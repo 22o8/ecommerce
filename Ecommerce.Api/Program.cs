@@ -137,7 +137,11 @@ if (app.Environment.IsDevelopment())
 // https (حسب رغبتك)
 if (!app.Environment.IsDevelopment())
 {
+    if (!app.Environment.IsProduction())
+{
     app.UseHttpsRedirection();
+}
+
 }
 
 app.UseAuthentication();
