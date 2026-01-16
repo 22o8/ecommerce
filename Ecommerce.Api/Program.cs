@@ -1,11 +1,9 @@
-// Program.cs
+using System.Text;
 using Ecommerce.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,7 +45,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ✅ DB (PostgreSQL)
+// ✅ DB
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"))
 );
@@ -57,7 +55,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         var jwt = builder.Configuration.GetSection("Jwt");
-        var key = Encoding.UTF8.GetBytes(jwt["Key"]!);
+        var key = Encoding.UTF8.GetBytes(jwt["Key"] ?? "");
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -74,69 +72,52 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// ✅ CORS
-// ملاحظة: عدّل Render URL بعد ما تعرف رابط الفرونت النهائي
+// ✅ CORS (خله عام لأن عندك فرونت راح ينرفع)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AppCors", policy =>
+    options.AddPolicy("CorsPolicy", policy =>
     {
         policy
-            .WithOrigins(
-                "http://localhost:3000",
-                "https://localhost:3000",
-                "http://127.0.0.1:3000",
-                "https://127.0.0.1:3000",
-                "http://localhost:5173",
-                "https://localhost:5173",
-
-                // لو عندك فرونت على Render/Vercel حط الدومين هنا:
-                // "https://your-frontend.onrender.com",
-                // "https://your-frontend.vercel.app"
-                ""
-            )
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials();
+            .AllowCredentials()
+            .SetIsOriginAllowed(_ => true); // يسمح لكل الدومينات (تقدر تقيده بعدين)
     });
 });
 
 var app = builder.Build();
 
-// ✅ Swagger (شغّله دائمًا حتى على Render Production)
-app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ecommerce.Api v1");
-    c.RoutePrefix = "swagger";
-});
+// ✅ Swagger يشتغل بـ Development دائمًا
+// وبـ Production فقط إذا فعلت متغير البيئة: SWAGGER_ENABLED=true
+var swaggerEnabled =
+    app.Environment.IsDevelopment() ||
+    string.Equals(Environment.GetEnvironmentVariable("SWAGGER_ENABLED"), "true", StringComparison.OrdinalIgnoreCase);
 
-// ✅ wwwroot + static files
-var webRoot = app.Environment.WebRootPath;
-if (string.IsNullOrWhiteSpace(webRoot))
+if (swaggerEnabled)
 {
-    webRoot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
-    app.Environment.WebRootPath = webRoot;
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ecommerce.Api v1");
+        c.RoutePrefix = "swagger";
+    });
 }
-Directory.CreateDirectory(webRoot);
 
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(webRoot),
-    RequestPath = ""
-});
-
-// ✅ CORS لازم يجي قبل Auth
-app.UseCors("AppCors");
-
-// ✅ لا تفعل HttpsRedirection على Render (يسبب تحذير/ممكن مشاكل)
-// إذا تحتاجه بس خليّه للـ Local أو سيرفر عندك https فعلي
+// ✅ على Render لا تستخدم HttpsRedirection (يسبب تحذيرات/مشاكل)
 if (app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
 
+// ✅ ترتيب الميدلوير الصحيح
+app.UseCors("CorsPolicy");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// (اختياري) Root endpoint حتى ما تشوف 404 على /
+app.MapGet("/", () => Results.Ok("Ecommerce API is running ✅"));
+
 app.Run();
