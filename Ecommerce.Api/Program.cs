@@ -2,10 +2,10 @@
 using Ecommerce.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,12 +47,12 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// DB
+// ✅ DB (PostgreSQL)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"))
 );
 
-// JWT
+// ✅ JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -74,10 +74,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// ✅ CORS (اختياري لكن مفيد لو شغّلت الفرونت بدون BFF)
+// ✅ CORS
+// ملاحظة: عدّل Render URL بعد ما تعرف رابط الفرونت النهائي
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("DevCors", policy =>
+    options.AddPolicy("AppCors", policy =>
     {
         policy
             .WithOrigins(
@@ -86,7 +87,12 @@ builder.Services.AddCors(options =>
                 "http://127.0.0.1:3000",
                 "https://127.0.0.1:3000",
                 "http://localhost:5173",
-                "https://localhost:5173"
+                "https://localhost:5173",
+
+                // لو عندك فرونت على Render/Vercel حط الدومين هنا:
+                // "https://your-frontend.onrender.com",
+                // "https://your-frontend.vercel.app"
+                ""
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -96,17 +102,15 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+// ✅ Swagger (شغّله دائمًا حتى على Render Production)
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ecommerce.Api v1");
-        c.RoutePrefix = "swagger";
-    });
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ecommerce.Api v1");
+    c.RoutePrefix = "swagger";
+});
 
-// ✅ تأكد wwwroot موجود
+// ✅ wwwroot + static files
 var webRoot = app.Environment.WebRootPath;
 if (string.IsNullOrWhiteSpace(webRoot))
 {
@@ -115,33 +119,20 @@ if (string.IsNullOrWhiteSpace(webRoot))
 }
 Directory.CreateDirectory(webRoot);
 
-// ✅ Static files لازم قبل auth (حل جذري)
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(webRoot),
     RequestPath = ""
 });
 
-// ✅ CORS (Development)
-if (app.Environment.IsDevelopment())
-{
-    app.UseCors("DevCors");
-}
+// ✅ CORS لازم يجي قبل Auth
+app.UseCors("AppCors");
 
-// ✅ Use CORS early (قبل auth) - للتطوير فقط
+// ✅ لا تفعل HttpsRedirection على Render (يسبب تحذير/ممكن مشاكل)
+// إذا تحتاجه بس خليّه للـ Local أو سيرفر عندك https فعلي
 if (app.Environment.IsDevelopment())
-{
-    app.UseCors("DevCors");
-}
-
-// https (حسب رغبتك)
-if (!app.Environment.IsDevelopment())
-{
-    if (!app.Environment.IsProduction())
 {
     app.UseHttpsRedirection();
-}
-
 }
 
 app.UseAuthentication();
