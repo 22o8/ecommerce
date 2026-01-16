@@ -1,16 +1,20 @@
 # ---------- Build stage ----------
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
+WORKDIR /src
 
-COPY *.csproj ./
-RUN dotnet restore
-
+# Copy everything (because we're building from the repo root on Render)
 COPY . .
-RUN dotnet publish -c Release -o out
+
+# Go into API folder
+WORKDIR /src/Ecommerce.Api
+
+RUN dotnet restore
+RUN dotnet publish -c Release -o /app/out
 
 # ---------- Runtime stage ----------
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
+
 COPY --from=build /app/out .
 
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
