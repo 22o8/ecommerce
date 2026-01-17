@@ -1,17 +1,17 @@
 using System.Text;
 using Ecommerce.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ================== Services ==================
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// ---------- Swagger + JWT ----------
+// ✅ Swagger + JWT
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -46,15 +46,12 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ---------- Database ----------
+// ✅ DB
 builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("Default")
-    );
-});
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default"))
+);
 
-// ---------- JWT ----------
+// ✅ JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -76,7 +73,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// ---------- CORS ----------
+// ✅ CORS (عام حالياً)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
@@ -91,23 +88,24 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// ================== Middleware ==================
+// ✅ مهم على Render/Reverse Proxy
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
-// ---------- Auto Migrate (مهم جدًا) ----------
+// ✅ Auto-Migrate (حل جذري لمشكلة Users/Products not exist)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 }
 
-// ---------- Swagger ----------
+// ✅ Swagger بالـ Development دائماً
+// وبـ Production فقط إذا SWAGGER_ENABLED=true
 var swaggerEnabled =
     app.Environment.IsDevelopment() ||
-    string.Equals(
-        Environment.GetEnvironmentVariable("SWAGGER_ENABLED"),
-        "true",
-        StringComparison.OrdinalIgnoreCase
-    );
+    string.Equals(Environment.GetEnvironmentVariable("SWAGGER_ENABLED"), "true", StringComparison.OrdinalIgnoreCase);
 
 if (swaggerEnabled)
 {
@@ -119,8 +117,7 @@ if (swaggerEnabled)
     });
 }
 
-// ---------- HTTPS ----------
-// على Render لا نفعّلها بالإنتاج
+// ✅ على Render خلي HTTPS Redirection فقط محلياً
 if (app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
@@ -133,7 +130,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// ---------- Root ----------
+// Root endpoint
 app.MapGet("/", () => Results.Ok("Ecommerce API is running ✅"));
 
 app.Run();
