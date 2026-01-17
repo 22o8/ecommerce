@@ -7,10 +7,11 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ================== Services ==================
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// ✅ Swagger + JWT
+// ---------- Swagger + JWT ----------
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -45,14 +46,15 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ✅ DB
+// ---------- Database ----------
 builder.Services.AddDbContext<AppDbContext>(options =>
+{
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("Default")
-    ));
+    );
+});
 
-
-// ✅ JWT
+// ---------- JWT ----------
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -74,7 +76,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// ✅ CORS (خله عام لأن عندك فرونت راح ينرفع)
+// ---------- CORS ----------
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
@@ -83,17 +85,29 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials()
-            .SetIsOriginAllowed(_ => true); // يسمح لكل الدومينات (تقدر تقيده بعدين)
+            .SetIsOriginAllowed(_ => true);
     });
 });
 
 var app = builder.Build();
 
-// ✅ Swagger يشتغل بـ Development دائمًا
-// وبـ Production فقط إذا فعلت متغير البيئة: SWAGGER_ENABLED=true
+// ================== Middleware ==================
+
+// ---------- Auto Migrate (مهم جدًا) ----------
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
+
+// ---------- Swagger ----------
 var swaggerEnabled =
     app.Environment.IsDevelopment() ||
-    string.Equals(Environment.GetEnvironmentVariable("SWAGGER_ENABLED"), "true", StringComparison.OrdinalIgnoreCase);
+    string.Equals(
+        Environment.GetEnvironmentVariable("SWAGGER_ENABLED"),
+        "true",
+        StringComparison.OrdinalIgnoreCase
+    );
 
 if (swaggerEnabled)
 {
@@ -105,13 +119,13 @@ if (swaggerEnabled)
     });
 }
 
-// ✅ على Render لا تستخدم HttpsRedirection (يسبب تحذيرات/مشاكل)
+// ---------- HTTPS ----------
+// على Render لا نفعّلها بالإنتاج
 if (app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
 
-// ✅ ترتيب الميدلوير الصحيح
 app.UseCors("CorsPolicy");
 
 app.UseAuthentication();
@@ -119,7 +133,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// (اختياري) Root endpoint حتى ما تشوف 404 على /
+// ---------- Root ----------
 app.MapGet("/", () => Results.Ok("Ecommerce API is running ✅"));
 
 app.Run();
