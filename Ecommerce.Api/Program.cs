@@ -47,8 +47,10 @@ builder.Services.AddSwaggerGen(c =>
 
 // ✅ DB
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default"))
-);
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("Default")
+    ));
+
 
 // ✅ JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
