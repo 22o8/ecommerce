@@ -1,24 +1,21 @@
-using System.Text;
 using Ecommerce.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Controllers
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
 
-// ✅ Swagger + JWT
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Ecommerce.Api",
-        Version = "v1"
-    });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Ecommerce API", Version = "v1" });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -27,7 +24,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "اكتب: Bearer {token}"
+        Description = "Enter: Bearer {your token}"
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -46,18 +43,33 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ✅ DB
+// DB
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"))
 );
 
-// ✅ JWT
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("cors", p =>
+        p.WithOrigins(
+            "https://ecommerce-web-vr0i.onrender.com",
+            "http://localhost:5173",
+            "http://localhost:3000"
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials()
+    );
+});
+
+// JWT
+var jwt = builder.Configuration.GetSection("Jwt");
+var keyBytes = Encoding.UTF8.GetBytes(jwt["Key"] ?? "");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var jwt = builder.Configuration.GetSection("Jwt");
-        var key = Encoding.UTF8.GetBytes(jwt["Key"] ?? "");
-
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -66,71 +78,36 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwt["Issuer"],
             ValidAudience = jwt["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ClockSkew = TimeSpan.Zero
+            IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
         };
     });
 
 builder.Services.AddAuthorization();
 
-// ✅ CORS (عام حالياً)
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("CorsPolicy", policy =>
-    {
-        policy
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials()
-            .SetIsOriginAllowed(_ => true);
-    });
-});
-
 var app = builder.Build();
 
-// ✅ مهم على Render/Reverse Proxy
+// ✅ مهم خلف Render/Cloudflare
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto |
+        ForwardedHeaders.XForwardedHost
 });
 
-// ✅ Auto-Migrate (حل جذري لمشكلة Users/Products not exist)
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-}
+// Swagger (اختياري: لو تحبه شغال دايم)
+app.UseSwagger();
+app.UseSwaggerUI();
 
-// ✅ Swagger بالـ Development دائماً
-// وبـ Production فقط إذا SWAGGER_ENABLED=true
-var swaggerEnabled =
-    app.Environment.IsDevelopment() ||
-    string.Equals(Environment.GetEnvironmentVariable("SWAGGER_ENABLED"), "true", StringComparison.OrdinalIgnoreCase);
+// ✅ يخدم wwwroot/uploads/... وغيرها
+app.UseStaticFiles();
 
-if (swaggerEnabled)
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ecommerce.Api v1");
-        c.RoutePrefix = "swagger";
-    });
-}
-
-// ✅ على Render خلي HTTPS Redirection فقط محلياً
-if (app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
-
-app.UseCors("CorsPolicy");
+app.UseRouting();
+app.UseCors("cors");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-// Root endpoint
-app.MapGet("/", () => Results.Ok("Ecommerce API is running ✅"));
 
 app.Run();
