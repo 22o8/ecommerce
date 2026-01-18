@@ -133,7 +133,11 @@ public class AdminProductsController : ControllerBase
 
     [HttpPost("{id:guid}/images")]
     [RequestSizeLimit(30_000_000)]
-    public async Task<IActionResult> UploadImages(Guid id, [FromForm] List<IFormFile> files)
+    public async Task<IActionResult> UploadImages(
+    Guid id,
+    [FromForm(Name = "images")] List<IFormFile> files
+)
+
     {
         if (files == null || files.Count == 0)
             return BadRequest("No files");
