@@ -22,7 +22,7 @@ public class AdminProductsController : ControllerBase
     }
 
     // ============================
-    // CRUD
+    // CRUD (Admin)
     // ============================
 
     [HttpGet]
@@ -38,7 +38,8 @@ public class AdminProductsController : ControllerBase
                 p.Slug,
                 p.PriceUsd,
                 p.IsPublished,
-                imagesCount = _db.ProductImages.Count(i => i.ProductId == p.Id)
+                p.CreatedAt,
+                imagesCount = _db.ProductImages.Count(i => i.ProductId == p.Id),
             })
             .ToListAsync();
 
@@ -46,7 +47,7 @@ public class AdminProductsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id)
+    public async Task<IActionResult> GetById([FromRoute] Guid id)
     {
         var p = await _db.Products
             .AsNoTracking()
@@ -59,45 +60,40 @@ public class AdminProductsController : ControllerBase
                 x.Description,
                 x.PriceUsd,
                 x.IsPublished,
+                x.CreatedAt,
+                x.RatingAvg,
+                x.RatingCount,
                 images = _db.ProductImages
                     .Where(i => i.ProductId == x.Id)
                     .OrderBy(i => i.SortOrder)
-                    .Select(i => new
-                    {
-                        i.Id,
-                        i.Url,
-                        i.Alt,
-                        i.SortOrder
-                    })
+                    .ThenBy(i => i.CreatedAt)
+                    .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
                     .ToList()
             })
             .FirstOrDefaultAsync();
 
-        if (p == null)
-            return NotFound(new { message = "Product not found" });
-
+        if (p == null) return NotFound(new { message = "Product not found" });
         return Ok(p);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] UpsertProductRequest req)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var slug = string.IsNullOrWhiteSpace(req.Slug)
-            ? Slugify(req.Title)
-            : req.Slug.Trim().ToLower();
+        var slug = NormalizeSlug(req.Slug);
+        if (string.IsNullOrWhiteSpace(slug))
+            slug = Slugify(req.Title);
 
-        if (await _db.Products.AnyAsync(x => x.Slug == slug))
-            return BadRequest(new { message = "Slug already exists" });
+        var exists = await _db.Products.AnyAsync(x => x.Slug.ToLower() == slug);
+        if (exists) return BadRequest(new { message = "Slug already exists" });
 
         var p = new Product
         {
             Id = Guid.NewGuid(),
             Title = req.Title.Trim(),
             Slug = slug,
-            Description = req.Description ?? "",
+            Description = (req.Description ?? "").Trim(),
             PriceUsd = req.PriceUsd,
             IsPublished = req.IsPublished,
             CreatedAt = DateTime.UtcNow
@@ -106,103 +102,253 @@ public class AdminProductsController : ControllerBase
         _db.Products.Add(p);
         await _db.SaveChangesAsync();
 
-        return Ok(new { p.Id });
+        return CreatedAtAction(nameof(GetById), new { id = p.Id }, new { p.Id });
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpsertProductRequest req)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        var p = await _db.Products.FirstOrDefaultAsync(x => x.Id == id);
+        if (p == null) return NotFound(new { message = "Product not found" });
+
+        var slug = NormalizeSlug(req.Slug);
+        if (string.IsNullOrWhiteSpace(slug))
+            slug = Slugify(req.Title);
+
+        var exists = await _db.Products.AnyAsync(x => x.Id != id && x.Slug.ToLower() == slug);
+        if (exists) return BadRequest(new { message = "Slug already exists" });
+
+        p.Title = req.Title.Trim();
+        p.Slug = slug;
+        p.Description = (req.Description ?? "").Trim();
+        p.PriceUsd = req.PriceUsd;
+        p.IsPublished = req.IsPublished;
+
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Updated" });
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete([FromRoute] Guid id)
+    {
+        var p = await _db.Products.FirstOrDefaultAsync(x => x.Id == id);
+        if (p == null) return NotFound(new { message = "Product not found" });
+
+        var images = await _db.ProductImages.Where(i => i.ProductId == id).ToListAsync();
+        foreach (var img in images)
+            TryDeletePhysicalFile(img.Url);
+
+        _db.ProductImages.RemoveRange(images);
+        _db.Products.Remove(p);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Deleted" });
     }
 
     // ============================
-    // IMAGES
+    // Images (Admin)
     // ============================
 
     [HttpGet("{id:guid}/images")]
-    public async Task<IActionResult> GetImages(Guid id)
+    public async Task<IActionResult> GetImages([FromRoute] Guid id)
     {
-        var images = await _db.ProductImages
-            .Where(x => x.ProductId == id)
-            .OrderBy(x => x.SortOrder)
-            .Select(x => new
-            {
-                x.Id,
-                x.Url,
-                x.Alt,
-                x.SortOrder
-            })
+        var exists = await _db.Products.AnyAsync(x => x.Id == id);
+        if (!exists) return NotFound(new { message = "Product not found" });
+
+        var items = await _db.ProductImages
+            .AsNoTracking()
+            .Where(i => i.ProductId == id)
+            .OrderBy(i => i.SortOrder)
+            .ThenBy(i => i.CreatedAt)
+            .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
             .ToListAsync();
 
-        return Ok(new { items = images });
+        // خليها {items} حتى تكون ثابتة للفرونت
+        return Ok(new { items });
     }
 
+    // ✅ يقبل:
+    // - images (متعدد)  => الفرونت الحالي عندك
+    // - file   (مفرد)   => اذا اكو مكان ثاني يرسل file
     [HttpPost("{id:guid}/images")]
     [RequestSizeLimit(30_000_000)]
     public async Task<IActionResult> UploadImages(
-    Guid id,
-    [FromForm(Name = "images")] List<IFormFile> files
-)
-
+        [FromRoute] Guid id,
+        [FromForm(Name = "images")] List<IFormFile>? images,
+        [FromForm(Name = "file")] IFormFile? file,
+        [FromForm] string? alt
+    )
     {
-        if (files == null || files.Count == 0)
-            return BadRequest("No files");
+        var product = await _db.Products.FirstOrDefaultAsync(x => x.Id == id);
+        if (product == null) return NotFound(new { message = "Product not found" });
 
-        var product = await _db.Products.FindAsync(id);
-        if (product == null)
-            return NotFound();
+        var files = new List<IFormFile>();
+        if (images is { Count: > 0 }) files.AddRange(images);
+        if (file != null && file.Length > 0) files.Add(file);
 
-        var root = _env.WebRootPath ?? Path.Combine(AppContext.BaseDirectory, "wwwroot");
-        var dir = Path.Combine(root, "uploads", "products", id.ToString());
+        if (files.Count == 0)
+            return BadRequest(new { message = "No files uploaded." });
+
+        var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        { ".jpg", ".jpeg", ".png", ".webp" };
+
+        var webRoot = _env.WebRootPath;
+        if (string.IsNullOrWhiteSpace(webRoot))
+            webRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+
+        var dir = Path.Combine(webRoot, "uploads", "products", id.ToString());
         Directory.CreateDirectory(dir);
 
-        var maxSort = await _db.ProductImages
-            .Where(x => x.ProductId == id)
-            .Select(x => (int?)x.SortOrder)
+        var maxOrder = await _db.ProductImages
+            .Where(i => i.ProductId == id)
+            .Select(i => (int?)i.SortOrder)
             .MaxAsync() ?? 0;
 
-        var result = new List<object>();
+        var created = new List<object>();
 
-        foreach (var file in files)
+        foreach (var f in files)
         {
-            var ext = Path.GetExtension(file.FileName).ToLower();
-            var name = $"{Guid.NewGuid():N}{ext}";
-            var path = Path.Combine(dir, name);
+            var ext = Path.GetExtension(f.FileName);
+            if (!allowed.Contains(ext))
+                return BadRequest(new { message = $"File type not allowed: {ext}" });
 
-            await using var fs = System.IO.File.Create(path);
-            await file.CopyToAsync(fs);
+            var safeName = $"{Guid.NewGuid():N}{ext}";
+            var fullPath = Path.Combine(dir, safeName);
 
-            var publicUrl = $"{Request.Scheme}://{Request.Host}/uploads/products/{id}/{name}";
+            await using (var fs = System.IO.File.Create(fullPath))
+            {
+                await f.CopyToAsync(fs);
+            }
+
+            // ✅ رابط كامل حتى يشتغل بكل مكان
+            var publicPath = $"/uploads/products/{id}/{safeName}";
+            var publicUrl = $"{Request.Scheme}://{Request.Host}{publicPath}";
 
             var img = new ProductImage
             {
+                Id = Guid.NewGuid(),
                 ProductId = id,
                 Url = publicUrl,
-                Alt = Path.GetFileNameWithoutExtension(file.FileName),
-                SortOrder = ++maxSort
+                Alt = string.IsNullOrWhiteSpace(alt)
+                    ? Path.GetFileNameWithoutExtension(f.FileName)
+                    : alt.Trim(),
+                SortOrder = ++maxOrder,
+                CreatedAt = DateTime.UtcNow
             };
 
             _db.ProductImages.Add(img);
-            result.Add(img);
+            created.Add(new { img.Id, img.Url, img.Alt, img.SortOrder });
         }
 
         await _db.SaveChangesAsync();
-        return Ok(new { items = result });
+        return Ok(new { items = created });
+    }
+
+    [HttpPut("{id:guid}/images/reorder")]
+    public async Task<IActionResult> ReorderImages([FromRoute] Guid id, [FromBody] ReorderImagesRequest req)
+    {
+        if (req?.ImageIds == null || req.ImageIds.Count == 0)
+            return BadRequest(new { message = "ImageIds is required" });
+
+        var exists = await _db.Products.AnyAsync(x => x.Id == id);
+        if (!exists) return NotFound(new { message = "Product not found" });
+
+        var images = await _db.ProductImages
+            .Where(i => i.ProductId == id)
+            .ToListAsync();
+
+        var set = images.Select(i => i.Id).ToHashSet();
+        foreach (var imgId in req.ImageIds)
+            if (!set.Contains(imgId))
+                return BadRequest(new { message = $"ImageId {imgId} not found for this product" });
+
+        for (int idx = 0; idx < req.ImageIds.Count; idx++)
+        {
+            var imgId = req.ImageIds[idx];
+            var img = images.First(x => x.Id == imgId);
+            img.SortOrder = idx + 1;
+        }
+
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Reordered" });
+    }
+
+    [HttpDelete("{id:guid}/images/{imageId:guid}")]
+    public async Task<IActionResult> DeleteImage([FromRoute] Guid id, [FromRoute] Guid imageId)
+    {
+        var img = await _db.ProductImages.FirstOrDefaultAsync(i => i.ProductId == id && i.Id == imageId);
+        if (img == null) return NotFound(new { message = "Image not found" });
+
+        TryDeletePhysicalFile(img.Url);
+
+        _db.ProductImages.Remove(img);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Deleted" });
     }
 
     // ============================
-    // HELPERS
+    // Helpers
     // ============================
+
+    private static string NormalizeSlug(string? slug)
+        => (slug ?? "").Trim().ToLowerInvariant();
 
     private static string Slugify(string input)
     {
-        return string.Join("-",
-            input.ToLower()
-                 .Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        input = (input ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(input)) return "item";
+
+        var chars = input.Select(c =>
+        {
+            if (char.IsLetterOrDigit(c)) return c;
+            if (char.IsWhiteSpace(c) || c == '-' || c == '_') return '-';
+            return '-';
+        }).ToArray();
+
+        var s = new string(chars);
+        while (s.Contains("--")) s = s.Replace("--", "-");
+        s = s.Trim('-');
+
+        return string.IsNullOrWhiteSpace(s) ? "item" : s;
+    }
+
+    private void TryDeletePhysicalFile(string? url)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(url)) return;
+
+            // اذا رابط كامل (https://..) نحوله لمسار
+            string relative;
+            if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+                relative = uri.AbsolutePath.TrimStart('/');
+            else
+                relative = url.TrimStart('/');
+
+            var fullPath = Path.Combine(_env.WebRootPath ?? "wwwroot",
+                relative.Replace('/', Path.DirectorySeparatorChar));
+
+            if (System.IO.File.Exists(fullPath))
+                System.IO.File.Delete(fullPath);
+        }
+        catch
+        {
+            // تجاهل
+        }
     }
 }
 
 // ============================
-// REQUESTS
+// Requests
 // ============================
 
 public class UpsertProductRequest
 {
-    [Required, MinLength(2)]
+    [Required]
+    [MinLength(2)]
     public string Title { get; set; } = "";
 
     public string? Slug { get; set; }
@@ -212,4 +358,10 @@ public class UpsertProductRequest
     public decimal PriceUsd { get; set; }
 
     public bool IsPublished { get; set; }
+}
+
+public class ReorderImagesRequest
+{
+    [Required]
+    public List<Guid> ImageIds { get; set; } = new();
 }
