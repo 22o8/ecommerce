@@ -66,7 +66,13 @@ public class AdminProductsController : ControllerBase
                 images = _db.ProductImages
                     .Where(i => i.ProductId == x.Id)
                     .OrderBy(i => i.SortOrder)
-                    .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
+                    .Select(i => new
+                    {
+                        i.Id,
+                        url = GetPublicUrl(i.Url), // ✅ رجع رابط صحيح للعرض
+                        i.Alt,
+                        i.SortOrder
+                    })
                     .ToList()
             })
             .FirstOrDefaultAsync();
@@ -161,7 +167,13 @@ public class AdminProductsController : ControllerBase
             .AsNoTracking()
             .Where(i => i.ProductId == id)
             .OrderBy(i => i.SortOrder)
-            .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
+            .Select(i => new
+            {
+                i.Id,
+                url = GetPublicUrl(i.Url), // ✅ رجع رابط صحيح للعرض
+                i.Alt,
+                i.SortOrder
+            })
             .ToListAsync();
 
         return Ok(images);
@@ -185,7 +197,12 @@ public class AdminProductsController : ControllerBase
         if (!allowed.Contains(ext))
             return BadRequest(new { message = "Only jpg/jpeg/png/webp allowed" });
 
-        var uploadsRoot = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", "products", id.ToString());
+        // ✅ تأكد webroot موجود حتى داخل Render
+        var webRoot = _env.WebRootPath;
+        if (string.IsNullOrWhiteSpace(webRoot))
+            webRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+
+        var uploadsRoot = Path.Combine(webRoot, "uploads", "products", id.ToString());
         Directory.CreateDirectory(uploadsRoot);
 
         var safeName = $"{Guid.NewGuid():N}{ext}";
@@ -200,13 +217,14 @@ public class AdminProductsController : ControllerBase
             .Select(i => (int?)i.SortOrder)
             .MaxAsync() ?? 0;
 
+        // ✅ خزن مسار نسبي فقط (هذا أهم تعديل)
         var url = $"/uploads/products/{id}/{safeName}";
 
         var img = new ProductImage
         {
             Id = Guid.NewGuid(),
             ProductId = id,
-            Url = url,
+            Url = url, // ✅ نسبي
             Alt = (alt ?? "").Trim(),
             SortOrder = maxOrder + 1
         };
@@ -214,7 +232,8 @@ public class AdminProductsController : ControllerBase
         _db.ProductImages.Add(img);
         await _db.SaveChangesAsync();
 
-        return Ok(new { img.Id, img.Url, img.Alt, img.SortOrder });
+        // ✅ رجّع رابط كامل للعرض
+        return Ok(new { img.Id, url = GetPublicUrl(img.Url), img.Alt, img.SortOrder });
     }
 
     // إعادة ترتيب الصور
@@ -289,13 +308,39 @@ public class AdminProductsController : ControllerBase
         return string.IsNullOrWhiteSpace(s) ? "item" : s;
     }
 
+    // ✅ يبني رابط صحيح للصور حتى لو الطلب جاي من BFF/فرونت
+    private string GetPublicUrl(string? urlOrPath)
+    {
+        if (string.IsNullOrWhiteSpace(urlOrPath)) return "";
+
+        // إذا مخزن رابط كامل خلّه كما هو
+        if (urlOrPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            urlOrPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            return urlOrPath;
+
+        // مسار نسبي => رجّعه على دومين الـ API الفعلي
+        var apiBase = $"{Request.Scheme}://{Request.Host}";
+        return $"{apiBase}{(urlOrPath.StartsWith("/") ? "" : "/")}{urlOrPath}";
+    }
+
     private void TryDeletePhysicalFile(string? url)
     {
         try
         {
             if (string.IsNullOrWhiteSpace(url)) return;
-            var relative = url.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-            var fullPath = Path.Combine(_env.WebRootPath ?? "wwwroot", relative);
+
+            // إذا رابط كامل حوله لمسار
+            var pathOnly = url;
+            if (Uri.TryCreate(url, UriKind.Absolute, out var abs))
+                pathOnly = abs.AbsolutePath;
+
+            var relative = pathOnly.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+
+            var webRoot = _env.WebRootPath;
+            if (string.IsNullOrWhiteSpace(webRoot))
+                webRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+
+            var fullPath = Path.Combine(webRoot, relative);
             if (System.IO.File.Exists(fullPath))
                 System.IO.File.Delete(fullPath);
         }
