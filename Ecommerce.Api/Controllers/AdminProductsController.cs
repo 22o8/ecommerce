@@ -131,21 +131,35 @@ public class AdminProductsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete([FromRoute] Guid id)
+public async Task<IActionResult> Delete([FromRoute] Guid id)
+{
+    var product = await _db.Products
+        .Include(p => p.Images)
+        .FirstOrDefaultAsync(p => p.Id == id);
+
+    if (product == null)
+        return NotFound(new { message = "Product not found" });
+
+    // إذا المنتج مرتبط بطلبات → امنع الحذف
+    var hasOrders = await _db.OrderItems.AnyAsync(o => o.ProductId == id);
+    if (hasOrders)
     {
-        var p = await _db.Products.FirstOrDefaultAsync(x => x.Id == id);
-        if (p == null) return NotFound(new { message = "Product not found" });
-
-        var images = await _db.ProductImages.Where(i => i.ProductId == id).ToListAsync();
-        foreach (var img in images)
-            TryDeletePhysicalFile(img.Url);
-
-        _db.ProductImages.RemoveRange(images);
-        _db.Products.Remove(p);
-        await _db.SaveChangesAsync();
-
-        return Ok(new { message = "Deleted" });
+        return BadRequest(new
+        {
+            message = "Cannot delete product because it has related orders. Unpublish it instead."
+        });
     }
+
+    // حذف الصور من قاعدة البيانات فقط (بدون لمس الملفات)
+    if (product.Images?.Any() == true)
+        _db.ProductImages.RemoveRange(product.Images);
+
+    _db.Products.Remove(product);
+    await _db.SaveChangesAsync();
+
+    return Ok(new { message = "Deleted successfully" });
+}
+
 
     // ============================
     // Images (Admin)
