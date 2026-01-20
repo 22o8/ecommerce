@@ -2,14 +2,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# نسخ ملفات المشروع فقط أولاً
-COPY Ecommerce.Api/Ecommerce.Api.csproj Ecommerce.Api/
-RUN dotnet restore Ecommerce.Api/Ecommerce.Api.csproj
+COPY Ecommerce.Api.csproj ./
+RUN dotnet restore Ecommerce.Api.csproj
 
-# نسخ باقي الملفات
-COPY . .
-WORKDIR /src/Ecommerce.Api
-
+COPY . ./
 RUN dotnet publish -c Release -o /app/out
 
 # ===== RUNTIME STAGE =====
