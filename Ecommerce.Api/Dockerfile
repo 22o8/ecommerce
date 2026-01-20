@@ -1,23 +1,21 @@
-# ---------- Build stage ----------
+# ===== BUILD STAGE =====
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy everything (because we're building from the repo root on Render)
-COPY . .
+# نسخ ملفات المشروع فقط أولاً
+COPY Ecommerce.Api/Ecommerce.Api.csproj Ecommerce.Api/
+RUN dotnet restore Ecommerce.Api/Ecommerce.Api.csproj
 
-# Go into API folder
+# نسخ باقي الملفات
+COPY . .
 WORKDIR /src/Ecommerce.Api
 
-RUN dotnet restore
 RUN dotnet publish -c Release -o /app/out
 
-# ---------- Runtime stage ----------
+# ===== RUNTIME STAGE =====
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-
 COPY --from=build /app/out .
 
-ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 EXPOSE 8080
-
 ENTRYPOINT ["dotnet", "Ecommerce.Api.dll"]
