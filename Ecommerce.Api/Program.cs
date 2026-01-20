@@ -15,9 +15,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// HttpClient (للـ Instagram import وغيرها)
-builder.Services.AddHttpClient();
-
 // DbContext
 var conn = builder.Configuration.GetConnectionString("Default")
           ?? builder.Configuration["ConnectionStrings__Default"];
