@@ -1,0 +1,60 @@
+{
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "ui": {
+    "dark": "Dark",
+    "light": "Light"
+  },
+  "home": {
+    "heroTitle1": "A",
+    "heroTitle2": "Professional",
+    "heroTitle3": "Digital Store",
+    "heroDesc": "Show your products, secure checkout, then instant download — clean and ready to scale.",
+    "browse": "Browse Products",
+    "latest": "Latest Products",
+    "viewAll": "View all",
+    "apiHint": "If API fails, make sure backend is running. Using BFF should avoid HTTPS/CORS issues.",
+    "cardFastTitle": "Fast Checkout",
+    "cardFastDesc": "Checkout + Confirm + Order",
+    "cardDlTitle": "Instant Download",
+    "cardDlDesc": "Token-based download from backend",
+    "cardSecureTitle": "Secure",
+    "cardSecureDesc": "Purchase/download after login"
+  },
+  "products": {
+    "title": "Products",
+    "subtitle": "Browse and search quickly",
+    "search": "Search for a product..."
+  },
+  "auth": {
+    "welcome": "Welcome 👋",
+    "subtitle": "Login to complete checkout or download your purchases.",
+    "tabLogin": "Login",
+    "tabRegister": "Create account",
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full name",
+    "btnLogin": "Login",
+    "btnRegister": "Create account",
+    "whyTitle": "Why login?",
+    "why1": "Secure and organized checkout",
+    "why2": "Download after payment",
+    "why3": "Order history saved"
+  },
+  "common": {
+    "loading": "Loading...",
+    "requestFailed": "Request failed",
+    "price": "Price",
+    "buy": "Buy now",
+    "loginToBuy": "Login to buy",
+    "backToProducts": "Back to products",
+    "productDetails": "Product details",
+    "noImage": "No image",
+    "invalidCredentials": "Invalid email or password",
+    "networkError": "Could not reach the server. Check the API URL or your connection"
+  }
+}

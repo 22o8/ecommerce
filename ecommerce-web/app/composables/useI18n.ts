@@ -1,0 +1,322 @@
+// app/composables/useI18n.ts
+import { computed } from 'vue'
+import { useCookie } from '#app'
+
+export type Locale = 'ar' | 'en'
+
+const dict: Record<Locale, Record<string, string>> = {
+  ar: {
+    // Products page
+    'productsPage.title': 'المنتجات',
+    'productsPage.subtitle': 'ابحث، فرّز، واستعرض المنتجات بسهولة',
+    'productsPage.searchPlaceholder': 'ابحث عن منتج...',
+    'productsPage.search': 'بحث',
+    'productsPage.sort': 'الفرز',
+    'productsPage.sort.new': 'الأحدث',
+    'productsPage.sort.priceAsc': 'السعر: الأقل',
+    'productsPage.sort.priceDesc': 'السعر: الأعلى',
+    'productsPage.total': 'المجموع',
+    'productsPage.prev': 'السابق',
+    'productsPage.next': 'التالي',
+    'productsPage.page': 'صفحة',
+    'productsPage.emptyTitle': 'لا توجد نتائج',
+    'productsPage.emptyDesc': 'جرّب كلمات مختلفة أو غيّر الفرز.',
+    home: 'الرئيسية',
+    products: 'المنتجات',
+    services: 'الخدمات',
+    myOrders: 'طلباتي',
+    serviceRequests: 'طلبات الخدمة',
+    admin: 'الادمن',
+    dashboard: 'لوحة التحكم',
+
+    login: 'تسجيل الدخول',
+    account: 'الحساب',
+    logout: 'تسجيل خروج',
+    contact: 'تواصل',
+    terms: 'الشروط',
+    privacy: 'الخصوصية',
+    dark: 'داكن',
+    light: 'فاتح',
+
+    tagline: 'منتجات رقمية',
+    'theme.dark': 'داكن',
+    'theme.light': 'فاتح',
+
+    heroTitle: 'متجرك للمنتجات الرقمية',
+    heroSub: 'اشترِ منتجات رقمية مختارة واستلم التحميل فوراً بعد الدفع.',
+    browseProducts: 'تصفح المنتجات',
+    browseServices: 'تصفح الخدمات',
+
+    whyUs: 'لماذا نحن؟',
+    fastDelivery: 'تسليم فوري بعد الدفع',
+    securePayments: 'دفع آمن ومنظم',
+    support: 'دعم سريع',
+
+    browseFast: 'تصفح بسرعة',
+    searchProduct: 'ابحث عن منتج...',
+    noProductsYet: 'لا توجد منتجات بعد',
+
+    productDetails: 'تفاصيل المنتج',
+    price: 'السعر',
+    buy: 'شراء الآن',
+    loginToBuy: 'سجّل دخول حتى تشتري',
+    backToProducts: 'رجوع للمنتجات',
+    noImage: 'لا توجد صورة',
+    buyNow: 'شراء الآن',
+    whatsappOrder: 'طلب عبر واتساب',
+
+    // Home (landing)
+    'home.badge': 'تسليم فوري • دفع آمن',
+    'home.subtitle': 'جرّب متجر متكامل لبيع المنتجات والخدمات الرقمية مع معرض صور، بحث، وفرز، وطلبات.',
+    'home.split.left.kicker': 'عناية • تجميل • روتين',
+    'home.split.left.title': 'منتجات للبشرة\nبأسلوب أنيق',
+    'home.split.left.desc': 'تصميم حديث وتجربة تسوّق سلسة — من العرض إلى الطلب بكل بساطة.',
+    'home.split.left.button': 'تصفح المنتجات',
+    'home.split.right.kicker': 'خدمات رقمية',
+    'home.split.right.title': 'احجز خدمة\nأو اطلب تصميم',
+    'home.split.right.desc': 'طلبات خدمة واضحة + متابعة سهلة + رد سريع عبر واتساب.',
+    'home.split.right.button': 'تصفح الخدمات',
+    'home.section.featured': 'منتجات مميزة',
+    'home.section.new': 'الأحدث',
+    'home.viewAll': 'عرض الكل',
+    'home.empty': 'لا توجد منتجات حالياً.',
+
+    // Contact (home)
+    'home.contact.title': 'تواصل معنا بسرعة',
+    'home.contact.sub': 'إيميل، اتصال، أو انستغرام — وخلي واتساب للطلبات.',
+    'home.contact.phone': 'اتصال',
+    'home.contact.email': 'إيميل',
+    'home.contact.instagram': 'انستغرام',
+
+    // صفحة التواصل
+    'contactPage.kicker': 'الدعم',
+    'contactPage.title': 'تواصل معنا',
+    'contactPage.sub': 'اختَر أسرع طريقة للتواصل — واتساب، بريد، أو انستغرام.',
+    'contactPage.phone': 'هاتف / واتساب',
+    'contactPage.email': 'البريد',
+    'contactPage.instagram': 'انستغرام',
+    'contactPage.send': 'إرسال',
+    'contactPage.openInstagram': 'فتح الحساب',
+    'contactPage.noteTitle': 'ملاحظة',
+    'contactPage.noteBody': 'للطلب السريع: أرسل اسم/رابط المنتج + تفاصيلك على واتساب.',
+    'contactPage.form.title': 'أرسل رسالة',
+    'contactPage.form.sub': 'هذا نموذج واجهة (تجريبي) ويمكن ربطه بالـ API لاحقاً.',
+    'contactPage.form.name': 'الاسم',
+    'contactPage.form.namePh': 'اكتب اسمك',
+    'contactPage.form.message': 'الرسالة',
+    'contactPage.form.messagePh': 'اكتب طلبك...',
+    'contactPage.form.send': 'إرسال الرسالة',
+    'contactPage.form.hint': 'عادة نرد بسرعة ضمن أوقات العمل.',
+    // Backward/forward compatible aliases (some pages use different key naming)
+    'home.title': 'متجر تجميل وعناية بالبشرة',
+    'home.browse': 'تصفح المنتجات',
+    'home.goToAccount': 'الذهاب للحساب',
+    'home.whyTitle': 'لماذا نحن؟',
+    'home.whySubtitle': 'المتجر',
+    'home.featured.title': 'منتجات مميزة',
+    'home.featured.subtitle': 'مختارات اليوم',
+    'home.features.instant.title': 'تسليم فوري',
+    'home.features.instant.desc': 'وصول مباشر بعد الدفع',
+    'home.features.secure': 'دفع آمن',
+    'home.features.secureDesc': 'دفع بثقة — حماية كاملة عند الدفع.',
+    'home.features.support': 'دعم سريع',
+    'home.features.supportDesc': 'مساعدة سريعة عبر واتساب أو الشات.',
+    'home.why.title': 'لماذا نحن؟',
+    'home.why.subtitle': 'المتجر',
+    'home.why.role': 'متجر احترافي',
+    'home.why.aTitle': 'جودة العرض',
+    'home.why.aDesc': 'تصميم نظيف يناسب متاجر التجميل والعناية.',
+    'home.why.bTitle': 'صور متعددة',
+    'home.why.bDesc': 'معرض صور لكل منتج مع عرض مصغّرات.',
+    'home.why.cTitle': 'تجربة سريعة',
+    'home.why.cDesc': 'بحث وفرز وتصفح سلس على كل الأجهزة.',
+
+    // Services
+    serviceDetails: 'تفاصيل الخدمة',
+    backToServices: 'رجوع للخدمات',
+    requestService: 'طلب الخدمة',
+    sendRequest: 'إرسال الطلب',
+
+    // Orders / Requests
+    orderPage: 'صفحة الطلب',
+    loading: 'جارٍ التحميل...',
+    download: 'تحميل الملف',
+    noDownloadToken: 'لا يوجد توكن تحميل بعد. تأكد أن الدفع مكتمل.',
+    needLogin: 'تحتاج تسجيل دخول للمتابعة.',
+    myOrdersTitle: 'طلباتي',
+
+    requestFailed: 'فشل الطلب',
+    notFound: 'الصفحة غير موجودة',
+    backHome: 'رجوع للرئيسية',
+  },
+
+  en: {
+    // Products page
+    'productsPage.title': 'Products',
+    'productsPage.subtitle': 'Search, sort and browse items with ease',
+    'productsPage.searchPlaceholder': 'Search products...',
+    'productsPage.search': 'Search',
+    'productsPage.sort': 'Sort',
+    'productsPage.sort.new': 'Newest',
+    'productsPage.sort.priceAsc': 'Price: Low',
+    'productsPage.sort.priceDesc': 'Price: High',
+    'productsPage.total': 'Total',
+    'productsPage.prev': 'Prev',
+    'productsPage.next': 'Next',
+    'productsPage.page': 'Page',
+    'productsPage.emptyTitle': 'No results',
+    'productsPage.emptyDesc': 'Try different keywords or sorting.',
+    home: 'Home',
+    products: 'Products',
+    services: 'Services',
+    myOrders: 'My Orders',
+    serviceRequests: 'Service Requests',
+    admin: 'Admin',
+    dashboard: 'Dashboard',
+
+    login: 'Login',
+    account: 'Account',
+    logout: 'Logout',
+    contact: 'Contact',
+    terms: 'Terms',
+    privacy: 'Privacy',
+    dark: 'Dark',
+    light: 'Light',
+
+    tagline: 'Digital products',
+    'theme.dark': 'Dark',
+    'theme.light': 'Light',
+
+    heroTitle: 'Digital Products Store',
+    heroSub: 'Buy curated digital products — download instantly after payment.',
+    browseProducts: 'Browse products',
+    browseServices: 'Browse services',
+
+    whyUs: 'Why us?',
+    fastDelivery: 'Instant delivery after payment',
+    securePayments: 'Secure checkout',
+    support: 'Fast support',
+
+    browseFast: 'Browse fast',
+    searchProduct: 'Search product...',
+    noProductsYet: 'No products yet',
+
+    productDetails: 'Product details',
+    price: 'Price',
+    buy: 'Buy now',
+    loginToBuy: 'Login to buy',
+    backToProducts: 'Back to products',
+    noImage: 'No image',
+    buyNow: 'Buy now',
+    whatsappOrder: 'Order via WhatsApp',
+
+    // Home (landing)
+    'home.badge': 'Instant delivery • Secure checkout',
+    'home.subtitle': 'A complete store experience for selling digital products and services.',
+    'home.split.left.kicker': 'Skincare • Beauty • Routine',
+    'home.split.left.title': 'A clean beauty\nstore experience',
+    'home.split.left.desc': 'Minimal, fast and mobile-friendly — from browsing to checkout.',
+    'home.split.left.button': 'Browse products',
+    'home.split.right.kicker': 'Digital services',
+    'home.split.right.title': 'Book a service\nor request a quote',
+    'home.split.right.desc': 'Clear requests, easy follow-up, and quick WhatsApp support.',
+    'home.split.right.button': 'Browse services',
+    'home.section.featured': 'Featured products',
+    'home.section.new': 'Latest',
+    'home.viewAll': 'View all',
+    'home.empty': 'No products yet.',
+
+    // Contact (home)
+    'home.contact.title': 'Quick contact',
+    'home.contact.sub': 'Email, phone, or Instagram — WhatsApp for orders.',
+    'home.contact.phone': 'Call',
+    'home.contact.email': 'Email',
+    'home.contact.instagram': 'Instagram',
+
+    // Contact page
+    'contactPage.kicker': 'Support',
+    'contactPage.title': 'Contact us',
+    'contactPage.sub': 'Choose the fastest way to reach us — WhatsApp, email, or Instagram.',
+    'contactPage.phone': 'Phone / WhatsApp',
+    'contactPage.email': 'Email',
+    'contactPage.instagram': 'Instagram',
+    'contactPage.send': 'Send',
+    'contactPage.openInstagram': 'Open profile',
+    'contactPage.noteTitle': 'Tip',
+    'contactPage.noteBody': 'For faster ordering, send the product name/link and your details on WhatsApp.',
+    'contactPage.form.title': 'Send a message',
+    'contactPage.form.sub': 'This is a UI form (demo). You can connect it to your API later.',
+    'contactPage.form.name': 'Name',
+    'contactPage.form.namePh': 'Your name',
+    'contactPage.form.message': 'Message',
+    'contactPage.form.messagePh': 'Write what you need...',
+    'contactPage.form.send': 'Send message',
+    'contactPage.form.hint': 'We usually reply quickly during business hours.',
+    // Backward/forward compatible aliases (some pages use different key naming)
+    'home.title': 'Beauty Shop – glow delivered',
+    'home.browse': 'Browse products',
+    'home.goToAccount': 'Go to account',
+    'home.whyTitle': 'Why choose us?',
+    'home.whySubtitle': 'Trusted experience, clear pricing, and quick support.',
+    'home.why.aTitle': 'Curated & authentic',
+    'home.why.aDesc': 'Carefully selected items with clear info.',
+    'home.why.bTitle': 'Fast WhatsApp support',
+    'home.why.bDesc': 'Quick replies for questions and ordering.',
+    'home.why.cDesc': 'Transparent prices & smooth checkout.',
+    'home.featured.title': 'Featured products',
+    'home.featured.subtitle': 'Hand-picked items we recommend.',
+    'home.why.cTitle': 'Why choose us',
+    'home.why.cSub': 'Fast, secure and easy',
+    'home.features.instant.title': 'Instant delivery',
+    'home.features.instant.desc': 'Get access right after payment',
+    'home.features.secure': 'Secure checkout',
+    'home.features.secureDesc': 'Pay with confidence — protected checkout.',
+    'home.features.support': 'Fast support',
+    'home.features.supportDesc': 'Quick help via WhatsApp and chat.',
+
+    'home.why.title': 'Why us?',
+    'home.why.subtitle': 'Developer',
+    'home.why.items.1.title': 'Trusted products',
+    'home.why.items.1.desc': 'Quality files & clear descriptions',
+    'home.why.items.2.title': 'Fast response',
+    'home.why.items.2.desc': 'We answer quickly on requests',
+    'home.why.items.3.title': 'Easy experience',
+    'home.why.items.3.desc': 'Smooth browsing, buying, and delivery',
+
+    // Services
+    serviceDetails: 'Service details',
+    backToServices: 'Back to services',
+    requestService: 'Request service',
+    sendRequest: 'Send request',
+
+    // Orders / Requests
+    orderPage: 'Order page',
+    loading: 'Loading...',
+    download: 'Download file',
+    noDownloadToken: 'No download token yet. Make sure payment is completed.',
+    needLogin: 'You need to login to continue.',
+    myOrdersTitle: 'My Orders',
+
+    requestFailed: 'Request failed',
+    notFound: 'Page not found',
+    backHome: 'Back home',
+  },
+}
+
+export function useI18n() {
+  // ✅ الافتراضي عربي
+  const localeCookie = useCookie<Locale>('locale', { default: () => 'ar' })
+  const locale = computed(() => localeCookie.value)
+
+  const t = (key: string) => dict[localeCookie.value]?.[key] ?? key
+
+  const setLocale = (l: Locale) => {
+    localeCookie.value = l
+  }
+
+  // ✅ توافق مع نسخ سابقة (بعض الملفات القديمة كانت تستدعي init())
+  // ما نحتاج أي تهيئة حاليًا، لكن وجودها يمنع خطأ: "init is not a function".
+  const init = () => {}
+
+  return { t, locale, setLocale, init }
+}
