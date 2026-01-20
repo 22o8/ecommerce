@@ -12,8 +12,7 @@ export default defineNuxtConfig({
     apiOrigin:
       process.env.NUXT_API_ORIGIN ||
       (process.env.NUXT_PUBLIC_API_BASE ? process.env.NUXT_PUBLIC_API_BASE.replace(/\/api\/?$/, '') : undefined) ||
-      // الافتراضي يكون الدومن المنشور حتى ما تواجه مشكلة شهادة HTTPS المحلية
-      'https://ecommerce-api-endk.onrender.com',
+      'https://localhost:7043',
     public: {
       // Client requests should go through the Nuxt BFF (avoids CORS + keeps tokens server-side).
       apiBase: '/api/bff',
@@ -23,8 +22,7 @@ export default defineNuxtConfig({
         (process.env.NUXT_PUBLIC_API_BASE
           ? process.env.NUXT_PUBLIC_API_BASE.replace(/\/api\/?$/, '')
           : undefined) ||
-      // الافتراضي يكون الدومن المنشور حتى ما تواجه مشكلة شهادة HTTPS المحلية
-      'https://ecommerce-api-endk.onrender.com',
+        'https://localhost:7043',
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
       siteName: process.env.NUXT_PUBLIC_SITE_NAME || 'Ecommerce',
       // رقم واتساب لاستلام الطلبات (بدون +). مثال: 9647xxxxxxxxx

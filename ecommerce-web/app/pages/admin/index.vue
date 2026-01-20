@@ -38,25 +38,25 @@ const stats = {
 <style scoped>
 .admin-box{
   border-radius: 20px;
-  border: 1px solid rgba(var(--border), .75);
-  background: rgba(var(--panel), .88);
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
   padding: 16px;
 }
-.admin-muted{ color: rgb(var(--muted)); }
+.admin-muted{ color: rgba(255,255,255,.65); }
 
 .admin-primary{
   padding: 10px 12px;
   border-radius: 14px;
   background: rgba(99,102,241,.22);
   border: 1px solid rgba(99,102,241,.35);
-  color: rgb(var(--text));
+  color: white;
   font-weight: 700;
 }
 .admin-ghost{
   padding: 10px 12px;
   border-radius: 14px;
-  border: 1px solid rgba(var(--border), .75);
-  background: rgba(var(--panel), .88);
-  color: rgb(var(--text));
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.85);
 }
 </style>

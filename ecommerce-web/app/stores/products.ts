@@ -16,12 +16,10 @@ export const useProductsStore = defineStore('products', () => {
 
   const featured = ref<any[]>([])
   const loadingFeatured = ref(false)
-  const featuredError = ref<string | null>(null)
   const hasFeatured = computed(() => featured.value.length > 0)
 
   async function fetchFeatured() {
     loadingFeatured.value = true
-    featuredError.value = null
     try {
       // نفس شكل صفحة المنتجات
       const res = await api.get<Paged<any>>('/Products', {
@@ -31,9 +29,8 @@ export const useProductsStore = defineStore('products', () => {
       })
       featured.value = Array.isArray(res?.items) ? res.items : []
     } catch (e) {
-      // لا نخلي المنتجات "تظهر ثواني وتختفي" إذا صار خطأ لحظي
-      // نخلي آخر بيانات موجودة ونعرض رسالة (إذا تحتاجها بالواجهة)
-      featuredError.value = (e as any)?.message || 'Failed to load products'
+      // لا نكسر الصفحة الرئيسية إذا فشل الطلب
+      featured.value = []
     } finally {
       loadingFeatured.value = false
     }
@@ -42,7 +39,6 @@ export const useProductsStore = defineStore('products', () => {
   return {
     featured,
     loadingFeatured,
-    featuredError,
     hasFeatured,
     fetchFeatured,
   }

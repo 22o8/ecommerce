@@ -63,9 +63,6 @@
             <NuxtLink to="/admin/products" class="side-link" :class="isActive('/admin/products') ? 'side-active' : ''">
               Products
             </NuxtLink>
-            <NuxtLink to="/admin/commands" class="side-link" :class="isActive('/admin/commands') ? 'side-active' : ''">
-              Commands
-            </NuxtLink>
             <NuxtLink to="/admin/orders" class="side-link" :class="isActive('/admin/orders') ? 'side-active' : ''">
               Orders
             </NuxtLink>
@@ -166,15 +163,15 @@ html[data-theme="dark"], html.theme-dark{
   --adm-bg: 7 10 18;
   --adm-bg2: 10 14 26;
 
-  /* تباين أعلى حتى الكاردات والجداول تكون واضحة */
-  --adm-panel: 20 24 38;
-  --adm-panel-alpha: .86;
+  /* الأهم: لوح/كارد غامق حتى ما يطلع أبيض */
+  --adm-panel: 14 18 32;
+  --adm-panel-alpha: .78;
 
   --adm-border: 255 255 255;
-  --adm-border-alpha: .18;
+  --adm-border-alpha: .10;
 
   --adm-text: 236 244 255;
-  --adm-muted: 183 193 218;
+  --adm-muted: 164 180 205;
 
   --adm-soft: 255 255 255 / .07;
 

@@ -21,13 +21,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const config = useRuntimeConfig()
-
-  // ✅ apiOrigin لازم يكون بدون /api
-  // (إذا انحط بالغلط مثل: https://domain.com/api راح نسويه https://domain.com)
-  let apiOrigin = String((config as any).apiOrigin || '').trim()
-  apiOrigin = apiOrigin.replace(/\/+$/g, "")
-  apiOrigin = apiOrigin.replace(/\/api$/i, "")
-
+  const apiOrigin = String((config as any).apiOrigin || '').replace(/\/$/, '')
   const apiBase = `${apiOrigin}/api` // مثال: https://localhost:7043/api
 
   const method = (event.node.req.method || "GET").toUpperCase()
@@ -103,7 +97,6 @@ export default defineEventHandler(async (event) => {
       headers,
       query,
       body,
-      timeout: 20000,
     })
 
     const setCookie = res.headers.get("set-cookie")
@@ -112,22 +105,8 @@ export default defineEventHandler(async (event) => {
     return res._data
   } catch (err: any) {
     const statusCode = err?.statusCode || err?.response?.status || 500
-    const upstreamData = err?.data
-    const message =
-      upstreamData?.message ||
-      upstreamData?.title ||
-      err?.message ||
-      "fetch failed"
-
+    const message = err?.data?.message || err?.message || "fetch failed"
     setResponseStatus(event, statusCode)
-
-    // لا نعرض الـ targetUrl بالإنتاج
-    const isProd = process.env.NODE_ENV === "production"
-
-    return {
-      message,
-      ...(upstreamData && typeof upstreamData === "object" ? { upstream: upstreamData } : {}),
-      ...(isProd ? {} : { targetUrl, method }),
-    }
+    return { message, targetUrl, method }
   }
 })

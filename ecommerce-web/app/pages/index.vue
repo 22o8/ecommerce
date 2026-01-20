@@ -119,17 +119,7 @@ const featured = computed(() => products.featured)
 }
 
 :global(.theme-dark) .hero-overlay{
-  /* تغميق أقوى حتى يبقى النص والبوكسات واضحة فوق صورة الهيرو */
-  background: linear-gradient(90deg, rgba(4,6,12,.94), rgba(4,6,12,.82) 52%, rgba(4,6,12,.94));
-  backdrop-filter: blur(2px) saturate(1.05);
-}
-
-:global(.theme-dark) .metric{
-  background: rgba(var(--panel2), .94);
-  border-color: rgba(var(--border), .82);
-}
-:global(.theme-dark) .metric-sub{
-  opacity: .96;
+  background: linear-gradient(90deg, rgba(8,10,18,.86), rgba(8,10,18,.68) 52%, rgba(8,10,18,.86));
 }
 
 .hero-glow{
@@ -173,7 +163,6 @@ const featured = computed(() => products.featured)
   font-weight: 1000;
   letter-spacing: -0.02em;
   color: rgb(var(--text-strong));
-  text-shadow: 0 1px 0 rgba(0,0,0,0.10), 0 14px 34px rgba(0,0,0,0.20);
   white-space: pre-line;
 }
 
@@ -183,7 +172,6 @@ const featured = computed(() => products.featured)
   opacity: .9;
   font-size: 15px;
   line-height: 1.75;
-  text-shadow: 0 1px 0 rgba(0,0,0,0.06), 0 10px 26px rgba(0,0,0,0.16);
 }
 
 .hero-actions{
@@ -207,8 +195,7 @@ const featured = computed(() => products.featured)
   padding: 14px 14px;
   border-radius: 18px;
   border: 1px solid rgb(var(--border));
-  /* خليها شبه صلبة حتى النص يكون واضح فوق صورة الخلفية */
-  background: rgb(var(--panel2));
+  background: rgba(var(--panel), .86);
   box-shadow: var(--shadow0);
   transition: transform .18s ease, box-shadow .18s ease;
 }
@@ -238,13 +225,13 @@ const featured = computed(() => products.featured)
   margin-top: 2px;
   font-size: 12px;
   color: rgb(var(--text));
-  opacity: .92;
+  opacity: .85;
 }
 
 .contact-card{
   border-radius: 22px;
   border: 1px solid rgb(var(--border));
-  background: rgb(var(--panel2));
+  background: rgba(var(--panel2), .88);
   box-shadow: var(--shadow1);
   padding: 18px;
   display: grid;

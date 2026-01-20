@@ -2225,14 +2225,12 @@ const styles$1 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
 }, Symbol.toStringTag, { value: 'Module' }));
 
 const ____path_$2 = defineEventHandler(async (event) => {
-  var _a, _b, _c, _d;
+  var _a, _b, _c, _d, _e;
   {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
   }
   const config = useRuntimeConfig();
-  let apiOrigin = String(config.apiOrigin || "").trim();
-  apiOrigin = apiOrigin.replace(/\/+$/g, "");
-  apiOrigin = apiOrigin.replace(/\/api$/i, "");
+  const apiOrigin = String(config.apiOrigin || "").replace(/\/$/, "");
   const apiBase = `${apiOrigin}/api`;
   const method = (event.node.req.method || "GET").toUpperCase();
   const params = getRouterParams(event);
@@ -2283,22 +2281,16 @@ const ____path_$2 = defineEventHandler(async (event) => {
       method,
       headers,
       query,
-      body,
-      timeout: 2e4
+      body
     });
     const setCookie = res.headers.get("set-cookie");
     if (setCookie) setHeader(event, "set-cookie", setCookie);
     return res._data;
   } catch (err) {
     const statusCode = (err == null ? void 0 : err.statusCode) || ((_d = err == null ? void 0 : err.response) == null ? void 0 : _d.status) || 500;
-    const upstreamData = err == null ? void 0 : err.data;
-    const message = (upstreamData == null ? void 0 : upstreamData.message) || (upstreamData == null ? void 0 : upstreamData.title) || (err == null ? void 0 : err.message) || "fetch failed";
+    const message = ((_e = err == null ? void 0 : err.data) == null ? void 0 : _e.message) || (err == null ? void 0 : err.message) || "fetch failed";
     setResponseStatus(event, statusCode);
-    return {
-      message,
-      ...upstreamData && typeof upstreamData === "object" ? { upstream: upstreamData } : {},
-      ...{ targetUrl, method }
-    };
+    return { message, targetUrl, method };
   }
 });
 

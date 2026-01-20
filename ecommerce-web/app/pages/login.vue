@@ -257,7 +257,7 @@ async function onSubmit() {
 
   try {
     if (mode.value === 'login') {
-      await auth.login({ email: form.email.trim(), password: form.password })
+      await auth.login({ email: form.email, password: form.password })
       success.value = t('loggedIn')
       await navigateTo('/products')
     } else {
@@ -270,16 +270,8 @@ async function onSubmit() {
       mode.value = 'login'
     }
   } catch (e: any) {
-    // معالجة أخطاء API بشكل أوضح
-    const status = e?.statusCode || e?.status || e?.response?.status
-
-    if (status == 401) {
-      generalError.value = t('invalidCredentials')
-    } else if (status == 0 && (e?.message || '').toLowerCase().includes('fetch')) {
-      generalError.value = t('networkError')
-    } else {
-      generalError.value = e?.data?.message || e?.message || t('requestFailed')
-    }
+    // هذا خطأ عام من API
+    generalError.value = e?.data?.message || e?.message || t('requestFailed')
   } finally {
     pending.value = false
   }
