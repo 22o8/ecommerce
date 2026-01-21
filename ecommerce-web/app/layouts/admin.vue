@@ -48,13 +48,6 @@
         <div class="p-2">
           <div class="text-xs admin-muted">Navigation</div>
           <div class="mt-2 space-y-1">
-            <NuxtLink
-  to="/admin/commands"
-  class="nav-item"
->
-  Commands
-</NuxtLink>
-
             <NuxtLink to="/admin" class="side-link" :class="isActive('/admin') ? 'side-active' : ''">
               Overview
             </NuxtLink>
@@ -64,6 +57,12 @@
             <NuxtLink to="/admin/orders" class="side-link" :class="isActive('/admin/orders') ? 'side-active' : ''">
               Orders
             </NuxtLink>
+            <NuxtLink
+              to="/admin/commands"
+              class="nav-item"
+              >
+               Commands
+              </NuxtLink>
           </div>
         </div>
 
