@@ -6,6 +6,9 @@ import { useApi } from '~/composables/useApi'
 
 const api = useApi()
 
+// token مخزّن بالكوكي حسب اللي باين عندك بالـ Network (cookie: token=...)
+const token = useCookie<string | null>('token')
+
 const igUserId = ref('')
 const accessToken = ref('')
 const limit = ref(80)
@@ -24,20 +27,43 @@ function saveLocal() {
   localStorage.setItem('ig_access_token', accessToken.value.trim())
 }
 
+function authHeaders() {
+  // إذا ماكو توكن، رجّع هيدرز فارغ
+  if (!token.value) return {}
+  return { Authorization: `Bearer ${token.value}` }
+}
+
+function normalizeError(e: any, fallback: string) {
+  const status = e?.status || e?.response?.status || e?.data?.statusCode
+  const msg = e?.data?.error || e?.data?.message || e?.message || fallback
+
+  if (status === 401) return 'غير مسموح (401) — لازم تسجّل دخول أدمن والتوكن يكون صحيح.'
+  if (status === 403) return 'ممنوع (403) — حسابك مو أدمن أو ما عندك صلاحية.'
+  return msg
+}
+
 async function runImport() {
   error.value = null
   message.value = null
   loading.value = true
+
   try {
     saveLocal()
-    const res = await api.post('/admin/instagram/import', {
-      igUserId: igUserId.value.trim(),
-      accessToken: accessToken.value.trim(),
-      limit: Number(limit.value || 80)
-    })
+    const res = await api.post(
+      '/admin/instagram/import',
+      {
+        igUserId: igUserId.value.trim(),
+        accessToken: accessToken.value.trim(),
+        limit: Number(limit.value || 80),
+      },
+      {
+        headers: authHeaders(),
+      }
+    )
+
     message.value = `Imported: ${res.imported}, Skipped: ${res.skipped}`
   } catch (e: any) {
-    error.value = e?.data?.error || e?.message || 'Import failed'
+    error.value = normalizeError(e, 'Import failed')
   } finally {
     loading.value = false
   }
@@ -45,15 +71,20 @@ async function runImport() {
 
 async function deleteImported() {
   if (!confirm('Delete all Instagram imported products (slug starts with ig-)?')) return
+
   error.value = null
   message.value = null
   loading.value = true
+
   try {
-    // ✅ المسار الصحيح للحذف
-    const res = await api.del('/admin/instagram/imported')
-    message.value = `Deleted: ${res.deleted}`
+    // ✅ هذا هو المسار الصحيح حسب الـ API: DELETE /api/admin/instagram/imported
+    const res = await api.del('/admin/instagram/imported', {
+      headers: authHeaders(),
+    })
+
+    message.value = `Deleted: ${res.deleted ?? 'OK'}`
   } catch (e: any) {
-    error.value = e?.data?.error || e?.message || 'Delete failed'
+    error.value = normalizeError(e, 'Delete failed')
   } finally {
     loading.value = false
   }
