@@ -49,7 +49,8 @@ async function deleteImported() {
   message.value = null
   loading.value = true
   try {
-    const res = await api.del('/admin/instagram/delete-imported')
+    // ✅ المسار الصحيح للحذف
+    const res = await api.del('/admin/instagram/imported')
     message.value = `Deleted: ${res.deleted}`
   } catch (e: any) {
     error.value = e?.data?.error || e?.message || 'Delete failed'
