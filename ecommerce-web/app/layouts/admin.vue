@@ -5,15 +5,6 @@
       <div class="mx-auto max-w-7xl px-4 pt-4">
         <div class="admin-card px-4 py-3 flex items-center justify-between gap-4">
           <div class="flex items-center gap-3">
-            <button
-              class="icon-btn"
-              type="button"
-              @click="sidebarOpen = !sidebarOpen"
-              aria-label="Toggle sidebar"
-            >
-              ☰
-            </button>
-
             <NuxtLink to="/admin" class="flex items-center gap-3">
               <div
                 class="h-10 w-10 rounded-2xl flex items-center justify-center font-black text-white"
@@ -57,6 +48,13 @@
         <div class="p-2">
           <div class="text-xs admin-muted">Navigation</div>
           <div class="mt-2 space-y-1">
+            <NuxtLink
+  to="/admin/commands"
+  class="nav-item"
+>
+  Commands
+</NuxtLink>
+
             <NuxtLink to="/admin" class="side-link" :class="isActive('/admin') ? 'side-active' : ''">
               Overview
             </NuxtLink>
