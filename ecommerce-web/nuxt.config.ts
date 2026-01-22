@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-05',
 
-  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
+  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', 'nuxt-icon', '@vueuse/nuxt'],
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
@@ -12,7 +12,7 @@ export default defineNuxtConfig({
     apiOrigin:
       process.env.NUXT_API_ORIGIN ||
       (process.env.NUXT_PUBLIC_API_BASE ? process.env.NUXT_PUBLIC_API_BASE.replace(/\/api\/?$/, '') : undefined) ||
-      'https://localhost:7043',
+      'https://ecommerce-api-endk.onrender.com',
     public: {
       // Client requests should go through the Nuxt BFF (avoids CORS + keeps tokens server-side).
       apiBase: '/api/bff',
@@ -22,7 +22,7 @@ export default defineNuxtConfig({
         (process.env.NUXT_PUBLIC_API_BASE
           ? process.env.NUXT_PUBLIC_API_BASE.replace(/\/api\/?$/, '')
           : undefined) ||
-        'https://localhost:7043',
+        'https://ecommerce-api-endk.onrender.com',
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
       siteName: process.env.NUXT_PUBLIC_SITE_NAME || 'Ecommerce',
       // رقم واتساب لاستلام الطلبات (بدون +). مثال: 9647xxxxxxxxx

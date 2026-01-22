@@ -1,79 +1,70 @@
 <template>
-  <div class="space-y-6">
-    <div v-if="pending" class="rounded-3xl border border-white/10 bg-white/5 p-6">
-      {{ t('loading') }}
+  <div class="grid gap-6">
+    <UiButton variant="ghost" class="w-fit" @click="back">
+      <Icon name="mdi:arrow-left" class="keep-ltr text-xl" />
+      <span class="rtl-text">{{ t('backToProducts') }}</span>
+    </UiButton>
+
+    <div v-if="loading" class="grid gap-6 lg:grid-cols-2">
+      <div class="card-soft p-4">
+        <div class="skeleton h-[420px]" />
+      </div>
+      <div class="card-soft p-6 grid gap-3">
+        <div class="skeleton h-7 w-3/4" />
+        <div class="skeleton h-5 w-1/2" />
+        <div class="skeleton h-24" />
+        <div class="skeleton h-12" />
+      </div>
     </div>
 
-    <div v-else-if="errorMsg" class="rounded-3xl border border-red-500/30 bg-red-500/10 p-6 text-red-200">
-      {{ errorMsg }}
+    <div v-else-if="!p" class="card-soft p-10 text-center">
+      <Icon name="mdi:alert-circle-outline" class="text-4xl opacity-70 mx-auto" />
+      <div class="mt-3 font-bold rtl-text">{{ t('notFound') }}</div>
     </div>
-    <div v-else class="grid gap-6 md:grid-cols-3">
-      <div class="md:col-span-2 rounded-3xl border border-white/10 bg-white/5 p-6">
-        <!-- Gallery -->
-        <div class="grid gap-4 md:grid-cols-5">
-          <div class="md:col-span-3 rounded-3xl overflow-hidden border border-white/10 bg-black/20">
-            <img
-              v-if="activeImage"
-              :src="activeImage"
-              :alt="product.title"
-              class="w-full h-full object-cover aspect-square"
-            />
-            <div v-else class="aspect-square grid place-items-center text-white/60">
-              {{ t('noImage') }}
-            </div>
-          </div>
 
-          <div class="md:col-span-2 grid gap-3">
-            <h1 class="text-3xl font-black leading-tight">{{ product.title }}</h1>
-            <p class="text-sm text-white/70">{{ product.description }}</p>
-
-            <div v-if="thumbs.length" class="grid grid-cols-4 gap-2">
-              <button
-                v-for="(im, idx) in thumbs"
-                :key="idx"
-                class="rounded-2xl overflow-hidden border"
-                :style="{ borderColor: selectedIndex === idx ? 'rgba(99,102,241,.55)' : 'rgba(255,255,255,.10)' }"
-                type="button"
-                @click="selectedIndex = idx"
-              >
-                <img :src="im" class="w-full h-full object-cover aspect-square" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
-          <div class="text-sm text-white/60">{{ t('productDetails') }}</div>
-          <div class="mt-2 text-sm">
-            <div><span class="text-white/60">Slug:</span> <span class="font-bold">{{ product.slug }}</span></div>
-            <div class="mt-1"><span class="text-white/60">{{ t('price') }}:</span> <span class="font-black">${{ product.priceUsd }}</span></div>
+    <div v-else class="grid gap-6 lg:grid-cols-2">
+      <div class="card-soft overflow-hidden">
+        <div class="h-[420px] bg-surface-2 grid place-items-center">
+          <img v-if="img" :src="img" class="h-full w-full object-cover" :alt="p.name" />
+          <div v-else class="text-center grid gap-2 px-6">
+            <Icon name="mdi:image-outline" class="text-4xl opacity-70 mx-auto" />
+            <div class="text-sm text-muted rtl-text">{{ t('noImage') }}</div>
           </div>
         </div>
       </div>
 
-      <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
-        <div class="text-sm text-white/60">{{ t('price') }}</div>
-        <div class="mt-2 text-2xl font-black">${{ product.priceUsd }}</div>
-
-        <div class="mt-5 grid gap-3">
-          <AppButton v-if="auth.isAuthed" type="button" @click="buyNow">
-            {{ t('buy') }}
-          </AppButton>
-
-          <AppButton type="button" variant="soft" @click="orderViaWhatsApp">
-            {{ t('whatsappOrder') }}
-          </AppButton>
-          <AppButton v-if="!auth.isAuthed" type="button" variant="soft" @click="goLoginForCheckout">
-            {{ t('loginToBuy') }}
-          </AppButton>
-
-          <NuxtLink to="/products" class="text-sm font-extrabold text-blue-300 hover:underline">
-            ← {{ t('backToProducts') }}
-          </NuxtLink>
+      <div class="card-soft p-6 md:p-8 grid gap-4">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-black rtl-text">{{ p.name }}</h1>
+          <div class="mt-2 text-muted rtl-text">{{ p.description || '' }}</div>
         </div>
 
-        <div v-if="actionError" class="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
-          {{ actionError }}
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-muted rtl-text">{{ t('price') }}</div>
+          <div class="text-2xl font-black keep-ltr">{{ fmt(p.price) }}</div>
+        </div>
+
+        <div class="grad-line" />
+
+        <div class="grid gap-3">
+          <UiButton v-if="auth.isAuthed" @click="buy" :loading="buying">
+            <Icon name="mdi:cart-outline" class="text-lg" />
+            <span class="rtl-text">{{ t('buyNow') }}</span>
+          </UiButton>
+
+          <NuxtLink v-else to="/login">
+            <UiButton>
+              <Icon name="mdi:login-variant" class="text-lg" />
+              <span class="rtl-text">{{ t('loginToBuy') }}</span>
+            </UiButton>
+          </NuxtLink>
+
+          <a class="rounded-2xl border border-app bg-surface px-4 py-3 text-sm hover:bg-surface-2 transition keep-ltr" :href="waOrderLink" target="_blank" rel="noreferrer">
+            <Icon name="mdi:whatsapp" class="inline-block text-lg align-middle" />
+            <span class="ml-2 rtl-text">{{ t('whatsappOrder') }}</span>
+          </a>
+
+          <p v-if="msg" class="text-sm rtl-text" :class="ok ? 'text-[rgb(var(--success))]' : 'text-[rgb(var(--danger))]'">{{ msg }}</p>
         </div>
       </div>
     </div>
@@ -81,142 +72,73 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute, navigateTo } from '#app'
+import UiButton from '~/components/ui/UiButton.vue'
 import { useApi } from '~/composables/useApi'
-import { useI18n } from '~/composables/useI18n'
-import { useSiteMeta } from '~/composables/useSiteMeta'
-import { useAuthStore } from '~/stores/auth'
 
-const route = useRoute()
-const api = useApi()
-const auth = useAuthStore()
 const { t } = useI18n()
+const auth = useAuthStore()
+const api = useApi()
+const route = useRoute()
+const router = useRouter()
+const config = useRuntimeConfig()
 
-const runtimeConfig = useRuntimeConfig()
-const whatsappNumber = computed(() => String((runtimeConfig.public as any)?.whatsappNumber || '').replace(/^\+/, ''))
+const loading = ref(true)
+const buying = ref(false)
+const msg = ref('')
+const ok = ref(false)
 
-const slug = computed(() => String(route.params.slug || ''))
+const p = ref<any>(null)
+const img = computed(() => api.buildAssetUrl(p.value?.images?.[0] || p.value?.imageUrl || p.value?.image || ''))
 
-type Product = {
-  id: string
-  title: string
-  slug: string
-  description: string
-  priceUsd: number
-  isPublished?: boolean
-  coverImage?: string | null
-  images?: Array<{ url: string; alt?: string | null; sortOrder?: number | null }>
+const waOrderLink = computed(() => {
+  const n = String((config.public as any).whatsappNumber || '').replace(/[^0-9]/g,'')
+  const text = encodeURIComponent(`Order: ${p.value?.name || ''} | Price: ${p.value?.price || ''}`)
+  return n ? `https://wa.me/${n}?text=${text}` : '#'
+})
+
+function fmt(v:any){
+  const n = Number(v||0)
+  return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(n)
 }
 
-const errorMsg = ref<string | null>(null)
-const actionError = ref<string>('')
+function back(){ router.push('/products') }
 
-function extractErrorMessage(e: any) {
-  return e?.data?.message || e?.data || e?.message || 'صار خطأ'
-}
-
-const { data, pending } = await useAsyncData(`product_${slug.value}`, async () => {
-  return await api.get<Product>(`/Products/slug/${slug.value}`)
-})
-
-const product = computed(() => data.value as Product)
-
-// صور المنتج تأتي جاهزة من API: GET /api/Products/slug/{slug}
-const selectedIndex = ref(0)
-
-const thumbs = computed(() => {
-  const p = product.value
-  const list = (p?.images || [])
-    .slice()
-    .sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0))
-    .map((x) => api.buildAssetUrl(String(x?.url || '')))
-    .filter(Boolean)
-
-  // إذا ماكو صور، جرّب coverImage
-  if (!list.length && p?.coverImage) {
-    const c = api.buildAssetUrl(String(p.coverImage))
-    if (c) list.push(c)
-  }
-  return list
-})
-
-const activeImage = computed(() => thumbs.value[selectedIndex.value] || '')
-
-watchEffect(() => {
-  if (selectedIndex.value >= thumbs.value.length) selectedIndex.value = 0
-})
-
-watchEffect(() => {
-  if (!pending.value && !data.value) errorMsg.value = t('requestFailed')
-})
-
-useSiteMeta({
-  title: product.value?.title ? `${product.value.title} | Ecommerce` : 'Product | Ecommerce',
-  description: product.value?.description || 'Product details',
-  path: `/products/${slug.value}`,
-})
-
-// JSON-LD (Product)
-useHead(() => {
-  if (!product.value) return {}
-  return {
-    script: [
-      {
-        type: 'application/ld+json',
-        children: JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'Product',
-          name: product.value.title,
-          description: product.value.description,
-          sku: product.value.id,
-          offers: {
-            '@type': 'Offer',
-            priceCurrency: 'USD',
-            price: product.value.priceUsd,
-            availability: 'https://schema.org/InStock',
-          },
-        }),
-      },
-    ],
-  }
-})
-
-async function goLoginForCheckout() {
-  await navigateTo('/login')
-}
-
-// مبدئياً: ننشئ Order بالباك ثم نودّي المستخدم لصفحة order للتحميل/الدفع حسب نظامك
-async function buyNow() {
-  actionError.value = ''
-  try {
-    // ✅ Swagger: POST /api/Checkout/products
-    // ينشئ Order + Payment mock ثم تقدر تفتح صفحة الطلب
-    const res: any = await api.post('/Checkout/products', {
-      productId: product.value.id,
-      quantity: 1,
+async function fetchProduct(){
+  loading.value = true
+  msg.value = ''
+  try{
+    // backend supports /Products/{id} and /Products/BySlug?slug=...
+    const slug = String(route.params.slug || '')
+    // try by slug endpoint first
+    p.value = await api.get(`/Products/by-slug`, { slug }).catch(async () => {
+      // fallback: treat as id
+      return await api.get(`/Products/${slug}`)
     })
-
-    const orderId = res?.orderId || res?.id
-    if (!orderId) throw new Error('Order id missing')
-    await navigateTo(`/orders/${orderId}`)
-  } catch (e: any) {
-    actionError.value = extractErrorMessage(e)
+  }catch(e:any){
+    p.value = null
+  }finally{
+    loading.value = false
   }
 }
 
-function orderViaWhatsApp() {
-  const number = whatsappNumber.value
-  if (!number) {
-    actionError.value = 'WHATSAPP_NUMBER غير مضبوط'
-    return
-  }
-  const title = product.value?.title || 'Product'
-  const price = product.value?.priceUsd != null ? `$${product.value.priceUsd}` : ''
-  const url = typeof window !== 'undefined' ? window.location.href : ''
-  const msg = encodeURIComponent(`طلب منتج: ${title}\nالسعر: ${price}\nالرابط: ${url}`)
-  if (typeof window !== 'undefined') {
-    window.open(`https://wa.me/${number}?text=${msg}`, '_blank')
+async function buy(){
+  if(!p.value) return
+  buying.value = true
+  msg.value = ''
+  try{
+    // example order endpoint
+    const res:any = await api.post('/Orders', { productId: p.value.id })
+    ok.value = true
+    msg.value = t('orderCreated')
+    // optionally redirect
+    router.push('/orders')
+  }catch(e:any){
+    ok.value = false
+    msg.value = e?.data?.message || e?.message || t('buyFailed')
+  }finally{
+    buying.value = false
   }
 }
 
+onMounted(fetchProduct)
 </script>

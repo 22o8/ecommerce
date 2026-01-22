@@ -24,7 +24,11 @@ export default defineEventHandler(async (event) => {
 
   const config = useRuntimeConfig()
   // ✅ نفس مصدر الـ API المستخدم في باقي السيرفر routes
-  const apiOrigin = String((config as any).public?.apiOrigin || (config as any).apiOrigin || 'http://localhost:7043')
+  const apiOrigin = String(
+    (config as any).public?.apiOrigin ||
+      (config as any).apiOrigin ||
+      'https://ecommerce-api-endk.onrender.com'
+  )
     .replace(/\/$/, '')
 
   const { id } = getRouterParams(event)

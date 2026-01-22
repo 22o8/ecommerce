@@ -1,4 +1,5 @@
 <template>
+<<<<<<< HEAD
   <div class="min-h-screen bg-admin">
     <!-- Topbar -->
     <header class="sticky top-0 z-50">
@@ -63,233 +64,78 @@
               >
                Commands
               </NuxtLink>
+=======
+  <div class="min-h-screen bg-app">
+    <div class="mx-auto max-w-7xl px-4 py-6 grid gap-6 lg:grid-cols-[280px_1fr]">
+      <aside class="card-soft p-4 h-fit sticky top-4">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-2xl bg-[rgb(var(--primary))] text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black">
+            <Icon name="mdi:view-dashboard-outline" class="text-xl" />
+          </div>
+          <div>
+            <div class="font-extrabold rtl-text">{{ t('dashboard') }}</div>
+            <div class="text-xs text-muted keep-ltr">{{ userLabel }}</div>
+>>>>>>> 55e014a (Initial commit)
           </div>
         </div>
 
-        <div class="mt-3 admin-divider" />
+        <div class="mt-4 grad-line" />
 
-        <div class="p-2">
-          <div class="text-xs admin-muted">Quick actions</div>
-          <div class="mt-2 grid grid-cols-1 gap-2">
-            <NuxtLink to="/admin/products" class="btn-primary text-center">Add / Edit Products</NuxtLink>
-          </div>
+        <nav class="mt-4 grid gap-2 text-sm">
+          <NuxtLink to="/admin" class="navItem">
+            <Icon name="mdi:chart-box-outline" class="text-lg" />
+            <span class="rtl-text">{{ t('admin.overview') }}</span>
+          </NuxtLink>
+
+          <NuxtLink to="/admin/products" class="navItem">
+            <Icon name="mdi:shopping-outline" class="text-lg" />
+            <span class="rtl-text">{{ t('admin.products') }}</span>
+          </NuxtLink>
+
+          <NuxtLink to="/admin/orders" class="navItem">
+            <Icon name="mdi:receipt-text-outline" class="text-lg" />
+            <span class="rtl-text">{{ t('admin.orders') }}</span>
+          </NuxtLink>
+
+          <!-- ✅ تم حذف صفحة (موجهة أوامر / commands) بالكامل حسب طلبك -->
+        </nav>
+
+        <div class="mt-4 grad-line" />
+
+        <div class="mt-4 grid gap-2">
+          <UiButton variant="secondary" @click="goHome">
+            <Icon name="mdi:arrow-left" class="keep-ltr" />
+            <span class="rtl-text">{{ t('home') }}</span>
+          </UiButton>
         </div>
       </aside>
 
-      <!-- Content -->
-      <main class="admin-card p-5 md:p-6">
+      <section class="grid gap-6">
         <slot />
-      </main>
+      </section>
     </div>
-
-    <footer class="py-10 text-center text-sm admin-muted">
-      © {{ new Date().getFullYear() }} — Admin Dashboard
-    </footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import { useUiStore } from '~/stores/ui'
-import { useAuthStore } from '~/stores/auth'
-import { useI18n } from '~/composables/useI18n'
-const ui = useUiStore()
+import UiButton from '~/components/ui/UiButton.vue'
+definePageMeta({ middleware: ['auth', 'admin'] })
 const auth = useAuthStore()
-const { setLocale } = useI18n()
-const route = useRoute()
-const sidebarOpen = ref(false)
-
-function isActive(path: string) {
-  return route.path === path || (path !== '/admin' && route.path.startsWith(path))
-}
-
-function toggleTheme() {
-  ui.toggleTheme()
-}
-
-function toggleLocale() {
-  const next = ui.locale === 'en' ? 'ar' : 'en'
-  setLocale(next)
-  ui.setLocale(next) // dir ثابت ltr
-}
-
-async function logout() {
-  await auth.logout()
-}
-
-onMounted(() => ui.initClient())
+const { t } = useI18n()
+const userLabel = computed(() => auth.user?.email || 'admin')
+const router = useRouter()
+function goHome(){ router.push('/') }
 </script>
 
-<style>
-/* =========================================
-   Admin tokens (يدعم data-theme و theme-dark)
-   ========================================= */
-:root{
-  --primary: 99 102 241;   /* indigo */
-  --success: 34 197 94;
-  --danger: 239 68 68;
-
-  /* LIGHT defaults */
-  --adm-bg: 245 247 252;
-  --adm-bg2: 238 242 255;
-
-  --adm-panel: 255 255 255;
-  --adm-panel-alpha: .88;
-
-  --adm-border: 226 232 240;
-  --adm-border-alpha: 1;
-
-  --adm-text: 15 23 42;
-  --adm-muted: 71 85 105;
-
-  --adm-soft: 15 23 42 / .04;
-
-  --adm-shadow: 0 18px 50px rgba(2,6,23,.08);
+<style scoped>
+.navItem{
+  display:flex; align-items:center; gap:10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface));
+  transition: .15s ease;
 }
-
-/* LIGHT overrides (إذا الثيم ينكتب بالطريقتين) */
-html[data-theme="light"], html.theme-light{
-  color-scheme: light;
-}
-
-/* DARK overrides (إذا الثيم ينكتب بالطريقتين) */
-html[data-theme="dark"], html.theme-dark{
-  color-scheme: dark;
-
-  --adm-bg: 7 10 18;
-  --adm-bg2: 10 14 26;
-
-  /* الأهم: لوح/كارد غامق حتى ما يطلع أبيض */
-  --adm-panel: 14 18 32;
-  --adm-panel-alpha: .78;
-
-  --adm-border: 255 255 255;
-  --adm-border-alpha: .10;
-
-  --adm-text: 236 244 255;
-  --adm-muted: 164 180 205;
-
-  --adm-soft: 255 255 255 / .07;
-
-  --adm-shadow: 0 22px 80px rgba(0,0,0,.55);
-}
-
-/* =========================================
-   Background
-   ========================================= */
-.bg-admin{
-  background:
-    radial-gradient(1100px 560px at 18% -10%, rgba(99,102,241,.22), transparent 58%),
-    radial-gradient(900px 520px at 92% 8%, rgba(56,189,248,.12), transparent 55%),
-    radial-gradient(900px 520px at 50% 120%, rgba(34,197,94,.10), transparent 55%),
-    linear-gradient(to bottom, rgb(var(--adm-bg)), rgb(var(--adm-bg2)));
-}
-
-/* =========================================
-   Card
-   ========================================= */
-.admin-card{
-  border: 1px solid rgba(var(--adm-border), var(--adm-border-alpha));
-  background: rgba(var(--adm-panel), var(--adm-panel-alpha));
-  backdrop-filter: blur(14px);
-  border-radius: 24px;
-  box-shadow: var(--adm-shadow);
-  color: rgb(var(--adm-text));
-}
-
-.admin-text{ color: rgb(var(--adm-text)) !important; }
-.admin-muted{ color: rgb(var(--adm-muted)) !important; }
-
-.admin-divider{
-  height: 1px;
-  background: rgba(var(--adm-border), var(--adm-border-alpha));
-}
-
-/* =========================================
-   Buttons / pill
-   ========================================= */
-.icon-btn{
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(var(--adm-border), var(--adm-border-alpha));
-  background: rgba(var(--adm-soft));
-  color: rgb(var(--adm-text));
-  transition: transform .12s ease, background .12s ease, border-color .12s ease, opacity .12s ease;
-}
-.icon-btn:hover{
-  border-color: rgba(var(--primary), .35);
-  background: rgba(var(--primary), .10);
-}
-.icon-btn:active{ transform: scale(.98); }
-
-.admin-pill{
-  border: 1px solid rgba(var(--adm-border), var(--adm-border-alpha));
-  background: rgba(var(--adm-soft));
-  padding: 8px 12px;
-  border-radius: 999px;
-}
-
-/* =========================================
-   Sidebar links
-   ========================================= */
-.side-link{
-  display:block;
-  padding: 10px 12px;
-  border-radius: 14px;
-  color: rgb(var(--adm-text));
-  border: 1px solid transparent;
-  transition: background .12s ease, border-color .12s ease;
-}
-.side-link:hover{
-  background: rgba(var(--primary), .10);
-  border-color: rgba(var(--primary), .22);
-}
-.side-active{
-  background: rgba(var(--primary), .16);
-  border-color: rgba(var(--primary), .30);
-  font-weight: 900;
-}
-
-/* =========================================
-   Action buttons
-   ========================================= */
-.btn-primary{
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-weight: 900;
-  color: #fff;
-  background: rgb(var(--primary));
-  box-shadow: 0 10px 24px rgba(99,102,241,.22);
-  transition: transform .12s ease, opacity .12s ease;
-}
-.btn-primary:hover{ opacity: .95; }
-.btn-primary:active{ transform: scale(.99); }
-
-.btn-soft{
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-weight: 900;
-  border: 1px solid rgba(var(--adm-border), var(--adm-border-alpha));
-  background: rgba(var(--adm-soft));
-  color: rgb(var(--adm-text));
-  transition: transform .12s ease, border-color .12s ease, background .12s ease;
-}
-.btn-soft:hover{
-  border-color: rgba(var(--primary), .28);
-  background: rgba(var(--primary), .08);
-}
-.btn-soft:active{ transform: scale(.99); }
-
-.btn-danger{
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-weight: 900;
-  color: #fff;
-  background: rgb(var(--danger));
-  box-shadow: 0 10px 24px rgba(239,68,68,.20);
-  transition: transform .12s ease, opacity .12s ease;
-}
-.btn-danger:hover{ opacity: .95; }
-.btn-danger:active{ transform: scale(.99); }
+.navItem:hover{ background: rgb(var(--surface-2)); }
+.router-link-active{ box-shadow: 0 0 0 4px rgba(var(--ring), .18); border-color: rgba(var(--ring), .55); }
 </style>

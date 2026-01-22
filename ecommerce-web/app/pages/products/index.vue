@@ -1,181 +1,110 @@
-<!-- app/pages/products/index.vue -->
-<script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useApi } from '~/composables/useApi'
-import { useI18n } from '~/composables/useI18n'
-
-const api = useApi()
-const { t } = useI18n()
-
-const q = ref('')
-const sort = ref<'new' | 'priceAsc' | 'priceDesc'>('new')
-const view = ref<'grid' | 'list'>('grid')
-
-const page = ref(1)
-const pageSize = 12
-
-const sortValue = computed(() => {
-  if (sort.value === 'priceAsc') return 'price:asc'
-  if (sort.value === 'priceDesc') return 'price:desc'
-  return 'new'
-})
-
-const { data, pending, refresh } = await useAsyncData(
-  'products',
-  async () => {
-    return await api.get<any>('/Products', {
-      page: page.value,
-      pageSize,
-      q: q.value || undefined,
-      sort: sortValue.value,
-    })
-  },
-  { watch: [page, sort] },
-)
-
-const items = computed(() => data.value?.items || [])
-const total = computed(() => data.value?.totalCount || 0)
-const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
-
-function doSearch() {
-  page.value = 1
-  refresh()
-}
-
-function clearSearch() {
-  q.value = ''
-  doSearch()
-}
-</script>
-
 <template>
   <div class="grid gap-6">
-    <section class="card p-8">
-      <div class="flex items-start justify-between gap-4 flex-wrap">
-        <div class="rtl-text">
-          <h1 class="h2">{{ t('productsPage.title') }}</h1>
-          <p class="mt-1 muted text-sm">{{ t('productsPage.subtitle') }}</p>
-        </div>
-
-        <div class="flex gap-2 flex-wrap keep-ltr">
-          <div class="relative">
-            <input
-              v-model.trim="q"
-              class="input"
-              style="min-width: 280px; padding-left: 40px;"
-              :placeholder="t('productsPage.searchPlaceholder')"
-              @keyup.enter="doSearch"
-            />
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 opacity-60">🔎</span>
-          </div>
-
-          <select v-model="sort" class="input" style="width: 200px;">
-            <option value="new">{{ t('productsPage.sort.new') }}</option>
-            <option value="priceAsc">{{ t('productsPage.sort.priceAsc') }}</option>
-            <option value="priceDesc">{{ t('productsPage.sort.priceDesc') }}</option>
-          </select>
-
-          <button
-            type="button"
-            class="px-4 py-3 rounded-2xl font-extrabold"
-            :style="{ background: `rgb(var(--primary))`, color: 'white' }"
-            @click="doSearch"
-          >
-            {{ t('productsPage.search') }}
-          </button>
-
-          <button
-            v-if="q"
-            type="button"
-            class="px-4 py-3 rounded-2xl font-extrabold border"
-            :style="{ borderColor: 'rgb(var(--border))', background: 'rgba(var(--text),.04)' }"
-            @click="clearSearch"
-          >
-            ✕
-          </button>
-
-          <div class="flex rounded-2xl overflow-hidden border" :style="{ borderColor: 'rgb(var(--border))' }">
-            <button
-              type="button"
-              class="px-3 py-3 font-extrabold"
-              :style="view === 'grid' ? { background: 'rgba(var(--text),.06)' } : { background: 'transparent' }"
-              @click="view = 'grid'"
-              title="Grid"
-            >
-              ⬚
-            </button>
-            <button
-              type="button"
-              class="px-3 py-3 font-extrabold"
-              :style="view === 'list' ? { background: 'rgba(var(--text),.06)' } : { background: 'transparent' }"
-              @click="view = 'list'"
-              title="List"
-            >
-              ≡
-            </button>
-          </div>
-        </div>
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-black rtl-text">{{ t('productsPage.title') }}</h1>
+        <p class="text-muted rtl-text">{{ t('productsPage.subtitle') }}</p>
       </div>
 
-      <div class="hr my-6"></div>
-
-      <div
-        v-if="pending"
-        :class="view === 'grid' ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'grid gap-3'"
-      >
-        <div v-for="i in 12" :key="i" class="soft p-5 animate-pulse">
-          <div class="h-4 w-2/3 rounded bg-black/10 dark:bg-white/10"></div>
-          <div class="h-3 w-1/2 rounded bg-black/10 dark:bg-white/10 mt-3"></div>
-          <div class="h-10 rounded bg-black/10 dark:bg-white/10 mt-6"></div>
+      <div class="flex flex-wrap gap-2">
+        <div class="flex items-center gap-2 rounded-2xl border border-app bg-surface px-3 py-2">
+          <Icon name="mdi:magnify" class="text-lg opacity-70" />
+          <input
+            v-model="q"
+            class="bg-transparent outline-none text-sm rtl-text w-56"
+            :placeholder="t('productsPage.searchPlaceholder')"
+            @keydown.enter="apply()"
+          />
         </div>
+
+        <select v-model="sort" class="rounded-2xl border border-app bg-surface px-4 py-2 text-sm">
+          <option value="new">{{ t('productsPage.sort.new') }}</option>
+          <option value="priceAsc">{{ t('productsPage.sort.priceAsc') }}</option>
+          <option value="priceDesc">{{ t('productsPage.sort.priceDesc') }}</option>
+        </select>
+
+        <UiButton variant="secondary" @click="apply">
+          <Icon name="mdi:filter-outline" class="text-lg" />
+          <span class="rtl-text">{{ t('productsPage.search') }}</span>
+        </UiButton>
       </div>
+    </div>
 
-      <div
-        v-else
-        :class="view === 'grid' ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'grid gap-3'"
-      >
-        <ProductCard
-          v-for="p in items"
-          :key="p.id"
-          :item="p"
-          :compact="view === 'list'"
-        />
-
-        <div v-if="!items.length" class="soft p-6">
-          <div class="font-extrabold rtl-text">{{ t('productsPage.emptyTitle') }}</div>
-          <div class="text-sm muted mt-1 rtl-text">{{ t('productsPage.emptyDesc') }}</div>
-        </div>
+    <div v-if="loading" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div v-for="i in 9" :key="i" class="card-soft p-4 grid gap-3">
+        <div class="skeleton h-44" />
+        <div class="skeleton h-5 w-3/4" />
+        <div class="skeleton h-4 w-1/2" />
+        <div class="skeleton h-10" />
       </div>
+    </div>
 
-      <div class="mt-8 flex items-center justify-between gap-3 flex-wrap keep-ltr">
-        <div class="text-sm muted">
-          {{ t('productsPage.total') }}: <b>{{ total }}</b>
-        </div>
+    <div v-else-if="items.length === 0" class="card-soft p-10 text-center">
+      <Icon name="mdi:database-off-outline" class="text-4xl opacity-70 mx-auto" />
+      <div class="mt-3 font-bold rtl-text">{{ t('productsPage.emptyTitle') }}</div>
+      <div class="mt-1 text-sm text-muted rtl-text">{{ t('productsPage.emptyDesc') }}</div>
+    </div>
 
-        <div class="flex items-center gap-2">
-          <button
-            class="px-3 py-2 rounded-xl border"
-            :style="{ borderColor: 'rgb(var(--border))', background: 'rgba(var(--text),.04)' }"
-            :disabled="page <= 1"
-            @click="page--"
-          >
-            ← {{ t('productsPage.prev') }}
-          </button>
+    <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <ProductCard v-for="p in items" :key="p.id" :p="p" />
+    </div>
 
-          <div class="badge">
-            {{ t('productsPage.page') }} {{ page }} / {{ pages }}
-          </div>
+    <div class="flex items-center justify-between gap-3 pt-2">
+      <UiButton variant="ghost" @click="prev" :disabled="page<=1">
+        <Icon name="mdi:chevron-left" class="text-xl keep-ltr" />
+        <span class="rtl-text">{{ t('productsPage.prev') }}</span>
+      </UiButton>
 
-          <button
-            class="px-3 py-2 rounded-xl border"
-            :style="{ borderColor: 'rgb(var(--border))', background: 'rgba(var(--text),.04)' }"
-            :disabled="page >= pages"
-            @click="page++"
-          >
-            {{ t('productsPage.next') }} →
-          </button>
-        </div>
-      </div>
-    </section>
+      <UiBadge>
+        <span class="rtl-text">{{ t('productsPage.page') }}</span>
+        <span class="keep-ltr"> {{ page }} </span>
+      </UiBadge>
+
+      <UiButton variant="ghost" @click="next" :disabled="items.length < pageSize">
+        <span class="rtl-text">{{ t('productsPage.next') }}</span>
+        <Icon name="mdi:chevron-right" class="text-xl keep-ltr" />
+      </UiButton>
+    </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import UiButton from '~/components/ui/UiButton.vue'
+import UiBadge from '~/components/ui/UiBadge.vue'
+import ProductCard from '~/components/ProductCard.vue'
+import { useProductsStore } from '~/stores/products'
+
+const { t } = useI18n()
+const route = useRoute()
+const router = useRouter()
+const products = useProductsStore()
+
+const loading = ref(true)
+const page = ref(Number(route.query.page || 1))
+const pageSize = 12
+const q = ref(String(route.query.q || ''))
+const sort = ref(String(route.query.sort || 'new'))
+
+const items = computed(() => products.items)
+
+async function fetchNow(){
+  loading.value = true
+  await products.fetch({ page: page.value, pageSize, q: q.value, sort: sort.value }).catch(() => {})
+  loading.value = false
+}
+
+function apply(){
+  page.value = 1
+  router.push({ query: { ...(q.value ? { q: q.value } : {}), sort: sort.value, page: page.value } })
+}
+
+function prev(){ if (page.value>1){ page.value--; router.push({ query: { ...(q.value ? { q: q.value } : {}), sort: sort.value, page: page.value } }) } }
+function next(){ page.value++; router.push({ query: { ...(q.value ? { q: q.value } : {}), sort: sort.value, page: page.value } }) }
+
+watch(() => route.query, () => {
+  page.value = Number(route.query.page || 1)
+  q.value = String(route.query.q || '')
+  sort.value = String(route.query.sort || 'new')
+  fetchNow()
+}, { immediate: true })
+</script>

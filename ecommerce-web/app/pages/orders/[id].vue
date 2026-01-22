@@ -1,93 +1,70 @@
-<!-- app/pages/orders/[id].vue -->
 <template>
-  <main class="mx-auto max-w-3xl space-y-6">
-    <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
-      <h1 class="text-2xl font-black">{{ t('orderPage') }}</h1>
-      <p class="mt-2 text-sm text-white/70">ID: {{ orderId }}</p>
+  <div class="grid gap-6">
+    <UiButton variant="ghost" class="w-fit" @click="back">
+      <Icon name="mdi:arrow-left" class="keep-ltr text-xl" />
+      <span class="rtl-text">{{ t('myOrders') }}</span>
+    </UiButton>
+
+    <div v-if="pending" class="card-soft p-6">
+      <div class="skeleton h-6 w-1/2" />
+      <div class="mt-4 grid gap-3">
+        <div class="skeleton h-20" />
+        <div class="skeleton h-20" />
+      </div>
     </div>
 
-    <div v-if="pending" class="rounded-3xl border border-white/10 bg-white/5 p-6">
-      {{ t('loading') }}
+    <div v-else-if="error" class="card-soft p-6 border" :style="{ borderColor: 'rgba(var(--danger),.35)', background: 'rgba(var(--danger),.08)' }">
+      <div class="font-bold rtl-text">{{ t('error') }}</div>
+      <div class="text-sm rtl-text mt-1">{{ error }}</div>
     </div>
 
-    <div v-else-if="errorMsg" class="rounded-3xl border border-red-500/30 bg-red-500/10 p-6 text-red-200">
-      {{ errorMsg }}
-    </div>
-    <template v-else>
-      <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
-        <h3 class="text-lg font-black">تفاصيل الطلب</h3>
-        <pre class="mt-3 whitespace-pre-wrap text-xs text-white/70">{{ order }}</pre>
+    <div v-else class="card-soft p-6">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="text-sm text-muted rtl-text">{{ t('order') }}</div>
+          <div class="font-black keep-ltr text-xl">{{ item?.id }}</div>
+          <div class="mt-2 text-sm text-muted rtl-text">{{ item?.status || item?.state || '—' }}</div>
+        </div>
+        <UiBadge>
+          <Icon name="mdi:calendar-outline" />
+          <span class="keep-ltr">{{ (item?.createdAt || item?.createdOn || '').toString().slice(0,10) }}</span>
+        </UiBadge>
       </div>
 
-      <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
-        <h3 class="text-lg font-black">{{ t('download') }}</h3>
-
-        <div v-if="downloadUrl" class="mt-4">
-          <a
-            :href="downloadUrl"
-            target="_blank"
-            rel="noopener"
-            class="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-extrabold hover:bg-black/30"
-          >
-            ⬇️ {{ t('download') }}
-          </a>
-        </div>
-        <div v-else class="mt-3 text-sm text-white/70">
-          {{ t('noDownloadToken') }}
+      <div class="mt-6 grid gap-3">
+        <div class="rounded-3xl border border-app bg-surface p-4">
+          <div class="font-bold rtl-text">{{ t('details') }}</div>
+          <pre class="mt-2 text-xs whitespace-pre-wrap keep-ltr text-muted">{{ item }}</pre>
         </div>
       </div>
-    </template>
-  </main>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRoute, navigateTo } from '#app'
-import { useApi } from '~/composables/useApi'
-import { useI18n } from '~/composables/useI18n'
-import { useAuthStore } from '~/stores/auth'
-import { useSiteMeta } from '~/composables/useSiteMeta'
-
+definePageMeta({ middleware: ['auth'] })
+import UiButton from '~/components/ui/UiButton.vue'
+import UiBadge from '~/components/ui/UiBadge.vue'
 const { t } = useI18n()
-const route = useRoute()
 const api = useApi()
-const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
+const pending = ref(false)
+const error = ref('')
+const item = ref<any>(null)
 
-const orderId = String(route.params.id ?? '')
+function back(){ router.push('/orders') }
 
-useSiteMeta({
-  title: `Order ${orderId} | Ecommerce`,
-  description: 'Order details and download.',
-  path: `/orders/${orderId}`,
-})
-
-const errorMsg = ref<string | null>(null)
-function extractErrorMessage(e: any) {
-  return e?.data?.message || e?.data || e?.message || 'صار خطأ بجلب بيانات الطلب'
+async function load(){
+  pending.value = true
+  error.value = ''
+  try{
+    item.value = await api.get(`/Orders/${route.params.id}`)
+  }catch(e:any){
+    error.value = e?.data?.message || e?.message || t('failedLoad')
+  }finally{
+    pending.value = false
+  }
 }
-
-// حماية (زيادة على middleware)
-if (!auth.isAuthed) {
-  await navigateTo('/login')
-}
-
-const { data, pending } = await useAsyncData(`order_${orderId}`, async () => {
-  // عدل endpoints حسب باك اندك الحقيقي
-  const order = await api.get<any>(`/Orders/${orderId}`)
-const purchase = await api.get<any>(`/Purchases/product/${orderId}`).catch(() => null)
-  return { order, purchase }
-})
-
-const order = computed(() => data.value?.order || null)
-const purchase = computed(() => data.value?.purchase || null)
-
-watchEffect(() => {
-  if (!pending.value && !data.value) errorMsg.value = t('requestFailed')
-})
-
-const downloadUrl = computed(() => {
-  const token = purchase.value?.download?.token || purchase.value?.downloadToken
-  if (!token) return null
-  return `/api/bff/Download/${token}`
-})
+onMounted(load)
 </script>

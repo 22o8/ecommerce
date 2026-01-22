@@ -18,6 +18,7 @@ export const useUiStore = defineStore('ui', () => {
     const root = document.documentElement
     root.classList.toggle('theme-dark', t === 'dark')
     root.classList.toggle('theme-light', t === 'light')
+    root.classList.toggle('dark', t === 'dark')
   }
 
   function applyLocaleToHtml(l: Locale) {

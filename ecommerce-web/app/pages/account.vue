@@ -1,32 +1,32 @@
-<!-- app/pages/account.vue -->
 <template>
-  <div class="mx-auto max-w-3xl space-y-6">
-    <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
-      <h1 class="text-2xl font-black">{{ t('account') }}</h1>
-      <p class="mt-2 text-sm text-white/70">
-        {{ auth.user ? JSON.stringify(auth.user) : '—' }}
-      </p>
-
-      <div class="mt-6">
-        <AppButton type="button" variant="soft" @click="auth.logout()">
-          {{ t('logout') }}
-        </AppButton>
-      </div>
+  <div class="card-soft p-6 md:p-10">
+    <h1 class="text-2xl md:text-3xl font-black rtl-text">{{ t('account') }}</h1>
+    <div class="mt-3 text-muted rtl-text">
+      <slot />
+      <p v-if="placeholder">{{ placeholder }}</p>
+    </div>
+    <div v-if="$route.path==='/'" />
+    <div class="mt-6">
+      <NuxtLink to="/">
+        <UiButton variant="secondary">
+          <Icon name="mdi:home-outline" class="text-lg" />
+          <span class="rtl-text">{{ t('home') }}</span>
+        </UiButton>
+      </NuxtLink>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useAuthStore } from '~/stores/auth'
-import { useI18n } from '~/composables/useI18n'
-import { useSiteMeta } from '~/composables/useSiteMeta'
-
-const auth = useAuthStore()
+import UiButton from '~/components/ui/UiButton.vue'
 const { t } = useI18n()
-
-useSiteMeta({
-  title: `${t('account')} | Ecommerce`,
-  description: 'Your account dashboard.',
-  path: '/account',
+const placeholder = computed(() => {
+  const map:any = {
+    'terms': t('termsPlaceholder'),
+    'privacy': t('privacyPlaceholder'),
+    'account': t('accountPlaceholder'),
+    'notFound': t('notFound'),
+  }
+  return map['account'] || ''
 })
 </script>
