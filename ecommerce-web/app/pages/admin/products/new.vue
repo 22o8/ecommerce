@@ -66,7 +66,7 @@ const form = reactive({
   title: '',
   slug: '',
   description: '',
-  price: 0,
+  priceUsd: 0,
   isPublished: true,
 })
 

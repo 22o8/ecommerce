@@ -12,14 +12,14 @@ export default defineEventHandler(async (event) => {
     return { message: 'Missing id' }
   }
 
-  // 1) endpoint عام (لو موجود)
-  try {
-    return await $fetch(`${apiBase}/Products/${encodeURIComponent(id)}/images`)
-  } catch {}
-
-  // 2) endpoint الادمن (بعض النسخ تكون public للقراءة)
+  // 1) endpoint الادمن (بعض النسخ تكون public للقراءة)
   try {
     return await $fetch(`${apiBase}/admin/products/${encodeURIComponent(id)}/images`)
+  } catch {}
+
+  // 2) endpoint عام (لو موجود)
+  try {
+    return await $fetch(`${apiBase}/Products/${encodeURIComponent(id)}/images`)
   } catch {}
 
   setResponseStatus(event, 404)

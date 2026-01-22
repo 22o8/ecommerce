@@ -81,7 +81,12 @@ function normalizeProduct(p: any) {
 
   // نحافظ على name لأن أغلب الكومبوننتات تعتمد عليه
   const name = p?.name ?? p?.title ?? ''
-  const slug = p?.slug ?? p?.id ?? ''
+  // إذا الـ API ما يرجّع slug، نولّد واحد من العنوان بدل ما نستخدم الـ id
+  // لأن شاشة تفاصيل المنتج تعتمد على (by-slug)
+  const slug =
+    (p?.slug && String(p.slug).trim())
+      ? String(p.slug).trim()
+      : slugify(String(p?.title ?? name))
   const description = p?.description ?? ''
 
   return {

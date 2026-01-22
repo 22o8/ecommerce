@@ -268,12 +268,21 @@ async function load() {
     const found = (Array.isArray(res) ? res : []).find(x => String(x.id) === id.value)
     if (!found) throw new Error('Product not found')
 
+    const resolvedTitle = String(found.title || '')
+    const resolvedSlug = String(found.slug || '').trim() || slugify(resolvedTitle)
+    const resolvedPrice =
+      typeof found.priceUsd === 'number'
+        ? Number(found.priceUsd)
+        : typeof found.price === 'number'
+          ? Number(found.price)
+          : Number(found.price || 0)
+
     model.value = {
       id: String(found.id),
-      title: String(found.title || ''),
-      slug: String(found.slug || ''),
+      title: resolvedTitle,
+      slug: resolvedSlug,
       description: String(found.description || ''),
-      price: Number(found.price || 0),
+      price: resolvedPrice,
       isPublished: !!found.isPublished,
       ratingAvg: Number(found.ratingAvg || 0),
       ratingCount: Number(found.ratingCount || 0),
@@ -333,7 +342,13 @@ async function save() {
   error.value = ''
   success.value = ''
   try {
-    await api.updateAdminProduct(id.value, { ...form })
+    await api.updateAdminProduct(id.value, {
+      title: form.title,
+      slug: (form.slug || '').trim() || slugify(form.title),
+      description: form.description,
+      priceUsd: Number(form.price || 0),
+      isPublished: form.isPublished,
+    })
     success.value = 'Saved.'
     dirty.value = false
     await load()

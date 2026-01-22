@@ -32,16 +32,44 @@ export default defineEventHandler(async (event) => {
   }
 
   // 3) fallback: جب قائمة منتجات وفلتر بالـ id/slug محلياً
-  // ملاحظة: نستخدم take كبير قدر الإمكان حتى نلقط المنتج من أول صفحة.
-  try {
-    const list: any = await $fetch(`${apiBase}/Products`, {
-      query: { page: 1, take: 200 },
-    })
-    const items = list?.items || list?.data?.items || list || []
-    const found = Array.isArray(items) ? items.find((p: any) => String(p.id) === slug || String(p.slug) === slug) : null
-    if (found) return found
-  } catch (e: any) {
-    // ignore
+  // ملاحظة: بعض الـ APIs تستخدم أسماء باراميترات مختلفة (page/take أو Page/Take أو pageNumber/pageSize)
+  // فنجرّب أكثر من شكل ونكبر حجم الصفحة حتى نضمن نلقط المنتج.
+  const candidates = [
+    { page: 1, take: 500 },
+    { Page: 1, Take: 500 },
+    { pageNumber: 1, pageSize: 500 },
+  ]
+
+  const slugify = (input: string) =>
+    String(input || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9\-\u0600-\u06FF]/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+
+  for (const q of candidates) {
+    try {
+      const list: any = await $fetch(`${apiBase}/Products`, { query: q })
+      const items = list?.items || list?.data?.items || list || []
+      if (!Array.isArray(items)) continue
+
+      const found = items.find((p: any) => {
+        const pid = String(p.id || '')
+        const pslug = String(p.slug || '')
+        const ptitle = String(p.title || p.name || '')
+        return (
+          pid === slug ||
+          pslug === slug ||
+          (ptitle && slugify(ptitle) === slug)
+        )
+      })
+
+      if (found) return found
+    } catch {
+      // جرّب الشكل التالي
+    }
   }
 
   setResponseStatus(event, 404)
