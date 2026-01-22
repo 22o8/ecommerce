@@ -1,0 +1,15 @@
+@"
+**/node_modules/
+**/.output/
+**/.nuxt/
+**/dist/
+**/.env
+**/.env.*
+**/bin/
+**/obj/
+**/.vs/
+**/.idea/
+**/*.user
+**/*.suo
+**/*.log
+"@ | Out-File -Encoding utf8 .gitignore
