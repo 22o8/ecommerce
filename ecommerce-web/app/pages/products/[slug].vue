@@ -119,13 +119,54 @@ async function fetchProduct(){
   loading.value = true
   msg.value = ''
   try{
-    // backend supports /Products/{id} and /Products/BySlug?slug=...
-    const slug = String(route.params.slug || '')
-    // try by slug endpoint first
-    p.value = await api.get(`/Products/by-slug`, { slug }).catch(async () => {
-      // fallback: treat as id
-      return await api.get(`/Products/${slug}`)
-    })
+    const key = String(route.params.slug || '')
+
+    // بعض مرات الـ API تكون by-slug كـ (path param) وليس query
+    // وبعض مرات الرابط الي عندنا يكون UUID (يعني ID) مو slug
+    const tryFetch = async () => {
+      // 1) by-slug/<slug>
+      if (!isUuidLike(key)) {
+        try {
+          return await api.get<any>(`/Products/by-slug/${encodeURIComponent(key)}`)
+        } catch {}
+      }
+
+      // 2) by-slug?slug=
+      try {
+        return await api.get<any>(`/Products/by-slug`, { slug: key })
+      } catch {}
+
+      // 3) by-id route شائع: /Products/<id>
+      try {
+        return await api.get<any>(`/Products/${encodeURIComponent(key)}`)
+      } catch {}
+
+      // 4) fallback: نجيب من اللستة ونفلتر (ينقذنا اذا ماكو endpoint منفصل للـ details)
+      const list = await api.get<any>(`/Products`, { page: 1, pageSize: 100 })
+      const items = Array.isArray(list) ? list : list?.items || list?.data || []
+      const found = items.find((x: any) => x?.id === key || x?.slug === key)
+      if (found) return found
+      throw new Error('NOT_FOUND')
+    }
+
+    p.value = await tryFetch()
+
+    // إذا الـ details ما جاب الصور، نجرب endpoint للصور
+    if (p.value && (!Array.isArray(p.value.images) || p.value.images.length === 0)) {
+      const id = p.value.id || key
+      const imgRes = await api
+        .get<any>(`/Products/${encodeURIComponent(id)}/images`)
+        .catch(async () => await api.get<any>(`/Products/images`, { productId: id }).catch(() => null))
+      const items = Array.isArray(imgRes) ? imgRes : imgRes?.items || []
+      if (Array.isArray(items) && items.length) {
+        p.value.images = items.map((it: any) => ({
+          id: it.id || it.imageId || undefined,
+          url: it.url || it.path || it.imageUrl,
+          alt: it.alt || it.caption || '',
+          sortOrder: it.sortOrder || it.order || 0,
+        }))
+      }
+    }
   }catch(e:any){
     p.value = null
   }finally{
