@@ -186,6 +186,19 @@ ordersSubtitle: 'كل طلباتك والمتابعة الخاصة بها',
     'admin.overview': 'نظرة عامة',
     'admin.products': 'المنتجات',
     'admin.orders': 'الطلبات',
+      // Auth / Login
+      loginTitle: 'تسجيل الدخول',
+      loginSubtitle: 'سجّل دخولك لإدارة طلباتك وإتمام الشراء بسرعة.',
+      email: 'البريد الإلكتروني',
+      password: 'كلمة المرور',
+      benefitsTitle: 'مزايا الحساب',
+      'benefit.orders': 'متابعة الطلبات',
+      'benefit.orders.desc': 'شاهد كل طلباتك وحالة التحميل بسهولة.',
+      'benefit.security': 'حماية وأمان',
+      'benefit.security.desc': 'تسجيل دخول آمن مع جلسة مستخدم مستقرة.',
+      'benefit.whatsapp': 'طلب عبر واتساب',
+      'benefit.whatsapp.desc': 'تواصل سريع لإكمال الطلب أو الاستفسار.',
+
 
 en: {
     // Products page
@@ -212,6 +225,18 @@ en: {
     dashboard: 'Dashboard',
 
     login: 'Login',
+    // Auth / Login
+    loginTitle: 'Login',
+    loginSubtitle: 'Sign in to manage orders and complete purchases faster.',
+    email: 'Email',
+    password: 'Password',
+    benefitsTitle: 'Account benefits',
+    'benefit.orders': 'Order tracking',
+    'benefit.orders.desc': 'See all your orders and download status easily.',
+    'benefit.security': 'Secure access',
+    'benefit.security.desc': 'Safe sign-in with a stable user session.',
+    'benefit.whatsapp': 'WhatsApp order',
+    'benefit.whatsapp.desc': 'Fast contact to finish an order or ask questions.',
     account: 'Account',
     logout: 'Logout',
     contact: 'Contact',

@@ -56,23 +56,24 @@
           </div>
         </div>
 
-        <!-- Image placeholder -->
+                <!-- Hero Image -->
         <div class="relative">
           <div class="absolute -inset-10 bg-[rgba(var(--primary),.08)] blur-3xl" />
           <div class="relative rounded-3xl border border-app bg-surface overflow-hidden">
-            <div class="p-4 flex items-center justify-between">
-              <div class="text-sm font-bold rtl-text">{{ t('home.heroImage') }}</div>
-              <UiBadge><span class="keep-ltr">/public/hero.jpg</span></UiBadge>
-            </div>
-            <div class="h-[320px] md:h-[420px] grid place-items-center bg-surface-2">
-              <div class="text-center grid gap-2 px-6">
-                <Icon name="mdi:image-outline" class="text-4xl opacity-70 mx-auto" />
-                <div class="font-bold rtl-text">{{ t('placeImageHere') }}</div>
-                <div class="text-sm text-muted rtl-text">{{ t('placeImageHint') }}</div>
-              </div>
+            <picture>
+              <source srcset="/hero/images.avif" type="image/avif" />
+              <img src="/hero-placeholder.svg" alt="Hero" class="h-[320px] md:h-[420px] w-full object-cover" loading="lazy" decoding="async" />
+            </picture>
+            <div class="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,.45)] via-transparent to-transparent pointer-events-none" />
+            <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
+              <UiBadge>
+                <span class="rtl-text">{{ t('home.badge') }}</span>
+              </UiBadge>
+              <UiBadge><span class="rtl-text">{{ t('home.section.new') }}</span></UiBadge>
             </div>
           </div>
         </div>
+</div>
       </div>
     </section>
 
