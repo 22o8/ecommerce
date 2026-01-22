@@ -93,19 +93,11 @@ const loading = ref(false)
 const error = ref('')
 
 function extractError(e: any): string {
-<<<<<<< Updated upstream
   // Nuxt $fetch errors غالباً:
   // { statusCode, statusMessage, data: { message } }
-=======
->>>>>>> Stashed changes
   const msg =
     e?.data?.message ||
     e?.data?.error ||
-    e?.response?._data?.message ||
-<<<<<<< Updated upstream
-    e?.response?.data?.message ||
-=======
->>>>>>> Stashed changes
     e?.statusMessage ||
     e?.message
 
@@ -118,26 +110,11 @@ async function submit() {
   loading.value = true
   error.value = ''
 
-  const payload = {
-    email: (email.value || '').trim(),
-    password: password.value || '',
-  }
-
-  if (!payload.email || !payload.password) {
-    error.value = t('loginFailed')
-    loading.value = false
-    return
-  }
-
   try {
-<<<<<<< Updated upstream
-    await auth.login(payload)
-=======
     await auth.login({
       email: (email.value || '').trim(),
       password: password.value || '',
     })
->>>>>>> Stashed changes
     await router.push('/')
   } catch (e: any) {
     error.value = extractError(e)
