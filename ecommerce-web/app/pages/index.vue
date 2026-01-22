@@ -12,26 +12,26 @@
           <h1 class="text-3xl md:text-5xl font-black leading-tight rtl-text">
             {{ t('heroTitle') }}
           </h1>
+
           <p class="text-muted text-base md:text-lg rtl-text">
             {{ t('home.subtitle') }}
           </p>
 
           <div class="flex flex-wrap gap-3">
-  <NuxtLink to="/products">
-    <UiButton>
-      <Icon name="mdi:shopping-search-outline" class="text-lg" />
-      <span class="rtl-text">{{ t('browseProducts') }}</span>
-    </UiButton>
-  </NuxtLink>
+            <NuxtLink to="/products">
+              <UiButton>
+                <Icon name="mdi:shopping-search-outline" class="text-lg" />
+                <span class="rtl-text">{{ t('browseProducts') }}</span>
+              </UiButton>
+            </NuxtLink>
 
-  <NuxtLink to="/contact">
-    <UiButton variant="secondary">
-      <Icon name="mdi:message-text-outline" class="text-lg" />
-      <span class="rtl-text">{{ t('contact') }}</span>
-    </UiButton>
-  </NuxtLink>
-</div>
-
+            <NuxtLink to="/contact">
+              <UiButton variant="secondary">
+                <Icon name="mdi:message-text-outline" class="text-lg" />
+                <span class="rtl-text">{{ t('contact') }}</span>
+              </UiButton>
+            </NuxtLink>
+          </div>
 
           <div class="grid gap-3 mt-2 md:grid-cols-3">
             <div class="rounded-3xl border border-app bg-surface p-4">
@@ -41,6 +41,7 @@
               </div>
               <div class="text-sm text-muted rtl-text mt-1">{{ t('whyUs') }}</div>
             </div>
+
             <div class="rounded-3xl border border-app bg-surface p-4">
               <div class="flex items-center gap-2">
                 <Icon name="mdi:shield-check-outline" class="text-xl animate-floaty" />
@@ -48,6 +49,7 @@
               </div>
               <div class="text-sm text-muted rtl-text mt-1">{{ t('whyUs') }}</div>
             </div>
+
             <div class="rounded-3xl border border-app bg-surface p-4">
               <div class="flex items-center gap-2">
                 <Icon name="mdi:headset" class="text-xl animate-floaty" />
@@ -58,31 +60,46 @@
           </div>
         </div>
 
-                <!-- Hero Image -->
+        <!-- Hero Image -->
         <div class="relative">
           <div class="absolute -inset-10 bg-[rgba(var(--primary),.08)] blur-3xl" />
           <div class="relative rounded-3xl border border-app bg-surface overflow-hidden">
             <picture>
               <source srcset="/hero/images.avif" type="image/avif" />
-              <img src="/hero-placeholder.svg" alt="Hero" class="h-[320px] md:h-[420px] w-full object-cover" loading="lazy" decoding="async" />
+              <img
+                src="/hero-placeholder.svg"
+                alt="Hero"
+                class="h-[320px] md:h-[420px] w-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
             </picture>
-            <div class="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,.45)] via-transparent to-transparent pointer-events-none" />
+
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,.45)] via-transparent to-transparent pointer-events-none"
+            />
+
             <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
               <UiBadge>
                 <span class="rtl-text">{{ t('home.badge') }}</span>
               </UiBadge>
-              <UiBadge><span class="rtl-text">{{ t('home.section.new') }}</span></UiBadge>
+
+              <UiBadge>
+                <span class="rtl-text">{{ t('home.section.new') }}</span>
+              </UiBadge>
             </div>
           </div>
         </div>
-</div>
       </div>
     </section>
 
     <!-- Featured products -->
     <section class="grid gap-4">
       <div class="flex items-center justify-between gap-3">
-        <h2 class="text-xl md:text-2xl font-extrabold rtl-text">{{ t('home.section.featured') }}</h2>
+        <h2 class="text-xl md:text-2xl font-extrabold rtl-text">
+          {{ t('home.section.featured') }}
+        </h2>
+
         <NuxtLink to="/products">
           <UiButton variant="ghost">
             <span class="rtl-text">{{ t('home.viewAll') }}</span>
@@ -117,6 +134,7 @@ import UiButton from '~/components/ui/UiButton.vue'
 import UiBadge from '~/components/ui/UiBadge.vue'
 import ProductCard from '~/components/ProductCard.vue'
 import { useProductsStore } from '~/stores/products'
+
 const { t } = useI18n()
 const products = useProductsStore()
 
