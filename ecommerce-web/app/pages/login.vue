@@ -81,7 +81,10 @@
 <script setup lang="ts">
 import UiButton from '~/components/ui/UiButton.vue'
 import UiInput from '~/components/ui/UiInput.vue'
+<<<<<<< HEAD
 import { useAuthStore } from '~/stores/auth'
+=======
+>>>>>>> 4c1e32d (Fix login v-model + navbar icons)
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -92,6 +95,7 @@ const password = ref('')
 const loading = ref(false)
 const error = ref('')
 
+<<<<<<< HEAD
 async function submit() {
   loading.value = true
   error.value = ''
@@ -124,6 +128,33 @@ async function submit() {
       t('loginFailed')
 
     error.value = msg
+=======
+function extractError(e: any): string {
+  // Nuxt $fetch errors عادة تكون بالشكل:
+  // { statusCode, statusMessage, data: { message } }
+  const msg =
+    e?.data?.message ||
+    e?.data?.error ||
+    e?.statusMessage ||
+    e?.message
+
+  if (typeof msg === 'string' && msg.trim()) return msg
+  if (e?.statusCode) return `${t('loginFailed')} (HTTP ${e.statusCode})`
+  return t('loginFailed')
+}
+
+async function submit() {
+  loading.value = true
+  error.value = ''
+  try {
+    await auth.login({
+      email: email.value.trim(),
+      password: password.value,
+    })
+    await router.push('/')
+  } catch (e: any) {
+    error.value = extractError(e)
+>>>>>>> 4c1e32d (Fix login v-model + navbar icons)
   } finally {
     loading.value = false
   }

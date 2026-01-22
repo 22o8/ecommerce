@@ -33,7 +33,7 @@
         <!-- Actions -->
         <div class="flex items-center gap-2">
           <UiButton variant="ghost" class="px-3" @click="toggleLocale" :title="t('language')">
-            <Icon name="mdi:translate" class="text-lg" />
+            <Icon name="mdi:message-text-outline" class="text-lg" />
             <span class="hidden sm:inline keep-ltr">{{ ui.locale.toUpperCase() }}</span>
           </UiButton>
 
