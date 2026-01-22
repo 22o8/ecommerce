@@ -88,7 +88,19 @@ const msg = ref('')
 const ok = ref(false)
 
 const p = ref<any>(null)
-const img = computed(() => api.buildAssetUrl(p.value?.images?.[0] || p.value?.imageUrl || p.value?.image || ''))
+const firstImageUrl = computed(() => {
+  const images = p.value?.images
+  const first = Array.isArray(images) ? images[0] : null
+
+  if (typeof first === 'string') return first
+  if (first && typeof first === 'object') {
+    return first.url || first.path || first.fileUrl || first.imageUrl || first.src || ''
+  }
+
+  return p.value?.imageUrl || p.value?.image || p.value?.thumbnailUrl || ''
+})
+
+const img = computed(() => api.buildAssetUrl(firstImageUrl.value))
 
 const waOrderLink = computed(() => {
   const n = String((config.public as any).whatsappNumber || '').replace(/[^0-9]/g,'')

@@ -328,8 +328,6 @@ async function loadImages() {
   }
 }
 
-}
-
 async function save() {
   pending.value = true
   error.value = ''

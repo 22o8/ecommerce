@@ -1,11 +1,15 @@
 <template>
-  <Iconify v-if="iconData" :icon="iconData" :class="props.class" :style="props.style" aria-hidden="true" />
-  <span v-else aria-hidden="true" />
+  <span
+    class="inline-flex items-center justify-center leading-none"
+    :class="props.class"
+    :style="mergedStyle"
+    aria-hidden="true"
+    v-html="svg"
+  />
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Icon as Iconify } from '@iconify/vue'
 import mdi from '@iconify-json/mdi/icons.json'
 
 const props = defineProps<{
@@ -13,28 +17,36 @@ const props = defineProps<{
   name: string
   class?: any
   style?: any
+  size?: number | string
 }>()
 
-type IconData = { body: string; width?: number; height?: number }
+function normalizeName(n: string) {
+  const raw = (n || '').trim()
+  if (!raw) return ''
+  // supports "mdi:xxx" and "xxx"
+  return raw.includes(':') ? raw.split(':').slice(1).join(':') : raw
+}
 
-const iconData = computed<IconData | undefined>(() => {
-  const raw = (props.name || '').trim()
-  if (!raw) return undefined
-
-  // Accept both "mdi:xxx" and "xxx"
-  const key = raw.includes(':') ? raw.split(':').slice(1).join(':') : raw
-
-  // iconify-json format: { prefix, icons: { [name]: { body, width, height } }, width, height }
+const svg = computed(() => {
+  const key = normalizeName(props.name)
+  if (!key) return ''
   const icons = (mdi as any)?.icons || {}
-  const commonW = (mdi as any)?.width
-  const commonH = (mdi as any)?.height
-  const found = icons[key]
-  if (!found?.body) return undefined
+  const icon = icons[key]
+  if (!icon?.body) return ''
+  const w = icon.width ?? (mdi as any)?.width ?? 24
+  const h = icon.height ?? (mdi as any)?.height ?? 24
+  const viewBox = `0 0 ${w} ${h}`
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="1em" height="1em" fill="currentColor">${icon.body}</svg>`
+})
 
-  return {
-    body: found.body,
-    width: found.width ?? commonW,
-    height: found.height ?? commonH,
+const mergedStyle = computed(() => {
+  const out: any = { ...(props.style || {}) }
+  if (props.size) {
+    const s = typeof props.size === 'number' ? `${props.size}px` : props.size
+    out.fontSize = out.fontSize || s
+    out.width = out.width || s
+    out.height = out.height || s
   }
+  return out
 })
 </script>

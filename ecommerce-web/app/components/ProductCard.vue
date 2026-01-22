@@ -37,13 +37,24 @@ import { useApi } from '~/composables/useApi'
 const { t } = useI18n()
 const api = useApi()
 const props = defineProps<{ p: any }>()
-const img = computed(() => {
-  const p = props.p
-  const first = p?.images?.[0] || p?.imageUrl || p?.image || ''
-  return api.buildAssetUrl(first)
+
+const firstImageUrl = computed(() => {
+  const p = props.p || {}
+  const images = p?.images
+  const first = Array.isArray(images) ? images[0] : null
+
+  if (typeof first === 'string') return first
+  if (first && typeof first === 'object') {
+    return first.url || first.path || first.fileUrl || first.imageUrl || first.src || ''
+  }
+
+  return p?.imageUrl || p?.image || p?.thumbnailUrl || ''
 })
-function fmt(v:any){
-  const n = Number(v||0)
+
+const img = computed(() => api.buildAssetUrl(firstImageUrl.value))
+
+function fmt(v: any) {
+  const n = Number(v || 0)
   return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(n)
 }
 </script>
