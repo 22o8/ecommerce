@@ -57,7 +57,7 @@
           <div class="grid gap-3 md:grid-cols-3">
             <div>
               <div class="label">Price (USD)</div>
-              <input v-model.number="form.priceUsd" type="number" class="admin-input" min="0" @input="dirty=true" />
+              <input v-model.number="form.price" type="number" class="admin-input" min="0" @input="dirty=true" />
             </div>
 
             <div>
@@ -196,7 +196,7 @@ type Product = {
   title: string
   slug: string
   description: string
-  priceUsd: number
+  price: number
   isPublished: boolean
   ratingAvg?: number
   ratingCount?: number
@@ -220,7 +220,7 @@ const form = reactive({
   title: '',
   slug: '',
   description: '',
-  priceUsd: 0,
+  price: 0,
   isPublished: true,
   ratingAvg: 0,
   ratingCount: 0,
@@ -273,7 +273,7 @@ async function load() {
       title: String(found.title || ''),
       slug: String(found.slug || ''),
       description: String(found.description || ''),
-      priceUsd: Number(found.priceUsd || 0),
+      price: Number(found.price || 0),
       isPublished: !!found.isPublished,
       ratingAvg: Number(found.ratingAvg || 0),
       ratingCount: Number(found.ratingCount || 0),
@@ -282,7 +282,7 @@ async function load() {
     form.title = model.value.title
     form.slug = model.value.slug
     form.description = model.value.description
-    form.priceUsd = model.value.priceUsd
+    form.price = model.value.price
     form.isPublished = model.value.isPublished
     form.ratingAvg = model.value.ratingAvg || 0
     form.ratingCount = model.value.ratingCount || 0
@@ -300,14 +300,34 @@ async function loadImages() {
   imagesLoading.value = true
   galleryError.value = ''
   try {
-    const res = await api.getProductImages<any[]>(id.value)
-    const list = Array.isArray(res) ? res : []
-    images.value = list.map(x => ({ id: String(x.id), url: String(x.url) }))
-  } catch (e:any) {
-    galleryError.value = extractErr(e)
+    const res: any = await api.getProductImages<any>(id.value)
+
+    const raw =
+      Array.isArray(res) ? res :
+      Array.isArray(res?.items) ? res.items :
+      Array.isArray(res?.images) ? res.images :
+      Array.isArray(res?.data) ? res.data :
+      []
+
+    images.value = raw
+      .map((x: any) => {
+        if (typeof x === 'string') return { id: x, url: x }
+        const url = x?.url ?? x?.path ?? x?.src ?? ''
+        const idv = x?.id ?? url
+        return { id: String(idv), url: String(url) }
+      })
+      .filter((x: any) => x.url)
+  } catch (e: any) {
+    galleryError.value =
+      e?.data?.message ||
+      e?.statusMessage ||
+      e?.message ||
+      t('uploadFailed')
   } finally {
     imagesLoading.value = false
   }
+}
+
 }
 
 async function save() {

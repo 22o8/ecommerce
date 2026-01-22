@@ -29,7 +29,10 @@ export function useAdminApi() {
     getProductImages: <T>(productId: string) => api.get<T>(`/admin/products/${productId}/images`),
     uploadProductImage: async <T>(productId: string, file: File, alt?: string) => {
       const fd = new FormData()
-      fd.append('file', file) // ✅ لازم "file"
+      fd.append('file', file)
+    fd.append('files', file)
+    fd.append('image', file)
+    fd.append('images', file) // ✅ لازم "file"
       if (alt) fd.append('alt', alt)
       return await api.postForm<T>(`/admin/products/${productId}/images`, fd)
     },
@@ -44,6 +47,9 @@ export function useAdminApi() {
     addProductImage: async <T>(productId: string, file: File, alt?: string) => {
       const fd = new FormData()
       fd.append('file', file)
+    fd.append('files', file)
+    fd.append('image', file)
+    fd.append('images', file)
       if (alt) fd.append('alt', alt)
       return await api.postForm<T>(`/admin/products/${productId}/images`, fd)
     },
