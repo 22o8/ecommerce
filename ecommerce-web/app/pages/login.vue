@@ -81,10 +81,7 @@
 <script setup lang="ts">
 import UiButton from '~/components/ui/UiButton.vue'
 import UiInput from '~/components/ui/UiInput.vue'
-<<<<<<< HEAD
 import { useAuthStore } from '~/stores/auth'
-=======
->>>>>>> 4c1e32d (Fix login v-model + navbar icons)
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -95,46 +92,14 @@ const password = ref('')
 const loading = ref(false)
 const error = ref('')
 
-<<<<<<< HEAD
-async function submit() {
-  loading.value = true
-  error.value = ''
-
-  // مهم: تنظيف الإيميل قبل الإرسال
-  const payload = {
-    email: (email.value || '').trim(),
-    password: password.value || '',
-  }
-
-  if (!payload.email || !payload.password) {
-    error.value = t('loginFailed') // أو تقدر تسوي ترجمة منفصلة
-    loading.value = false
-    return
-  }
-
-  try {
-    // مهم: تأكد إن auth.login يرسل body بنفس أسماء الحقول (email/password)
-    await auth.login(payload)
-
-    // نجاح
-    await router.push('/')
-  } catch (e: any) {
-    // استخراج رسالة خطأ من أكثر من شكل محتمل
-    const msg =
-      e?.data?.message ||
-      e?.response?._data?.message ||
-      e?.response?.data?.message ||
-      e?.message ||
-      t('loginFailed')
-
-    error.value = msg
-=======
 function extractError(e: any): string {
-  // Nuxt $fetch errors عادة تكون بالشكل:
+  // Nuxt $fetch errors غالباً:
   // { statusCode, statusMessage, data: { message } }
   const msg =
     e?.data?.message ||
     e?.data?.error ||
+    e?.response?._data?.message ||
+    e?.response?.data?.message ||
     e?.statusMessage ||
     e?.message
 
@@ -146,15 +111,23 @@ function extractError(e: any): string {
 async function submit() {
   loading.value = true
   error.value = ''
+
+  const payload = {
+    email: (email.value || '').trim(),
+    password: password.value || '',
+  }
+
+  if (!payload.email || !payload.password) {
+    error.value = t('loginFailed')
+    loading.value = false
+    return
+  }
+
   try {
-    await auth.login({
-      email: email.value.trim(),
-      password: password.value,
-    })
+    await auth.login(payload)
     await router.push('/')
   } catch (e: any) {
     error.value = extractError(e)
->>>>>>> 4c1e32d (Fix login v-model + navbar icons)
   } finally {
     loading.value = false
   }
