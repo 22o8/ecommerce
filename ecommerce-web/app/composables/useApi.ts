@@ -96,8 +96,10 @@ export function useApi() {
       return `/api/uploads/${rest}`
     }
 
-    // fallback: خليها absolute على apiOrigin إذا أحبّيت (مفيد للروابط اللي مو proxy)
-    // لكن افتراضيًا نخليها relative حتى تشتغل على نفس الدومين
+    // fallback: لو رجّع السيرفر مسار نسبي (مثل "images/x.png" أو "abc.jpg")
+    // إذا خلّيناه relative راح يدور عليه ضمن دومين الفرونت ويطلع 404.
+    // لذلك نخليه absolute على دومين الـ API.
+    if (apiOrigin) return `${apiOrigin}${path}`
     return path
   }
 
