@@ -17,19 +17,21 @@
           </p>
 
           <div class="flex flex-wrap gap-3">
-            <NuxtLink to="/products">
-              <UiButton>
-                <Icon name="mdi:shopping-search-outline" class="text-lg" />
-                <span class="rtl-text">{{ t('browseProducts') }}</span>
-              </UiButton>
-            </NuxtLink>
-            <NuxtLink to="/contact">
-              <UiButton variant="secondary">
-                <Icon name="mdi:message-text-outline" class="text-lg" />
-                <span class="rtl-text">{{ t('contact') }}</span>
-              </UiButton>
-            </NuxtLink>
-          </div>
+  <NuxtLink to="/products">
+    <UiButton>
+      <Icon name="mdi:shopping-search-outline" class="text-lg" />
+      <span class="rtl-text">{{ t('browseProducts') }}</span>
+    </UiButton>
+  </NuxtLink>
+
+  <NuxtLink to="/contact">
+    <UiButton variant="secondary">
+      <Icon name="mdi:message-text-outline" class="text-lg" />
+      <span class="rtl-text">{{ t('contact') }}</span>
+    </UiButton>
+  </NuxtLink>
+</div>
+
 
           <div class="grid gap-3 mt-2 md:grid-cols-3">
             <div class="rounded-3xl border border-app bg-surface p-4">
