@@ -1,5 +1,6 @@
 <template>
-  <NuxtLink :to="`/products/${p.slug || p.id}`" class="group card-soft overflow-hidden transition duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+  <!-- نستخدم الـ id لأن بعض الـ APIs ما تدعم slug -->
+  <NuxtLink :to="`/products/${p.id}`" class="group card-soft overflow-hidden transition duration-300 hover:-translate-y-0.5 hover:shadow-lg">
     <div class="relative">
       <div class="h-44 bg-surface-2 grid place-items-center">
         <img v-if="img" :src="img" class="h-full w-full object-cover will-change-transform transition duration-300 group-hover:scale-[1.03]" :alt="p.name" loading="lazy" decoding="async" />

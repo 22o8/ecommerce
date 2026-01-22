@@ -17,17 +17,59 @@ type FetchParams = {
 }
 
 function normalizeImages(p: any): Array<{ url: string; id?: string }> {
-  const raw = p?.images ?? p?.gallery ?? p?.imageUrls ?? p?.imageUrl ?? p?.image ?? []
-  const arr = Array.isArray(raw) ? raw : (raw ? [raw] : [])
+  // دعم أكبر عدد ممكن من الأسماء/الأشكال اللي ممكن يرجّعها الـ API
+  const raw =
+    p?.images ??
+    p?.gallery ??
+    p?.productImages ??
+    p?.imageUrls ??
+    p?.imagePaths ??
+    p?.coverImageUrl ??
+    p?.thumbnailUrl ??
+    p?.mainImageUrl ??
+    p?.imageUrl ??
+    p?.image ??
+    []
+
+  // لو يرجع سترنغ مفصولة بفواصل
+  const toArray = (v: any) => {
+    if (!v) return []
+    if (Array.isArray(v)) return v
+    if (typeof v === 'string') {
+      const s = v.trim()
+      if (!s) return []
+      return s.includes(',') ? s.split(',').map(x => x.trim()).filter(Boolean) : [s]
+    }
+    return [v]
+  }
+
+  const arr = toArray(raw)
+
   return arr
-    .map((x: any) => {
-      if (!x) return null
-      if (typeof x === 'string') return { url: x }
-      const url = x.url || x.path || x.fileUrl || x.imageUrl || x.src || ''
-      const id = x.id ?? (url || undefined)
-      return url ? { url, id } : null
+    .flatMap((x: any) => {
+      if (!x) return []
+      // بعض الـ APIs ترجع مصفوفة سترنغ، وبعضها ترجع مصفوفة Objects
+      if (typeof x === 'string') {
+        const s = x.trim()
+        if (!s) return []
+        // لو داخل عنصر واحد بيه فواصل
+        const parts = s.includes(',') ? s.split(',').map(p => p.trim()).filter(Boolean) : [s]
+        return parts.map((url) => ({ url, id: url }))
+      }
+
+      const url =
+        x.url ||
+        x.path ||
+        x.fileUrl ||
+        x.imageUrl ||
+        x.src ||
+        x.href ||
+        x.location ||
+        ''
+
+      if (!url) return []
+      return [{ url, id: x.id ?? url }]
     })
-    .filter(Boolean) as any
 }
 
 function normalizeProduct(p: any) {

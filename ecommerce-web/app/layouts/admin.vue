@@ -20,9 +20,10 @@
             <span class="rtl-text">{{ t('admin.overview') }}</span>
           </NuxtLink>
 
-          <NuxtLink to="/admin/products">
-  <span>Products</span>
-</NuxtLink>
+          <NuxtLink to="/admin/products" class="navItem">
+            <Icon name="mdi:package-variant-closed" class="text-lg" />
+            <span class="rtl-text">{{ t('admin.products') }}</span>
+          </NuxtLink>
 
 
           <NuxtLink to="/admin/orders" class="navItem">
