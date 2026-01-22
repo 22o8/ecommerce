@@ -104,5 +104,13 @@ export function useApi() {
   // ✅ Alias حتى بعض الكومبوننتات القديمة تشتغل
   const upload = postForm
 
+  
+  async function uploadFiles(files: File[], fieldName = 'files') {
+    const fd = new FormData()
+    for (const f of files) fd.append(fieldName, f)
+    // يمر عبر BFF حتى يعمل CORS والكوكيز بشكل صحيح
+    return await postForm('/uploads', fd)
+  }
+
   return { request, get, post, put, del, postForm, upload, buildAssetUrl }
 }
