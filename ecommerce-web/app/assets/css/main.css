@@ -149,3 +149,34 @@ html.theme-light .admin-primary{ color: rgb(0 0 0); }
   border: 1px solid rgb(var(--border));
   background: rgb(var(--surface-2));
 }
+
+
+/* ---------- Micro animations (lightweight) ---------- */
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-float { animation: floaty 6s ease-in-out infinite; }
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.0), rgba(255,255,255,0.18), rgba(255,255,255,0.0));
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+html.theme-dark .skeleton {
+  background: linear-gradient(90deg, rgba(0,0,0,0.0), rgba(255,255,255,0.10), rgba(0,0,0,0.0));
+  background-size: 200% 100%;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float, .skeleton, * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

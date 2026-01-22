@@ -3,7 +3,7 @@
     <div class="bg-app/80 backdrop-blur supports-[backdrop-filter]:bg-app/70 border-b border-app">
       <div class="mx-auto max-w-7xl px-4 py-3 flex items-center gap-3">
         <NuxtLink to="/" class="flex items-center gap-3">
-          <div class="h-10 w-10 rounded-2xl bg-[rgb(var(--primary))] text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black">
+          <div class="h-10 w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black">
             <Icon name="mdi:shopping-outline" class="text-xl animate-floaty" />
           </div>
           <div class="leading-tight">

@@ -1,70 +1,4 @@
 <template>
-<<<<<<< HEAD
-  <div class="min-h-screen bg-admin">
-    <!-- Topbar -->
-    <header class="sticky top-0 z-50">
-      <div class="mx-auto max-w-7xl px-4 pt-4">
-        <div class="admin-card px-4 py-3 flex items-center justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <NuxtLink to="/admin" class="flex items-center gap-3">
-              <div
-                class="h-10 w-10 rounded-2xl flex items-center justify-center font-black text-white"
-                :style="{ background: `rgb(var(--primary))` }"
-              >
-                A
-              </div>
-              <div class="leading-tight">
-                <div class="font-extrabold tracking-wide admin-text">Admin Panel</div>
-                <div class="text-xs admin-muted -mt-0.5">Manage products & orders</div>
-              </div>
-            </NuxtLink>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <div class="hidden sm:flex items-center gap-2 admin-pill">
-              <span class="admin-muted text-xs">Signed in</span>
-              <span class="text-sm font-semibold admin-text">{{ auth.user?.fullName || 'Admin' }}</span>
-            </div>
-
-            <button class="icon-btn" type="button" @click="toggleTheme" title="Theme">
-              {{ ui.theme === 'dark' ? '🌙' : '☀️' }}
-            </button>
-
-            <button class="icon-btn" type="button" @click="toggleLocale" title="Lang">
-              {{ ui.locale.toUpperCase() }}
-            </button>
-
-            <button class="btn-danger" type="button" @click="logout">
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- Body -->
-    <div class="mx-auto max-w-7xl px-4 py-6 grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
-      <!-- Sidebar -->
-      <aside class="admin-card p-3 lg:sticky lg:top-[92px] h-fit" :class="sidebarOpen ? '' : 'hidden lg:block'">
-        <div class="p-2">
-          <div class="text-xs admin-muted">Navigation</div>
-          <div class="mt-2 space-y-1">
-            <NuxtLink to="/admin" class="side-link" :class="isActive('/admin') ? 'side-active' : ''">
-              Overview
-            </NuxtLink>
-            <NuxtLink to="/admin/products" class="side-link" :class="isActive('/admin/products') ? 'side-active' : ''">
-              Products
-            </NuxtLink>
-            <NuxtLink to="/admin/orders" class="side-link" :class="isActive('/admin/orders') ? 'side-active' : ''">
-              Orders
-            </NuxtLink>
-            <NuxtLink
-              to="/admin/commands"
-              class="nav-item"
-              >
-               Commands
-              </NuxtLink>
-=======
   <div class="min-h-screen bg-app">
     <div class="mx-auto max-w-7xl px-4 py-6 grid gap-6 lg:grid-cols-[280px_1fr]">
       <aside class="card-soft p-4 h-fit sticky top-4">
@@ -75,7 +9,6 @@
           <div>
             <div class="font-extrabold rtl-text">{{ t('dashboard') }}</div>
             <div class="text-xs text-muted keep-ltr">{{ userLabel }}</div>
->>>>>>> 55e014a (Initial commit)
           </div>
         </div>
 
@@ -87,10 +20,10 @@
             <span class="rtl-text">{{ t('admin.overview') }}</span>
           </NuxtLink>
 
-          <NuxtLink to="/admin/products" class="navItem">
-            <Icon name="mdi:shopping-outline" class="text-lg" />
-            <span class="rtl-text">{{ t('admin.products') }}</span>
-          </NuxtLink>
+          <NuxtLink to="/admin/products">
+  <span>Products</span>
+</NuxtLink>
+
 
           <NuxtLink to="/admin/orders" class="navItem">
             <Icon name="mdi:receipt-text-outline" class="text-lg" />

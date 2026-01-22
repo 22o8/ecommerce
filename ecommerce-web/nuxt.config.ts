@@ -52,6 +52,27 @@ export default defineNuxtConfig({
     },
   },
 
+  nitro: {
+    compressPublicAssets: true,
+    routeRules: {
+      // 🔥 Long-term cache for built assets
+      '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+      '/icons/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+      // Cache static images placed in /public (hero, placeholders, etc.)
+      '/**/*.(png|jpg|jpeg|webp|svg|ico)': { headers: { 'cache-control': 'public, max-age=2592000' } },
+
+      // ⚡ Micro-caching for content-heavy pages (server-side SWR)
+      '/': { swr: 60 },
+      '/products/**': { swr: 60 },
+      '/services/**': { swr: 60 },
+    },
+  },
+
+  experimental: {
+    payloadExtraction: true,
+    inlineSSRStyles: false,
+  },
+
   vite: {
     define: {
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
