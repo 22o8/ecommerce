@@ -49,6 +49,76 @@ export default defineEventHandler(async (event) => {
     if (token) headers["authorization"] = `Bearer ${token}`
   }
 
+  // =========================
+  // ✅ Fixes لمسارات الواجهة العامة
+  // =========================
+  const isGuid = (s: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)
+
+  // 1) by-slug: بعض الصفحات كانت ترسل GUID بدل slug
+  if (event.method === "GET" && restPath === "Products/by-slug") {
+    const slugRaw = String((query as any)?.slug ?? "").trim()
+
+    // جرّب المسار الأصلي أولاً
+    try {
+      return await $fetch(`${apiBase}/Products/by-slug`, {
+        method: "GET",
+        headers,
+        query: { slug: slugRaw },
+      })
+    } catch {
+      // fallback: جلب قائمة المنتجات والبحث محلياً
+      const list: any = await $fetch(`${apiBase}/Products`, {
+        method: "GET",
+        headers,
+        query,
+      })
+
+      const items = Array.isArray(list?.items) ? list.items : Array.isArray(list) ? list : []
+
+      const normalizeSlug = (v: any) =>
+        String(v ?? "")
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9\-\u0600-\u06FF]+/g, "")
+
+      const found = items.find((p: any) => {
+        if (isGuid(slugRaw)) return String(p?.id) === slugRaw
+        return normalizeSlug(p?.slug ?? p?.title) === normalizeSlug(slugRaw)
+      })
+
+      if (!found) {
+        setResponseStatus(event, 404)
+        return {
+          message: `Product not found (slug=${slugRaw})`,
+          targetUrl: `${apiBase}/Products/by-slug`,
+          method: "GET",
+        }
+      }
+
+      return found
+    }
+  }
+
+  // 2) صور المنتج العامة: جرّب endpoint العام ثم fallback إلى admin (مع التوكن من الكوكي)
+  if (event.method === "GET") {
+    const m = restPath.match(/^Products\/([^/]+)\/images$/)
+    if (m?.[1]) {
+      const id = m[1]
+      try {
+        return await $fetch(`${apiBase}/Products/${id}/images`, { method: "GET", headers, query })
+      } catch (e: any) {
+        // إذا فشل العام (404/401/403) جرّب admin
+        try {
+          return await $fetch(`${apiBase}/admin/products/${id}/images`, { method: "GET", headers, query })
+        } catch {
+          throw e
+        }
+      }
+    }
+  }
+
   const contentType = (getHeader(event, "content-type") || "").toLowerCase()
   const hasBody = !["GET", "HEAD"].includes(method)
 
