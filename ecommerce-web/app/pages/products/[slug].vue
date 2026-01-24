@@ -107,11 +107,13 @@ async function fetchProduct(){
   loading.value = true
   msg.value = ''
   try{
-    // backend supports /Products/{id} and /Products/BySlug?slug=...
+    // Backend route for slug is: GET /api/Products/slug/{slug}
+    // (and GET /api/Products/{id} for GUID).
     const slug = String(route.params.slug || '')
-    // try by slug endpoint first
-    p.value = await api.get(`/Products/by-slug`, { slug }).catch(async () => {
-      // fallback: treat as id
+
+    // Always try slug route first.
+    p.value = await api.get(`/Products/slug/${encodeURIComponent(slug)}`).catch(async () => {
+      // fallback: treat as id (GUID)
       return await api.get(`/Products/${slug}`)
     })
   }catch(e:any){

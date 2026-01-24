@@ -300,9 +300,10 @@ async function loadImages() {
   imagesLoading.value = true
   galleryError.value = ''
   try {
-    const res = await api.getProductImages<any[]>(id.value)
-    const list = Array.isArray(res) ? res : []
-    images.value = list.map(x => ({ id: String(x.id), url: String(x.url) }))
+    const res:any = await api.getProductImages(id.value)
+    // Backend returns: { items: [...] }
+    const list = Array.isArray(res) ? res : (res?.items || [])
+    images.value = list.map((x:any) => ({ id: String(x.id), url: String(x.url) }))
   } catch (e:any) {
     galleryError.value = extractErr(e)
   } finally {
