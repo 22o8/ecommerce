@@ -263,9 +263,7 @@ async function load() {
   error.value = ''
   success.value = ''
   try {
-    // swagger عندك list فقط -> نفلتر بالـ id
-    const res: any[] = await api.listAdminProducts<any[]>()
-    const found = (Array.isArray(res) ? res : []).find(x => String(x.id) === id.value)
+    const found: any = await api.getProduct<any>(id.value)
     if (!found) throw new Error('Product not found')
 
     model.value = {

@@ -2,7 +2,7 @@
   <NuxtLink :to="`/products/${p.slug || p.id}`" class="group card-soft overflow-hidden transition duration-300 hover:-translate-y-0.5 hover:shadow-lg">
     <div class="relative">
       <div class="h-44 bg-surface-2 grid place-items-center">
-        <img v-if="img" :src="img" class="h-full w-full object-cover will-change-transform transition duration-300 group-hover:scale-[1.03]" :alt="p.name" loading="lazy" decoding="async" />
+        <img v-if="img" :src="img" class="h-full w-full object-cover will-change-transform transition duration-300 group-hover:scale-[1.03]" :alt="displayName" loading="lazy" decoding="async" />
         <div v-else class="text-center grid gap-2 px-4">
           <Icon name="mdi:image-outline" class="text-3xl opacity-70 mx-auto" />
           <div class="text-sm text-muted rtl-text">{{ t('noImage') }}</div>
@@ -17,11 +17,11 @@
     </div>
 
     <div class="p-4 grid gap-2">
-      <div class="font-extrabold rtl-text">{{ p.name }}</div>
+      <div class="font-extrabold rtl-text">{{ displayName }}</div>
       <div class="text-sm text-muted rtl-text">{{ p.description || '' }}</div>
 
       <div class="flex items-center justify-between mt-2">
-        <div class="font-black keep-ltr">{{ fmt(p.price) }}</div>
+        <div class="font-black keep-ltr">{{ fmt(displayPrice) }}</div>
         <div class="inline-flex items-center gap-2 text-sm text-muted">
           <span class="rtl-text">{{ t('buy') }}</span>
           <Icon name="mdi:arrow-right" class="keep-ltr transition group-hover:translate-x-1" />
@@ -34,16 +34,28 @@
 <script setup lang="ts">
 import UiBadge from '~/components/ui/UiBadge.vue'
 import { useApi } from '~/composables/useApi'
+
 const { t } = useI18n()
 const api = useApi()
 const props = defineProps<{ p: any }>()
+
+const displayName = computed(() => String(props.p?.title ?? props.p?.name ?? ''))
+const displayPrice = computed(() => Number(props.p?.priceUsd ?? props.p?.price ?? 0))
+
 const img = computed(() => {
   const p = props.p
-  const first = p?.images?.[0] || p?.imageUrl || p?.image || ''
+  const first =
+    p?.coverImage ||
+    p?.images?.[0]?.url ||
+    p?.images?.[0] ||
+    p?.imageUrl ||
+    p?.image ||
+    ''
   return api.buildAssetUrl(first)
 })
-function fmt(v:any){
-  const n = Number(v||0)
+
+function fmt(v: any) {
+  const n = Number(v || 0)
   return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(n)
 }
 </script>

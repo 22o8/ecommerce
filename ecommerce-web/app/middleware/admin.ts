@@ -1,19 +1,12 @@
-// app/middleware/Admin.ts
+// app/middleware/admin.ts
 export default defineNuxtRouteMiddleware(() => {
-  const auth = useAuthStore();
+  const auth = useAuthStore()
 
-  // إذا user عندك object مباشر (مو ref)
-  const user = auth.user;
+  // auth.userData هو computed(ref) داخل store
+  const u: any = (auth as any)?.userData?.value || (auth as any)?.user?.value || (auth as any)?.user || null
 
-  // عدّل شرط الأدمن حسب موديلك: isAdmin / role / permissions
-  const isAdmin =
-    !!user && (
-      (user as any).isAdmin === true ||
-      (user as any).role === 'Admin' ||
-      (user as any).role === 'admin'
-    );
+  const role = String(u?.role || '').toLowerCase()
+  const isAdmin = !!u && (u?.isAdmin === true || role === 'admin')
 
-  if (!isAdmin) {
-    return navigateTo('/login');
-  }
-});
+  if (!isAdmin) return navigateTo('/login')
+})

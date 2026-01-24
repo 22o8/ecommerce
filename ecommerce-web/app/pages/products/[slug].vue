@@ -25,7 +25,7 @@
     <div v-else class="grid gap-6 lg:grid-cols-2">
       <div class="card-soft overflow-hidden">
         <div class="h-[420px] bg-surface-2 grid place-items-center">
-          <img v-if="img" :src="img" class="h-full w-full object-cover" :alt="p.name" />
+          <img v-if="img" :src="img" class="h-full w-full object-cover" :alt="displayName" />
           <div v-else class="text-center grid gap-2 px-6">
             <Icon name="mdi:image-outline" class="text-4xl opacity-70 mx-auto" />
             <div class="text-sm text-muted rtl-text">{{ t('noImage') }}</div>
@@ -35,13 +35,13 @@
 
       <div class="card-soft p-6 md:p-8 grid gap-4">
         <div>
-          <h1 class="text-2xl md:text-3xl font-black rtl-text">{{ p.name }}</h1>
+          <h1 class="text-2xl md:text-3xl font-black rtl-text">{{ displayName }}</h1>
           <div class="mt-2 text-muted rtl-text">{{ p.description || '' }}</div>
         </div>
 
         <div class="flex items-center justify-between">
           <div class="text-sm text-muted rtl-text">{{ t('price') }}</div>
-          <div class="text-2xl font-black keep-ltr">{{ fmt(p.price) }}</div>
+          <div class="text-2xl font-black keep-ltr">{{ fmt(displayPrice) }}</div>
         </div>
 
         <div class="grad-line" />
@@ -88,59 +88,69 @@ const msg = ref('')
 const ok = ref(false)
 
 const p = ref<any>(null)
-const img = computed(() => api.buildAssetUrl(p.value?.images?.[0] || p.value?.imageUrl || p.value?.image || ''))
+
+const displayName = computed(() => String(p.value?.title ?? p.value?.name ?? ''))
+const displayPrice = computed(() => Number(p.value?.priceUsd ?? p.value?.price ?? 0))
+
+const img = computed(() => {
+  const first =
+    p.value?.images?.[0]?.url ||
+    p.value?.images?.[0] ||
+    p.value?.coverImage ||
+    p.value?.imageUrl ||
+    p.value?.image ||
+    ''
+  return api.buildAssetUrl(first)
+})
 
 const waOrderLink = computed(() => {
-  const n = String((config.public as any).whatsappNumber || '').replace(/[^0-9]/g,'')
-  const text = encodeURIComponent(`Order: ${p.value?.name || ''} | Price: ${p.value?.price || ''}`)
+  const n = String((config.public as any).whatsappNumber || '').replace(/[^0-9]/g, '')
+  const text = encodeURIComponent(`Order: ${displayName.value} | Price: ${displayPrice.value}`)
   return n ? `https://wa.me/${n}?text=${text}` : '#'
 })
 
-function fmt(v:any){
-  const n = Number(v||0)
+function fmt(v: any) {
+  const n = Number(v || 0)
   return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(n)
 }
 
-function back(){ router.push('/products') }
+function back() { router.push('/products') }
 
-async function fetchProduct(){
+async function fetchProduct() {
   loading.value = true
   msg.value = ''
-  try{
-    // Backend route for slug is: GET /api/Products/slug/{slug}
-    // (and GET /api/Products/{id} for GUID).
+  try {
     const slug = String(route.params.slug || '')
-
-    // Always try slug route first.
     p.value = await api.get(`/Products/slug/${encodeURIComponent(slug)}`).catch(async () => {
-      // fallback: treat as id (GUID)
       return await api.get(`/Products/${slug}`)
     })
-  }catch(e:any){
+  } catch {
     p.value = null
-  }finally{
+  } finally {
     loading.value = false
   }
 }
 
-async function buy(){
-  if(!p.value) return
+async function buy() {
+  if (!p.value) return
   buying.value = true
   msg.value = ''
-  try{
-    // example order endpoint
-    const res:any = await api.post('/Orders', { productId: p.value.id })
+  ok.value = false
+  try {
+    // Swagger: POST /api/Checkout/products { productId, quantity }
+    const res: any = await api.post('/Checkout/products', { productId: p.value.id, quantity: 1 })
     ok.value = true
-    msg.value = t('orderCreated')
-    // optionally redirect
-    router.push('/orders')
-  }catch(e:any){
+    msg.value = `تم إنشاء الطلب (#${res?.orderId || ''}) وحالته ${res?.status || ''}. بانتظار تأكيد الدفع.`
+    // اعرض صفحة طلباتي لو تحب
+    // router.push('/orders')
+  } catch (e: any) {
     ok.value = false
     msg.value = e?.data?.message || e?.message || t('buyFailed')
-  }finally{
+  } finally {
     buying.value = false
   }
 }
 
 onMounted(fetchProduct)
 </script>
+
