@@ -1,10 +1,29 @@
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split(".")[1]
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
+    const json = decodeURIComponent(
+      (typeof atob === "function" ? atob(base64) : Buffer.from(base64, "base64").toString("binary"))
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    )
+    return JSON.parse(json)
+  } catch {
+    return null
+  }
+}
+
 export default defineNuxtRouteMiddleware((to) => {
-  if (!to.path.startsWith('/admin')) return
+  if (!to.path.toLowerCase().startsWith("/admin")) return
 
-  const auth = useAuthStore()
-  // auth.user هو Ref (useCookie) لذلك لازم نقرأ .value
-  const role = (auth.user as any)?.value?.role || (auth.userData as any)?.value?.role
+  const token = useCookie<string | null>("token").value
+  if (!token) return navigateTo("/login")
 
-  if (!auth.isAuthed) return navigateTo('/login')
-  if (role !== 'Admin') return navigateTo('/') // ممنوع لغير الادمن
+  const payload = parseJwt(token)
+  const role =
+    payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
+    payload?.role
+
+  if (role !== "Admin") return navigateTo("/")
 })
