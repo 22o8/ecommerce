@@ -13,7 +13,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    // ✅ يمنع تعارض أسماء الـ Schemas لما يكون عندك DTOs/Requests بنفس الاسم
+    // في أكثر من مكان. هذا كان يسبب 500 في /swagger/v1/swagger.json على Render.
+    c.CustomSchemaIds(t => t.FullName);
+});
 
 // DbContext
 var conn = builder.Configuration.GetConnectionString("Default")
