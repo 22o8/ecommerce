@@ -13,8 +13,16 @@ export type User = {
 }
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = useCookie<string | null>('token', { default: () => null })
-  const user = useCookie<User | null>('user', { default: () => null })
+  const cookieOptions = {
+    default: () => null,
+    path: '/',
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 60 * 60 * 24 * 30, // 30 days
+  }
+
+  const token = useCookie<string | null>('token', cookieOptions)
+  const user = useCookie<User | null>('user', cookieOptions)
 
   const isAuthed = computed(() => !!token.value)
   const userData = computed(() => user.value) // ✅ هذا اللي نستخدمه بكل مكان

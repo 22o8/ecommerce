@@ -76,6 +76,54 @@ public class ProductsController : ControllerBase
         });
     }
 
+    // GET /api/Products/{id}
+    // Public product details by id (compatibility for some frontend pages)
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById([FromRoute] Guid id)
+    {
+        var p = await _db.Products
+            .AsNoTracking()
+            .Where(x => x.IsPublished && x.Id == id)
+            .Select(x => new
+            {
+                x.Id,
+                x.Title,
+                x.Slug,
+                x.Description,
+                x.PriceUsd,
+                x.RatingAvg,
+                x.RatingCount,
+                x.CreatedAt,
+                images = _db.ProductImages
+                    .Where(i => i.ProductId == x.Id)
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync();
+
+        if (p == null) return NotFound(new { message = "Product not found" });
+        return Ok(p);
+    }
+
+    // GET /api/Products/{id}/images
+    // Public images list by product id (compatibility)
+    [HttpGet("{id:guid}/images")]
+    public async Task<IActionResult> GetImages([FromRoute] Guid id)
+    {
+        var exists = await _db.Products.AsNoTracking().AnyAsync(x => x.IsPublished && x.Id == id);
+        if (!exists) return NotFound(new { message = "Product not found" });
+
+        var images = await _db.ProductImages
+            .AsNoTracking()
+            .Where(i => i.ProductId == id)
+            .OrderBy(i => i.SortOrder)
+            .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
+            .ToListAsync();
+
+        return Ok(images);
+    }
+
     // GET /api/Products/slug/{slug}
     [HttpGet("slug/{slug}")]
     public async Task<IActionResult> GetBySlug([FromRoute] string slug)
