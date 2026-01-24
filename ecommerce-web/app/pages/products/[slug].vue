@@ -88,19 +88,7 @@ const msg = ref('')
 const ok = ref(false)
 
 const p = ref<any>(null)
-
-const isBadImageUrl = (url?: string) => {
-  if (!url) return true
-  // بعض المنتجات ترجع رابط API (JSON) بدل رابط ملف الصورة مثل: /api/bff/Products/<id>/images
-  if (/\/api\/bff\/Products\//i.test(url) && /\/images$/i.test(url)) return true
-  return false
-}
-
-const img = computed(() => {
-  const first = p.value?.images?.[0] || p.value?.imageUrl || p.value?.image || ''
-  const raw = typeof first === 'string' ? first : (first?.url ?? '')
-  return api.buildAssetUrl(isBadImageUrl(raw) ? '' : raw)
-})
+const img = computed(() => api.buildAssetUrl(p.value?.images?.[0] || p.value?.imageUrl || p.value?.image || ''))
 
 const waOrderLink = computed(() => {
   const n = String((config.public as any).whatsappNumber || '').replace(/[^0-9]/g,'')
@@ -126,16 +114,6 @@ async function fetchProduct(){
       // fallback: treat as id
       return await api.get(`/Products/${slug}`)
     })
-
-    // لو الصور مو موجودة أو جايه كرابط API غلط، نجرب نجلبها من اندبوينت الادمن (GET) اللي يرجع URLs صحيحة
-    const productId = String(p.value?.id || '')
-    const firstImg = p.value?.images?.[0]
-    const firstUrl = typeof firstImg === 'string' ? firstImg : (firstImg?.url ?? '')
-    if (productId && isBadImageUrl(firstUrl)) {
-      const res:any = await api.get(`/admin/products/${productId}/images`).catch(() => null)
-      if (res?.items?.length) p.value.images = res.items
-      else if (Array.isArray(res) && res.length) p.value.images = res
-    }
   }catch(e:any){
     p.value = null
   }finally{

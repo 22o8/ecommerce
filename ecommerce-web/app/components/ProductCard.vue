@@ -40,15 +40,7 @@ const props = defineProps<{ p: any }>()
 const img = computed(() => {
   const p = props.p
   const first = p?.images?.[0] || p?.imageUrl || p?.image || ''
-  const raw = typeof first === 'string' ? first : (first?.url ?? '')
-
-  // بعض الردود ترجع رابط API (JSON) بدل رابط ملف الصورة، نخليه فارغ حتى ما يصير 404
-  const bad =
-    !raw ||
-    /\/api\/bff\/Products\//i.test(raw) && /\/images$/i.test(raw) ||
-    /\/Products\/.+\/images$/i.test(raw)
-
-  return bad ? '' : api.buildAssetUrl(raw)
+  return api.buildAssetUrl(first)
 })
 function fmt(v:any){
   const n = Number(v||0)

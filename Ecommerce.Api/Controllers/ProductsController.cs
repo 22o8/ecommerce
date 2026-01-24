@@ -59,7 +59,7 @@ public class ProductsController : ControllerBase
                 p.RatingAvg,
                 p.RatingCount,
                 p.CreatedAt,
-                coverImage = _db.ProductImages
+                coverImageUrl = _db.ProductImages
                     .Where(i => i.ProductId == p.Id)
                     .OrderBy(i => i.SortOrder)
                     .Select(i => i.Url)
@@ -95,6 +95,11 @@ public class ProductsController : ControllerBase
                 x.RatingAvg,
                 x.RatingCount,
                 x.CreatedAt,
+                coverImageUrl = _db.ProductImages
+                    .Where(i => i.ProductId == x.Id)
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => i.Url)
+                    .FirstOrDefault(),
                 images = _db.ProductImages
                     .Where(i => i.ProductId == x.Id)
                     .OrderBy(i => i.SortOrder)
@@ -105,5 +110,64 @@ public class ProductsController : ControllerBase
 
         if (p == null) return NotFound(new { message = "Product not found" });
         return Ok(p);
+    }
+
+    // Backward-compatible endpoint used by the frontend BFF: /api/Products/by-slug?slug=...
+    [HttpGet("by-slug")]
+    public async Task<IActionResult> GetBySlugQuery([FromQuery] string slug)
+    {
+        if (string.IsNullOrWhiteSpace(slug)) return BadRequest(new { message = "slug is required" });
+        return await GetBySlug(slug);
+    }
+
+    // Public: get by id
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var p = await _db.Products
+            .AsNoTracking()
+            .Where(x => x.Id == id)
+            .Select(x => new
+            {
+                x.Id,
+                x.Title,
+                x.Slug,
+                x.Description,
+                x.PriceUsd,
+                x.RatingAvg,
+                x.RatingCount,
+                x.CreatedAt,
+                coverImageUrl = _db.ProductImages
+                    .Where(i => i.ProductId == x.Id)
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => i.Url)
+                    .FirstOrDefault(),
+                images = _db.ProductImages
+                    .Where(i => i.ProductId == x.Id)
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync();
+
+        if (p == null) return NotFound(new { message = "Product not found" });
+        return Ok(p);
+    }
+
+    // Public: list images for a product
+    [HttpGet("{id:guid}/images")]
+    public async Task<IActionResult> GetImages(Guid id)
+    {
+        var exists = await _db.Products.AsNoTracking().AnyAsync(p => p.Id == id);
+        if (!exists) return NotFound(new { message = "Product not found" });
+
+        var images = await _db.ProductImages
+            .AsNoTracking()
+            .Where(i => i.ProductId == id)
+            .OrderBy(i => i.SortOrder)
+            .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
+            .ToListAsync();
+
+        return Ok(new { items = images });
     }
 }
