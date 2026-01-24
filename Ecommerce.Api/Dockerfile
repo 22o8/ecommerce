@@ -1,23 +1,22 @@
-# ---------- Build stage ----------
+# build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-
-# Copy everything (because we're building from the repo root on Render)
 COPY . .
 
-# Go into API folder
-WORKDIR /src/Ecommerce.Api
+# ابحث عن اول csproj واستعمله بالـ restore/publish
+RUN set -e; \
+    csproj="$(find . -maxdepth 6 -name '*.csproj' | head -n 1)"; \
+    echo "Using csproj: $csproj"; \
+    dotnet restore "$csproj"; \
+    dotnet publish "$csproj" -c Release -o /app/out --no-restore
 
-RUN dotnet restore
-RUN dotnet publish -c Release -o /app/out
-
-# ---------- Runtime stage ----------
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+# runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
+COPY --from=build /app/out ./
 
-COPY --from=build /app/out .
-
-ENV ASPNETCORE_URLS=http://0.0.0.0:8080
+ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
+# (اسم dll حسب مشروعك)
 ENTRYPOINT ["dotnet", "Ecommerce.Api.dll"]
