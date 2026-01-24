@@ -13,8 +13,17 @@ export type User = {
 }
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = useCookie<string | null>('token', { default: () => null })
-  const user = useCookie<User | null>('user', { default: () => null })
+  // مهم: نثبت Path=/ حتى الكوكي تبقى بكل الصفحات
+  // (بدون هذا أحياناً تنكتب الكوكي على مسار محدد مثل /login وتختفي عند الرجوع للرئيسية)
+  const cookieOptions = {
+    default: () => null,
+    path: '/',
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+  }
+
+  const token = useCookie<string | null>('token', cookieOptions)
+  const user = useCookie<User | null>('user', cookieOptions)
 
   const isAuthed = computed(() => !!token.value)
   const userData = computed(() => user.value) // ✅ هذا اللي نستخدمه بكل مكان

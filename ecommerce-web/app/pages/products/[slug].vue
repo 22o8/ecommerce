@@ -88,19 +88,19 @@ const msg = ref('')
 const ok = ref(false)
 
 const p = ref<any>(null)
-const firstImageUrl = computed(() => {
-  const images = p.value?.images
-  const first = Array.isArray(images) ? images[0] : null
 
-  if (typeof first === 'string') return first
-  if (first && typeof first === 'object') {
-    return first.url || first.path || first.fileUrl || first.imageUrl || first.src || ''
-  }
+const isBadImageUrl = (url?: string) => {
+  if (!url) return true
+  // بعض المنتجات ترجع رابط API (JSON) بدل رابط ملف الصورة مثل: /api/bff/Products/<id>/images
+  if (/\/api\/bff\/Products\//i.test(url) && /\/images$/i.test(url)) return true
+  return false
+}
 
-  return p.value?.imageUrl || p.value?.image || p.value?.thumbnailUrl || ''
+const img = computed(() => {
+  const first = p.value?.images?.[0] || p.value?.imageUrl || p.value?.image || ''
+  const raw = typeof first === 'string' ? first : (first?.url ?? '')
+  return api.buildAssetUrl(isBadImageUrl(raw) ? '' : raw)
 })
-
-const img = computed(() => api.buildAssetUrl(firstImageUrl.value))
 
 const waOrderLink = computed(() => {
   const n = String((config.public as any).whatsappNumber || '').replace(/[^0-9]/g,'')
@@ -119,53 +119,22 @@ async function fetchProduct(){
   loading.value = true
   msg.value = ''
   try{
-    const key = String(route.params.slug || '')
+    // backend supports /Products/{id} and /Products/BySlug?slug=...
+    const slug = String(route.params.slug || '')
+    // try by slug endpoint first
+    p.value = await api.get(`/Products/by-slug`, { slug }).catch(async () => {
+      // fallback: treat as id
+      return await api.get(`/Products/${slug}`)
+    })
 
-    // بعض مرات الـ API تكون by-slug كـ (path param) وليس query
-    // وبعض مرات الرابط الي عندنا يكون UUID (يعني ID) مو slug
-    const tryFetch = async () => {
-      // 1) by-slug/<slug>
-      if (!isUuidLike(key)) {
-        try {
-          return await api.get<any>(`/Products/by-slug/${encodeURIComponent(key)}`)
-        } catch {}
-      }
-
-      // 2) by-slug?slug=
-      try {
-        return await api.get<any>(`/Products/by-slug`, { slug: key })
-      } catch {}
-
-      // 3) by-id route شائع: /Products/<id>
-      try {
-        return await api.get<any>(`/Products/${encodeURIComponent(key)}`)
-      } catch {}
-
-      // 4) fallback: نجيب من اللستة ونفلتر (ينقذنا اذا ماكو endpoint منفصل للـ details)
-      const list = await api.get<any>(`/Products`, { page: 1, pageSize: 100 })
-      const items = Array.isArray(list) ? list : list?.items || list?.data || []
-      const found = items.find((x: any) => x?.id === key || x?.slug === key)
-      if (found) return found
-      throw new Error('NOT_FOUND')
-    }
-
-    p.value = await tryFetch()
-
-    // إذا الـ details ما جاب الصور، نجرب endpoint للصور
-    if (p.value && (!Array.isArray(p.value.images) || p.value.images.length === 0)) {
-      const id = p.value.id || key
-      const imgRes = await api
-        .get<any>(`/Products/${encodeURIComponent(id)}/images`)
-        .catch(async () => await api.get<any>(`/Products/images`, { productId: id }).catch(() => null))
-      const items = Array.isArray(imgRes) ? imgRes : imgRes?.items || []
-      if (Array.isArray(items) && items.length) {
-        p.value.images = items.map((it: any) => ({
-          id: it.id || it.imageId || undefined,
-          url: it.url || it.path || it.imageUrl,
-          alt: it.alt || it.caption || '',
-          sortOrder: it.sortOrder || it.order || 0,
-        }))
-      }
+    // لو الصور مو موجودة أو جايه كرابط API غلط، نجرب نجلبها من اندبوينت الادمن (GET) اللي يرجع URLs صحيحة
+    const productId = String(p.value?.id || '')
+    const firstImg = p.value?.images?.[0]
+    const firstUrl = typeof firstImg === 'string' ? firstImg : (firstImg?.url ?? '')
+    if (productId && isBadImageUrl(firstUrl)) {
+      const res:any = await api.get(`/admin/products/${productId}/images`).catch(() => null)
+      if (res?.items?.length) p.value.images = res.items
+      else if (Array.isArray(res) && res.length) p.value.images = res
     }
   }catch(e:any){
     p.value = null
