@@ -47,16 +47,6 @@
         <div class="grad-line" />
 
         <div class="grid gap-3">
-          <UiButton variant="secondary" @click="addToCart">
-            <Icon name="mdi:cart-plus" class="text-lg" />
-            <span class="rtl-text">{{ t('addToCart') }}</span>
-          </UiButton>
-          <NuxtLink to="/cart">
-            <UiButton variant="ghost">
-              <Icon name="mdi:cart-outline" class="text-lg" />
-              <span class="rtl-text">{{ t('goToCart') }}</span>
-            </UiButton>
-          </NuxtLink>
           <UiButton v-if="auth.isAuthed" @click="buy" :loading="buying">
             <Icon name="mdi:cart-outline" class="text-lg" />
             <span class="rtl-text">{{ t('buyNow') }}</span>
@@ -83,14 +73,10 @@
 
 <script setup lang="ts">
 import UiButton from '~/components/ui/UiButton.vue'
-import { useI18n } from '~/app/composables/useI18n'
-import { useAuthStore } from '~/app/stores/auth'
-import { useCartStore } from '~/app/stores/cart'
 import { useApi } from '~/composables/useApi'
 
 const { t } = useI18n()
 const auth = useAuthStore()
-const cart = useCartStore()
 const api = useApi()
 const route = useRoute()
 const router = useRouter()
@@ -126,13 +112,6 @@ const waOrderLink = computed(() => {
 function fmt(v: any) {
   const n = Number(v || 0)
   return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(n)
-}
-
-function addToCart(){
-  if (!p.value) return
-  cart.add(p.value, 1)
-  msg.value = t('addedToCart')
-  ok.value = true
 }
 
 function back() { router.push('/products') }

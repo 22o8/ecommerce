@@ -21,9 +21,11 @@ export default defineNuxtRouteMiddleware((to) => {
   if (!token) return navigateTo("/login")
 
   const payload = parseJwt(token)
-  const role =
+  const rawRole =
     payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
     payload?.role
 
-  if (role !== "Admin") return navigateTo("/")
+  // Role can be string or array; also case may differ
+  const role = (Array.isArray(rawRole) ? rawRole[0] : rawRole)
+  if (String(role ?? "").toLowerCase() !== "admin") return navigateTo("/")
 })
