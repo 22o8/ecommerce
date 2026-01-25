@@ -76,7 +76,19 @@ public class AuthController : ControllerBase
     private string CreateJwt(User user)
     {
         var jwt = _config.GetSection("Jwt");
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
+
+        // Render / environment friendly: allow common env var names too.
+        var rawKey = jwt["Key"]
+                     ?? _config["Jwt:Key"]
+                     ?? _config["Jwt__Key"]
+                     ?? _config["JWT_KEY"]
+                     ?? _config["JWTSECRET"]
+                     ?? _config["JWT_SECRET"];
+
+        if (string.IsNullOrWhiteSpace(rawKey))
+            throw new InvalidOperationException("JWT key is missing. Set Jwt:Key (or Jwt__Key) in configuration / environment variables.");
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(rawKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new List<Claim>
@@ -88,11 +100,20 @@ public class AuthController : ControllerBase
             new Claim("fullName", user.FullName)
         };
 
-        var expires = DateTime.UtcNow.AddMinutes(int.Parse(jwt["ExpiresMinutes"]!));
+        var expiresMinutesRaw = jwt["ExpiresMinutes"]
+                                ?? _config["Jwt:ExpiresMinutes"]
+                                ?? _config["Jwt__ExpiresMinutes"]
+                                ?? _config["JWT_EXPIRES_MINUTES"];
+        if (!int.TryParse(expiresMinutesRaw, out var expiresMinutes)) expiresMinutes = 60;
+
+        var expires = DateTime.UtcNow.AddMinutes(expiresMinutes);
+
+        var issuer = jwt["Issuer"] ?? _config["Jwt:Issuer"] ?? _config["Jwt__Issuer"] ?? "ecommerce";
+        var audience = jwt["Audience"] ?? _config["Jwt:Audience"] ?? _config["Jwt__Audience"] ?? "ecommerce";
 
         var token = new JwtSecurityToken(
-            issuer: jwt["Issuer"],
-            audience: jwt["Audience"],
+            issuer: issuer,
+            audience: audience,
             claims: claims,
             expires: expires,
             signingCredentials: creds
