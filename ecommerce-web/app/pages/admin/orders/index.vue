@@ -1,116 +1,69 @@
+<template>
+  <div class="space-y-4">
+    <div class="admin-box">
+      <div class="text-xl font-extrabold">Orders</div>
+      <div class="text-sm admin-muted">View and manage orders</div>
+    </div>
+
+    <div class="admin-box overflow-hidden">
+      <div class="admin-table">
+        <div class="admin-tr admin-th">
+          <div>ID</div>
+          <div>Status</div>
+          <div>User</div>
+          <div class="text-right">Actions</div>
+        </div>
+
+        <div v-if="pending" class="p-4 admin-muted">Loading...</div>
+        <div v-else-if="items.length === 0" class="p-4 admin-muted">No orders yet.</div>
+        <div v-else>
+          <div v-for="o in items" :key="o.id" class="admin-tr">
+            <div class="font-semibold">{{ o.id }}</div>
+            <div class="admin-muted text-sm">{{ o.status || o.state || '—' }}</div>
+            <div class="admin-muted text-sm">{{ o.userEmail || o.user?.email || '—' }}</div>
+            <div class="flex justify-end">
+              <NuxtLink :to="`/admin/orders/${o.id}`" class="admin-pill">Details</NuxtLink>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="error" class="admin-error">{{ error }}</div>
+  </div>
+</template>
+
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useApi } from '~/app/composables/useApi'
-import { useI18n } from '~/app/composables/useI18n'
+definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
-const { t } = useI18n()
-const api = useApi()
-
-type Order = {
-  id: string
-  status: string
-  totalUsd: number
-  createdAt: string
-  user: { userId: string; fullName: string; email: string; phone: string }
-  items: any[]
-}
-
-const loading = ref(false)
-const error = ref<string | null>(null)
-const orders = ref<Order[]>([])
+const api = useAdminApi()
+const pending = ref(false)
+const error = ref('')
+const items = ref<any[]>([])
 
 async function load() {
-  loading.value = true
-  error.value = null
+  pending.value = true
+  error.value = ''
   try {
-    orders.value = await api.get('/api/bff/admin/orders')
+    // swagger: GET /api/admin/orders (no params)
+    const res: any = await api.get('/admin/orders')
+    items.value = Array.isArray(res) ? res : (res.items || [])
   } catch (e: any) {
-    error.value = e?.data?.message || e?.message || 'Failed'
+    error.value = e?.data?.message || e?.message || 'Failed to load orders'
   } finally {
-    loading.value = false
-  }
-}
-
-async function remove(id: string) {
-  if (!confirm(t('admin.confirmDelete'))) return
-  loading.value = true
-  error.value = null
-  try {
-    await api.del(`/api/bff/admin/orders/${id}`)
-    await load()
-  } catch (e: any) {
-    error.value = e?.data?.message || e?.message || 'Failed'
-  } finally {
-    loading.value = false
-  }
-}
-
-async function removeAll() {
-  if (!confirm(t('admin.confirmDelete'))) return
-  loading.value = true
-  error.value = null
-  try {
-    await api.del('/api/bff/admin/orders/all')
-    await load()
-  } catch (e: any) {
-    error.value = e?.data?.message || e?.message || 'Failed'
-  } finally {
-    loading.value = false
+    pending.value = false
   }
 }
 
 onMounted(load)
 </script>
 
-<template>
-  <div class="space-y-6">
-    <div class="flex items-center justify-between gap-3">
-      <h1 class="text-xl font-bold">{{ t('admin.orders') }}</h1>
-
-      <div class="flex items-center gap-2">
-        <button class="btn-secondary" :disabled="loading" @click="load">{{ t('admin.refresh') }}</button>
-        <button class="btn-danger" :disabled="loading" @click="removeAll">{{ t('admin.deleteAllOrders') }}</button>
-      </div>
-    </div>
-
-    <div v-if="error" class="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
-      {{ error }}
-    </div>
-
-    <div class="grid gap-3">
-      <div
-        v-for="o in orders"
-        :key="o.id"
-        class="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-2"
-      >
-        <div class="flex items-center justify-between gap-3">
-          <div class="font-semibold truncate">
-            {{ o.user?.fullName || '—' }} • {{ o.totalUsd }} US$
-          </div>
-          <button class="btn-danger" :disabled="loading" @click="remove(o.id)">{{ t('admin.delete') }}</button>
-        </div>
-
-        <div class="text-xs opacity-70 flex flex-wrap gap-3">
-          <span>id: {{ o.id }}</span>
-          <span>status: {{ o.status }}</span>
-          <span>{{ new Date(o.createdAt).toLocaleString() }}</span>
-          <span>{{ o.user?.email }}</span>
-          <span>{{ o.user?.phone }}</span>
-        </div>
-
-        <div class="text-sm opacity-90">
-          <div class="font-semibold mb-1">العناصر</div>
-          <ul class="list-disc ps-6 space-y-1">
-            <li v-for="(it, idx) in o.items" :key="idx">
-              {{ it.itemType }} • qty: {{ it.quantity }} • {{ it.unitPriceUsd }} US$
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div v-if="!loading && orders.length === 0" class="opacity-70 text-sm">
-        لا توجد طلبات.
-      </div>
-    </div>
-  </div>
-</template>
+<style scoped>
+.admin-box{ border-radius: 20px; border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.06); padding: 16px; }
+.admin-muted{ color: rgba(255,255,255,.65); }
+.admin-pill{ padding:8px 10px; border-radius:14px; border:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.06); color: rgba(255,255,255,.9); }
+.admin-table{ display:grid; }
+.admin-tr{ display:grid; grid-template-columns: 2fr 1fr 2fr 1fr; gap:12px; padding:12px 16px; border-top:1px solid rgba(255,255,255,.08); }
+.admin-th{ border-top:none; background: rgba(0,0,0,.18); font-size:12px; text-transform:uppercase; letter-spacing:.08em; color: rgba(255,255,255,.65); }
+.admin-error{ border-radius:16px; border:1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.10); padding:12px 14px; }
+</style>

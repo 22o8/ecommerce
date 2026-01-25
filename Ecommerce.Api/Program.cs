@@ -49,13 +49,7 @@ builder.Services.AddCors(opt =>
 });
 
 // JWT Auth (إذا عندك Secret بالكونفيغ)
-var jwtKey = config["Jwt:Key"]
-    ?? config["JWT_SECRET"]
-    ?? config["JWT_KEY"]
-    ?? Environment.GetEnvironmentVariable("JWT_SECRET")
-    ?? Environment.GetEnvironmentVariable("JWT_KEY")
-    ?? Environment.GetEnvironmentVariable("Jwt__Key")
-    ?? "DEV_ONLY_CHANGE_ME";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? builder.Configuration["JWT_KEY"];
 if (!string.IsNullOrWhiteSpace(jwtKey))
 {
     var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
@@ -88,18 +82,30 @@ else
 
 var app = builder.Build();
 
-// تطبيق الـ migrations تلقائياً لتفادي مشاكل النشر
+// تطبيق المايغريشن تلقائياً (مهم للديبلوي على Render)
 using (var scope = app.Services.CreateScope())
 {
+<<<<<<< HEAD
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     // خَلّينا الهجرة ما تكسر التشغيل إذا صارت مشكلة بسيطة (مثل عمود موجود مسبقاً)
     try
     {
+=======
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+>>>>>>> a85ed87 (fix: resolve stash conflicts)
         db.Database.Migrate();
     }
     catch (Exception ex)
     {
+<<<<<<< HEAD
         Console.WriteLine($"[WARN] Database migration failed: {ex.Message}");
+=======
+        var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Migrations");
+        logger.LogError(ex, "Database migration failed");
+        // لا نكسر التطبيق؛ راح تبين المشكلة في اللوغ
+>>>>>>> a85ed87 (fix: resolve stash conflicts)
     }
 }
 

@@ -22,17 +22,9 @@
 
       <div class="flex items-center justify-between mt-2">
         <div class="font-black keep-ltr">{{ fmt(displayPrice) }}</div>
-
-        <div class="flex items-center gap-2">
-          <UiButton size="sm" variant="soft" @click="addToCart">
-            <Icon name="mdi:cart-plus" />
-            <span class="rtl-text">{{ t('addToCart') }}</span>
-          </UiButton>
-
-          <div class="inline-flex items-center gap-2 text-sm text-muted">
-            <span class="rtl-text">{{ t('buy') }}</span>
-            <Icon name="mdi:arrow-right" class="keep-ltr transition group-hover:translate-x-1" />
-          </div>
+        <div class="inline-flex items-center gap-2 text-sm text-muted">
+          <span class="rtl-text">{{ t('buy') }}</span>
+          <Icon name="mdi:arrow-right" class="keep-ltr transition group-hover:translate-x-1" />
         </div>
       </div>
     </div>
@@ -41,13 +33,11 @@
 
 <script setup lang="ts">
 import UiBadge from '~/components/ui/UiBadge.vue'
-import UiButton from '~/components/ui/UiButton.vue'
 import { useApi } from '~/composables/useApi'
 
 const { t } = useI18n()
 const api = useApi()
 const props = defineProps<{ p: any }>()
-const cart = useCartStore()
 
 const displayName = computed(() => String(props.p?.title ?? props.p?.name ?? ''))
 const displayPrice = computed(() => Number(props.p?.priceUsd ?? props.p?.price ?? 0))
@@ -67,17 +57,5 @@ const img = computed(() => {
 function fmt(v: any) {
   const n = Number(v || 0)
   return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(n)
-}
-
-function addToCart(e: MouseEvent) {
-  e.preventDefault()
-  e.stopPropagation()
-  cart.add({
-    id: String(props.p?.id ?? props.p?.slug ?? ''),
-    title: displayName.value,
-    price: displayPrice.value,
-    imageUrl: img.value,
-    quantity: 1,
-  })
 }
 </script>
