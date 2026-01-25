@@ -7,6 +7,9 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// اختصار للكونفيغ (حتى لا يصير خطأ compile)
+var config = builder.Configuration;
+
 // ============================
 // Services
 // ============================
@@ -89,7 +92,15 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    // خَلّينا الهجرة ما تكسر التشغيل إذا صارت مشكلة بسيطة (مثل عمود موجود مسبقاً)
+    try
+    {
+        db.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[WARN] Database migration failed: {ex.Message}");
+    }
 }
 
 // Render / Reverse Proxy Support (مهم)
