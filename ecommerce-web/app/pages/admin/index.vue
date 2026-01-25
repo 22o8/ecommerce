@@ -7,15 +7,15 @@
     </div>
 
     <div class="admin-box">
-      <div class="text-sm admin-muted">Orders</div>
+      <div class="text-sm admin-muted">{{ t('admin.totalOrders') }}</div>
       <div class="text-3xl font-extrabold mt-2">{{ stats.orders }}</div>
     </div>
 
     <div class="md:col-span-3 admin-box">
       <div class="flex items-center justify-between gap-2">
         <div>
-          <div class="font-extrabold">Quick Actions</div>
-          <div class="text-sm admin-muted">Create and manage content quickly</div>
+          <div class="font-extrabold"></div>
+          <div class="text-sm admin-muted"></div>
         </div>
 
         <div class="flex gap-2">
@@ -27,6 +27,8 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
+
 definePageMeta({ layout: 'admin' })
 
 const stats = {
