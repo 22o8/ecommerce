@@ -37,12 +37,16 @@ public class AuthController : ControllerBase
         if (string.IsNullOrWhiteSpace(req.Password) || req.Password.Length < 6)
             return BadRequest("Password must be >= 6 chars");
 
+        if (string.IsNullOrWhiteSpace(req.Phone))
+            return BadRequest("Phone is required");
+
         var exists = await _db.Users.AnyAsync(u => u.Email == email);
         if (exists) return Conflict("Email already exists");
 
         var user = new User
         {
             FullName = req.FullName.Trim(),
+            Phone = req.Phone.Trim(),
             Email = email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
             Role = "User"
@@ -51,7 +55,8 @@ public class AuthController : ControllerBase
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
-        return Ok(new { user.Id, user.FullName, user.Email, user.Role });
+        var token = CreateJwt(user);
+        return Ok(new { token, user = new { user.Id, user.FullName, user.Email, user.Phone, user.Role } });
     }
 
     [HttpPost("login")]
@@ -66,7 +71,7 @@ public class AuthController : ControllerBase
         if (!ok) return Unauthorized("Invalid email or password");
 
         var token = CreateJwt(user);
-        return Ok(new { token, user = new { user.Id, user.FullName, user.Email, user.Role } });
+        return Ok(new { token, user = new { user.Id, user.FullName, user.Email, user.Phone, user.Role } });
     }
 
     private string CreateJwt(User user)
@@ -81,7 +86,8 @@ public class AuthController : ControllerBase
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(ClaimTypes.Role, user.Role),
-            new Claim("fullName", user.FullName)
+            new Claim("fullName", user.FullName),
+            new Claim("phone", user.Phone)
         };
 
         var expires = DateTime.UtcNow.AddMinutes(int.Parse(jwt["ExpiresMinutes"]!));
@@ -101,6 +107,7 @@ public class AuthController : ControllerBase
 public class RegisterRequest
 {
     public string FullName { get; set; } = "";
+    public string Phone { get; set; } = "";
     public string Email { get; set; } = "";
     public string Password { get; set; } = "";
 }

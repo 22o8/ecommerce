@@ -32,6 +32,18 @@
 
         <!-- Actions -->
         <div class="flex items-center gap-2">
+          <NuxtLink to="/cart" class="hidden sm:block">
+            <UiButton variant="ghost" class="relative">
+              <Icon name="mdi:cart-outline" class="text-lg" />
+              <span class="rtl-text">{{ t('cart') }}</span>
+              <span
+                v-if="cart.count"
+                class="absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full bg-[rgb(var(--primary))] text-black text-xs font-black grid place-items-center"
+              >
+                {{ cart.count }}
+              </span>
+            </UiButton>
+          </NuxtLink>
           <UiButton variant="ghost" class="px-3" @click="toggleLocale" :title="t('language')">
             <Icon name="mdi:translate" class="text-lg" />
             <span class="hidden sm:inline keep-ltr">{{ ui.locale.toUpperCase() }}</span>
@@ -91,6 +103,13 @@
                 <span class="rtl-text">{{ t('products') }}</span>
               </div>
             </NuxtLink>
+            <NuxtLink to="/cart" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
+              <div class="flex items-center gap-2">
+                <Icon name="mdi:cart-outline" class="text-lg" />
+                <span class="rtl-text">{{ t('cart') }}</span>
+                <span v-if="cart.count" class="keep-ltr text-xs text-muted">({{ cart.count }})</span>
+              </div>
+            </NuxtLink>
             <NuxtLink v-if="auth.isAuthed" to="/orders" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
               <div class="flex items-center gap-2">
                 <Icon name="mdi:receipt-text-outline" class="text-lg" />
@@ -114,6 +133,7 @@
 import UiButton from '~/components/ui/UiButton.vue'
 const ui = useUiStore()
 const auth = useAuthStore()
+const cart = useCartStore()
 const { t } = useI18n()
 
 const route = useRoute()

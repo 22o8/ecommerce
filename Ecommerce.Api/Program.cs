@@ -79,6 +79,13 @@ else
 
 var app = builder.Build();
 
+// تطبيق الـ migrations تلقائياً لتفادي مشاكل النشر
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
+
 // Render / Reverse Proxy Support (مهم)
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
