@@ -44,7 +44,8 @@
     "why1": "Secure and organized checkout",
     "why2": "Download after payment",
     "why3": "Order history saved"
-  },
+  }
+  ,
   "common": {
     "loading": "Loading...",
     "requestFailed": "Request failed",
@@ -54,11 +55,5 @@
     "backToProducts": "Back to products",
     "productDetails": "Product details",
     "noImage": "No image"
-  },
-  "admin": {
-    "overview": "Overview",
-    "products": "Products",
-    "orders": "Orders",
-    "newProduct": "New Product"
   }
 }
