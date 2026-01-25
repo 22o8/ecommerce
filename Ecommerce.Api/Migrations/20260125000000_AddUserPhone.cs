@@ -1,9 +1,10 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
-
-#nullable disable
 
 namespace Ecommerce.Api.Migrations
 {
+    [DbContext(typeof(Data.AppDbContext))]
+    [Migration("20260125000000_AddUserPhone")]
     public partial class AddUserPhone : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -11,8 +12,7 @@ namespace Ecommerce.Api.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Phone",
                 table: "Users",
-                type: "character varying(30)",
-                maxLength: 30,
+                type: "text",
                 nullable: false,
                 defaultValue: "");
         }

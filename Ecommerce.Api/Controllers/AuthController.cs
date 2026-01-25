@@ -1,4 +1,3 @@
-// Ecommerce.Api/Controllers/AuthController.cs
 using Ecommerce.Api.Domain.Entities;
 using Ecommerce.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -12,106 +11,113 @@ namespace Ecommerce.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController : ControllerBase
+public class AuthController(AppDbContext db, IConfiguration cfg) : ControllerBase
 {
-    private readonly AppDbContext _db;
-    private readonly IConfiguration _config;
-
-    public AuthController(AppDbContext db, IConfiguration config)
-    {
-        _db = db;
-        _config = config;
-    }
+    public record RegisterRequest(string FullName, string Phone, string Email, string Password);
+    public record LoginRequest(string Email, string Password);
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest req)
+    public async Task<IActionResult> Register(RegisterRequest req)
     {
-        var email = (req.Email ?? "").Trim().ToLower();
+        if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
+            return BadRequest(new { message = "Email and password are required." });
 
-        if (string.IsNullOrWhiteSpace(req.FullName))
-            return BadRequest("FullName is required");
+        var email = req.Email.Trim().ToLowerInvariant();
 
-        if (string.IsNullOrWhiteSpace(req.Phone))
-            return BadRequest("Phone is required");
+        if (await db.Users.AnyAsync(u => u.Email.ToLower() == email))
+            return BadRequest(new { message = "Email already exists." });
 
-        if (string.IsNullOrWhiteSpace(email))
-            return BadRequest("Email is required");
-
-        if (string.IsNullOrWhiteSpace(req.Password) || req.Password.Length < 6)
-            return BadRequest("Password must be >= 6 chars");
-
-        var exists = await _db.Users.AnyAsync(u => u.Email == email);
-        if (exists) return Conflict("Email already exists");
+        // Optional: set one email as Admin via env/config (ADMIN_EMAIL or Admin:Email)
+        var adminEmail = (cfg["Admin:Email"] ?? Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? "")
+            .Trim().ToLowerInvariant();
+        var role = (!string.IsNullOrWhiteSpace(adminEmail) && adminEmail == email) ? "Admin" : "User";
 
         var user = new User
         {
-            FullName = req.FullName.Trim(),
-            Phone = req.Phone.Trim(),
+            Id = Guid.NewGuid(),
+            FullName = req.FullName?.Trim() ?? "",
+            Phone = req.Phone?.Trim() ?? "",
             Email = email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
-            Role = "User"
+            Role = role,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password)
         };
 
-        _db.Users.Add(user);
-        await _db.SaveChangesAsync();
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
 
-        return Ok(new { user.Id, user.FullName, user.Phone, user.Email, user.Role });
+        var token = CreateJwt(user);
+        return Ok(new { token, user = new { user.Id, user.FullName, user.Phone, user.Email, user.Role } });
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest req)
+    public async Task<IActionResult> Login(LoginRequest req)
     {
-        var email = (req.Email ?? "").Trim().ToLower();
+        try
+        {
+            var email = req.Email?.Trim().ToLowerInvariant() ?? "";
+            var user = await db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+            if (user is null) return Unauthorized(new { message = "Invalid credentials." });
 
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
-        if (user == null) return Unauthorized("Invalid email or password");
+            if (!BCrypt.Net.BCrypt.Verify(req.Password ?? "", user.PasswordHash))
+                return Unauthorized(new { message = "Invalid credentials." });
 
-        var ok = BCrypt.Net.BCrypt.Verify(req.Password ?? "", user.PasswordHash);
-        if (!ok) return Unauthorized("Invalid email or password");
+            // Optional: promote to Admin if ADMIN_EMAIL matches
+            var adminEmail = (cfg["Admin:Email"] ?? Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? "")
+                .Trim().ToLowerInvariant();
+            if (!string.IsNullOrWhiteSpace(adminEmail) && adminEmail == email && user.Role != "Admin")
+            {
+                user.Role = "Admin";
+                await db.SaveChangesAsync();
+            }
 
-        var token = CreateJwt(user);
-        return Ok(new { token, user = new { user.Id, user.FullName, user.Email, user.Role } });
+            var token = CreateJwt(user);
+            return Ok(new { token, user = new { user.Id, user.FullName, user.Phone, user.Email, user.Role } });
+        }
+        catch (Exception ex)
+        {
+            return Problem(title: "Login failed", detail: ex.Message, statusCode: 500);
+        }
     }
 
     private string CreateJwt(User user)
     {
-        var jwt = _config.GetSection("Jwt");
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        // Works on Render/containers: read from env/config, fallback for demo.
+        var key =
+            cfg["Jwt:Key"] ??
+            Environment.GetEnvironmentVariable("JWT_SECRET") ??
+            Environment.GetEnvironmentVariable("Jwt__Key") ??
+            "DEV_ONLY_CHANGE_ME";
+
+        var issuer =
+            cfg["Jwt:Issuer"] ??
+            Environment.GetEnvironmentVariable("JWT_ISSUER") ??
+            Environment.GetEnvironmentVariable("Jwt__Issuer") ??
+            "ecommerce-api";
+
+        var audience =
+            cfg["Jwt:Audience"] ??
+            Environment.GetEnvironmentVariable("JWT_AUDIENCE") ??
+            Environment.GetEnvironmentVariable("Jwt__Audience") ??
+            "ecommerce-web";
+
+        var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+        var creds = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role),
-            new Claim("fullName", user.FullName)
+            new Claim(ClaimTypes.Name, user.Email),
+            new Claim(ClaimTypes.Role, user.Role ?? "User"),
         };
 
-        var expires = DateTime.UtcNow.AddMinutes(int.Parse(jwt["ExpiresMinutes"]!));
-
         var token = new JwtSecurityToken(
-            issuer: jwt["Issuer"],
-            audience: jwt["Audience"],
+            issuer: issuer,
+            audience: audience,
             claims: claims,
-            expires: expires,
+            expires: DateTime.UtcNow.AddDays(7),
             signingCredentials: creds
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-}
-
-public class RegisterRequest
-{
-    public string FullName { get; set; } = "";
-    public string Phone { get; set; } = "";
-    public string Email { get; set; } = "";
-    public string Password { get; set; } = "";
-}
-
-public class LoginRequest
-{
-    public string Email { get; set; } = "";
-    public string Password { get; set; } = "";
 }
