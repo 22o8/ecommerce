@@ -49,11 +49,31 @@
   "common": {
     "loading": "جار التحميل...",
     "requestFailed": "فشل الطلب",
+    "refresh": "تحديث",
+    "actions": "الإجراءات",
+    "details": "تفاصيل",
     "price": "السعر",
     "buy": "شراء الآن",
     "loginToBuy": "سجّل دخولك للشراء",
     "backToProducts": "رجوع للمنتجات",
     "productDetails": "تفاصيل المنتج",
     "noImage": "لا توجد صورة"
+  },
+
+  "cartTitle": "سلة الشراء",
+  "cartHint": "راجع المنتجات ثم أكمل الدفع.",
+  "createAccount": "إنشاء حساب",
+  "accuracyWarning": "قد تختلف الأسعار حسب إعدادات العملة.",
+  "registerFailed": "فشل إنشاء الحساب",
+
+  "admin": {
+    "overview": "نظرة عامة",
+    "products": "المنتجات",
+    "orders": "الطلبات",
+    "ordersHint": "عرض وإدارة الطلبات",
+    "noOrders": "لا توجد طلبات",
+    "noOrdersHint": "عندما يبدأ الزبائن بالشراء ستظهر الطلبات هنا.",
+    "status": "الحالة",
+    "user": "المستخدم"
   }
 }

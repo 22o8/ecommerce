@@ -89,24 +89,4 @@ public class OrdersController : ControllerBase
         if (order == null) return NotFound();
         return Ok(order);
     }
-
-    // DELETE /api/orders/my
-    // يحذف كل طلبات المستخدم الحالي (للتنظيف أثناء التطوير)
-    [HttpDelete("my")]
-    public async Task<IActionResult> DeleteMyOrders()
-    {
-        if (!TryGetUserId(out var userId)) return Unauthorized("Invalid token");
-
-        var orders = await _db.Orders
-            .Where(o => o.UserId == userId)
-            .ToListAsync();
-
-        if (orders.Count == 0) return Ok(new { deleted = 0 });
-
-        _db.Orders.RemoveRange(orders);
-        var deleted = await _db.SaveChangesAsync();
-
-        // deleted هنا يعكس عدد العمليات على EF، مو عدد الطلبات بالضرورة
-        return Ok(new { deletedOrders = orders.Count, affected = deleted });
-    }
 }

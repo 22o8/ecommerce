@@ -4,58 +4,62 @@
     <div class="admin-box">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <div class="text-xl font-extrabold">Products</div>
-          <div class="text-sm admin-muted">Create, publish and manage products</div>
+          <div class="text-xl font-extrabold rtl-text">{{ t('admin.products') }}</div>
+          <div class="text-sm admin-muted rtl-text">{{ t('admin.productsHint') }}</div>
         </div>
 
         <div class="flex gap-2">
-          <NuxtLink to="/admin/products/new" class="admin-primary">+ New Product</NuxtLink>
-          <button class="admin-ghost" type="button" @click="fetchList(1)">Refresh</button>
+          <NuxtLink to="/admin/products/new" class="admin-primary">+ {{ t('admin.newProduct') }}</NuxtLink>
+          <button class="admin-ghost" type="button" @click="fetchList(1)">{{ t('common.refresh') }}</button>
         </div>
       </div>
 
       <!-- Filters -->
       <div class="mt-4 grid gap-2 md:grid-cols-4">
+<<<<<<< HEAD
         <input
           v-model="q"
           class="admin-input"
           placeholder="Search title or slug..."
           @keydown.enter="fetchList(1)"
         />
+=======
+        <input v-model="q" class="admin-input" :placeholder="t('admin.searchProducts')" @keydown.enter="fetchList(1)" />
+>>>>>>> bdd2dec (fix: resolve conflicts + ui cleanup + admin layout + cart)
 
         <select v-model="status" class="admin-input" @change="fetchList(1)">
-          <option value="">All</option>
-          <option value="published">Published</option>
-          <option value="draft">Draft</option>
+          <option value="">{{ t('admin.all') }}</option>
+          <option value="published">{{ t('admin.published') }}</option>
+          <option value="draft">{{ t('admin.draft') }}</option>
         </select>
 
         <select v-model="sort" class="admin-input" @change="fetchList(1)">
-          <option value="newest">Newest</option>
-          <option value="oldest">Oldest</option>
-          <option value="title">Title</option>
-          <option value="priceHigh">Price: High</option>
-          <option value="priceLow">Price: Low</option>
+          <option value="newest">{{ t('admin.sortNewest') }}</option>
+          <option value="oldest">{{ t('admin.sortOldest') }}</option>
+          <option value="title">{{ t('admin.sortTitle') }}</option>
+          <option value="priceHigh">{{ t('admin.sortPriceHigh') }}</option>
+          <option value="priceLow">{{ t('admin.sortPriceLow') }}</option>
         </select>
 
-        <button class="admin-ghost" type="button" @click="fetchList(1)">Search</button>
+        <button class="admin-ghost" type="button" @click="fetchList(1)">{{ t('admin.search') }}</button>
       </div>
 
       <!-- Bulk -->
       <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
-        <div class="text-sm admin-muted">
-          Total: <span class="font-bold text-white">{{ total }}</span>
-          <span v-if="selectedIds.length" class="ml-2">• Selected: {{ selectedIds.length }}</span>
+        <div class="text-sm admin-muted rtl-text">
+          {{ t('admin.total') }}: <span class="font-bold text-white">{{ total }}</span>
+          <span v-if="selectedIds.length" class="ml-2">• {{ t('admin.selected') }}: {{ selectedIds.length }}</span>
         </div>
 
         <div class="flex gap-2" v-if="selectedIds.length">
           <button class="admin-pill" type="button" @click="bulkPublish(true)" :disabled="pending">
-            Publish
+            {{ t('admin.publish') }}
           </button>
           <button class="admin-pill" type="button" @click="bulkPublish(false)" :disabled="pending">
-            Unpublish
+            {{ t('admin.unpublish') }}
           </button>
           <button class="admin-btn-danger" type="button" @click="bulkDelete" :disabled="pending">
-            Delete
+            {{ t('admin.delete') }}
           </button>
         </div>
       </div>
@@ -63,27 +67,32 @@
 
     <!-- List -->
     <div class="admin-box overflow-hidden">
-      <div v-if="loading" class="p-4 admin-muted">Loading...</div>
+      <div v-if="loading" class="p-4 admin-muted rtl-text">{{ t('common.loading') }}</div>
 
       <div v-else-if="items.length === 0" class="p-6 text-center">
-        <div class="text-lg font-extrabold">No products yet</div>
-        <div class="admin-muted mt-1">Create your first product in one minute.</div>
-        <NuxtLink to="/admin/products/new" class="admin-primary inline-flex mt-4">+ Add first product</NuxtLink>
+        <div class="text-lg font-extrabold rtl-text">{{ t('admin.noProducts') }}</div>
+        <div class="admin-muted mt-1 rtl-text">{{ t('admin.noProductsHint') }}</div>
+        <NuxtLink to="/admin/products/new" class="admin-primary inline-flex mt-4">+ {{ t('admin.addFirstProduct') }}</NuxtLink>
       </div>
 
       <div v-else class="admin-table">
         <div class="admin-tr admin-th">
           <div class="flex items-center gap-2">
+<<<<<<< HEAD
             <input
               type="checkbox"
               :checked="allChecked"
               @change="toggleAll(($event.target as HTMLInputElement).checked)"
             />
             <span>Product</span>
+=======
+            <input type="checkbox" :checked="allChecked" @change="toggleAll(($event.target as HTMLInputElement).checked)" />
+            <span class="rtl-text">{{ t('admin.product') }}</span>
+>>>>>>> bdd2dec (fix: resolve conflicts + ui cleanup + admin layout + cart)
           </div>
-          <div>Price</div>
-          <div>Status</div>
-          <div class="text-right">Actions</div>
+          <div class="rtl-text">{{ t('common.price') }}</div>
+          <div class="rtl-text">{{ t('admin.status') }}</div>
+          <div class="text-right rtl-text">{{ t('common.actions') }}</div>
         </div>
 
         <div v-for="p in pagedItems" :key="p.id" class="admin-tr">
@@ -106,15 +115,16 @@
 
           <div>
             <span :class="p.isPublished ? 'badge-on' : 'badge-off'">
-              {{ p.isPublished ? 'Published' : 'Draft' }}
+              {{ p.isPublished ? t('admin.published') : t('admin.draft') }}
             </span>
           </div>
 
           <div class="flex justify-end gap-2">
-            <NuxtLink class="admin-pill" :to="`/admin/products/${p.id}`">Edit</NuxtLink>
+            <NuxtLink class="admin-pill" :to="`/admin/products/${p.id}`">{{ t('common.details') }}</NuxtLink>
             <button class="admin-pill" type="button" @click="quickToggle(p)" :disabled="pending">
-              {{ p.isPublished ? 'Unpublish' : 'Publish' }}
+              {{ p.isPublished ? t('admin.unpublish') : t('admin.publish') }}
             </button>
+<<<<<<< HEAD
             <button class="admin-btn-danger" type="button" @click="removeOne(p)" :disabled="pending">
               Delete
             </button>
@@ -122,27 +132,43 @@
         </div>
 
         <!-- Pagination -->
+=======
+            <button class="admin-btn-danger" type="button" @click="removeOne(p)" :disabled="pending">{{ t('admin.delete') }}</button>
+          </div>
+        </div>
+
+        <!-- Pagination (client-side) -->
+>>>>>>> bdd2dec (fix: resolve conflicts + ui cleanup + admin layout + cart)
         <div class="p-4 flex items-center justify-between">
-          <div class="text-sm admin-muted">Page {{ page }} / {{ totalPages }}</div>
+          <div class="text-sm admin-muted rtl-text">{{ t('admin.page') }} {{ page }} / {{ totalPages }}</div>
           <div class="flex gap-2">
+<<<<<<< HEAD
             <button class="admin-pill" type="button" :disabled="page <= 1" @click="go(page - 1)">
               Prev
             </button>
             <button class="admin-pill" type="button" :disabled="page >= totalPages" @click="go(page + 1)">
               Next
             </button>
+=======
+            <button class="admin-pill" type="button" :disabled="page<=1" @click="go(page-1)">{{ t('admin.prev') }}</button>
+            <button class="admin-pill" type="button" :disabled="page>=totalPages" @click="go(page+1)">{{ t('admin.next') }}</button>
+>>>>>>> bdd2dec (fix: resolve conflicts + ui cleanup + admin layout + cart)
           </div>
         </div>
       </div>
     </div>
 
-    <div v-if="error" class="admin-error">{{ error }}</div>
-    <div v-if="success" class="admin-success">{{ success }}</div>
+    <div v-if="error" class="admin-error rtl-text">{{ error }}</div>
+    <div v-if="success" class="admin-success rtl-text">{{ success }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: ['admin'] })
+
+import { ref, computed, onMounted } from 'vue'
+import { useAdminApi } from '~/app/composables/useAdminApi'
+import { useI18n } from '~/app/composables/useI18n'
 
 type Product = {
   id: string
@@ -152,7 +178,11 @@ type Product = {
   isPublished: boolean
 }
 
+<<<<<<< HEAD
 // Nuxt auto-import (من app/composables)
+=======
+const { t } = useI18n()
+>>>>>>> bdd2dec (fix: resolve conflicts + ui cleanup + admin layout + cart)
 const api = useAdminApi()
 
 const q = ref('')
@@ -180,7 +210,7 @@ const selectedIds = ref<string[]>([])
 const allChecked = computed(() => items.value.length > 0 && selectedIds.value.length === items.value.length)
 
 function extractErr(e: any) {
-  return e?.data?.message || e?.message || 'Request failed'
+  return e?.data?.message || e?.message || t('common.requestFailed')
 }
 
 function toggleOne(id: string) {
@@ -253,7 +283,7 @@ async function quickToggle(p: Product) {
   success.value = ''
   try {
     await api.updateAdminProduct(p.id, { ...p, isPublished: !p.isPublished })
-    success.value = 'Updated.'
+    success.value = t('admin.updated')
     await fetchList(page.value)
   } catch (e: any) {
     error.value = extractErr(e)
@@ -263,13 +293,13 @@ async function quickToggle(p: Product) {
 }
 
 async function removeOne(p: Product) {
-  if (!confirm(`Delete "${p.title}"?`)) return
+  if (!confirm(t('admin.confirmDeleteOne').replace('{title}', p.title))) return
   pending.value = true
   error.value = ''
   success.value = ''
   try {
     await api.deleteAdminProduct(p.id)
-    success.value = 'Deleted.'
+    success.value = t('admin.deleted')
     await fetchList(Math.min(page.value, totalPages.value))
   } catch (e: any) {
     error.value = extractErr(e)
@@ -288,7 +318,7 @@ async function bulkPublish(v: boolean) {
       if (!p) continue
       await api.updateAdminProduct(id, { ...p, isPublished: v })
     }
-    success.value = 'Bulk updated.'
+    success.value = t('admin.bulkUpdated')
     await fetchList(page.value)
   } catch (e: any) {
     error.value = extractErr(e)
@@ -298,7 +328,7 @@ async function bulkPublish(v: boolean) {
 }
 
 async function bulkDelete() {
-  if (!confirm(`Delete ${selectedIds.value.length} products?`)) return
+  if (!confirm(t('admin.confirmDeleteMany').replace('{count}', String(selectedIds.value.length)))) return
   pending.value = true
   error.value = ''
   success.value = ''
@@ -306,7 +336,7 @@ async function bulkDelete() {
     for (const id of selectedIds.value) {
       await api.deleteAdminProduct(id)
     }
-    success.value = 'Bulk deleted.'
+    success.value = t('admin.bulkDeleted')
     await fetchList(Math.min(page.value, totalPages.value))
   } catch (e: any) {
     error.value = extractErr(e)
@@ -401,6 +431,7 @@ onMounted(() => fetchList(1))
   border: 1px solid rgba(16, 185, 129, 0.35);
   background: rgba(16, 185, 129, 0.14);
   font-weight: 800;
+  display: inline-flex;
 }
 .badge-off {
   padding: 6px 10px;
@@ -409,6 +440,7 @@ onMounted(() => fetchList(1))
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.75);
   font-weight: 800;
+  display: inline-flex;
 }
 
 .admin-error {

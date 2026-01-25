@@ -38,10 +38,6 @@ public class AppDbContext : DbContext
             .Property(u => u.Role)
             .HasMaxLength(50);
 
-        modelBuilder.Entity<User>()
-            .Property(u => u.Phone)
-            .HasMaxLength(30);
-
         // Product - Images relation
         modelBuilder.Entity<Product>()
             .HasMany(p => p.Images)

@@ -4,10 +4,6 @@
     <section class="card-soft overflow-hidden">
       <div class="grid gap-6 p-6 md:p-10 lg:grid-cols-2 lg:items-center">
         <div class="grid gap-4">
-          <UiBadge>
-            <Icon name="mdi:flash-outline" />
-            <span class="rtl-text">{{ t('home.badge') }}</span>
-          </UiBadge>
 
           <h1 class="text-3xl md:text-5xl font-black leading-tight rtl-text">
             {{ t('heroTitle') }}
@@ -33,31 +29,7 @@
             </NuxtLink>
           </div>
 
-          <div class="grid gap-3 mt-2 md:grid-cols-3">
-            <div class="rounded-3xl border border-app bg-surface p-4">
-              <div class="flex items-center gap-2">
-                <Icon name="mdi:truck-fast-outline" class="text-xl animate-floaty" />
-                <div class="font-bold rtl-text">{{ t('fastDelivery') }}</div>
-              </div>
-              <div class="text-sm text-muted rtl-text mt-1">{{ t('whyUs') }}</div>
-            </div>
-
-            <div class="rounded-3xl border border-app bg-surface p-4">
-              <div class="flex items-center gap-2">
-                <Icon name="mdi:shield-check-outline" class="text-xl animate-floaty" />
-                <div class="font-bold rtl-text">{{ t('securePayments') }}</div>
-              </div>
-              <div class="text-sm text-muted rtl-text mt-1">{{ t('whyUs') }}</div>
-            </div>
-
-            <div class="rounded-3xl border border-app bg-surface p-4">
-              <div class="flex items-center gap-2">
-                <Icon name="mdi:headset" class="text-xl animate-floaty" />
-                <div class="font-bold rtl-text">{{ t('support') }}</div>
-              </div>
-              <div class="text-sm text-muted rtl-text mt-1">{{ t('whyUs') }}</div>
-            </div>
-          </div>
+          <!-- تم حذف قسم: (تسليم فوري بعد الدفع / لماذا نحن؟ / دفع آمن ومنظم / دعم سريع) حسب الطلب -->
         </div>
 
         <!-- Hero Image -->
@@ -79,15 +51,7 @@
               class="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,.45)] via-transparent to-transparent pointer-events-none"
             />
 
-            <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3">
-              <UiBadge>
-                <span class="rtl-text">{{ t('home.badge') }}</span>
-              </UiBadge>
-
-              <UiBadge>
-                <span class="rtl-text">{{ t('home.section.new') }}</span>
-              </UiBadge>
-            </div>
+            <!-- removed bottom badge (Latest/New) -->
           </div>
         </div>
       </div>

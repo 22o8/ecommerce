@@ -49,11 +49,34 @@
   "common": {
     "loading": "Loading...",
     "requestFailed": "Request failed",
+    "refresh": "Refresh",
+    "actions": "Actions",
+    "details": "Details",
     "price": "Price",
     "buy": "Buy now",
     "loginToBuy": "Login to buy",
     "backToProducts": "Back to products",
     "productDetails": "Product details",
-    "noImage": "No image"
+    "noImage": "No image",
+    "cart": "Cart"
   }
+
+  ,
+  "admin": {
+    "overview": "Overview",
+    "products": "Products",
+    "orders": "Orders",
+    "ordersHint": "View and manage orders",
+    "noOrders": "No orders yet",
+    "noOrdersHint": "When customers place orders, they will appear here.",
+    "status": "Status",
+    "user": "User"
+  },
+
+  "cartTitle": "Shopping cart",
+  "cartHint": "Review your items and continue to checkout.",
+  "benefitsTitle": "What you get after login",
+  "createAccount": "Create account",
+  "accuracyWarning": "Make sure your info is correct.",
+  "registerFailed": "Register failed"
 }

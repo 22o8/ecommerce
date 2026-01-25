@@ -29,7 +29,7 @@ public class AdminOrdersController : ControllerBase
                 o.Status,
                 o.TotalUsd,
                 o.CreatedAt,
-                User = new { o.UserId, o.User.FullName, o.User.Email },
+                User = new { o.UserId, o.User.FullName, o.User.Email, o.User.Phone },
                 Items = o.Items.Select(i => new
                 {
                     i.ItemType,
@@ -46,5 +46,40 @@ public class AdminOrdersController : ControllerBase
             .ToListAsync();
 
         return Ok(orders);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var order = await _db.Orders
+            .Include(o => o.Items)
+            .Include(o => o.Payments)
+            .FirstOrDefaultAsync(o => o.Id == id);
+
+        if (order is null) return NotFound(new { message = "Order not found." });
+
+        _db.OrderItems.RemoveRange(order.Items);
+        _db.Payments.RemoveRange(order.Payments);
+        _db.Orders.Remove(order);
+
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Order deleted.", id });
+    }
+
+    // Helpful for testing/cleanup
+    [HttpDelete("all")]
+    public async Task<IActionResult> DeleteAll()
+    {
+        var orders = await _db.Orders
+            .Include(o => o.Items)
+            .Include(o => o.Payments)
+            .ToListAsync();
+
+        _db.OrderItems.RemoveRange(orders.SelectMany(o => o.Items));
+        _db.Payments.RemoveRange(orders.SelectMany(o => o.Payments));
+        _db.Orders.RemoveRange(orders);
+
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "All orders deleted.", count = orders.Count });
     }
 }
