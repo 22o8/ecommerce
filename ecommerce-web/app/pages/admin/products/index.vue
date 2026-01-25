@@ -16,16 +16,7 @@
 
       <!-- Filters -->
       <div class="mt-4 grid gap-2 md:grid-cols-4">
-<<<<<<< HEAD
-        <input
-          v-model="q"
-          class="admin-input"
-          placeholder="Search title or slug..."
-          @keydown.enter="fetchList(1)"
-        />
-=======
         <input v-model="q" class="admin-input" :placeholder="t('admin.searchProducts')" @keydown.enter="fetchList(1)" />
->>>>>>> bdd2dec (fix: resolve conflicts + ui cleanup + admin layout + cart)
 
         <select v-model="status" class="admin-input" @change="fetchList(1)">
           <option value="">{{ t('admin.all') }}</option>
@@ -78,17 +69,8 @@
       <div v-else class="admin-table">
         <div class="admin-tr admin-th">
           <div class="flex items-center gap-2">
-<<<<<<< HEAD
-            <input
-              type="checkbox"
-              :checked="allChecked"
-              @change="toggleAll(($event.target as HTMLInputElement).checked)"
-            />
-            <span>Product</span>
-=======
             <input type="checkbox" :checked="allChecked" @change="toggleAll(($event.target as HTMLInputElement).checked)" />
             <span class="rtl-text">{{ t('admin.product') }}</span>
->>>>>>> bdd2dec (fix: resolve conflicts + ui cleanup + admin layout + cart)
           </div>
           <div class="rtl-text">{{ t('common.price') }}</div>
           <div class="rtl-text">{{ t('admin.status') }}</div>
@@ -124,35 +106,16 @@
             <button class="admin-pill" type="button" @click="quickToggle(p)" :disabled="pending">
               {{ p.isPublished ? t('admin.unpublish') : t('admin.publish') }}
             </button>
-<<<<<<< HEAD
-            <button class="admin-btn-danger" type="button" @click="removeOne(p)" :disabled="pending">
-              Delete
-            </button>
-          </div>
-        </div>
-
-        <!-- Pagination -->
-=======
             <button class="admin-btn-danger" type="button" @click="removeOne(p)" :disabled="pending">{{ t('admin.delete') }}</button>
           </div>
         </div>
 
         <!-- Pagination (client-side) -->
->>>>>>> bdd2dec (fix: resolve conflicts + ui cleanup + admin layout + cart)
         <div class="p-4 flex items-center justify-between">
           <div class="text-sm admin-muted rtl-text">{{ t('admin.page') }} {{ page }} / {{ totalPages }}</div>
           <div class="flex gap-2">
-<<<<<<< HEAD
-            <button class="admin-pill" type="button" :disabled="page <= 1" @click="go(page - 1)">
-              Prev
-            </button>
-            <button class="admin-pill" type="button" :disabled="page >= totalPages" @click="go(page + 1)">
-              Next
-            </button>
-=======
             <button class="admin-pill" type="button" :disabled="page<=1" @click="go(page-1)">{{ t('admin.prev') }}</button>
             <button class="admin-pill" type="button" :disabled="page>=totalPages" @click="go(page+1)">{{ t('admin.next') }}</button>
->>>>>>> bdd2dec (fix: resolve conflicts + ui cleanup + admin layout + cart)
           </div>
         </div>
       </div>
@@ -178,11 +141,7 @@ type Product = {
   isPublished: boolean
 }
 
-<<<<<<< HEAD
-// Nuxt auto-import (من app/composables)
-=======
 const { t } = useI18n()
->>>>>>> bdd2dec (fix: resolve conflicts + ui cleanup + admin layout + cart)
 const api = useAdminApi()
 
 const q = ref('')
@@ -201,9 +160,7 @@ const total = computed(() => items.value.length)
 const page = ref(1)
 const pageSize = ref(10)
 const totalPages = computed(() => Math.max(1, Math.ceil(items.value.length / pageSize.value)))
-const pagedItems = computed(() =>
-  items.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value)
-)
+const pagedItems = computed(() => items.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
 
 // selection
 const selectedIds = ref<string[]>([])
@@ -214,12 +171,12 @@ function extractErr(e: any) {
 }
 
 function toggleOne(id: string) {
-  if (selectedIds.value.includes(id)) selectedIds.value = selectedIds.value.filter((x) => x !== id)
+  if (selectedIds.value.includes(id)) selectedIds.value = selectedIds.value.filter(x => x !== id)
   else selectedIds.value.push(id)
 }
 
 function toggleAll(v: boolean) {
-  selectedIds.value = v ? items.value.map((x) => x.id) : []
+  selectedIds.value = v ? items.value.map(x => x.id) : []
 }
 
 function go(p: number) {
@@ -230,21 +187,16 @@ function applyClientFilters(list: Product[]) {
   let out = [...list]
 
   const qq = q.value.trim().toLowerCase()
-  if (qq) {
-    out = out.filter(
-      (x) =>
-        (x.title || '').toLowerCase().includes(qq) || (x.slug || '').toLowerCase().includes(qq)
-    )
-  }
+  if (qq) out = out.filter(x => (x.title || '').toLowerCase().includes(qq) || (x.slug || '').toLowerCase().includes(qq))
 
-  if (status.value === 'published') out = out.filter((x) => !!x.isPublished)
-  if (status.value === 'draft') out = out.filter((x) => !x.isPublished)
+  if (status.value === 'published') out = out.filter(x => !!x.isPublished)
+  if (status.value === 'draft') out = out.filter(x => !x.isPublished)
 
-  if (sort.value === 'title') out.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
-  if (sort.value === 'oldest') out.sort((a, b) => String(a.id).localeCompare(String(b.id)))
-  if (sort.value === 'newest') out.sort((a, b) => String(b.id).localeCompare(String(a.id)))
-  if (sort.value === 'priceHigh') out.sort((a, b) => (b.priceUsd || 0) - (a.priceUsd || 0))
-  if (sort.value === 'priceLow') out.sort((a, b) => (a.priceUsd || 0) - (b.priceUsd || 0))
+  if (sort.value === 'title') out.sort((a,b) => (a.title||'').localeCompare(b.title||''))
+  if (sort.value === 'oldest') out.sort((a,b) => String(a.id).localeCompare(String(b.id)))
+  if (sort.value === 'newest') out.sort((a,b) => String(b.id).localeCompare(String(a.id)))
+  if (sort.value === 'priceHigh') out.sort((a,b) => (b.priceUsd||0) - (a.priceUsd||0))
+  if (sort.value === 'priceLow') out.sort((a,b) => (a.priceUsd||0) - (b.priceUsd||0))
 
   return out
 }
@@ -257,20 +209,17 @@ async function fetchList(p = 1) {
   try {
     const res = await api.listAdminProducts<any[]>()
     const list = Array.isArray(res) ? res : []
-
-    items.value = applyClientFilters(
-      list.map((x) => ({
-        id: String(x.id),
-        title: String(x.title || ''),
-        slug: String(x.slug || ''),
-        priceUsd: Number(x.priceUsd || 0),
-        isPublished: !!x.isPublished,
-      }))
-    )
+    items.value = applyClientFilters(list.map(x => ({
+      id: String(x.id),
+      title: String(x.title || ''),
+      slug: String(x.slug || ''),
+      priceUsd: Number(x.priceUsd || 0),
+      isPublished: !!x.isPublished,
+    })))
 
     page.value = p
     go(p)
-  } catch (e: any) {
+  } catch (e:any) {
     error.value = extractErr(e)
   } finally {
     loading.value = false
@@ -285,7 +234,7 @@ async function quickToggle(p: Product) {
     await api.updateAdminProduct(p.id, { ...p, isPublished: !p.isPublished })
     success.value = t('admin.updated')
     await fetchList(page.value)
-  } catch (e: any) {
+  } catch (e:any) {
     error.value = extractErr(e)
   } finally {
     pending.value = false
@@ -301,7 +250,7 @@ async function removeOne(p: Product) {
     await api.deleteAdminProduct(p.id)
     success.value = t('admin.deleted')
     await fetchList(Math.min(page.value, totalPages.value))
-  } catch (e: any) {
+  } catch (e:any) {
     error.value = extractErr(e)
   } finally {
     pending.value = false
@@ -314,13 +263,13 @@ async function bulkPublish(v: boolean) {
   success.value = ''
   try {
     for (const id of selectedIds.value) {
-      const p = items.value.find((x) => x.id === id)
+      const p = items.value.find(x => x.id === id)
       if (!p) continue
       await api.updateAdminProduct(id, { ...p, isPublished: v })
     }
     success.value = t('admin.bulkUpdated')
     await fetchList(page.value)
-  } catch (e: any) {
+  } catch (e:any) {
     error.value = extractErr(e)
   } finally {
     pending.value = false
@@ -338,7 +287,7 @@ async function bulkDelete() {
     }
     success.value = t('admin.bulkDeleted')
     await fetchList(Math.min(page.value, totalPages.value))
-  } catch (e: any) {
+  } catch (e:any) {
     error.value = extractErr(e)
   } finally {
     pending.value = false
@@ -349,127 +298,123 @@ onMounted(() => fetchList(1))
 </script>
 
 <style scoped>
-.admin-box {
+.admin-box{
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
   padding: 16px;
 }
-.admin-muted {
-  color: rgba(255, 255, 255, 0.65);
-}
+.admin-muted{ color: rgba(255,255,255,.65); }
 
-.admin-input {
+.admin-input{
   width: 100%;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
   padding: 10px 12px;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255,255,255,.9);
   outline: none;
 }
-.admin-input:focus {
-  border-color: rgba(99, 102, 241, 0.35);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+.admin-input:focus{
+  border-color: rgba(99,102,241,.35);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.12);
 }
 
-.admin-primary {
+.admin-primary{
   padding: 10px 12px;
   border-radius: 14px;
-  background: rgba(99, 102, 241, 0.22);
-  border: 1px solid rgba(99, 102, 241, 0.35);
+  background: rgba(99,102,241,.22);
+  border: 1px solid rgba(99,102,241,.35);
   color: white;
   font-weight: 900;
 }
-.admin-ghost {
+.admin-ghost{
   padding: 10px 12px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.85);
   font-weight: 800;
 }
-.admin-pill {
+.admin-pill{
   padding: 8px 10px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.9);
   font-weight: 800;
 }
-.admin-btn-danger {
+.admin-btn-danger{
   padding: 8px 10px;
   border-radius: 14px;
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  background: rgba(239, 68, 68, 0.14);
-  color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(239,68,68,.35);
+  background: rgba(239,68,68,.14);
+  color: rgba(255,255,255,.95);
   font-weight: 900;
 }
 
-.admin-table {
-  display: grid;
-}
-.admin-tr {
+.admin-table{ display: grid; }
+.admin-tr{
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 2fr;
   gap: 12px;
   padding: 12px 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255,255,255,.08);
 }
-.admin-th {
+.admin-th{
   border-top: none;
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(0,0,0,.18);
   font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: .08em;
+  color: rgba(255,255,255,.65);
 }
 
-.badge-on {
+.badge-on{
   padding: 6px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16,185,129,.35);
+  background: rgba(16,185,129,.14);
   font-weight: 800;
   display: inline-flex;
 }
-.badge-off {
+.badge-off{
   padding: 6px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.75);
   font-weight: 800;
   display: inline-flex;
 }
 
-.admin-error {
+.admin-error{
   border-radius: 16px;
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239,68,68,.35);
+  background: rgba(239,68,68,.10);
   padding: 12px 14px;
 }
-.admin-success {
+.admin-success{
   border-radius: 16px;
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16,185,129,.35);
+  background: rgba(16,185,129,.10);
   padding: 12px 14px;
 }
 
-.thumb {
+.thumb{
   width: 46px;
   height: 46px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
   flex: 0 0 auto;
   overflow: hidden;
 }
-.thumb-inner {
+.thumb-inner{
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 </style>

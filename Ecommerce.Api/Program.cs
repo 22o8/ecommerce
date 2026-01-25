@@ -24,8 +24,8 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // DbContext
-var conn = config.GetConnectionString("Default")
-          ?? config["ConnectionStrings__Default"];
+var conn = builder.Configuration.GetConnectionString("Default")
+          ?? builder.Configuration["ConnectionStrings__Default"];
 
 if (string.IsNullOrWhiteSpace(conn))
     throw new Exception("Missing connection string: ConnectionStrings:Default");
@@ -49,10 +49,6 @@ builder.Services.AddCors(opt =>
 });
 
 // JWT Auth (إذا عندك Secret بالكونفيغ)
-<<<<<<< HEAD
-var jwtKey = config["Jwt:Key"] ?? config["JWT_KEY"];
-
-=======
 var jwtKey = config["Jwt:Key"]
     ?? config["JWT_SECRET"]
     ?? config["JWT_KEY"]
@@ -60,7 +56,6 @@ var jwtKey = config["Jwt:Key"]
     ?? Environment.GetEnvironmentVariable("JWT_KEY")
     ?? Environment.GetEnvironmentVariable("Jwt__Key")
     ?? "DEV_ONLY_CHANGE_ME";
->>>>>>> bdd2dec (fix: resolve conflicts + ui cleanup + admin layout + cart)
 if (!string.IsNullOrWhiteSpace(jwtKey))
 {
     var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
@@ -96,25 +91,8 @@ var app = builder.Build();
 // تطبيق الـ migrations تلقائياً لتفادي مشاكل النشر
 using (var scope = app.Services.CreateScope())
 {
-<<<<<<< HEAD
-    try
-    {
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        db.Database.Migrate();
-    }
-    catch (Exception ex)
-    {
-        var logger = scope.ServiceProvider
-            .GetRequiredService<ILoggerFactory>()
-            .CreateLogger("Migrations");
-
-        logger.LogError(ex, "Database migration failed");
-        // لا نكسر التطبيق؛ راح تبين المشكلة في اللوغ
-    }
-=======
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
->>>>>>> bdd2dec (fix: resolve conflicts + ui cleanup + admin layout + cart)
 }
 
 // Render / Reverse Proxy Support (مهم)
