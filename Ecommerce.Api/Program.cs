@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
-var config = builder.Configuration;
 
 // Configuration helper (avoids using an undefined variable during publish/build)
 var config = builder.Configuration;
