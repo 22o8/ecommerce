@@ -41,6 +41,13 @@
             <Icon :name="ui.theme === 'dark' ? 'mdi:weather-night' : 'mdi:white-balance-sunny'" class="text-lg" />
           </UiButton>
 
+          <NuxtLink to="/cart" class="hidden sm:block">
+            <UiButton variant="ghost" class="px-3" :title="t('cart')">
+              <Icon name="mdi:cart-outline" class="text-lg" />
+              <span v-if="cart.count" class="ml-1 keep-ltr text-xs opacity-80">({{ cart.count }})</span>
+            </UiButton>
+          </NuxtLink>
+
           <NuxtLink v-if="isAdmin" to="/admin" class="hidden sm:block">
             <UiButton variant="secondary">
               <Icon name="mdi:view-dashboard-outline" class="text-lg" />
@@ -85,6 +92,12 @@
                 <span class="rtl-text">{{ t('home') }}</span>
               </div>
             </NuxtLink>
+            <NuxtLink to="/cart" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
+              <div class="flex items-center gap-2">
+                <Icon name="mdi:cart-outline" class="text-lg" />
+                <span class="rtl-text">{{ t('cart') }}</span>
+              </div>
+            </NuxtLink>
             <NuxtLink to="/products" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
               <div class="flex items-center gap-2">
                 <Icon name="mdi:shopping-search-outline" class="text-lg" />
@@ -112,8 +125,13 @@
 
 <script setup lang="ts">
 import UiButton from '~/components/ui/UiButton.vue'
+import { useI18n } from '~/app/composables/useI18n'
+import { useUiStore } from '~/app/stores/ui'
+import { useAuthStore } from '~/app/stores/auth'
+import { useCartStore } from '~/app/stores/cart'
 const ui = useUiStore()
 const auth = useAuthStore()
+const cart = useCartStore()
 const { t } = useI18n()
 
 const route = useRoute()

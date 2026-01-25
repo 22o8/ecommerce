@@ -21,6 +21,8 @@
         </UiButton>
 
         <p v-if="error" class="text-sm rtl-text text-[rgb(var(--danger))]">{{ error }}</p>
+
+        <NuxtLink to="/register" class="text-sm rtl-text underline opacity-90">{{ t('noAccount') }}</NuxtLink>
       </form>
     </div>
 

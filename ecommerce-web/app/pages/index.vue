@@ -4,10 +4,6 @@
     <section class="card-soft overflow-hidden">
       <div class="grid gap-6 p-6 md:p-10 lg:grid-cols-2 lg:items-center">
         <div class="grid gap-4">
-          <UiBadge>
-            <Icon name="mdi:flash-outline" />
-            <span class="rtl-text">{{ t('home.badge') }}</span>
-          </UiBadge>
 
           <h1 class="text-3xl md:text-5xl font-black leading-tight rtl-text">
             {{ t('heroTitle') }}
