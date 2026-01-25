@@ -1,9 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Ecommerce.Api.Migrations
 {
-    [DbContext(typeof(Data.AppDbContext))]
     [Migration("20260125000000_AddUserPhone")]
     public partial class AddUserPhone : Migration
     {

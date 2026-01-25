@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useApi } from '~/app/composables/useApi'
-import { useI18n } from '~/app/composables/useI18n'
+import { useApi } from '~/composables/useApi'
+import { useI18n } from '~/composables/useI18n'
 
 const { t } = useI18n()
 const api = useApi()

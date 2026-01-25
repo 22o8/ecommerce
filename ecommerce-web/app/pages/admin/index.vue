@@ -27,6 +27,8 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
+
 definePageMeta({ layout: 'admin' })
 
 const stats = {
