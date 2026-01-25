@@ -6,19 +6,14 @@ namespace Ecommerce.Api.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "Phone",
-                table: "Users",
-                type: "text",
-                nullable: false,
-                defaultValue: "");
+            // Make migration idempotent for existing databases.
+            // Render DB already has the column but migrations history may not.
+            migrationBuilder.Sql("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"Phone\" text NOT NULL DEFAULT '';" );
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Phone",
-                table: "Users");
+            migrationBuilder.Sql("ALTER TABLE \"Users\" DROP COLUMN IF EXISTS \"Phone\";");
         }
     }
 }
