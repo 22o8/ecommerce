@@ -112,3 +112,14 @@ C:\Users\Administrator\Desktop\3\Ecommerce.Api\obj\Debug\net8.0\refint\Ecommerce
 C:\Users\Administrator\Desktop\3\Ecommerce.Api\obj\Debug\net8.0\Ecommerce.Api.pdb
 C:\Users\Administrator\Desktop\3\Ecommerce.Api\obj\Debug\net8.0\Ecommerce.Api.genruntimeconfig.cache
 C:\Users\Administrator\Desktop\3\Ecommerce.Api\obj\Debug\net8.0\ref\Ecommerce.Api.dll
+C:\Users\Administrator\Desktop\ecommerce-project\Ecommerce.Api\obj\Debug\net8.0\Ecommerce.Api.csproj.AssemblyReference.cache
+C:\Users\Administrator\Desktop\ecommerce-project\Ecommerce.Api\obj\Debug\net8.0\Ecommerce.Api.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Administrator\Desktop\ecommerce-project\Ecommerce.Api\obj\Debug\net8.0\Ecommerce.Api.AssemblyInfoInputs.cache
+C:\Users\Administrator\Desktop\ecommerce-project\Ecommerce.Api\obj\Debug\net8.0\Ecommerce.Api.AssemblyInfo.cs
+C:\Users\Administrator\Desktop\ecommerce-project\Ecommerce.Api\obj\Debug\net8.0\Ecommerce.Api.csproj.CoreCompileInputs.cache
+C:\Users\Administrator\Desktop\ecommerce-project\Ecommerce.Api\obj\Debug\net8.0\Ecommerce.Api.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\Administrator\Desktop\ecommerce-project\Ecommerce.Api\obj\Debug\net8.0\Ecommerce.Api.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\Administrator\Desktop\ecommerce-project\Ecommerce.Api\obj\Debug\net8.0\Ecommerce.Api.sourcelink.json
+C:\Users\Administrator\Desktop\ecommerce-project\Ecommerce.Api\obj\Debug\net8.0\Ecommerce.Api.dll
+C:\Users\Administrator\Desktop\ecommerce-project\Ecommerce.Api\obj\Debug\net8.0\refint\Ecommerce.Api.dll
+C:\Users\Administrator\Desktop\ecommerce-project\Ecommerce.Api\obj\Debug\net8.0\Ecommerce.Api.pdb
