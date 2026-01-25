@@ -15,17 +15,17 @@
         <div class="mt-4 grad-line" />
 
         <nav class="mt-4 grid gap-2 text-sm">
-          <NuxtLink to="/admin" class="navItem">
+          <NuxtLink to="/admin" class="navItem" :class="{active: route.path === '/admin'}">
             <Icon name="mdi:chart-box-outline" class="text-lg" />
             <span class="rtl-text">{{ t('admin.overview') }}</span>
           </NuxtLink>
 
-          <NuxtLink to="/admin/products">
-  <span>Products</span>
-</NuxtLink>
+          <NuxtLink to="/admin/products" class="navItem" :class="{active: route.path.startsWith('/admin/products')}">
+            <Icon name="mdi:package-variant-closed" class="text-lg" />
+            <span class="rtl-text">{{ t('admin.products') }}</span>
+          </NuxtLink>
 
-
-          <NuxtLink to="/admin/orders" class="navItem">
+          <NuxtLink to="/admin/orders" class="navItem" :class="{active: route.path.startsWith('/admin/orders')}">
             <Icon name="mdi:receipt-text-outline" class="text-lg" />
             <span class="rtl-text">{{ t('admin.orders') }}</span>
           </NuxtLink>

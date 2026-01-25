@@ -1,69 +1,183 @@
 <template>
   <div class="space-y-4">
     <div class="admin-box">
-      <div class="text-xl font-extrabold">Orders</div>
-      <div class="text-sm admin-muted">View and manage orders</div>
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+          <div class="text-xl font-extrabold rtl-text">{{ t('admin.orders') }}</div>
+          <div class="text-sm admin-muted rtl-text">{{ t('admin.ordersHint') }}</div>
+        </div>
+
+        <div class="flex gap-2">
+          <button class="admin-ghost" type="button" @click="fetchOrders()" :disabled="loading">
+            {{ t('common.refresh') }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="admin-box overflow-hidden">
-      <div class="admin-table">
+      <div v-if="loading" class="p-4 admin-muted rtl-text">{{ t('common.loading') }}</div>
+
+      <div v-else-if="orders.length === 0" class="p-6 text-center">
+        <div class="text-lg font-extrabold rtl-text">{{ t('admin.noOrders') }}</div>
+        <div class="admin-muted mt-1 rtl-text">{{ t('admin.noOrdersHint') }}</div>
+      </div>
+
+      <div v-else class="admin-table">
         <div class="admin-tr admin-th">
           <div>ID</div>
-          <div>Status</div>
-          <div>User</div>
-          <div class="text-right">Actions</div>
+          <div class="rtl-text">{{ t('admin.status') }}</div>
+          <div class="rtl-text">{{ t('admin.user') }}</div>
+          <div class="text-right rtl-text">{{ t('common.actions') }}</div>
         </div>
 
-        <div v-if="pending" class="p-4 admin-muted">Loading...</div>
-        <div v-else-if="items.length === 0" class="p-4 admin-muted">No orders yet.</div>
-        <div v-else>
-          <div v-for="o in items" :key="o.id" class="admin-tr">
-            <div class="font-semibold">{{ o.id }}</div>
-            <div class="admin-muted text-sm">{{ o.status || o.state || '—' }}</div>
-            <div class="admin-muted text-sm">{{ o.userEmail || o.user?.email || '—' }}</div>
-            <div class="flex justify-end">
-              <NuxtLink :to="`/admin/orders/${o.id}`" class="admin-pill">Details</NuxtLink>
-            </div>
+        <div v-for="o in orders" :key="o.id" class="admin-tr">
+          <div class="font-mono text-xs break-all">{{ o.id }}</div>
+
+          <div>
+            <span :class="statusClass(o.status)">{{ o.status }}</span>
+          </div>
+
+          <div class="truncate">{{ o.userEmail || '-' }}</div>
+
+          <div class="flex justify-end gap-2">
+            <NuxtLink class="admin-pill" :to="`/admin/orders/${o.id}`">{{ t('common.details') }}</NuxtLink>
           </div>
         </div>
       </div>
     </div>
 
-    <div v-if="error" class="admin-error">{{ error }}</div>
+    <div v-if="error" class="admin-error rtl-text">{{ error }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
-const api = useAdminApi()
-const pending = ref(false)
-const error = ref('')
-const items = ref<any[]>([])
+import { ref } from 'vue'
+import { useApi } from '~/composables/useApi'
+import { useI18n } from '~/app/composables/useI18n'
 
-async function load() {
-  pending.value = true
+type OrderRow = {
+  id: string
+  status: string
+  userEmail?: string
+}
+
+const { t } = useI18n()
+const api = useApi()
+
+const loading = ref(false)
+const error = ref('')
+const orders = ref<OrderRow[]>([])
+
+function extractErr(e: any) {
+  return e?.data?.message || e?.message || t('common.requestFailed')
+}
+
+function statusClass(status: string) {
+  const s = (status || '').toLowerCase()
+  if (s.includes('paid') || s.includes('completed') || s.includes('success')) return 'badge-on'
+  if (s.includes('cancel')) return 'badge-bad'
+  return 'badge-off'
+}
+
+async function fetchOrders() {
+  loading.value = true
   error.value = ''
   try {
-    // swagger: GET /api/admin/orders (no params)
-    const res: any = await api.get('/admin/orders')
-    items.value = Array.isArray(res) ? res : (res.items || [])
+    const res = await api.get<any[]>('/admin/orders')
+    const list = Array.isArray(res) ? res : []
+    orders.value = list.map(x => ({
+      id: String(x.id),
+      status: String(x.status || 'Unknown'),
+      userEmail: x.userEmail ? String(x.userEmail) : (x.user?.email ? String(x.user.email) : ''),
+    }))
   } catch (e: any) {
-    error.value = e?.data?.message || e?.message || 'Failed to load orders'
+    error.value = extractErr(e)
   } finally {
-    pending.value = false
+    loading.value = false
   }
 }
 
-onMounted(load)
+fetchOrders()
 </script>
 
 <style scoped>
-.admin-box{ border-radius: 20px; border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.06); padding: 16px; }
+.admin-box{
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  padding: 16px;
+}
 .admin-muted{ color: rgba(255,255,255,.65); }
-.admin-pill{ padding:8px 10px; border-radius:14px; border:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.06); color: rgba(255,255,255,.9); }
-.admin-table{ display:grid; }
-.admin-tr{ display:grid; grid-template-columns: 2fr 1fr 2fr 1fr; gap:12px; padding:12px 16px; border-top:1px solid rgba(255,255,255,.08); }
-.admin-th{ border-top:none; background: rgba(0,0,0,.18); font-size:12px; text-transform:uppercase; letter-spacing:.08em; color: rgba(255,255,255,.65); }
-.admin-error{ border-radius:16px; border:1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.10); padding:12px 14px; }
+
+.admin-ghost{
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.85);
+  font-weight: 800;
+}
+
+.admin-pill{
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.9);
+  font-weight: 800;
+}
+
+.admin-table{ display: grid; }
+.admin-tr{
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  align-items: center;
+}
+.admin-th{
+  border-top: none;
+  background: rgba(0,0,0,.18);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: rgba(255,255,255,.65);
+}
+
+.badge-on{
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(16,185,129,.35);
+  background: rgba(16,185,129,.14);
+  font-weight: 800;
+  display: inline-flex;
+}
+.badge-off{
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.75);
+  font-weight: 800;
+  display: inline-flex;
+}
+.badge-bad{
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(239,68,68,.35);
+  background: rgba(239,68,68,.14);
+  font-weight: 800;
+  display: inline-flex;
+}
+
+.admin-error{
+  border-radius: 16px;
+  border: 1px solid rgba(239,68,68,.35);
+  background: rgba(239,68,68,.10);
+  padding: 12px 14px;
+}
 </style>
