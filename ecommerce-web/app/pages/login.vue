@@ -6,14 +6,14 @@
           <Icon name="mdi:account-lock-outline" class="text-2xl animate-floaty" />
         </div>
         <div>
-          <h1 class="text-2xl font-black rtl-text">{{ t('loginTitle') }}</h1>
-          <p class="text-sm text-muted rtl-text">{{ t('loginSubtitle') }}</p>
+          <h1 class="text-2xl font-black rtl-text">{{ t('login.title') }}</h1>
+          <p class="text-sm text-muted rtl-text">{{ t('login.subtitle') }}</p>
         </div>
       </div>
 
       <form class="mt-6 grid gap-4" @submit.prevent="submit">
-        <UiInput v-model="email" type="email" autocomplete="email" :label="t('email')" class="keep-ltr" />
-        <UiInput v-model="password" type="password" autocomplete="current-password" :label="t('password')" class="keep-ltr" />
+        <UiInput v-model="email" type="email" autocomplete="email" :label="t('auth.email')" class="keep-ltr" />
+        <UiInput v-model="password" type="password" autocomplete="current-password" :label="t('auth.password')" class="keep-ltr" />
 
         <UiButton :loading="loading" type="submit">
           <Icon name="mdi:login-variant" class="text-lg" />
@@ -21,9 +21,9 @@
         </UiButton>
 
         <p class="text-sm text-muted rtl-text">
-          {{ t('noAccount') }}
+          {{ t('auth.noAccount') }}
           <NuxtLink to="/register" class="font-bold text-[rgb(var(--primary))]">
-            {{ t('createAccount') }}
+            {{ t('register.title') }}
           </NuxtLink>
         </p>
 

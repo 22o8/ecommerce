@@ -6,16 +6,16 @@
           <Icon name="mdi:account-plus-outline" class="text-2xl animate-floaty" />
         </div>
         <div>
-          <h1 class="text-2xl font-black rtl-text">{{ t('registerTitle') }}</h1>
-          <p class="text-sm text-muted rtl-text">{{ t('registerSubtitle') }}</p>
+          <h1 class="text-2xl font-black rtl-text">{{ t('register.title') }}</h1>
+          <p class="text-sm text-muted rtl-text">{{ t('register.subtitle') }}</p>
         </div>
       </div>
 
       <form class="mt-6 grid gap-4" @submit.prevent="submit">
-        <UiInput v-model="fullName" autocomplete="name" :label="t('fullName')" class="rtl-text" />
-        <UiInput v-model="phone" autocomplete="tel" :label="t('phone')" class="keep-ltr" />
-        <UiInput v-model="email" type="email" autocomplete="email" :label="t('email')" class="keep-ltr" />
-        <UiInput v-model="password" type="password" autocomplete="new-password" :label="t('password')" class="keep-ltr" />
+        <UiInput v-model="fullName" autocomplete="name" :label="t('auth.fullName')" class="rtl-text" />
+        <UiInput v-model="phone" autocomplete="tel" :label="t('auth.phone')" class="keep-ltr" />
+        <UiInput v-model="email" type="email" autocomplete="email" :label="t('auth.email')" class="keep-ltr" />
+        <UiInput v-model="password" type="password" autocomplete="new-password" :label="t('auth.password')" class="keep-ltr" />
 
         <UiButton :loading="loading" type="submit">
           <Icon name="mdi:account-check-outline" class="text-lg" />
