@@ -6,12 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
-<<<<<<< HEAD
-
-// Configuration helper (avoids using an undefined variable during publish/build)
-var config = builder.Configuration;
-=======
->>>>>>> d1656da (fix: register/login + phone + auto migrate)
 
 // ============================
 // Services
