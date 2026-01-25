@@ -79,11 +79,20 @@ else
 
 var app = builder.Build();
 
-// تطبيق الـ migrations تلقائياً لتفادي مشاكل النشر
+// تطبيق المايغريشن تلقائياً (مهم للديبلوي على Render)
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Migrations");
+        logger.LogError(ex, "Database migration failed");
+        // لا نكسر التطبيق؛ راح تبين المشكلة في اللوغ
+    }
 }
 
 // Render / Reverse Proxy Support (مهم)

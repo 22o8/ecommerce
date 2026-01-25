@@ -11,8 +11,10 @@ namespace Ecommerce.Api.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Phone",
                 table: "Users",
-                type: "text",
-                nullable: true);
+                type: "character varying(30)",
+                maxLength: 30,
+                nullable: false,
+                defaultValue: "");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

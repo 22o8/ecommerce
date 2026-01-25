@@ -78,86 +78,6 @@ public class CheckoutController : ControllerBase
         });
     }
 
-    // POST /api/checkout/cart
-    // ينشئ Order واحد لعدة منتجات من السلة
-    [HttpPost("cart")]
-    public async Task<IActionResult> CheckoutCart([FromBody] CheckoutCartRequest req)
-    {
-        if (!TryGetUserId(out var userId)) return Unauthorized("Invalid token");
-
-        if (req?.Items == null || req.Items.Count == 0)
-            return BadRequest("Cart is empty");
-
-        if (req.Items.Count > 50)
-            return BadRequest("Too many items");
-
-        // sanitize quantities and collect ids
-        var items = req.Items
-            .Where(i => i.ProductId != Guid.Empty)
-            .Select(i => new { i.ProductId, Quantity = i.Quantity <= 0 ? 1 : i.Quantity })
-            .ToList();
-
-        if (items.Count == 0) return BadRequest("Cart is empty");
-
-        if (items.Any(i => i.Quantity > 50))
-            return BadRequest("Quantity too large");
-
-        var productIds = items.Select(i => i.ProductId).Distinct().ToList();
-
-        var products = await _db.Products
-            .Where(p => productIds.Contains(p.Id) && p.IsPublished)
-            .ToListAsync();
-
-        if (products.Count != productIds.Count)
-            return NotFound("One or more products not found");
-
-        var order = new Order
-        {
-            UserId = userId,
-            Status = "PendingPayment",
-            TotalUsd = 0
-        };
-
-        foreach (var i in items)
-        {
-            var p = products.First(x => x.Id == i.ProductId);
-            var lineTotal = p.PriceUsd * i.Quantity;
-            order.TotalUsd += lineTotal;
-
-            order.Items.Add(new OrderItem
-            {
-                ItemType = "DigitalProduct",
-                ProductId = p.Id,
-                UnitPriceUsd = p.PriceUsd,
-                Quantity = i.Quantity,
-                LineTotalUsd = lineTotal
-            });
-        }
-
-        var payment = new Payment
-        {
-            Order = order,
-            Provider = "Mock",
-            Status = "Pending",
-            ProviderRef = $"MOCK-{Guid.NewGuid():N}",
-            AmountUsd = order.TotalUsd
-        };
-
-        order.Payments.Add(payment);
-
-        _db.Orders.Add(order);
-        await _db.SaveChangesAsync();
-
-        return Ok(new
-        {
-            orderId = order.Id,
-            status = order.Status,
-            amountUsd = order.TotalUsd,
-            items = order.Items.Select(x => new { x.ProductId, x.Quantity, x.UnitPriceUsd, x.LineTotalUsd }).ToList(),
-            payment = new { payment.Id, payment.Provider, payment.Status, payment.ProviderRef }
-        });
-    }
-
     // POST /api/checkout/services
     // هذا ينشئ Order مرتبط بـ ServiceRequest موجود (اللي سويته سابقًا)
     [HttpPost("services")]
@@ -221,17 +141,6 @@ public class CheckoutController : ControllerBase
 }
 
 public class CheckoutProductRequest
-{
-    public Guid ProductId { get; set; }
-    public int Quantity { get; set; } = 1;
-}
-
-public class CheckoutCartRequest
-{
-    public List<CheckoutCartItem> Items { get; set; } = new();
-}
-
-public class CheckoutCartItem
 {
     public Guid ProductId { get; set; }
     public int Quantity { get; set; } = 1;

@@ -3042,11 +3042,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Administrator\\Desktop\\ecommerce-project\\Ecommerce.Api\\Ecommerce.Api.csproj",
+      "projectUniqueName": "C:\\Users\\Administrator\\Desktop\\3\\Ecommerce.Api\\Ecommerce.Api.csproj",
       "projectName": "Ecommerce.Api",
-      "projectPath": "C:\\Users\\Administrator\\Desktop\\ecommerce-project\\Ecommerce.Api\\Ecommerce.Api.csproj",
+      "projectPath": "C:\\Users\\Administrator\\Desktop\\3\\Ecommerce.Api\\Ecommerce.Api.csproj",
       "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Administrator\\Desktop\\ecommerce-project\\Ecommerce.Api\\obj\\",
+      "outputPath": "C:\\Users\\Administrator\\Desktop\\3\\Ecommerce.Api\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config"
