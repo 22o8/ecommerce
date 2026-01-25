@@ -3,13 +3,12 @@ import { computed } from 'vue'
 import { useApi } from '~/composables/useApi'
 
 type LoginRequest = { email: string; password: string }
-type RegisterRequest = { fullName: string; phone: string; email: string; password: string }
+type RegisterRequest = { fullName: string; email: string; password: string }
 
 export type User = {
   id: string
   fullName: string
   email: string
-  phone?: string
   role: string
 }
 
@@ -46,10 +45,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function register(payload: RegisterRequest) {
     const api = useApi()
-    const res: any = await api.post('/Auth/register', payload)
-    token.value = res?.token ?? null
-    user.value = res?.user ?? null
-    return res
+    return await api.post('/Auth/register', payload)
   }
 
   function logout() {

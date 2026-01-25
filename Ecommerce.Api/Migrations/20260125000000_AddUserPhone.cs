@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 
+#nullable disable
+
 namespace Ecommerce.Api.Migrations
 {
     [Migration("20260125000000_AddUserPhone")]
@@ -7,10 +9,9 @@ namespace Ecommerce.Api.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-        // في بعض بيئات النشر (مثل Render) ممكن يكون العمود موجود أصلًا
-        // بسبب تشغيل Migration سابق أو تعديل يدوي على قاعدة البيانات.
-        // نخليها Idempotent حتى ما يطيح التطبيق بخطأ: column already exists
-        migrationBuilder.Sql(@"
+            // Idempotent: لا يطيّح الديبلوي إذا العمود موجود مسبقاً
+            // نخليه VARCHAR(30) حتى يطابق أغلب إعدادات الـ Entity (MaxLength 30)
+            migrationBuilder.Sql(@"
 DO $$
 BEGIN
     IF NOT EXISTS (
@@ -20,7 +21,7 @@ BEGIN
           AND table_name   = 'Users'
           AND column_name  = 'Phone'
     ) THEN
-        ALTER TABLE \"Users\" ADD \"Phone\" text NOT NULL DEFAULT '';
+        ALTER TABLE ""Users"" ADD ""Phone"" character varying(30) NOT NULL DEFAULT '';
     END IF;
 END $$;
 ");
@@ -28,7 +29,7 @@ END $$;
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-        migrationBuilder.Sql(@"
+            migrationBuilder.Sql(@"
 DO $$
 BEGIN
     IF EXISTS (
@@ -38,7 +39,7 @@ BEGIN
           AND table_name   = 'Users'
           AND column_name  = 'Phone'
     ) THEN
-        ALTER TABLE \"Users\" DROP COLUMN \"Phone\";
+        ALTER TABLE ""Users"" DROP COLUMN ""Phone"";
     END IF;
 END $$;
 ");
