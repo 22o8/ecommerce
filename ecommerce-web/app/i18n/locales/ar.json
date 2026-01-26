@@ -44,11 +44,10 @@
     "why1": "شراء آمن ومنظم",
     "why2": "تحميل ملفك بعد الدفع",
     "why3": "تاريخ طلباتك محفوظ"
-  }
-  ,
+  },
   "common": {
     "loading": "جار التحميل...",
-    "requestFailed": "فشل الطلب",
+    "requestFailed": "فشل الطلب. حاول مرة أخرى.",
     "refresh": "تحديث",
     "actions": "الإجراءات",
     "details": "تفاصيل",
@@ -57,15 +56,16 @@
     "loginToBuy": "سجّل دخولك للشراء",
     "backToProducts": "رجوع للمنتجات",
     "productDetails": "تفاصيل المنتج",
-    "noImage": "لا توجد صورة"
+    "noImage": "لا توجد صورة",
+    "search": "بحث",
+    "save": "حفظ",
+    "cancel": "إلغاء"
   },
-
   "cartTitle": "سلة الشراء",
   "cartHint": "راجع المنتجات ثم أكمل الدفع.",
   "createAccount": "إنشاء حساب",
   "accuracyWarning": "قد تختلف الأسعار حسب إعدادات العملة.",
   "registerFailed": "فشل إنشاء الحساب",
-
   "admin": {
     "overview": "نظرة عامة",
     "products": "المنتجات",
@@ -74,6 +74,43 @@
     "noOrders": "لا توجد طلبات",
     "noOrdersHint": "عندما يبدأ الزبائن بالشراء ستظهر الطلبات هنا.",
     "status": "الحالة",
-    "user": "المستخدم"
-  }
+    "user": "المستخدم",
+    "dashboard": "لوحة التحكم",
+    "dashboardHint": "ملخص سريع وإدارة كاملة للمتجر.",
+    "totalOrders": "إجمالي الطلبات",
+    "totalUsers": "إجمالي المستخدمين",
+    "totalRevenue": "إجمالي الإيرادات",
+    "revenueHint": "الإيرادات محسوبة من المدفوعات الناجحة بالدولار.",
+    "manageProducts": "إدارة المنتجات",
+    "manageProductsHint": "إضافة وتعديل وحذف المنتجات.",
+    "manageOrders": "إدارة الطلبات",
+    "manageOrdersHint": "متابعة حالات الطلبات وتفاصيلها.",
+    "manageServices": "إدارة الخدمات",
+    "manageServicesHint": "تحديث وإدارة الخدمات الخاصة بك.",
+    "productsHint": "إدارة وعرض قائمة المنتجات.",
+    "searchProducts": "بحث عن منتج",
+    "newProduct": "إضافة منتج",
+    "name": "الاسم",
+    "price": "السعر",
+    "stock": "المخزون",
+    "image": "الصورة",
+    "actionsHint": "إجراءات",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "confirmDelete": "هل أنت متأكد من حذف هذا العنصر؟"
+  },
+  "loginToCheckout": "سجّل الدخول لإكمال الطلب.",
+  "cartSubtitle": "راجع منتجاتك قبل إكمال الطلب.",
+  "browseProducts": "تصفح المنتجات",
+  "itemsCount": "عدد العناصر",
+  "clearCart": "تفريغ السلة",
+  "total": "المجموع",
+  "sendWhatsApp": "إرسال عبر واتساب",
+  "checkout": "إكمال الطلب",
+  "orderFailed": "فشل إنشاء الطلب",
+  "registerTitle": "إنشاء حساب",
+  "loginTitle": "تسجيل الدخول",
+  "createOrder": "إنشاء الطلب",
+  "cartEmpty": "سلتك فارغة.",
+  "orderCreated": "تم إنشاء الطلب بنجاح"
 }

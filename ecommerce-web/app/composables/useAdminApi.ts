@@ -5,6 +5,8 @@ export function useAdminApi() {
   const api = useApi()
 
   return {
+    getDashboardStats: <T>() => api.get<T>('/admin/dashboard/stats'),
+
     // generic (تحتاجها بالصفحات)
     get: api.get,
     post: api.post,

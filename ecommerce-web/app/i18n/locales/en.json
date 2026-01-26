@@ -44,11 +44,10 @@
     "why1": "Secure and organized checkout",
     "why2": "Download after payment",
     "why3": "Order history saved"
-  }
-  ,
+  },
   "common": {
     "loading": "Loading...",
-    "requestFailed": "Request failed",
+    "requestFailed": "Request failed. Please try again.",
     "refresh": "Refresh",
     "actions": "Actions",
     "details": "Details",
@@ -58,10 +57,11 @@
     "backToProducts": "Back to products",
     "productDetails": "Product details",
     "noImage": "No image",
-    "cart": "Cart"
-  }
-
-  ,
+    "cart": "Cart",
+    "search": "Search",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
   "admin": {
     "overview": "Overview",
     "products": "Products",
@@ -70,13 +70,49 @@
     "noOrders": "No orders yet",
     "noOrdersHint": "When customers place orders, they will appear here.",
     "status": "Status",
-    "user": "User"
+    "user": "User",
+    "dashboard": "Admin Dashboard",
+    "dashboardHint": "Quick overview and full store management.",
+    "totalOrders": "Total orders",
+    "totalUsers": "Total users",
+    "totalRevenue": "Total revenue",
+    "revenueHint": "Revenue is calculated from successful USD payments.",
+    "manageProducts": "Manage products",
+    "manageProductsHint": "Add, edit, and delete products.",
+    "manageOrders": "Manage orders",
+    "manageOrdersHint": "Track order statuses and details.",
+    "manageServices": "Manage services",
+    "manageServicesHint": "Update and manage your services.",
+    "productsHint": "Manage and browse products list.",
+    "searchProducts": "Search products",
+    "newProduct": "Add product",
+    "name": "Name",
+    "price": "Price",
+    "stock": "Stock",
+    "image": "Image",
+    "actionsHint": "Actions",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete this item?"
   },
-
   "cartTitle": "Shopping cart",
   "cartHint": "Review your items and continue to checkout.",
   "benefitsTitle": "What you get after login",
   "createAccount": "Create account",
   "accuracyWarning": "Make sure your info is correct.",
-  "registerFailed": "Register failed"
+  "registerFailed": "Register failed",
+  "loginToCheckout": "Please login to checkout.",
+  "cartSubtitle": "Review your items before checkout.",
+  "browseProducts": "Browse products",
+  "itemsCount": "Items",
+  "clearCart": "Clear cart",
+  "total": "Total",
+  "sendWhatsApp": "Send via WhatsApp",
+  "checkout": "Checkout",
+  "orderFailed": "Failed to create order",
+  "registerTitle": "Register",
+  "loginTitle": "Login",
+  "createOrder": "Create order",
+  "cartEmpty": "Your cart is empty.",
+  "orderCreated": "Order created successfully"
 }
