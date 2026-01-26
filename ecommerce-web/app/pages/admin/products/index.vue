@@ -131,7 +131,7 @@ definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
 import { ref, computed, onMounted } from 'vue'
 import { useAdminApi } from '~/composables/useAdminApi'
-import { useI18n } from '~/app/composables/useI18n'
+import { useI18n } from '~/composables/useI18n'
 
 type Product = {
   id: string
