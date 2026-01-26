@@ -8,9 +8,24 @@
           <div class="text-sm admin-muted rtl-text">{{ t('admin.productsHint') }}</div>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
           <NuxtLink to="/admin/products/new" class="admin-primary">+ {{ t('admin.newProduct') }}</NuxtLink>
+
+          <button class="admin-pill" type="button" @click="pickBulkImages" :disabled="pending">
+            {{ t('admin.bulkUploadImages') }}
+          </button>
+
           <button class="admin-ghost" type="button" @click="fetchList(1)">{{ t('common.refresh') }}</button>
+
+          <!-- hidden file input (bulk create products from images) -->
+          <input
+            ref="bulkImagesInput"
+            type="file"
+            accept="image/*"
+            multiple
+            class="hidden"
+            @change="onBulkImagesSelected"
+          />
         </div>
       </div>
 
@@ -165,6 +180,71 @@ const pagedItems = computed(() => items.value.slice((page.value - 1) * pageSize.
 // selection
 const selectedIds = ref<string[]>([])
 const allChecked = computed(() => items.value.length > 0 && selectedIds.value.length === items.value.length)
+
+// bulk create products from images
+const bulkImagesInput = ref<HTMLInputElement | null>(null)
+
+function pickBulkImages() {
+  if (pending.value) return
+  bulkImagesInput.value?.click()
+}
+
+function slugify(input: string) {
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+}
+
+function autoPriceFromName(name: string) {
+  const m = name.match(/(\d+(?:\.\d+)?)/)
+  return m ? Number(m[1]) : 0
+}
+
+async function onBulkImagesSelected(e: Event) {
+  const input = e.target as HTMLInputElement
+  const files = Array.from(input.files || [])
+  if (!files.length) return
+
+  pending.value = true
+  error.value = ''
+  success.value = ''
+
+  try {
+    for (const file of files) {
+      const base = (file.name || '').replace(/\.[^.]+$/, '')
+      const title = base || t('admin.newProduct')
+      const slug = slugify(base || `product-${Date.now()}`)
+      const priceUsd = autoPriceFromName(base)
+
+      // 1) create product
+      const created = await api.createAdminProduct<any>({
+        title,
+        slug,
+        description: '',
+        priceUsd,
+        isPublished: false,
+      })
+
+      const productId = String(created?.id)
+      if (!productId) throw new Error('Create product failed')
+
+      // 2) upload main image
+      await api.uploadProductImage(productId, file)
+    }
+
+    success.value = t('admin.bulkUploadDone')
+    await fetchList(1)
+  } catch (e:any) {
+    error.value = extractErr(e)
+  } finally {
+    // reset input so same files can be selected again
+    if (bulkImagesInput.value) bulkImagesInput.value.value = ''
+    pending.value = false
+  }
+}
 
 function extractErr(e: any) {
   return e?.data?.message || e?.message || t('common.requestFailed')

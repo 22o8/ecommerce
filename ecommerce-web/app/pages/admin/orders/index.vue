@@ -42,6 +42,9 @@
 
           <div class="flex justify-end gap-2">
             <NuxtLink class="admin-pill" :to="`/admin/orders/${o.id}`">{{ t('common.details') }}</NuxtLink>
+            <button class="admin-danger" type="button" @click="removeOrder(o.id)" :disabled="loading">
+              {{ t('common.delete') }}
+            </button>
           </div>
         </div>
       </div>
@@ -70,6 +73,22 @@ const api = useApi()
 const loading = ref(false)
 const error = ref('')
 const orders = ref<OrderRow[]>([])
+
+async function removeOrder(id: string) {
+  const ok = confirm(t('admin.confirmDeleteOrder'))
+  if (!ok) return
+
+  loading.value = true
+  error.value = ''
+  try {
+    await api.del(`/admin/orders/${id}`)
+    orders.value = orders.value.filter(o => o.id !== id)
+  } catch (e: any) {
+    error.value = extractErr(e)
+  } finally {
+    loading.value = false
+  }
+}
 
 function extractErr(e: any) {
   return e?.data?.message || e?.message || t('common.requestFailed')
@@ -128,6 +147,20 @@ fetchOrders()
   background: rgba(255,255,255,.06);
   color: rgba(255,255,255,.9);
   font-weight: 800;
+}
+
+.admin-danger{
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(239,68,68,.35);
+  background: rgba(239,68,68,.12);
+  color: rgba(255,255,255,.95);
+  font-weight: 800;
+}
+
+.admin-danger:disabled{
+  opacity: .55;
+  cursor: not-allowed;
 }
 
 .admin-table{ display: grid; }

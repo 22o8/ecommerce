@@ -70,7 +70,8 @@
     "search": "بحث",
     "save": "حفظ",
     "cancel": "إلغاء",
-    "back": "رجوع"
+    "back": "رجوع",
+    "delete": "حذف"
   },
   "cartTitle": "سلة الشراء",
   "cartHint": "راجع المنتجات ثم أكمل الدفع.",
@@ -125,6 +126,13 @@
     "deleted": "تم الحذف",
     "bulkUpdated": "تم تحديث المجموعة",
     "bulkDeleted": "تم حذف المجموعة",
+    "bulkUploadImages": "رفع منتجات بالصور",
+    "bulkUploadImagesHint": "حدد عدة صور. كل صورة ستُنشأ كمنتج منفصل.",
+    "bulkUploadDone": "تم رفع المنتجات.",
+    "deleteOrder": "حذف الطلب",
+    "confirmDeleteOrder": "تأكيد حذف الطلب؟",
+    "deleting": "جارِ الحذف...",
+    "uploading": "جارِ الرفع...",
     "confirmDeleteOne": "هل أنت متأكد من حذف هذا العنصر؟",
     "confirmDeleteMany": "هل أنت متأكد من حذف العناصر المحددة؟",
     "noProducts": "لا توجد منتجات",
