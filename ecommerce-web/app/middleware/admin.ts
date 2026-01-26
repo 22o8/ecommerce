@@ -37,7 +37,7 @@ export default defineNuxtRouteMiddleware((to) => {
   const token = useCookie<string | null>("token").value
   if (!token) {
     return navigateTo(
-      `/login?redirect=${encodeURIComponent(to.fullPath || "/admin")}`
+      `/login?redirect=${encodeURIComponent(to.fullPath || "/Admin")}`
     )
   }
 
