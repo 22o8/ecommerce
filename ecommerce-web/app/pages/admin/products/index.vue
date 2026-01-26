@@ -130,7 +130,7 @@
 definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
 import { ref, computed, onMounted } from 'vue'
-import { useAdminApi } from '~/app/composables/useAdminApi'
+import { useAdminApi } from '~/composables/useAdminApi'
 import { useI18n } from '~/app/composables/useI18n'
 
 type Product = {
