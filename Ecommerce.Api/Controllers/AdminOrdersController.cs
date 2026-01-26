@@ -1,4 +1,3 @@
-// Ecommerce.Api/Controllers/AdminOrdersController.cs
 using Ecommerce.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,31 +20,50 @@ public class AdminOrdersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var orders = await _db.Orders.AsNoTracking()
+        // ✅ SplitQuery يمنع مشاكل الترجمة/الـ cartesian explosion
+        var orders = await _db.Orders
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(o => o.User)
+            .Include(o => o.Items)
+            .Include(o => o.Payments)
             .OrderByDescending(o => o.CreatedAt)
-            .Select(o => new
-            {
-                o.Id,
-                o.Status,
-                o.TotalUsd,
-                o.CreatedAt,
-                User = new { o.UserId, o.User.FullName, o.User.Email, o.User.Phone },
-                Items = o.Items.Select(i => new
-                {
-                    i.ItemType,
-                    i.Quantity,
-                    i.UnitPriceUsd,
-                    i.LineTotalUsd,
-                    i.ProductId,
-                    i.ServiceId,
-                    i.PackageId,
-                    i.ServiceRequestId
-                }).ToList(),
-                Payments = o.Payments.Select(p => new { p.Id, p.Provider, p.Status, p.AmountUsd }).ToList()
-            })
             .ToListAsync();
 
-        return Ok(orders);
+        var result = orders.Select(o => new
+        {
+            o.Id,
+            o.Status,
+            o.TotalUsd,
+            o.CreatedAt,
+            User = new
+            {
+                o.UserId,
+                FullName = o.User?.FullName ?? "",
+                Email = o.User?.Email ?? "",
+                Phone = o.User?.Phone ?? ""
+            },
+            Items = o.Items.Select(i => new
+            {
+                i.ItemType,
+                i.Quantity,
+                i.UnitPriceUsd,
+                i.LineTotalUsd,
+                i.ProductId,
+                i.ServiceId,
+                i.PackageId,
+                i.ServiceRequestId
+            }).ToList(),
+            Payments = o.Payments.Select(p => new
+            {
+                p.Id,
+                p.Provider,
+                p.Status,
+                p.AmountUsd
+            }).ToList()
+        });
+
+        return Ok(result);
     }
 
     [HttpDelete("{id:guid}")]
@@ -66,7 +84,6 @@ public class AdminOrdersController : ControllerBase
         return Ok(new { message = "Order deleted.", id });
     }
 
-    // Helpful for testing/cleanup
     [HttpDelete("all")]
     public async Task<IActionResult> DeleteAll()
     {
