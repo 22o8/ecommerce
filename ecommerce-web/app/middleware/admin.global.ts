@@ -1,13 +1,18 @@
 function parseJwt(token: string) {
   try {
-    const base64Url = token.split(".")[1]
-    if (!base64Url) return null
+    const part = token.split(".")[1]
+    if (!part) return null
 
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
+    const base64 = part.replace(/-/g, "+").replace(/_/g, "/")
+
     const bin =
       typeof atob === "function"
         ? atob(base64)
-        : Buffer.from(base64, "base64").toString("binary")
+        : typeof Buffer !== "undefined"
+          ? Buffer.from(base64, "base64").toString("binary")
+          : ""
+
+    if (!bin) return null
 
     const json = decodeURIComponent(
       bin
@@ -23,12 +28,17 @@ function parseJwt(token: string) {
 }
 
 export default defineNuxtRouteMiddleware((to) => {
-  // ✅ Guard: لا تستخدم path إذا مو موجود
-  const path = (to?.path || "").toLowerCase()
+  // ✅ SSR-safe route
+  const route = to ?? useRoute?.()
+  const path = String(route?.path ?? "").toLowerCase()
+
   if (!path.startsWith("/admin")) return
 
   const token = useCookie<string | null>("token").value
-  if (!token) return navigateTo("/login")
+  if (!token) {
+    const redirect = encodeURIComponent(route?.fullPath || "/admin")
+    return navigateTo(`/login?redirect=${redirect}`)
+  }
 
   const payload = parseJwt(token)
   const rawRole =
@@ -36,5 +46,7 @@ export default defineNuxtRouteMiddleware((to) => {
     payload?.role
 
   const role = Array.isArray(rawRole) ? rawRole[0] : rawRole
-  if (String(role ?? "").toLowerCase() !== "admin") return navigateTo("/")
+  if (String(role).toLowerCase() !== "admin") {
+    return navigateTo("/")
+  }
 })
