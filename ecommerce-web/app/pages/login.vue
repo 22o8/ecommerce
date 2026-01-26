@@ -39,6 +39,7 @@ import UiInput from '~/components/ui/UiInput.vue'
 const { t } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 
 const email = ref('')
 const password = ref('')
@@ -50,7 +51,8 @@ async function submit(){
   error.value = ''
   try{
     await auth.login({ email: email.value, password: password.value })
-    router.push('/')
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
+    router.push(redirect)
   }catch(e:any){
     error.value = e?.data?.message || e?.message || t('loginFailed')
   }finally{

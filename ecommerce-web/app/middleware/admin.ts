@@ -28,11 +28,12 @@ function parseJwt(token: string) {
 }
 
 export default defineNuxtRouteMiddleware((to) => {
-  // ✅ SSR-safe route
-  const route = to ?? useRoute?.()
+  const route = (to as any) ?? (typeof useRoute === "function" ? useRoute() : null)
   const path = String(route?.path ?? "").toLowerCase()
 
-  if (!path.startsWith("/admin")) return
+  // هذا middleware ينادي فقط لما الصفحة تطلبه بـ definePageMeta({ middleware: ['admin'] })
+  // فـ ما نحتاج نفحص startsWith('/admin') لكن نخليه Guard احتياطي
+  if (path && !path.startsWith("/admin")) return
 
   const token = useCookie<string | null>("token").value
   if (!token) {
@@ -46,7 +47,7 @@ export default defineNuxtRouteMiddleware((to) => {
     payload?.role
 
   const role = Array.isArray(rawRole) ? rawRole[0] : rawRole
-  if (String(role).toLowerCase() !== "admin") {
+  if (String(role ?? "").toLowerCase() !== "admin") {
     return navigateTo("/")
   }
 })
