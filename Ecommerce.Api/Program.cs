@@ -20,7 +20,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     // ✅ يمنع تعارض أسماء الـ Schemas لما يكون عندك DTOs/Requests بنفس الاسم
     // في أكثر من مكان. هذا كان يسبب 500 في /swagger/v1/swagger.json على Render.
-    c.CustomSchemaIds(t => t.FullName);
+    c.CustomSchemaIds(t => t.FullName!.Replace("+", "."));
 });
 
 // DbContext
