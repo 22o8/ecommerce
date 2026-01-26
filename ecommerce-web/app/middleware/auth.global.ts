@@ -1,11 +1,19 @@
-// app/middleware/auth.global.ts
 export default defineNuxtRouteMiddleware((to) => {
+  const route = to ?? useRoute?.()
+  const path = String(route?.path ?? "").toLowerCase()
+
+  const protectedPaths = [
+    "/account",
+    "/orders",
+    "/service-requests",
+  ]
+
+  const needsAuth = protectedPaths.some(p => path.startsWith(p))
+  if (!needsAuth) return
+
   const auth = useAuthStore()
-
-  const protectedPaths = ['/account', '/orders', '/service-requests', '/admin']
-  const needsAuth = protectedPaths.some((p) => (to?.path ?? '').startsWith(p))
-
-  if (needsAuth && !auth.isAuthed) {
-    return navigateTo('/login')
+  if (!auth.isAuthed) {
+    const redirect = encodeURIComponent(route?.fullPath || "/")
+    return navigateTo(`/login?redirect=${redirect}`)
   }
 })
