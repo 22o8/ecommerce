@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import { useHead } from '#app'
+import { useHead, useCookie } from '#app'
 
-// SSR defaults (client will override via ui.initClient)
+type Locale = 'ar' | 'en'
+const localeCookie = useCookie<Locale>('locale', { default: () => 'ar' })
+const locale = localeCookie.value === 'en' ? 'en' : 'ar'
+
 useHead({
-  htmlAttrs: { lang: 'ar', dir: 'ltr', class: 'theme-light lang-ar' },
+  htmlAttrs: {
+    lang: locale,
+    // ✅ نخلي اتجاه الصفحة ثابت LTR حتى ما يتغير ترتيب العناصر عند تبديل اللغة
+    dir: 'ltr',
+    class: `theme-light ${locale === 'ar' ? 'lang-ar' : 'lang-en'}`,
+  },
 })
 </script>
 
