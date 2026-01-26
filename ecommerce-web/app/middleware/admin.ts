@@ -9,8 +9,8 @@ function parseJwt(token: string) {
     const bin =
       typeof atob === "function"
         ? atob(base64)
-        : (globalThis as any)?.Buffer
-          ? (globalThis as any).Buffer.from(base64, "base64").toString("binary")
+        : typeof Buffer !== "undefined"
+          ? Buffer.from(base64, "base64").toString("binary")
           : ""
 
     if (!bin) return null
@@ -29,16 +29,19 @@ function parseJwt(token: string) {
 }
 
 export default defineNuxtRouteMiddleware((to) => {
-  // ✅ Guard: لا تستخدم path إذا مو موجود
-  const path = (to?.path || "").toLowerCase()
+  // ✅ Nuxt أحياناً يمرر to = undefined بالـ SSR
+  const route = (to as any) ?? useRoute?.()
+
+  // ✅ لا تلمس path إذا مو موجود
+  const path = String(route?.path ?? "").toLowerCase()
+  if (!path) return
   if (!path.startsWith("/admin")) return
 
   // ✅ إذا ماكو توكن -> لوجن + redirect
   const token = useCookie<string | null>("token").value
   if (!token) {
-    return navigateTo(
-      `/login?redirect=${encodeURIComponent(to.fullPath || "/admin")}`
-    )
+    const full = String(route?.fullPath ?? "/admin")
+    return navigateTo(`/login?redirect=${encodeURIComponent(full)}`)
   }
 
   // ✅ تحقق من صلاحية الادمن
