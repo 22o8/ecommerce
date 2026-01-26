@@ -1,13 +1,21 @@
 function parseJwt(token: string) {
   try {
     const base64Url = token.split(".")[1]
+    if (!base64Url) return null
+
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
+    const bin =
+      typeof atob === "function"
+        ? atob(base64)
+        : Buffer.from(base64, "base64").toString("binary")
+
     const json = decodeURIComponent(
-      (typeof atob === "function" ? atob(base64) : Buffer.from(base64, "base64").toString("binary"))
+      bin
         .split("")
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
         .join("")
     )
+
     return JSON.parse(json)
   } catch {
     return null
@@ -15,7 +23,9 @@ function parseJwt(token: string) {
 }
 
 export default defineNuxtRouteMiddleware((to) => {
-  if (!to.path.toLowerCase().startsWith("/admin")) return
+  // ✅ Guard: لا تستخدم path إذا مو موجود
+  const path = (to?.path || "").toLowerCase()
+  if (!path.startsWith("/admin")) return
 
   const token = useCookie<string | null>("token").value
   if (!token) return navigateTo("/login")
@@ -25,7 +35,6 @@ export default defineNuxtRouteMiddleware((to) => {
     payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
     payload?.role
 
-  // Role can be string or array; also case may differ
-  const role = (Array.isArray(rawRole) ? rawRole[0] : rawRole)
+  const role = Array.isArray(rawRole) ? rawRole[0] : rawRole
   if (String(role ?? "").toLowerCase() !== "admin") return navigateTo("/")
 })
