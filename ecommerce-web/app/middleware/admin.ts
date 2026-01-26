@@ -1,24 +1,19 @@
-<<<<<<< HEAD
-export default defineNuxtRouteMiddleware((to) => {
-  // حماية من أي undefined
-  if (!to?.path) return
-
-  // إذا ماكو توكن -> لوجن
-  const token = useCookie<string | null>('token').value
-  if (!token) {
-    return navigateTo(`/login?redirect=${encodeURIComponent(to.fullPath || '/admin')}`)
-  }
-=======
 function parseJwt(token: string) {
   try {
     const base64Url = token.split(".")[1]
     if (!base64Url) return null
 
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
+
+    // SSR/Client safe decode
     const bin =
       typeof atob === "function"
         ? atob(base64)
-        : Buffer.from(base64, "base64").toString("binary")
+        : (globalThis as any)?.Buffer
+          ? (globalThis as any).Buffer.from(base64, "base64").toString("binary")
+          : ""
+
+    if (!bin) return null
 
     const json = decodeURIComponent(
       bin
@@ -38,15 +33,22 @@ export default defineNuxtRouteMiddleware((to) => {
   const path = (to?.path || "").toLowerCase()
   if (!path.startsWith("/admin")) return
 
+  // ✅ إذا ماكو توكن -> لوجن + redirect
   const token = useCookie<string | null>("token").value
-  if (!token) return navigateTo("/login")
+  if (!token) {
+    return navigateTo(
+      `/login?redirect=${encodeURIComponent(to.fullPath || "/admin")}`
+    )
+  }
 
+  // ✅ تحقق من صلاحية الادمن
   const payload = parseJwt(token)
   const rawRole =
     payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
     payload?.role
 
   const role = Array.isArray(rawRole) ? rawRole[0] : rawRole
-  if (String(role ?? "").toLowerCase() !== "admin") return navigateTo("/")
->>>>>>> 2f20a05 (fix: admin middleware SSR safe + translations + composables)
+  if (String(role ?? "").toLowerCase() !== "admin") {
+    return navigateTo("/")
+  }
 })
