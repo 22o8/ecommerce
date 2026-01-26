@@ -56,7 +56,7 @@ definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
 import { ref } from 'vue'
 import { useApi } from '~/composables/useApi'
-import { useI18n } from '~/app/composables/useI18n'
+import { useI18n } from '~/composables/useI18n'
 
 type OrderRow = {
   id: string
