@@ -1,8 +1,16 @@
 <template>
   <NuxtLink :to="`/products/${p.slug || p.id}`" class="group card-soft overflow-hidden transition duration-300 hover:-translate-y-0.5 hover:shadow-lg">
     <div class="relative">
-      <div class="h-56 md:h-64 bg-surface-2 grid place-items-center">
-        <img v-if="img" :src="img" class="h-full w-full object-cover will-change-transform transition duration-300 group-hover:scale-[1.03]" :alt="displayName" loading="lazy" decoding="async" />
+      <!-- صورة أكبر + بدون قص (contain) حتى تبين المنتجات بوضوح -->
+      <div class="h-72 md:h-80 bg-surface-2 grid place-items-center overflow-hidden">
+        <img
+          v-if="img"
+          :src="img"
+          :alt="displayName"
+          loading="lazy"
+          decoding="async"
+          class="h-full w-full object-contain p-3 will-change-transform transition duration-300 group-hover:scale-[1.04]"
+        />
         <div v-else class="text-center grid gap-2 px-4">
           <Icon name="mdi:image-outline" class="text-3xl opacity-70 mx-auto" />
           <div class="text-sm text-muted rtl-text">{{ t('noImage') }}</div>
@@ -17,8 +25,8 @@
     </div>
 
     <div class="p-4 grid gap-2">
-      <div class="font-extrabold rtl-text">{{ displayName }}</div>
-      <div class="text-sm text-muted rtl-text">{{ p.description || '' }}</div>
+      <div class="font-extrabold rtl-text line-clamp-2">{{ displayName }}</div>
+      <div class="text-sm text-muted rtl-text line-clamp-2">{{ p.description || '' }}</div>
 
       <div class="flex items-center justify-between mt-2">
         <div class="font-black keep-ltr">{{ fmt(displayPrice) }}</div>
