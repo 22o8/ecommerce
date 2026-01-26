@@ -46,7 +46,7 @@
         <div class="mt-4 grid gap-2">
           <UiButton variant="secondary" @click="goHome">
             <Icon name="mdi:arrow-left" class="keep-ltr" />
-            <span class="rtl-text">{{ t('home') }}</span>
+            <span class="rtl-text">{{ t('nav.home') }}</span>
           </UiButton>
         </div>
       </aside>

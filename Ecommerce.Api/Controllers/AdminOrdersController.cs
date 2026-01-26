@@ -20,6 +20,7 @@ public class AdminOrdersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
+<<<<<<< HEAD
         // ✅ SplitQuery يمنع مشاكل الترجمة/الـ cartesian explosion
         var orders = await _db.Orders
             .AsNoTracking()
@@ -64,6 +65,40 @@ public class AdminOrdersController : ControllerBase
         });
 
         return Ok(result);
+=======
+        // ✅ ملاحظة مهمة:
+        // هذا الـ endpoint كان يسبب 500 على بعض قواعد البيانات إذا كان عمود Phone غير موجود بعد،
+        // لأن Include(User) يقرأ كل أعمدة جدول Users.
+        // لذلك نستخدم Projection خفيف (Email فقط) حتى ما نعتمد على أعمدة إضافية.
+        try
+        {
+            var orders = await _db.Orders
+                .AsNoTracking()
+                .OrderByDescending(o => o.CreatedAt)
+                .Select(o => new
+                {
+                    o.Id,
+                    o.Status,
+                    o.TotalUsd,
+                    o.CreatedAt,
+                    UserEmail = o.User.Email,
+                    User = new
+                    {
+                        o.UserId,
+                        FullName = o.User.FullName,
+                        Email = o.User.Email
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(orders);
+        }
+        catch (Exception ex)
+        {
+            // حتى يطلع السبب بالـ response بدل 500 غامض
+            return StatusCode(500, new { message = "Failed to load orders.", detail = ex.Message });
+        }
+>>>>>>> 87e4ee6 (fix: admin orders endpoint + complete i18n + ssr-safe middleware)
     }
 
     [HttpDelete("{id:guid}")]

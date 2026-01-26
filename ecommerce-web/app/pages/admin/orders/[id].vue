@@ -2,29 +2,29 @@
   <div class="space-y-4">
     <div class="admin-box flex items-center justify-between gap-3">
       <div>
-        <div class="text-xl font-extrabold">Order Details</div>
-        <div class="text-sm admin-muted">{{ id }}</div>
+        <div class="text-xl font-extrabold rtl-text">{{ t('admin.orderDetails') }}</div>
+        <div class="text-sm admin-muted keep-ltr">{{ id }}</div>
       </div>
-      <NuxtLink to="/admin/orders" class="admin-ghost">Back</NuxtLink>
+      <NuxtLink to="/admin/orders" class="admin-ghost rtl-text">{{ t('common.back') }}</NuxtLink>
     </div>
 
-    <div v-if="loading" class="admin-box admin-muted">Loading...</div>
+    <div v-if="loading" class="admin-box admin-muted rtl-text">{{ t('common.loading') }}</div>
 
-    <div v-else-if="!order" class="admin-box admin-muted">Order not found.</div>
+    <div v-else-if="!order" class="admin-box admin-muted rtl-text">{{ t('admin.orderNotFound') }}</div>
     <div v-else class="admin-box">
       <div class="grid gap-3 md:grid-cols-2">
         <div class="sub-box">
-          <div class="label">Status</div>
+          <div class="label rtl-text">{{ t('admin.status') }}</div>
           <div class="font-extrabold">{{ order.status || order.state || '—' }}</div>
         </div>
         <div class="sub-box">
-          <div class="label">User</div>
+          <div class="label rtl-text">{{ t('admin.user') }}</div>
           <div class="font-extrabold">{{ order.userEmail || order.user?.email || '—' }}</div>
         </div>
       </div>
 
       <div class="mt-4 sub-box">
-        <div class="label">Raw</div>
+        <div class="label rtl-text">{{ t('admin.raw') }}</div>
         <pre class="text-xs whitespace-pre-wrap">{{ order }}</pre>
       </div>
     </div>
@@ -36,7 +36,13 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
-const api = useAdminApi()
+import { computed, ref, onMounted } from 'vue'
+import { useRoute } from '#imports'
+import { useApi } from '~/composables/useApi'
+import { useI18n } from '~/composables/useI18n'
+
+const { t } = useI18n()
+const api = useApi()
 const route = useRoute()
 const id = computed(() => String(route.params.id))
 
@@ -52,7 +58,7 @@ async function load() {
     const list = Array.isArray(res) ? res : (res.items || [])
     order.value = list.find((x: any) => x.id === id.value) || null
   } catch (e: any) {
-    error.value = e?.data?.message || e?.message || 'Load failed'
+    error.value = e?.data?.message || e?.message || t('failedLoad')
   } finally {
     loading.value = false
   }

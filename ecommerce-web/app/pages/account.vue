@@ -10,7 +10,7 @@
       <NuxtLink to="/">
         <UiButton variant="secondary">
           <Icon name="mdi:home-outline" class="text-lg" />
-          <span class="rtl-text">{{ t('home') }}</span>
+          <span class="rtl-text">{{ t('nav.home') }}</span>
         </UiButton>
       </NuxtLink>
     </div>

@@ -18,7 +18,7 @@
 
       <div class="grid gap-2 text-sm">
         <div class="font-bold rtl-text">{{ t('quickLinks') }}</div>
-        <NuxtLink to="/products" class="text-muted hover:opacity-90 rtl-text">{{ t('products') }}</NuxtLink>
+        	<NuxtLink to="/products" class="text-muted hover:opacity-90 rtl-text">{{ t('nav.products') }}</NuxtLink>
         <NuxtLink to="/orders" class="text-muted hover:opacity-90 rtl-text">{{ t('myOrders') }}</NuxtLink>
         <NuxtLink to="/contact" class="text-muted hover:opacity-90 rtl-text">{{ t('contact') }}</NuxtLink>
         <NuxtLink to="/terms" class="text-muted hover:opacity-90 rtl-text">{{ t('terms') }}</NuxtLink>

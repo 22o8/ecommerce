@@ -17,7 +17,7 @@
 
         <UiButton :loading="loading" type="submit">
           <Icon name="mdi:login-variant" class="text-lg" />
-          <span class="rtl-text">{{ t('login') }}</span>
+          <span class="rtl-text">{{ t('nav.login') }}</span>
         </UiButton>
 
         <p class="text-sm text-muted rtl-text">

@@ -41,20 +41,20 @@
           </div>
           <div class="text-sm text-muted rtl-text mt-1">{{ t('cartHint') }}</div>
         </div>
-        <div class="rounded-3xl border border-app bg-surface p-4">
-          <div class="flex items-center gap-2">
-            <Icon name="mdi:receipt-text-outline" class="text-xl" />
-            <div class="font-bold rtl-text">{{ t('benefit.orders') }}</div>
-          </div>
-          <div class="text-sm text-muted rtl-text mt-1">{{ t('benefit.orders.desc') }}</div>
-        </div>
-        <div class="rounded-3xl border border-app bg-surface p-4">
-          <div class="flex items-center gap-2">
-            <Icon name="mdi:whatsapp" class="text-xl" />
-            <div class="font-bold rtl-text">{{ t('benefit.whatsapp') }}</div>
-          </div>
-          <div class="text-sm text-muted rtl-text mt-1">{{ t('benefit.whatsapp.desc') }}</div>
-        </div>
+		        <div class="rounded-3xl border border-app bg-surface p-4">
+		          <div class="flex items-center gap-2">
+		            <Icon name="mdi:receipt-text-outline" class="text-xl" />
+		            <div class="font-bold rtl-text">{{ t('benefit.orders.title') }}</div>
+		          </div>
+		          <div class="text-sm text-muted rtl-text mt-1">{{ t('benefit.orders.desc') }}</div>
+		        </div>
+		        <div class="rounded-3xl border border-app bg-surface p-4">
+		          <div class="flex items-center gap-2">
+		            <Icon name="mdi:whatsapp" class="text-xl" />
+		            <div class="font-bold rtl-text">{{ t('benefit.whatsapp.title') }}</div>
+		          </div>
+		          <div class="text-sm text-muted rtl-text mt-1">{{ t('benefit.whatsapp.desc') }}</div>
+		        </div>
       </div>
     </div>
   </div>
