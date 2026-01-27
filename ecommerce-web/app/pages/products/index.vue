@@ -45,9 +45,13 @@
       <div class="mt-1 text-sm text-muted rtl-text">{{ t('productsPage.emptyDesc') }}</div>
     </div>
 
-    <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <ProductCard v-for="p in items" :key="p.id" :p="p" />
+    <div v-else>
+      <MasonryGrid :items="items" :columns="masonryCols" :gap="16" v-slot="{ item }">
+        <ProductCard :p="item" />
+      </MasonryGrid>
     </div>
+
+    <ProductQuickPreviewModal />
 
     <div class="flex items-center justify-between gap-3 pt-2">
       <UiButton variant="ghost" @click="prev" :disabled="page<=1">
@@ -72,6 +76,8 @@
 import UiButton from '~/components/ui/UiButton.vue'
 import UiBadge from '~/components/ui/UiBadge.vue'
 import ProductCard from '~/components/ProductCard.vue'
+import MasonryGrid from '~/components/MasonryGrid.vue'
+import ProductQuickPreviewModal from '~/components/ProductQuickPreviewModal.vue'
 import { useProductsStore } from '~/stores/products'
 
 const { t } = useI18n()
@@ -84,6 +90,24 @@ const page = ref(Number(route.query.page || 1))
 const pageSize = 12
 const q = ref(String(route.query.q || ''))
 const sort = ref(String(route.query.sort || 'new'))
+
+const masonryCols = ref(3)
+
+function updateMasonryCols() {
+  if (process.server) return
+  const w = window.innerWidth
+  masonryCols.value = w < 640 ? 1 : w < 1024 ? 2 : 3
+}
+
+onMounted(() => {
+  updateMasonryCols()
+  window.addEventListener('resize', updateMasonryCols)
+})
+
+onBeforeUnmount(() => {
+  if (process.server) return
+  window.removeEventListener('resize', updateMasonryCols)
+})
 
 const items = computed(() => products.items)
 

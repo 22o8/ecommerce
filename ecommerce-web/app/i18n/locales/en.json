@@ -218,6 +218,44 @@
       "priceDesc": "Price: high to low"
     }
   },
+  "product": {
+    "back": "Back to products",
+    "fullscreen": "Full screen",
+    "price": "Price",
+    "addToCart": "Add to cart",
+    "buyNow": "Buy",
+    "wa": "Order via WhatsApp",
+    "waMessage": "Hello, I'm interested in this product:",
+    "related": "Related products",
+    "notFound": "Product not found",
+    "notFoundDesc": "This product may have been removed or the link is incorrect.",
+    "goProducts": "Go to products"
+  },
+  "wishlist": {
+    "added": "Added to wishlist",
+    "removed": "Removed from wishlist",
+    "title": "Wishlist"
+  },
+  "preview": {
+    "title": "Quick preview",
+    "open": "Preview",
+    "viewDetails": "View details",
+    "close": "Close"
+  },
+  "reviews": {
+    "title": "Reviews",
+    "yourRating": "Your rating",
+    "write": "Write a review",
+    "name": "Name",
+    "comment": "Comment",
+    "submit": "Submit",
+    "empty": "No reviews yet."
+  },
+  "wishlist": {
+    "add": "Add to favorites",
+    "remove": "Remove from favorites",
+    "favorites": "Favorites"
+  },
   "benefit": {
     "whatsapp": {
       "desc": "Quick contact and instant questions",

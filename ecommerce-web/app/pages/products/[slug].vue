@@ -1,251 +1,395 @@
 <template>
   <div class="grid gap-6">
-    <UiButton variant="ghost" class="w-fit" @click="back">
-      <Icon name="mdi:arrow-left" class="keep-ltr text-xl" />
-      <span class="rtl-text">{{ t('backToProducts') }}</span>
-    </UiButton>
+    <div class="flex items-center justify-between gap-3">
+      <NuxtLink to="/products" class="inline-flex items-center gap-2 text-sm opacity-80 hover:opacity-100">
+        <Icon name="mdi:arrow-left" class="text-xl keep-ltr" />
+        <span class="rtl-text">{{ t('product.back') }}</span>
+      </NuxtLink>
 
-    <div v-if="loading" class="grid gap-6 lg:grid-cols-2">
-      <div class="card-soft p-4">
-        <div class="skeleton h-[420px]" />
-      </div>
-      <div class="card-soft p-6 grid gap-3">
-        <div class="skeleton h-7 w-3/4" />
-        <div class="skeleton h-5 w-1/2" />
-        <div class="skeleton h-24" />
-        <div class="skeleton h-12" />
+      <div class="flex items-center gap-2">
+        <UiButton variant="secondary" @click="toggleFav()">
+          <Icon :name="isFav ? 'mdi:heart' : 'mdi:heart-outline'" class="text-lg" />
+          <span class="rtl-text">{{ isFav ? t('wishlist.saved') : t('wishlist.save') }}</span>
+        </UiButton>
       </div>
     </div>
 
-    <div v-else-if="!p" class="card-soft p-10 text-center">
+    <div v-if="pending" class="grid gap-4 lg:grid-cols-2">
+      <div class="card-soft p-4"><div class="skeleton h-80" /></div>
+      <div class="card-soft p-4 grid gap-3">
+        <div class="skeleton h-8 w-3/4" />
+        <div class="skeleton h-5 w-1/2" />
+        <div class="skeleton h-24" />
+        <div class="skeleton h-12 w-1/2" />
+      </div>
+    </div>
+
+    <div v-else-if="!product" class="card-soft p-10 text-center">
       <Icon name="mdi:alert-circle-outline" class="text-4xl opacity-70 mx-auto" />
-      <div class="mt-3 font-bold rtl-text">{{ t('notFound') }}</div>
+      <div class="mt-3 font-bold rtl-text">{{ t('product.notFoundTitle') }}</div>
+      <div class="mt-1 text-sm text-muted rtl-text">{{ t('product.notFoundDesc') }}</div>
+      <div class="mt-4">
+        <UiButton variant="secondary" to="/products">
+          <span class="rtl-text">{{ t('product.backToProducts') }}</span>
+        </UiButton>
+      </div>
     </div>
 
     <div v-else class="grid gap-6 lg:grid-cols-2">
+      <!-- Gallery -->
       <div class="card-soft overflow-hidden">
-        <div class="p-4 md:p-5 grid gap-4">
-          <!-- Main image (بدون قص) + تكبير عند الضغط -->
-          <button
-            type="button"
-            class="relative rounded-2xl overflow-hidden bg-surface-2 grid place-items-center focus:outline-none"
-            :class="gallery.length ? 'cursor-zoom-in' : ''"
-            @click="gallery.length && (lightbox = true)"
-          >
-            <div class="h-[420px] w-full">
-              <img
-                v-if="currentImg"
-                :src="currentImg"
-                :alt="displayName"
-                class="h-full w-full object-contain"
-                loading="eager"
-                decoding="async"
-              />
-              <div v-else class="text-center grid gap-2 px-6 py-16">
-                <Icon name="mdi:image-outline" class="text-4xl opacity-70 mx-auto" />
-                <div class="text-sm text-muted rtl-text">{{ t('noImage') }}</div>
-              </div>
-            </div>
+        <div
+          class="relative aspect-[4/3] bg-black/20"
+          @mousemove="onZoomMove"
+          @mouseenter="zoomOn = true"
+          @mouseleave="zoomOn = false"
+        >
+          <SmartImage
+            v-if="activeImage"
+            :src="activeImage"
+            :alt="product.name"
+            class="absolute inset-0"
+            img-class="w-full h-full object-contain bg-black/10"
+          />
 
-            <div v-if="gallery.length" class="absolute top-3 right-3 rounded-full px-3 py-1 text-xs bg-black/40 text-white keep-ltr">
-              {{ currentIndex + 1 }} / {{ gallery.length }}
-            </div>
+          <!-- Mouse zoom lens -->
+          <div
+            v-if="zoomOn && activeImage"
+            class="absolute inset-0"
+            :style="zoomStyle"
+          />
+
+          <!-- Controls -->
+          <button
+            v-if="images.length > 1"
+            class="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/40 hover:bg-black/60 grid place-items-center"
+            @click.stop.prevent="prevImage"
+            aria-label="Prev"
+          >
+            <Icon name="mdi:chevron-left" class="text-2xl text-white keep-ltr" />
+          </button>
+          <button
+            v-if="images.length > 1"
+            class="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-black/40 hover:bg-black/60 grid place-items-center"
+            @click.stop.prevent="nextImage"
+            aria-label="Next"
+          >
+            <Icon name="mdi:chevron-right" class="text-2xl text-white keep-ltr" />
           </button>
 
-          <!-- Thumbnails -->
-          <div v-if="gallery.length > 1" class="flex gap-2 overflow-x-auto pb-1">
-            <button
-              v-for="(u, i) in gallery"
-              :key="u + i"
-              type="button"
-              class="relative shrink-0 h-16 w-24 rounded-xl overflow-hidden bg-surface-2 border transition"
-              :class="i === currentIndex ? 'border-white/60' : 'border-app hover:border-white/30'"
-              @click="currentIndex = i"
-            >
-              <img :src="u" :alt="displayName" class="h-full w-full object-contain" loading="lazy" decoding="async" />
-            </button>
-          </div>
+          <button
+            class="absolute bottom-3 right-3 rounded-xl border border-white/15 bg-black/40 hover:bg-black/60 px-3 py-2 text-xs text-white"
+            @click.stop.prevent="openFullscreen()"
+          >
+            <Icon name="mdi:fullscreen" class="text-base" />
+            <span class="ms-1 rtl-text">{{ t('product.fullscreen') }}</span>
+          </button>
+        </div>
+
+        <div v-if="images.length > 1" class="p-3 flex gap-2 overflow-x-auto">
+          <button
+            v-for="(img, idx) in images"
+            :key="img + idx"
+            class="relative h-16 w-24 shrink-0 rounded-xl overflow-hidden border"
+            :class="idx === activeIndex ? 'border-primary' : 'border-white/10'"
+            @click.stop.prevent="activeIndex = idx"
+          >
+            <SmartImage :src="img" :alt="product.name" class="absolute inset-0" img-class="w-full h-full object-cover" />
+          </button>
         </div>
       </div>
 
-      <!-- Lightbox -->
-      <Teleport to="body">
-        <div v-if="lightbox" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm" @click.self="lightbox = false">
-          <div class="h-full w-full grid place-items-center p-4">
-            <div class="w-full max-w-6xl">
-              <div class="flex items-center justify-between gap-2 mb-3">
-                <div class="text-white/90 font-semibold rtl-text">{{ displayName }}</div>
-                <div class="flex items-center gap-2">
-                  <button class="rounded-full px-3 py-2 bg-white/10 hover:bg-white/20 text-white" @click="prevImg">
-                    <Icon name="mdi:chevron-left" class="text-xl keep-ltr" />
-                  </button>
-                  <button class="rounded-full px-3 py-2 bg-white/10 hover:bg-white/20 text-white" @click="nextImg">
-                    <Icon name="mdi:chevron-right" class="text-xl keep-ltr" />
-                  </button>
-                  <button class="rounded-full px-3 py-2 bg-white/10 hover:bg-white/20 text-white" @click="lightbox = false">
-                    <Icon name="mdi:close" class="text-xl" />
-                  </button>
-                </div>
-              </div>
-
-              <div class="rounded-3xl overflow-hidden bg-black/20 border border-white/10">
-                <div class="h-[75vh] w-full grid place-items-center">
-                  <img :src="currentImg" :alt="displayName" class="max-h-[75vh] w-full object-contain" />
-                </div>
-              </div>
-
-              <div class="mt-3 flex items-center justify-center gap-2 text-white/70 text-xs keep-ltr">
-                <span>{{ currentIndex + 1 }} / {{ gallery.length }}</span>
-                <span>•</span>
-                <span>Esc</span>
-              </div>
+      <!-- Details -->
+      <div class="grid gap-4">
+        <div class="card-soft p-5 grid gap-3">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h1 class="text-2xl md:text-3xl font-black rtl-text">{{ product.name }}</h1>
+              <div class="mt-1 text-sm text-muted keep-ltr">/{{ product.slug }}</div>
             </div>
+            <div class="text-2xl font-black keep-ltr">{{ formatMoney(product.price) }}</div>
+          </div>
+
+          <div v-if="product.description" class="text-sm leading-7 rtl-text text-white/90">
+            {{ product.description }}
+          </div>
+
+          <div class="flex flex-wrap gap-2 pt-2">
+            <UiButton variant="primary" @click="addToCart(product)">
+              <Icon name="mdi:cart-plus" class="text-lg" />
+              <span class="rtl-text">{{ t('product.addToCart') }}</span>
+            </UiButton>
+            <UiButton variant="secondary" @click="buyNow(product)">
+              <Icon name="mdi:flash" class="text-lg" />
+              <span class="rtl-text">{{ t('product.buyNow') }}</span>
+            </UiButton>
+
+            <UiButton variant="ghost" :href="waLink" target="_blank">
+              <Icon name="mdi:whatsapp" class="text-lg" />
+              <span class="rtl-text">{{ t('product.whatsapp') }}</span>
+            </UiButton>
           </div>
         </div>
-      </Teleport>
 
-      <div class="card-soft p-6 md:p-8 grid gap-4">
-        <div>
-          <h1 class="text-2xl md:text-3xl font-black rtl-text">{{ displayName }}</h1>
-          <div class="mt-2 text-muted rtl-text">{{ p.description || '' }}</div>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div class="text-sm text-muted rtl-text">{{ t('price') }}</div>
-          <div class="text-2xl font-black keep-ltr">{{ fmt(displayPrice) }}</div>
-        </div>
-
-        <div class="grad-line" />
-
-        <div class="grid gap-3">
-          <UiButton v-if="auth.isAuthed" @click="buy" :loading="buying">
-            <Icon name="mdi:cart-outline" class="text-lg" />
-            <span class="rtl-text">{{ t('buyNow') }}</span>
-          </UiButton>
-
-          <NuxtLink v-else to="/login">
-            <UiButton>
-              <Icon name="mdi:login-variant" class="text-lg" />
-              <span class="rtl-text">{{ t('loginToBuy') }}</span>
-            </UiButton>
-          </NuxtLink>
-
-          <a class="rounded-2xl border border-app bg-surface px-4 py-3 text-sm hover:bg-surface-2 transition keep-ltr" :href="waOrderLink" target="_blank" rel="noreferrer">
-            <Icon name="mdi:whatsapp" class="inline-block text-lg align-middle" />
-            <span class="ml-2 rtl-text">{{ t('whatsappOrder') }}</span>
-          </a>
-
-          <p v-if="msg" class="text-sm rtl-text" :class="ok ? 'text-[rgb(var(--success))]' : 'text-[rgb(var(--danger))]'">{{ msg }}</p>
+        <div class="card-soft p-5">
+          <ProductReviews :product-id="String(product.id)" />
         </div>
       </div>
     </div>
+
+    <!-- Related products -->
+    <div v-if="related.length" class="grid gap-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-black rtl-text">{{ t('product.related') }}</h2>
+        <NuxtLink to="/products" class="text-sm opacity-80 hover:opacity-100 rtl-text">
+          {{ t('product.viewAll') }}
+        </NuxtLink>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ProductCard v-for="rp in related" :key="rp.id" :p="rp" />
+      </div>
+    </div>
+
+    <!-- Fullscreen slider -->
+    <teleport to="body">
+      <div v-if="fullscreen" class="fixed inset-0 z-[95]">
+        <div class="absolute inset-0 bg-black/80" @click="fullscreen = false" />
+        <div class="absolute inset-0 p-4 flex items-center justify-center">
+          <div
+            class="relative w-full max-w-6xl"
+            @touchstart.passive="onTouchStart"
+            @touchmove.passive="onTouchMove"
+            @touchend="onTouchEnd"
+          >
+            <div class="card-soft overflow-hidden">
+              <div class="relative aspect-[16/9] bg-black/30">
+                <SmartImage
+                  v-if="activeImage"
+                  :src="activeImage"
+                  :alt="product?.name || ''"
+                  class="absolute inset-0"
+                  img-class="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+
+            <button
+              class="absolute -top-2 -right-2 h-11 w-11 rounded-full bg-black/60 hover:bg-black/80 grid place-items-center"
+              @click="fullscreen = false"
+              aria-label="Close"
+            >
+              <Icon name="mdi:close" class="text-2xl text-white" />
+            </button>
+
+            <button
+              v-if="images.length > 1"
+              class="absolute left-0 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-black/50 hover:bg-black/70 grid place-items-center"
+              @click="prevImage"
+              aria-label="Prev"
+            >
+              <Icon name="mdi:chevron-left" class="text-3xl text-white keep-ltr" />
+            </button>
+            <button
+              v-if="images.length > 1"
+              class="absolute right-0 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-black/50 hover:bg-black/70 grid place-items-center"
+              @click="nextImage"
+              aria-label="Next"
+            >
+              <Icon name="mdi:chevron-right" class="text-3xl text-white keep-ltr" />
+            </button>
+
+            <div class="mt-3 flex items-center justify-center gap-2">
+              <button
+                v-for="(img, idx) in images"
+                :key="img + idx"
+                class="h-2.5 w-2.5 rounded-full"
+                :class="idx === activeIndex ? 'bg-primary' : 'bg-white/30'"
+                @click="activeIndex = idx"
+                aria-label="Dot"
+              />
+            </div>
+            <div class="mt-2 text-center text-xs text-white/70 keep-ltr">
+              {{ activeIndex + 1 }} / {{ images.length }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </teleport>
+
+    <ProductQuickPreviewModal />
   </div>
 </template>
 
 <script setup lang="ts">
 import UiButton from '~/components/ui/UiButton.vue'
-import { useApi } from '~/composables/useApi'
+import SmartImage from '~/components/SmartImage.vue'
+import ProductCard from '~/components/ProductCard.vue'
+import ProductReviews from '~/components/ProductReviews.vue'
+import ProductQuickPreviewModal from '~/components/ProductQuickPreviewModal.vue'
 
 const { t } = useI18n()
-const auth = useAuthStore()
-const api = useApi()
 const route = useRoute()
-const router = useRouter()
-const config = useRuntimeConfig()
+const api = useApi()
+const cart = useCartStore()
+const { has, toggle, load } = useWishlist()
 
-const loading = ref(true)
-const buying = ref(false)
-const msg = ref('')
-const ok = ref(false)
+const slug = computed(() => String(route.params.slug || ''))
 
-const p = ref<any>(null)
+const { data: product, pending } = await useAsyncData(
+  () => `product:${slug.value}`,
+  async () => {
+    if (!slug.value) return null
+    try {
+      // IMPORTANT: useApi.get returns the data directly (not {data})
+      return await api.get<any>(`/Products/slug/${encodeURIComponent(slug.value)}`)
+    } catch {
+      // fallback: sometimes route uses id instead of slug
+      try {
+        return await api.get<any>(`/Products/${encodeURIComponent(slug.value)}`)
+      } catch {
+        return null
+      }
+    }
+  }
+)
 
-const displayName = computed(() => String(p.value?.title ?? p.value?.name ?? ''))
-const displayPrice = computed(() => Number(p.value?.priceUsd ?? p.value?.price ?? 0))
+watch(
+  () => product.value?.id,
+  () => {
+    load()
+  },
+  { immediate: true }
+)
 
-// صور المنتج (تعمل مع: images: [{url}] أو images: [string] أو coverUrl)
+const isFav = computed(() => (product.value ? has(String(product.value.id)) : false))
+function toggleFav() {
+  if (!product.value) return
+  toggle(String(product.value.id))
+}
+
 const images = computed<string[]>(() => {
-  const list = (p.value?.images ?? []) as any[]
-  const urls = list
-    .map((x) => (typeof x === 'string' ? x : x?.url))
-    .filter(Boolean)
-    .map((u) => api.buildAssetUrl(String(u)))
-
-  const fallback = p.value?.coverUrl || p.value?.imageUrl || p.value?.coverImage
-  if (urls.length === 0 && fallback) urls.push(api.buildAssetUrl(String(fallback)))
-  return urls
+  const p: any = product.value
+  const arr: string[] = []
+  if (p?.images?.length) {
+    for (const im of p.images) {
+      if (typeof im === 'string') arr.push(im)
+      else if (im?.url) arr.push(im.url)
+    }
+  }
+  if (p?.imageUrl) arr.unshift(p.imageUrl)
+  if (p?.thumbnailUrl) arr.unshift(p.thumbnailUrl)
+  // unique
+  return Array.from(new Set(arr.filter(Boolean)))
 })
 
-const selectedIndex = ref(0)
-watch(images, () => {
-  selectedIndex.value = 0
-})
+const activeIndex = ref(0)
+const activeImage = computed(() => images.value[activeIndex.value] || images.value[0] || '')
+watch(images, () => { activeIndex.value = 0 })
 
-const activeImage = computed(() => images.value[selectedIndex.value])
-
-const lightboxOpen = ref(false)
-const openLightbox = () => {
-  if (!activeImage.value) return
-  lightboxOpen.value = true
-}
-const closeLightbox = () => (lightboxOpen.value = false)
-const nextImage = () => {
+function prevImage() {
   if (!images.value.length) return
-  selectedIndex.value = (selectedIndex.value + 1) % images.value.length
+  activeIndex.value = (activeIndex.value - 1 + images.value.length) % images.value.length
 }
-const prevImage = () => {
+function nextImage() {
   if (!images.value.length) return
-  selectedIndex.value = (selectedIndex.value - 1 + images.value.length) % images.value.length
+  activeIndex.value = (activeIndex.value + 1) % images.value.length
 }
 
-const waOrderLink = computed(() => {
-  const n = String((config.public as any).whatsappNumber || '').replace(/[^0-9]/g, '')
-  const text = encodeURIComponent(`Order: ${displayName.value} | Price: ${displayPrice.value}`)
-  return n ? `https://wa.me/${n}?text=${text}` : '#'
-})
-
-function fmt(v: any) {
+function formatMoney(v: any) {
   const n = Number(v || 0)
   return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(n)
 }
 
-function back() { router.push('/products') }
+function addToCart(p: any) {
+  cart.add(p)
+}
+function buyNow(p: any) {
+  cart.add(p)
+  navigateTo('/cart')
+}
 
-async function fetchProduct() {
-  loading.value = true
-  msg.value = ''
+const waLink = computed(() => {
+  const p: any = product.value
+  const name = p?.name || ''
+  const url = process.client ? window.location.href : ''
+  const msg = `${t('product.waMessage')}\n${name}\n${url}`
+  return `https://wa.me/?text=${encodeURIComponent(msg)}`
+})
+
+// Related products
+const related = ref<any[]>([])
+watch(product, async (p) => {
+  if (!p) return
   try {
-    const slug = String(route.params.slug || '')
-    p.value = await api.get(`/Products/slug/${encodeURIComponent(slug)}`).catch(async () => {
-      return await api.get(`/Products/${slug}`)
-    })
+    const res = await api.get<any>(`/Products?page=1&pageSize=24`)
+    const list = Array.isArray(res?.items) ? res.items : Array.isArray(res) ? res : []
+    related.value = list.filter((x: any) => String(x.id) !== String(p.id)).slice(0, 4)
   } catch {
-    p.value = null
-  } finally {
-    loading.value = false
+    related.value = []
   }
+}, { immediate: true })
+
+// Zoom on mouse
+const zoomOn = ref(false)
+const zoomPos = reactive({ x: 50, y: 50 })
+
+function onZoomMove(e: MouseEvent) {
+  const el = e.currentTarget as HTMLElement
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const x = ((e.clientX - rect.left) / rect.width) * 100
+  const y = ((e.clientY - rect.top) / rect.height) * 100
+  zoomPos.x = Math.max(0, Math.min(100, x))
+  zoomPos.y = Math.max(0, Math.min(100, y))
 }
 
-async function buy() {
-  if (!p.value) return
-  buying.value = true
-  msg.value = ''
-  ok.value = false
-  try {
-    // Swagger: POST /api/Checkout/products { productId, quantity }
-    const res: any = await api.post('/Checkout/products', { productId: p.value.id, quantity: 1 })
-    ok.value = true
-    msg.value = `تم إنشاء الطلب (#${res?.orderId || ''}) وحالته ${res?.status || ''}. بانتظار تأكيد الدفع.`
-    // اعرض صفحة طلباتي لو تحب
-    // router.push('/orders')
-  } catch (e: any) {
-    ok.value = false
-    msg.value = e?.data?.message || e?.message || t('buyFailed')
-  } finally {
-    buying.value = false
+const zoomStyle = computed(() => {
+  if (!activeImage.value) return {}
+  return {
+    backgroundImage: `url('${activeImage.value}')`,
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: '200% 200%',
+    backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
+    filter: 'drop-shadow(0 20px 60px rgba(0,0,0,.25))',
   }
+})
+
+// Fullscreen slider (with swipe)
+const fullscreen = ref(false)
+function openFullscreen() {
+  if (!images.value.length) return
+  fullscreen.value = true
 }
 
-onMounted(fetchProduct)
+const touch = reactive({ startX: 0, lastX: 0, dragging: false })
+function onTouchStart(e: TouchEvent) {
+  if (e.touches.length !== 1) return
+  touch.dragging = true
+  touch.startX = e.touches[0].clientX
+  touch.lastX = touch.startX
+}
+function onTouchMove(e: TouchEvent) {
+  if (!touch.dragging) return
+  touch.lastX = e.touches[0].clientX
+}
+function onTouchEnd() {
+  if (!touch.dragging) return
+  const dx = touch.lastX - touch.startX
+  touch.dragging = false
+  if (Math.abs(dx) < 40) return
+  if (dx > 0) prevImage()
+  else nextImage()
+}
+
+useHead(() => ({
+  title: product.value?.name ? `${product.value.name} | Ecommerce` : 'Product'
+}))
 </script>
 
+<style scoped>
+/* Lens layer: a subtle zoom overlay that follows the cursor */
+div[style*="background-size"] {
+  opacity: 0.9;
+  mix-blend-mode: lighten;
+}
+</style>
