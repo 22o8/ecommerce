@@ -85,11 +85,10 @@ const route = useRoute()
 const router = useRouter()
 const products = useProductsStore()
 
-const loading = ref(true)
-const page = ref(Number(route.query.page || 1))
 const pageSize = 12
-const q = ref(String(route.query.q || ''))
-const sort = ref(String(route.query.sort || 'new'))
+const page = computed(() => Number(route.query.page || 1))
+const q = computed(() => String(route.query.q || ''))
+const sort = computed(() => String(route.query.sort || 'new'))
 
 const masonryCols = ref(3)
 
@@ -111,24 +110,26 @@ onBeforeUnmount(() => {
 
 const items = computed(() => products.items)
 
-async function fetchNow(){
-  loading.value = true
-  await products.fetch({ page: page.value, pageSize, q: q.value, sort: sort.value }).catch(() => {})
-  loading.value = false
-}
+// SSR + CSR: حمّل المنتجات بشكل مضمون من أول تحميل
+const { pending: loading } = await useAsyncData(
+  () => `products:${route.fullPath}`,
+  async () => {
+    await products.fetch({ page: page.value, pageSize, q: q.value, sort: sort.value })
+    return true
+  },
+  { watch: [() => route.fullPath] }
+)
 
 function apply(){
-  page.value = 1
-  router.push({ query: { ...(q.value ? { q: q.value } : {}), sort: sort.value, page: page.value } })
+  router.push({ query: { ...(q.value ? { q: q.value } : {}), sort: sort.value, page: 1 } })
 }
 
-function prev(){ if (page.value>1){ page.value--; router.push({ query: { ...(q.value ? { q: q.value } : {}), sort: sort.value, page: page.value } }) } }
-function next(){ page.value++; router.push({ query: { ...(q.value ? { q: q.value } : {}), sort: sort.value, page: page.value } }) }
+function prev(){
+  if (page.value <= 1) return
+  router.push({ query: { ...(q.value ? { q: q.value } : {}), sort: sort.value, page: page.value - 1 } })
+}
 
-watch(() => route.query, () => {
-  page.value = Number(route.query.page || 1)
-  q.value = String(route.query.q || '')
-  sort.value = String(route.query.sort || 'new')
-  fetchNow()
-}, { immediate: true })
+function next(){
+  router.push({ query: { ...(q.value ? { q: q.value } : {}), sort: sort.value, page: page.value + 1 } })
+}
 </script>

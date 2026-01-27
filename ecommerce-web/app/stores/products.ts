@@ -13,6 +13,7 @@ type FetchParams = {
   pageSize?: number
   q?: string
   sort?: 'new' | 'priceAsc' | 'priceDesc' | string
+  isFeatured?: boolean
 }
 
 export const useProductsStore = defineStore('products', () => {
@@ -47,6 +48,7 @@ function normalizeProduct(p: any){
         pageSize: params.pageSize || 12,
         q: params.q || undefined,
         sort: params.sort || 'new',
+        isFeatured: params.isFeatured || undefined,
       })
 
       const raw = (res as any)?.items
@@ -60,7 +62,7 @@ function normalizeProduct(p: any){
   }
 
   async function fetchFeatured() {
-    return await fetch({ page: 1, pageSize: 8, sort: 'new' })
+    return await fetch({ page: 1, pageSize: 8, sort: 'new', isFeatured: true })
   }
 
   return {

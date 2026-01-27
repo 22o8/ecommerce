@@ -95,19 +95,16 @@
 
 <script setup lang="ts">
 import UiButton from '~/components/ui/UiButton.vue'
-import UiBadge from '~/components/ui/UiBadge.vue'
 import ProductCard from '~/components/ProductCard.vue'
 import { useProductsStore } from '~/stores/products'
 
 const { t } = useI18n()
 const products = useProductsStore()
-
-const loading = ref(true)
 const items = computed(() => products.items.slice(0, 6))
 
-onMounted(async () => {
-  loading.value = true
-  await products.fetch({ page: 1, pageSize: 12 }).catch(() => {})
-  loading.value = false
+// SSR + Client: حتى ما يصير "فارغ" بالبداية ويطلع بس بعد تبديل اللغة
+const { pending: loading } = await useAsyncData('home-featured-products', async () => {
+  await products.fetchFeatured({ page: 1, pageSize: 12 })
+  return true
 })
 </script>
