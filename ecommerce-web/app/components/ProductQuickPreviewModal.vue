@@ -128,8 +128,9 @@ function toggleFav() {
 </script>
 
 <style scoped>
-.btn-soft{
-  @apply rounded-2xl border border-white/15 bg-surface/70 hover:bg-surface px-3 py-2 transition;
-
+.btn-soft {
+  @apply rounded-2xl border border-white/15 px-3 py-2 transition hover:bg-white/5;
+  background-color: rgba(255, 255, 255, 0.04);
 }
+
 </style>
