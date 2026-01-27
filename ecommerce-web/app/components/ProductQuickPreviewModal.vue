@@ -132,13 +132,6 @@ function toggleFav() {
 </script>
 
 <style scoped>
-<<<<<<< HEAD
-.btn-soft {
-  @apply rounded-2xl border border-white/15 px-3 py-2 transition hover:bg-white/5;
-  background-color: rgba(255, 255, 255, 0.04);
-}
-
-=======
 .btn-soft{
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,.15);
@@ -148,5 +141,4 @@ function toggleFav() {
 }
 .btn-soft:hover{ background: rgba(255,255,255,.10); }
 .btn-soft:active{ transform: scale(.98); }
->>>>>>> 7764c28 (fix: public products mapping + gallery + render build css)
 </style>
