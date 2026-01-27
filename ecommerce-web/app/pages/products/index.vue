@@ -87,8 +87,23 @@ const products = useProductsStore()
 
 const pageSize = 12
 const page = computed(() => Number(route.query.page || 1))
-const q = computed(() => String(route.query.q || ''))
-const sort = computed(() => String(route.query.sort || 'new'))
+// v-model needs writable refs; computed() without setter throws and breaks rendering.
+const q = ref(String(route.query.q || ''))
+const sort = ref(String(route.query.sort || 'new'))
+
+watch(
+  () => route.query.q,
+  (v) => {
+    q.value = String(v || '')
+  }
+)
+
+watch(
+  () => route.query.sort,
+  (v) => {
+    sort.value = String(v || 'new')
+  }
+)
 
 const masonryCols = ref(3)
 

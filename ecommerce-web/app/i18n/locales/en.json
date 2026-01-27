@@ -36,7 +36,8 @@
   "products": {
     "title": "Products",
     "subtitle": "Browse and search quickly",
-    "search": "Search for a product..."
+    "search": "Search for a product...",
+    "quickPreview": "Quick preview"
   },
   "auth": {
     "welcome": "Welcome 👋",
@@ -207,6 +208,8 @@
   "productsPage": {
     "title": "Products",
     "subtitle": "Pick what you need and buy instantly",
+    "viewDetails": "View details",
+    "addToCart": "Add to cart",
     "searchPlaceholder": "Search products...",
     "search": "Search",
     "emptyTitle": "No products found",
@@ -233,11 +236,6 @@
     "notFoundDesc": "This product may have been removed or the link is incorrect.",
     "goProducts": "Go to products"
   },
-  "wishlist": {
-    "added": "Added to wishlist",
-    "removed": "Removed from wishlist",
-    "title": "Wishlist"
-  },
   "preview": {
     "title": "Quick preview",
     "open": "Preview",
@@ -246,6 +244,7 @@
   },
   "reviews": {
     "title": "Reviews",
+    "addTitle": "Add review",
     "yourRating": "Your rating",
     "write": "Write a review",
     "name": "Name",
@@ -253,10 +252,21 @@
     "submit": "Submit",
     "empty": "No reviews yet."
   },
+  "whatsapp": {
+    "title": "WhatsApp",
+    "cta": "Order via WhatsApp",
+    "messagePrefix": "Hello, I'm interested in"
+  },
   "wishlist": {
+    "title": "Wishlist",
+    "favorites": "Favorites",
     "add": "Add to favorites",
     "remove": "Remove from favorites",
-    "favorites": "Favorites"
+    "toggle": "Toggle favorite",
+    "save": "Save",
+    "saved": "Saved",
+    "added": "Added to wishlist",
+    "removed": "Removed from wishlist"
   },
   "benefit": {
     "whatsapp": {
