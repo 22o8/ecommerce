@@ -89,7 +89,7 @@ import SmartImage from '~/components/SmartImage.vue'
 const props = defineProps<{ p: any }>()
 const { t } = useI18n()
 const cart = useCartStore()
-const { isInWishlist, toggle } = useWishlist()
+const wl = useWishlist()
 const qp = useQuickPreview()
 
 const p = computed(() => props.p)
@@ -106,7 +106,7 @@ const isNew = computed(() => {
   return days <= 14
 })
 
-const fav = computed(() => isInWishlist(String(p.value?.id ?? '')))
+const fav = computed(() => wl.has(String(p.value?.id ?? '')))
 
 function formatPrice(v: any) {
   const n = Number(v ?? 0)
