@@ -18,6 +18,19 @@ type FetchParams = {
 export const useProductsStore = defineStore('products', () => {
   const api = useApi()
 
+function normalizeProduct(p: any){
+  if(!p) return p
+  // API returns Title/PriceUsd/coverImage; UI expects name/priceUsd/imageUrl
+  const name = p.name ?? p.title ?? p.Title ?? p.productName ?? ''
+  const priceUsd = p.priceUsd ?? p.PriceUsd ?? p.price ?? p.Price ?? 0
+  const cover = p.coverImage ?? p.imageUrl ?? p.ImageUrl ?? null
+  const slug = p.slug ?? p.Slug ?? null
+  const images = p.images ?? p.Images ?? null
+  const description = p.description ?? p.Description ?? null
+  return { ...p, name, priceUsd, imageUrl: cover, slug, images, description }
+}
+
+
   const items = ref<any[]>([])
   const totalCount = ref(0)
   const loading = ref(false)
@@ -36,7 +49,9 @@ export const useProductsStore = defineStore('products', () => {
         sort: params.sort || 'new',
       })
 
-      items.value = Array.isArray((res as any)?.items) ? (res as any).items : (Array.isArray(res as any) ? (res as any) : [])
+      const raw = (res as any)?.items
+      const arr = Array.isArray(raw) ? raw : (Array.isArray(res as any) ? (res as any) : [])
+      items.value = arr.map(normalizeProduct)
       totalCount.value = Number((res as any)?.totalCount || (res as any)?.total || items.value.length || 0)
       return res
     } finally {

@@ -14,6 +14,7 @@ export default defineNuxtConfig({
       (process.env.NUXT_PUBLIC_API_BASE ? process.env.NUXT_PUBLIC_API_BASE.replace(/\/api\/?$/, '') : undefined) ||
       'https://ecommerce-api-endk.onrender.com',
     public: {
+      whatsappPhone: process.env.NUXT_PUBLIC_WHATSAPP_PHONE || '',
       // Client requests should go through the Nuxt BFF (avoids CORS + keeps tokens server-side).
       apiBase: '/api/bff',
       // Exposed backend origin (WITHOUT /api). Useful for absolute urls when needed.
