@@ -285,7 +285,7 @@ const images = computed<string[]>(() => {
   if (Array.isArray(list)) {
     for (const im of list) {
       if (typeof im === 'string') pushResolved(im)
-      else if (im?.id) arr.push(api.buildProductImageUrl(im.id))
+      else if (im?.id) arr.push(api.buildAssetUrl(`/ProductImages/${im.id}`))
       else pushResolved(im?.url || im?.path || im?.src || im?.imageUrl)
     }
   }
