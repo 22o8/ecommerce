@@ -49,6 +49,7 @@
             v-if="activeImage"
             :src="activeImage"
             :alt="productName"
+            :eager="true"
             class="absolute inset-0"
             img-class="w-full h-full object-contain bg-black/10"
           />
@@ -168,6 +169,7 @@
                   v-if="activeImage"
                   :src="activeImage"
                   :alt="productName"
+                  :eager="true"
                   class="absolute inset-0"
                   img-class="w-full h-full object-contain"
                 />
@@ -264,6 +266,20 @@ const productId = computed(() => {
   return p?.id ?? p?.Id ?? ''
 })
 
+// ✅ Some API responses don't embed images; fetch them from the dedicated endpoint.
+const { data: productImages } = await useAsyncData(
+  () => (productId.value ? `product-images:${productId.value}` : 'product-images:none'),
+  async () => {
+    if (!productId.value) return []
+    try {
+      return await api.get<any>(`/Products/${encodeURIComponent(String(productId.value))}/images`)
+    } catch {
+      return []
+    }
+  },
+  { watch: [productId] }
+)
+
 const productName = computed(() => {
   const p: any = product.value
   return p?.name ?? p?.title ?? p?.Title ?? ''
@@ -310,18 +326,38 @@ const images = computed((): string[] => {
     arr.push(api.buildAssetUrl(s))
   }
 
-const list = p?.images || p?.Images || []
-if (Array.isArray(list)) {
-  for (const im of list) {
-    if (typeof im === 'string') pushResolved(im)
-    else pushResolved(
+  // 1) Embedded shapes in product payload
+  const list = p?.images || p?.Images || []
+  if (Array.isArray(list)) {
+    for (const im of list) {
+      if (typeof im === 'string') pushResolved(im)
+      else pushResolved(
+        im?.url || im?.Url ||
+        im?.path || im?.Path ||
+        im?.src || im?.Src ||
+        im?.imageUrl || im?.ImageUrl
+      )
+    }
+  }
+
+  // 2) Images endpoint response: can be array or { items: [] }
+  const imgRes: any = productImages.value
+  const endpointList = Array.isArray(imgRes)
+    ? imgRes
+    : Array.isArray(imgRes?.items)
+      ? imgRes.items
+      : Array.isArray(imgRes?.Images)
+        ? imgRes.Images
+        : []
+  for (const im of endpointList) {
+    pushResolved(
       im?.url || im?.Url ||
       im?.path || im?.Path ||
       im?.src || im?.Src ||
-      im?.imageUrl || im?.ImageUrl
+      im?.imageUrl || im?.ImageUrl ||
+      im?.localPath || im?.LocalPath
     )
   }
-}
 
   // cover fields
   pushResolved(p?.imageUrl || p?.ImageUrl || p?.coverImage || p?.CoverImage)
