@@ -47,36 +47,33 @@ const props = withDefaults(
     wrapperClass: '',
     imgClass: '',
     rounded: 'rounded-3xl',
-    background: 'rgba(255,255,255,0.06)',
+    background: 'rgba(255,255,255,0.06)'
   }
 )
 
 const imgEl = ref<HTMLImageElement | null>(null)
+
 const loaded = ref(false)
 const failed = ref(false)
 
-// مهم: على السيرفر ماكو DOM ولا Image()
-// نخليها true حتى SSR ما يرمي 500 وما يظل placeholder
-if (import.meta.server) {
-  loaded.value = true
-}
+const isClient = import.meta.client
 
+// Preload the image with a detached Image() so we never miss the load event.
+// IMPORTANT: Image() exists only in the browser, so guard it for SSR.
 let preloader: HTMLImageElement | null = null
 
-function cleanupPreloader() {
-  if (!preloader) return
-  preloader.onload = null
-  preloader.onerror = null
-  preloader = null
-}
-
 function startPreload(src: string) {
-  // client فقط
-  if (!import.meta.client) return
+  if (!isClient) return
   if (!src) return
 
-  cleanupPreloader()
+  // cleanup previous preloader
+  if (preloader) {
+    preloader.onload = null
+    preloader.onerror = null
+    preloader = null
+  }
 
+  // window.Image to be explicit in browser env
   const im = new window.Image()
   preloader = im
 
@@ -88,28 +85,26 @@ function startPreload(src: string) {
     loaded.value = true
     failed.value = true
   }
-
   im.src = src
 }
 
 async function syncIfAlreadyLoaded() {
-  // client فقط
-  if (!import.meta.client) return
+  if (!isClient) return
 
   const el = imgEl.value
   if (!el) return
 
-  // إذا الصورة بالكاش
+  // If the image is already cached/complete, the `load` event might not fire.
   if (el.complete && el.naturalWidth > 0) {
     loaded.value = true
     failed.value = false
     return
   }
 
-  // جرّب decode() لو متوفر
+  // Some browsers can miss `load` during hydration/caching; try decode()
   try {
-    const anyEl = el as any
-    const dec = anyEl.decode?.()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dec = (el as any).decode?.()
     if (dec && typeof dec.then === 'function') {
       await dec
       loaded.value = true
@@ -120,17 +115,15 @@ async function syncIfAlreadyLoaded() {
     // ignore
   }
 
-  // fallback: لا تبقى مخفية للأبد
-  window.setTimeout(() => {
+  // Last-resort: don't keep the image hidden forever
+  setTimeout(() => {
     if (!loaded.value) loaded.value = true
   }, 1200)
 }
 
 function onLoad() {
   loaded.value = true
-  failed.value = false
 }
-
 function onError() {
   failed.value = true
   loaded.value = true
@@ -138,42 +131,35 @@ function onError() {
 
 watch(
   () => props.src,
-  async (newSrc) => {
+  async () => {
     // reset state for new source
     loaded.value = false
     failed.value = false
 
-    // SSR: لا تسوي preload
-    if (!import.meta.client) {
-      loaded.value = true
-      return
-    }
+    // SSR guard: لا تسوي preload ولا تتعامل ويا DOM بالسيرفر
+    if (!isClient) return
 
     await nextTick()
+    // try both: DOM img checks + detached preloader
     syncIfAlreadyLoaded()
-    startPreload(newSrc)
+    startPreload(props.src)
   },
   { immediate: true }
 )
 
 onMounted(() => {
-  // client فقط
   syncIfAlreadyLoaded()
   startPreload(props.src)
 })
 
-onBeforeUnmount(() => {
-  cleanupPreloader()
-})
-
 const wrapperStyle = computed(() => ({
-  background: props.background,
+  background: props.background
 }))
 
 const placeholderStyle = computed(() => ({
   background: props.background,
   filter: 'blur(14px)',
-  transform: 'scale(1.15)',
+  transform: 'scale(1.15)'
 }))
 
 const imgClassComputed = computed(() => {
@@ -186,7 +172,9 @@ const imgClassComputed = computed(() => {
 
 const imgStyleComputed = computed(() => {
   if (failed.value) {
-    return { background: props.background }
+    return {
+      background: props.background
+    }
   }
   return {}
 })
