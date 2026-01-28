@@ -52,25 +52,17 @@ const props = withDefaults(
 )
 
 const imgEl = ref<HTMLImageElement | null>(null)
-
 const loaded = ref(false)
 const failed = ref(false)
 
-const isClient = import.meta.client
-
-// Preload the image with a detached Image() so we never miss the load event.
-<<<<<<< HEAD
-// IMPORTANT: Image() exists only in the browser, so guard it for SSR.
-=======
-// مهم: Image() غير موجودة على السيرفر (SSR)، لذلك نحميها بـ import.meta.client
->>>>>>> bbc72d4 (fix(images): SSR-safe SmartImage + use product quick preview instead of product page)
 let preloader: HTMLImageElement | null = null
 
 function startPreload(src: string) {
-  if (!isClient) return
+  // SSR guard
+  if (!import.meta.client) return
   if (!src) return
-  // حماية إضافية: على السيرفر/SSR لا توجد Image() أصلاً
-  // أحياناً قد تُستدعى الدالة أثناء SSR بسبب SWR أو Hydration، لذلك نعتمد فحص Runtime.
+
+  // extra guard: Image constructor exists only in browser
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ImgCtor = (globalThis as any)?.Image
   if (!ImgCtor) return
@@ -82,12 +74,7 @@ function startPreload(src: string) {
     preloader = null
   }
 
-<<<<<<< HEAD
-  // window.Image to be explicit in browser env
-  const im = new window.Image()
-=======
-  const im = new ImgCtor()
->>>>>>> bbc72d4 (fix(images): SSR-safe SmartImage + use product quick preview instead of product page)
+  const im = new ImgCtor() as HTMLImageElement
   preloader = im
 
   im.onload = () => {
@@ -98,31 +85,28 @@ function startPreload(src: string) {
     loaded.value = true
     failed.value = true
   }
+
   im.src = src
 }
 
 async function syncIfAlreadyLoaded() {
-<<<<<<< HEAD
-  if (!isClient) return
-=======
+  // SSR: don't block rendering
   if (!import.meta.client) {
-    // على SSR لا نريد تعليق الـ rendering بسبب انتظار تحميل صورة
     loaded.value = true
     return
   }
->>>>>>> bbc72d4 (fix(images): SSR-safe SmartImage + use product quick preview instead of product page)
 
   const el = imgEl.value
   if (!el) return
 
-  // If the image is already cached/complete, the `load` event might not fire.
+  // If cached/complete, the load event may not fire
   if (el.complete && el.naturalWidth > 0) {
     loaded.value = true
     failed.value = false
     return
   }
 
-  // Some browsers can miss `load` during hydration/caching; try decode()
+  // Try decode()
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dec = (el as any).decode?.()
@@ -136,7 +120,7 @@ async function syncIfAlreadyLoaded() {
     // ignore
   }
 
-  // Last-resort: don't keep the image hidden forever
+  // Last-resort: avoid permanent placeholder
   setTimeout(() => {
     if (!loaded.value) loaded.value = true
   }, 1200)
@@ -156,16 +140,11 @@ watch(
     loaded.value = false
     failed.value = false
 
-<<<<<<< HEAD
-    // SSR guard: لا تسوي preload ولا تتعامل ويا DOM بالسيرفر
-    if (!isClient) return
-=======
-    // SSR: لا نستخدم preloader ولا decode
+    // SSR: no preload/decode
     if (!import.meta.client) {
       loaded.value = true
       return
     }
->>>>>>> bbc72d4 (fix(images): SSR-safe SmartImage + use product quick preview instead of product page)
 
     await nextTick()
     syncIfAlreadyLoaded()
@@ -192,22 +171,14 @@ const placeholderStyle = computed(() => ({
 const imgClassComputed = computed(() => {
   const base = `${props.rounded} ${props.imgClass}`.trim()
   const fit = props.fit === 'contain' ? 'object-contain' : 'object-cover'
-<<<<<<< HEAD
-=======
-
-  // Never fully hide the image (it can look blank if load event is missed).
->>>>>>> bbc72d4 (fix(images): SSR-safe SmartImage + use product quick preview instead of product page)
   const vis = loaded.value ? 'opacity-100' : 'opacity-80'
   const blur = loaded.value ? '' : 'blur-[0.6px]'
-
   return `${base} ${fit} ${vis} ${blur}`.trim()
 })
 
 const imgStyleComputed = computed(() => {
   if (failed.value) {
-    return {
-      background: props.background
-    }
+    return { background: props.background }
   }
   return {}
 })
