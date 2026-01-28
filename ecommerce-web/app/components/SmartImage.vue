@@ -47,20 +47,20 @@ const props = withDefaults(
     wrapperClass: '',
     imgClass: '',
     rounded: 'rounded-3xl',
-    background: 'rgba(255,255,255,0.06)'
+    background: 'rgba(255,255,255,0.06)',
   }
 )
 
 const imgEl = ref<HTMLImageElement | null>(null)
-
 const loaded = ref(false)
 const failed = ref(false)
 
-// ✅ SSR guard: لا تستخدم Image / window بالسيرفر
-const isClient = typeof window !== 'undefined'
+// مهم: على السيرفر ماكو DOM ولا Image()
+// نخليها true حتى SSR ما يرمي 500 وما يظل placeholder
+if (import.meta.server) {
+  loaded.value = true
+}
 
-// Preload the image with a detached Image() so we never miss the load event.
-// This fixes cases where the <img> load event is missed during hydration + cache.
 let preloader: HTMLImageElement | null = null
 
 function cleanupPreloader() {
@@ -71,18 +71,13 @@ function cleanupPreloader() {
 }
 
 function startPreload(src: string) {
+  // client فقط
+  if (!import.meta.client) return
   if (!src) return
-
-  // ✅ على السيرفر لا تسوي preload نهائياً (هذا سبب 500)
-  if (!isClient) return
 
   cleanupPreloader()
 
-  // ✅ استخدم window.Image حتى نتأكد هو متوفر بالمتصفح
-  const ImgCtor = (window as any).Image
-  if (!ImgCtor) return
-
-  const im = new ImgCtor() as HTMLImageElement
+  const im = new window.Image()
   preloader = im
 
   im.onload = () => {
@@ -93,31 +88,28 @@ function startPreload(src: string) {
     loaded.value = true
     failed.value = true
   }
+
   im.src = src
 }
 
 async function syncIfAlreadyLoaded() {
+  // client فقط
+  if (!import.meta.client) return
+
   const el = imgEl.value
   if (!el) return
 
-  // ✅ على السيرفر خلّه loaded حتى ما تصير شاشة بيضة / crash
-  if (!isClient) {
-    loaded.value = true
-    failed.value = false
-    return
-  }
-
-  // If the image is already cached/complete, the `load` event might not fire.
+  // إذا الصورة بالكاش
   if (el.complete && el.naturalWidth > 0) {
     loaded.value = true
     failed.value = false
     return
   }
 
-  // Some browsers can miss `load` during hydration/caching; try decode()
+  // جرّب decode() لو متوفر
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dec = (el as any).decode?.()
+    const anyEl = el as any
+    const dec = anyEl.decode?.()
     if (dec && typeof dec.then === 'function') {
       await dec
       loaded.value = true
@@ -128,8 +120,8 @@ async function syncIfAlreadyLoaded() {
     // ignore
   }
 
-  // Last-resort: don't keep the image hidden forever
-  setTimeout(() => {
+  // fallback: لا تبقى مخفية للأبد
+  window.setTimeout(() => {
     if (!loaded.value) loaded.value = true
   }, 1200)
 }
@@ -138,6 +130,7 @@ function onLoad() {
   loaded.value = true
   failed.value = false
 }
+
 function onError() {
   failed.value = true
   loaded.value = true
@@ -145,27 +138,26 @@ function onError() {
 
 watch(
   () => props.src,
-  async (v) => {
+  async (newSrc) => {
     // reset state for new source
     loaded.value = false
     failed.value = false
 
-    // ✅ إذا ماكو رابط، لا تخلي placeholder للأبد
-    if (!v) {
+    // SSR: لا تسوي preload
+    if (!import.meta.client) {
       loaded.value = true
       return
     }
 
     await nextTick()
-
-    // ✅ try both: DOM img checks + detached preloader (client only)
     syncIfAlreadyLoaded()
-    startPreload(v)
+    startPreload(newSrc)
   },
   { immediate: true }
 )
 
 onMounted(() => {
+  // client فقط
   syncIfAlreadyLoaded()
   startPreload(props.src)
 })
@@ -175,21 +167,18 @@ onBeforeUnmount(() => {
 })
 
 const wrapperStyle = computed(() => ({
-  background: props.background
+  background: props.background,
 }))
 
 const placeholderStyle = computed(() => ({
   background: props.background,
   filter: 'blur(14px)',
-  transform: 'scale(1.15)'
+  transform: 'scale(1.15)',
 }))
 
 const imgClassComputed = computed(() => {
   const base = `${props.rounded} ${props.imgClass}`.trim()
   const fit = props.fit === 'contain' ? 'object-contain' : 'object-cover'
-
-  // Never fully hide the image (it can look "blank" if the load event is missed).
-  // Instead keep it visible with a mild fade/blur until it's confirmed loaded.
   const vis = loaded.value ? 'opacity-100' : 'opacity-80'
   const blur = loaded.value ? '' : 'blur-[0.6px]'
   return `${base} ${fit} ${vis} ${blur}`.trim()
@@ -197,9 +186,7 @@ const imgClassComputed = computed(() => {
 
 const imgStyleComputed = computed(() => {
   if (failed.value) {
-    return {
-      background: props.background
-    }
+    return { background: props.background }
   }
   return {}
 })
