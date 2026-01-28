@@ -84,6 +84,8 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const products = useProductsStore()
+const qp = useQuickPreview()
+const api = useApi()
 
 const pageSize = 12
 const page = computed(() => Number(route.query.page || 1))
@@ -124,6 +126,26 @@ onBeforeUnmount(() => {
 })
 
 const items = computed(() => products.items)
+
+// فتح Quick Preview عبر رابط قابل للمشاركة: /products?p=<id>
+watch(
+  () => route.query.p,
+  async (v) => {
+    if (!v) return
+    const id = String(v)
+    let prod: any = items.value.find((x: any) => String(x.id ?? x.slug ?? '') === id)
+    if (!prod) {
+      try {
+        prod = await api.get(`/Products/${id}`)
+      } catch (e) {
+        // إذا المنتج غير موجود لا نكسر الصفحة
+        return
+      }
+    }
+    if (prod) qp.show(prod)
+  },
+  { immediate: true }
+)
 
 // SSR + CSR: حمّل المنتجات بشكل مضمون من أول تحميل
 const { pending: loading } = await useAsyncData(

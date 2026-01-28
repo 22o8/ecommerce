@@ -1,7 +1,12 @@
 <template>
-  <NuxtLink
-    :to="`/products/${p.id ?? p.slug}`"
+  <!-- تم إلغاء صفحة تفاصيل المنتج: الضغط على الكارد يفتح Quick Preview فقط -->
+  <div
+    role="button"
+    tabindex="0"
     class="group card-soft overflow-hidden transition duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+    @click="openPreview"
+    @keydown.enter.prevent="openPreview"
+    @keydown.space.prevent="openPreview"
   >
     <div class="relative">
       <div class="relative aspect-[4/3] bg-black/20">
@@ -30,7 +35,7 @@
       <div class="absolute top-3 right-3 flex items-center gap-2">
         <button
           class="rounded-full bg-white/10 backdrop-blur border border-white/10 p-2 hover:bg-white/15 transition"
-          @click.prevent="toggleFav"
+          @click.stop.prevent="toggleFav"
           :aria-label="t('wishlist.toggle')"
         >
           <Icon
@@ -41,7 +46,7 @@
 
         <button
           class="rounded-full bg-white/10 backdrop-blur border border-white/10 p-2 hover:bg-white/15 transition"
-          @click.prevent="openPreview"
+          @click.stop.prevent="openPreview"
           :aria-label="t('products.quickPreview')"
         >
           <Icon name="mdi:eye-outline" class="text-lg" />
@@ -65,7 +70,7 @@
         <div class="flex items-center gap-2">
           <button
             class="px-3 py-2 rounded-xl border border-app bg-surface hover:bg-white/5 transition text-sm"
-            @click.prevent="addToCart"
+            @click.stop.prevent="addToCart"
           >
             <Icon name="mdi:cart-plus" class="text-lg" />
             <span class="rtl-text ml-1">{{ t('common.addToCart') }}</span>
@@ -73,14 +78,14 @@
 
           <button
             class="px-3 py-2 rounded-xl border border-app bg-surface hover:bg-white/5 transition text-sm"
-            @click.prevent="buyNow"
+            @click.stop.prevent="buyNow"
           >
             <span class="rtl-text">{{ t('common.buy') }}</span>
           </button>
         </div>
       </div>
     </div>
-  </NuxtLink>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -91,6 +96,8 @@ const { t } = useI18n()
 const cart = useCartStore()
 const { isInWishlist, toggle } = useWishlist()
 const qp = useQuickPreview()
+const router = useRouter()
+const route = useRoute()
 const { buildAssetUrl } = useApi()
 
 const p = computed(() => props.p)
@@ -134,5 +141,12 @@ function toggleFav() {
 
 function openPreview() {
   qp.show(p.value)
+
+  // رابط قابل للمشاركة: نضيف ?p=<id> لنفس الصفحة
+  const id = String(p.value?.id ?? p.value?.slug ?? '')
+  if (id) {
+    const q: Record<string, any> = { ...route.query, p: id }
+    router.replace({ query: q })
+  }
 }
 </script>

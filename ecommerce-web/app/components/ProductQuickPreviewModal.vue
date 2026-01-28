@@ -75,13 +75,13 @@ import { useQuickPreview } from '~/composables/useQuickPreview'
 
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const cart = useCartStore()
 const wl = useWishlist()
 const qp = useQuickPreview()
 
 const open = computed(() => qp.open.value)
-// Avoid `computed<T>()` generics in SFCs (can be mis-parsed as JSX in some Nuxt 4 build setups).
-const p = computed(() => qp.product.value as any)
+const p = computed<any>(() => qp.product.value)
 
 const displayName = computed(() => p.value?.name || p.value?.title || p.value?.Title || '')
 
@@ -112,14 +112,21 @@ const waLink = computed(() => {
 
 function close() {
   qp.close()
+
+  // إزالة ?p من الرابط بعد إغلاق النافذة
+  if (route.query.p) {
+    const q = { ...route.query } as Record<string, any>
+    delete q.p
+    router.replace({ query: q })
+  }
 }
 
 function goTo() {
   if (!p.value) return
   close()
-  // Prefer id for routing (backend guaranteed), fallback to slug if id missing
-  const slug = p.value.id ?? p.value.slug ?? p.value.Slug
-  router.push(`/products/${slug}`)
+  // بدل صفحة تفاصيل مستقلة: نفتح نفس النافذة عبر query ?p=<id>
+  const id = String(p.value.id ?? p.value.slug ?? p.value.Slug ?? '')
+  router.push({ path: '/products', query: { ...route.query, p: id } })
 }
 
 function addToCart() {
