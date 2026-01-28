@@ -39,7 +39,8 @@
       <!-- Gallery -->
       <div class="card-soft overflow-hidden">
         <div
-          class="relative aspect-[4/3] bg-black/20"
+          class="relative aspect-[4/3] bg-black/20 cursor-zoom-in"
+          @click="openFullscreen()"
           @mousemove="onZoomMove"
           @mouseenter="zoomOn = true"
           @mouseleave="zoomOn = false"
@@ -47,7 +48,7 @@
           <SmartImage
             v-if="activeImage"
             :src="activeImage"
-            :alt="product.name"
+            :alt="productName"
             class="absolute inset-0"
             img-class="w-full h-full object-contain bg-black/10"
           />
@@ -94,7 +95,7 @@
             :class="idx === activeIndex ? 'border-primary' : 'border-white/10'"
             @click.stop.prevent="activeIndex = idx"
           >
-            <SmartImage :src="img" :alt="product.name" class="absolute inset-0" img-class="w-full h-full object-cover" />
+            <SmartImage :src="img" :alt="productName" class="absolute inset-0" img-class="w-full h-full object-cover" />
           </button>
         </div>
       </div>
@@ -104,14 +105,14 @@
         <div class="card-soft p-5 grid gap-3">
           <div class="flex items-start justify-between gap-3">
             <div>
-              <h1 class="text-2xl md:text-3xl font-black rtl-text">{{ product.name }}</h1>
-              <div class="mt-1 text-sm text-muted keep-ltr">/{{ product.slug }}</div>
+              <h1 class="text-2xl md:text-3xl font-black rtl-text">{{ productName }}</h1>
+              <div class="mt-1 text-sm text-muted keep-ltr">/{{ productSlug }}</div>
             </div>
-            <div class="text-2xl font-black keep-ltr">{{ formatMoney(product.price) }}</div>
+            <div class="text-2xl font-black keep-ltr">{{ formatMoney(productPrice) }}</div>
           </div>
 
-          <div v-if="product.description" class="text-sm leading-7 rtl-text text-white/90">
-            {{ product.description }}
+          <div v-if="productDescription" class="text-sm leading-7 rtl-text text-white/90">
+            {{ productDescription }}
           </div>
 
           <div class="flex flex-wrap gap-2 pt-2">
@@ -132,7 +133,7 @@
         </div>
 
         <div class="card-soft p-5">
-          <ProductReviews :product-id="String(product.id)" />
+          <ProductReviews :product-id="String(productId)" />
         </div>
       </div>
     </div>
@@ -166,7 +167,7 @@
                 <SmartImage
                   v-if="activeImage"
                   :src="activeImage"
-                  :alt="product?.name || ''"
+                  :alt="productName"
                   class="absolute inset-0"
                   img-class="w-full h-full object-contain"
                 />
@@ -262,6 +263,32 @@ watch(
   { immediate: true }
 )
 
+// ✅ Normalize fields across API shapes
+const productId = computed(() => {
+  const p: any = product.value
+  return p?.id ?? p?.Id ?? ''
+})
+
+const productName = computed(() => {
+  const p: any = product.value
+  return p?.name ?? p?.title ?? p?.Title ?? ''
+})
+
+const productSlug = computed(() => {
+  const p: any = product.value
+  return p?.slug ?? p?.Slug ?? ''
+})
+
+const productDescription = computed(() => {
+  const p: any = product.value
+  return p?.description ?? p?.Description ?? ''
+})
+
+const productPrice = computed(() => {
+  const p: any = product.value
+  return p?.price ?? p?.priceUsd ?? p?.PriceUsd ?? p?.Price ?? 0
+})
+
 const isFav = computed(() => (product.value ? has(String(product.value.id)) : false))
 function toggleFav() {
   if (!product.value) return
@@ -274,7 +301,8 @@ const images = computed<string[]>(() => {
 
   const pushResolved = (v: any) => {
     if (!v) return
-    const s = String(v)
+    const s = String(v).trim()
+    if (!s) return
     arr.push(api.buildAssetUrl(s))
   }
 
@@ -285,13 +313,23 @@ const images = computed<string[]>(() => {
   if (Array.isArray(list)) {
     for (const im of list) {
       if (typeof im === 'string') pushResolved(im)
+<<<<<<< HEAD
       else if (im?.id) arr.push(api.buildAssetUrl(`/ProductImages/${im.id}`))
       else pushResolved(im?.url || im?.path || im?.src || im?.imageUrl)
+=======
+      else pushResolved(
+        im?.url || im?.Url ||
+        im?.path || im?.Path ||
+        im?.src || im?.Src ||
+        im?.imageUrl || im?.ImageUrl
+      )
+>>>>>>> 533303c (Fix product details routing (prefer id) + safe slug fallback)
     }
   }
 
-  pushResolved(p?.imageUrl)
-  pushResolved(p?.thumbnailUrl)
+  // cover fields
+  pushResolved(p?.imageUrl || p?.ImageUrl || p?.coverImage || p?.CoverImage)
+  pushResolved(p?.thumbnailUrl || p?.ThumbnailUrl)
 
   // unique
   return Array.from(new Set(arr.filter(Boolean)))
@@ -325,7 +363,7 @@ function buyNow(p: any) {
 
 const waLink = computed(() => {
   const p: any = product.value
-  const name = p?.name || ''
+  const name = productName.value || ''
   const url = process.client ? window.location.href : ''
   const msg = `${t('product.waMessage')}\n${name}\n${url}`
   return `https://wa.me/?text=${encodeURIComponent(msg)}`
@@ -338,7 +376,9 @@ watch(product, async (p) => {
   try {
     const res = await api.get<any>(`/Products?page=1&pageSize=24`)
     const list = Array.isArray(res?.items) ? res.items : Array.isArray(res) ? res : []
-    related.value = list.filter((x: any) => String(x.id) !== String(p.id)).slice(0, 4)
+    related.value = list
+      .filter((x: any) => String(x.id ?? x.Id) !== String(p?.id ?? p?.Id))
+      .slice(0, 4)
   } catch {
     related.value = []
   }
@@ -397,7 +437,7 @@ function onTouchEnd() {
 }
 
 useHead(() => ({
-  title: product.value?.name ? `${product.value.name} | Ecommerce` : 'Product'
+  title: productName.value ? `${productName.value} | Ecommerce` : 'Product'
 }))
 </script>
 

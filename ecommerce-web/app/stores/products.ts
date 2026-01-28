@@ -54,14 +54,13 @@ export const useProductsStore = defineStore('products', () => {
   async function fetch(params: FetchParams = {}) {
     loading.value = true
     try {
+      // useApi.get expects the query object directly (not wrapped in { query: ... })
       const res = await api.get<Paged<any>>('/Products', {
-        query: {
-          page: params.page || 1,
-          pageSize: params.pageSize || 12,
-          q: params.q || undefined,
-          sort: params.sort || 'new',
-          isFeatured: params.isFeatured || undefined,
-        },
+        page: params.page || 1,
+        pageSize: params.pageSize || 12,
+        q: params.q || undefined,
+        sort: params.sort || 'new',
+        isFeatured: params.isFeatured || undefined,
       })
 
       // Support different API shapes
