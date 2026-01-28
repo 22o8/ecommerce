@@ -30,11 +30,7 @@
         </div>
       </div>
 
-      <!-- Mouse hint: hide on phones -->
-      <div class="hint rtl-text hidden md:flex">
-        <Icon name="mdi:magnify-plus-outline" class="text-lg opacity-80" />
-        <span>حرّك الماوس للتقريب — اضغط لعرض ملء الشاشة</span>
-      </div>
+	    <!-- تم حذف ملاحظة التفاعل لتجنب الزحمة خصوصاً على الهاتف -->
     </div>
 
     <div v-if="images.length>1" class="thumbs" dir="ltr">

@@ -2,8 +2,8 @@
   <teleport to="body">
     <div v-if="open" class="fixed inset-0 z-[90]">
       <div class="absolute inset-0 bg-black/60" @click="close" />
-      <div class="absolute inset-0 flex items-center justify-center p-4">
-	        <div class="card-soft w-full max-w-5xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div class="absolute inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4">
+	        <div class="card-soft w-full sm:max-w-5xl overflow-hidden max-h-[92vh] flex flex-col rounded-t-3xl sm:rounded-3xl">
           <div class="flex items-center justify-between gap-3 border-b border-app px-4 py-3">
             <div class="font-extrabold rtl-text truncate">{{ displayName }}</div>
 
@@ -12,7 +12,7 @@
             </button>
           </div>
 
-	          <div class="flex-1 overflow-y-auto">
+			  <div class="flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]" style="-webkit-overflow-scrolling: touch;">
 	            <div class="grid gap-4 p-4 md:p-6 md:grid-cols-2">
             <ProductGallery :images="images" :title="displayName" />
 
@@ -72,12 +72,33 @@ import { useQuickPreview } from '~/composables/useQuickPreview'
 
 const { t } = useI18n()
 const route = useRoute()
+const router = useRouter()
 const cart = useCartStore()
 const wl = useWishlist()
 const qp = useQuickPreview()
+const products = useProductsStore()
 
 const open = computed(() => qp.open.value)
 const p = computed<any>(() => qp.product.value)
+
+// منع سكرول الخلفية فقط أثناء فتح المودال (وخاصة على iOS)
+let prevHtmlOverflow = ''
+let prevBodyOverflow = ''
+watch(open, (v) => {
+  if (!import.meta.client) return
+  const html = document.documentElement
+  const body = document.body
+
+  if (v) {
+    prevHtmlOverflow = html.style.overflow
+    prevBodyOverflow = body.style.overflow
+    html.style.overflow = 'hidden'
+    body.style.overflow = 'hidden'
+  } else {
+    html.style.overflow = prevHtmlOverflow || ''
+    body.style.overflow = prevBodyOverflow || ''
+  }
+})
 
 const displayName = computed(() => p.value?.name || p.value?.title || p.value?.Title || '')
 
@@ -105,6 +126,40 @@ const waLink = computed(() => {
   const target = phone ? `https://wa.me/${phone}` : 'https://wa.me/'
   return `${target}?text=${text}`
 })
+
+// دعم فتح الـ popup من أي صفحة عبر ?p=PRODUCT_ID
+watch(
+  () => route.query.p,
+  (val) => {
+    if (typeof val !== 'string' || !val) return
+    // إذا كانت نفس السلعة مفتوحة أصلاً، لا نسوي شي
+    const currentId = String(p.value?.id ?? p.value?.Id ?? '')
+    if (open.value && currentId === val) return
+
+    // حاول نلقاها من المنتجات المحمّلة حالياً
+    const found = products.items.find((x: any) => String(x?.id ?? x?.Id ?? '') === val)
+    if (found) qp.show(found)
+  },
+  { immediate: true }
+)
+
+// قفل سكرول الخلفية عند فتح المودال + السماح بالسكرول داخل المودال
+watch(
+  open,
+  (v) => {
+    if (!import.meta.client) return
+    const el = document.documentElement
+    const body = document.body
+    if (v) {
+      el.style.overflow = 'hidden'
+      body.style.overflow = 'hidden'
+    } else {
+      el.style.overflow = ''
+      body.style.overflow = ''
+    }
+  },
+  { immediate: true }
+)
 
 function close() {
   qp.close()

@@ -1,15 +1,7 @@
 <template>
-  <div
-    class="relative overflow-hidden"
-    :class="wrapperClass"
-    :style="wrapperStyle"
-  >
+  <div class="relative overflow-hidden" :class="wrapperClass" :style="wrapperStyle">
     <!-- Blur placeholder until image loads -->
-    <div
-      v-if="!loaded"
-      class="absolute inset-0"
-      :style="placeholderStyle"
-    />
+    <div v-if="!loaded" class="absolute inset-0" :style="placeholderStyle" />
 
     <img
       ref="imgEl"
@@ -55,25 +47,27 @@ const imgEl = ref<HTMLImageElement | null>(null)
 const loaded = ref(false)
 const failed = ref(false)
 
-// Preload image safely (SSR-safe)
+// Preloader only in browser
 let preloader: HTMLImageElement | null = null
 
-function startPreload(src: string) {
-  // SSR guard
-  if (!import.meta.client) return
-  if (!src) return
-
-  // Image constructor exists only in browser
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ImgCtor = (globalThis as any)?.Image
-  if (!ImgCtor) return
-
-  // cleanup previous preloader
+function cleanupPreloader() {
   if (preloader) {
     preloader.onload = null
     preloader.onerror = null
     preloader = null
   }
+}
+
+function startPreload(src: string) {
+  if (!import.meta.client) return
+  if (!src) return
+
+  // guard: Image exists only in browser
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ImgCtor = (globalThis as any)?.Image
+  if (!ImgCtor) return
+
+  cleanupPreloader()
 
   const im = new ImgCtor() as HTMLImageElement
   preloader = im
@@ -91,7 +85,7 @@ function startPreload(src: string) {
 }
 
 async function syncIfAlreadyLoaded() {
-  // SSR: don't block rendering
+  // SSR: never block rendering waiting for image
   if (!import.meta.client) {
     loaded.value = true
     return
@@ -100,14 +94,12 @@ async function syncIfAlreadyLoaded() {
   const el = imgEl.value
   if (!el) return
 
-  // If cached/complete, load event may not fire
   if (el.complete && el.naturalWidth > 0) {
     loaded.value = true
     failed.value = false
     return
   }
 
-  // Try decode()
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dec = (el as any).decode?.()
@@ -121,7 +113,7 @@ async function syncIfAlreadyLoaded() {
     // ignore
   }
 
-  // Last-resort: avoid permanent placeholder
+  // last resort
   setTimeout(() => {
     if (!loaded.value) loaded.value = true
   }, 1200)
@@ -159,6 +151,10 @@ onMounted(() => {
   startPreload(props.src)
 })
 
+onBeforeUnmount(() => {
+  cleanupPreloader()
+})
+
 const wrapperStyle = computed(() => ({
   background: props.background
 }))
@@ -173,16 +169,15 @@ const imgClassComputed = computed(() => {
   const base = `${props.rounded} ${props.imgClass}`.trim()
   const fit = props.fit === 'contain' ? 'object-contain' : 'object-cover'
 
-  // keep visible with mild fade/blur until loaded
+  // keep it visible slightly until loaded (avoid blank during hydration)
   const vis = loaded.value ? 'opacity-100' : 'opacity-80'
   const blur = loaded.value ? '' : 'blur-[0.6px]'
+
   return `${base} ${fit} ${vis} ${blur}`.trim()
 })
 
 const imgStyleComputed = computed(() => {
-  if (failed.value) {
-    return { background: props.background }
-  }
+  if (failed.value) return { background: props.background }
   return {}
 })
 </script>

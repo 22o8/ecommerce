@@ -31,11 +31,12 @@
         </div>
 
         <!-- Actions -->
-        <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-          <NuxtLink to="/cart" class="hidden sm:block">
-            <UiButton variant="ghost" class="relative">
+	        <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+	          <!-- Cart: يظهر على الهاتف أيضاً (أيقونة فقط) -->
+	          <NuxtLink to="/cart" class="block">
+	            <UiButton variant="ghost" class="relative px-3">
               <Icon name="mdi:cart-outline" class="text-lg" />
-              <span class="rtl-text">{{ t('nav.cart') }}</span>
+	              <span class="hidden sm:inline rtl-text">{{ t('nav.cart') }}</span>
               <span
                 v-if="cart.count"
                 class="absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full bg-[rgb(var(--primary))] text-black text-xs font-black grid place-items-center"
@@ -53,8 +54,14 @@
             <Icon :name="ui.theme === 'dark' ? 'mdi:weather-night' : 'mdi:white-balance-sunny'" class="text-lg" />
           </UiButton>
 
-          <NuxtLink v-if="isAdmin" to="/admin" class="hidden sm:block">
-            <UiButton variant="secondary">
+	          <!-- Admin: زر صغير على الهاتف + زر كامل على الشاشات الكبيرة -->
+	          <NuxtLink v-if="isAdmin" to="/admin" class="sm:hidden">
+	            <UiButton variant="ghost" class="px-3" :title="t('dashboard')">
+	              <Icon name="mdi:view-dashboard-outline" class="text-lg" />
+	            </UiButton>
+	          </NuxtLink>
+	          <NuxtLink v-if="isAdmin" to="/admin" class="hidden sm:block">
+	            <UiButton variant="secondary">
               <Icon name="mdi:view-dashboard-outline" class="text-lg" />
               <span class="rtl-text">{{ t('dashboard') }}</span>
             </UiButton>
@@ -116,6 +123,12 @@
                 <span class="rtl-text">{{ t('myOrders') }}</span>
               </div>
             </NuxtLink>
+	            <NuxtLink v-if="isAdmin" to="/admin" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
+	              <div class="flex items-center gap-2">
+	                <Icon name="mdi:view-dashboard-outline" class="text-lg" />
+	                <span class="rtl-text">لوحة التحكم</span>
+	              </div>
+	            </NuxtLink>
             <NuxtLink to="/contact" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
               <div class="flex items-center gap-2">
                 <Icon name="mdi:message-text-outline" class="text-lg" />

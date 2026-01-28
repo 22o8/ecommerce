@@ -32,24 +32,24 @@
         </div>
       </div>
 
-      <div class="absolute top-3 right-3 flex items-center gap-2">
+	      <div class="absolute top-3 right-3 flex items-center gap-2">
         <button
-          class="rounded-full bg-white/10 backdrop-blur border border-white/10 p-2 hover:bg-white/15 transition"
+	          class="rounded-full bg-white/10 backdrop-blur border border-white/10 p-3 sm:p-2 hover:bg-white/15 transition"
           @click.stop.prevent="toggleFav"
           :aria-label="t('wishlist.toggle')"
         >
-          <Icon
+	          <Icon
             :name="fav ? 'mdi:heart' : 'mdi:heart-outline'"
-            class="text-lg"
+	            class="text-xl sm:text-lg"
           />
         </button>
 
         <button
-          class="rounded-full bg-white/10 backdrop-blur border border-white/10 p-2 hover:bg-white/15 transition"
+	          class="rounded-full bg-white/10 backdrop-blur border border-white/10 p-3 sm:p-2 hover:bg-white/15 transition"
           @click.stop.prevent="openPreview"
           :aria-label="t('products.quickPreview')"
         >
-          <Icon name="mdi:eye-outline" class="text-lg" />
+	          <Icon name="mdi:eye-outline" class="text-xl sm:text-lg" />
         </button>
       </div>
     </div>
