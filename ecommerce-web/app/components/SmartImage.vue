@@ -56,6 +56,33 @@ const imgEl = ref<HTMLImageElement | null>(null)
 const loaded = ref(false)
 const failed = ref(false)
 
+// Preload the image with a detached Image() so we never miss the load event.
+// This fixes cases where the <img> load event is missed during hydration + cache.
+let preloader: HTMLImageElement | null = null
+
+function startPreload(src: string) {
+  if (!src) return
+
+  // cleanup previous preloader
+  if (preloader) {
+    preloader.onload = null
+    preloader.onerror = null
+    preloader = null
+  }
+
+  const im = new Image()
+  preloader = im
+  im.onload = () => {
+    loaded.value = true
+    failed.value = false
+  }
+  im.onerror = () => {
+    loaded.value = true
+    failed.value = true
+  }
+  im.src = src
+}
+
 async function syncIfAlreadyLoaded() {
   const el = imgEl.value
   if (!el) return
@@ -102,13 +129,16 @@ watch(
     loaded.value = false
     failed.value = false
     await nextTick()
+    // try both: DOM img checks + detached preloader
     syncIfAlreadyLoaded()
+    startPreload(props.src)
   },
   { immediate: true }
 )
 
 onMounted(() => {
   syncIfAlreadyLoaded()
+  startPreload(props.src)
 })
 
 const wrapperStyle = computed(() => ({
@@ -124,8 +154,11 @@ const placeholderStyle = computed(() => ({
 const imgClassComputed = computed(() => {
   const base = `${props.rounded} ${props.imgClass}`.trim()
   const fit = props.fit === 'contain' ? 'object-contain' : 'object-cover'
-  const blur = loaded.value ? 'opacity-100' : 'opacity-0'
-  return `${base} ${fit} ${blur}`.trim()
+  // Never fully hide the image (it can look "blank" if the load event is missed).
+  // Instead keep it visible with a mild fade/blur until it's confirmed loaded.
+  const vis = loaded.value ? 'opacity-100' : 'opacity-80'
+  const blur = loaded.value ? '' : 'blur-[0.6px]'
+  return `${base} ${fit} ${vis} ${blur}`.trim()
 })
 
 const imgStyleComputed = computed(() => {
