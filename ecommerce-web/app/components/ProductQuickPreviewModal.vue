@@ -80,7 +80,8 @@ const wl = useWishlist()
 const qp = useQuickPreview()
 
 const open = computed(() => qp.open.value)
-const p = computed<any>(() => qp.product.value)
+// Avoid `computed<T>()` generics in SFCs (can be mis-parsed as JSX in some Nuxt 4 build setups).
+const p = computed(() => qp.product.value as any)
 
 const displayName = computed(() => p.value?.name || p.value?.title || p.value?.Title || '')
 

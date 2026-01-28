@@ -12,6 +12,7 @@
     />
 
     <img
+      ref="imgEl"
       :src="src"
       :alt="alt"
       class="absolute inset-0 h-full w-full transition duration-500"
@@ -49,8 +50,20 @@ const props = withDefaults(
   }
 )
 
+const imgEl = ref<HTMLImageElement | null>(null)
+
 const loaded = ref(false)
 const failed = ref(false)
+
+function syncIfAlreadyLoaded() {
+  const el = imgEl.value
+  if (!el) return
+  // If the image is already cached/complete, the `load` event might not fire.
+  if (el.complete && el.naturalWidth > 0) {
+    loaded.value = true
+    failed.value = false
+  }
+}
 
 function onLoad() {
   loaded.value = true
@@ -59,6 +72,22 @@ function onError() {
   failed.value = true
   loaded.value = true
 }
+
+watch(
+  () => props.src,
+  async () => {
+    // reset state for new source
+    loaded.value = false
+    failed.value = false
+    await nextTick()
+    syncIfAlreadyLoaded()
+  },
+  { immediate: true }
+)
+
+onMounted(() => {
+  syncIfAlreadyLoaded()
+})
 
 const wrapperStyle = computed(() => ({
   background: props.background

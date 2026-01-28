@@ -290,7 +290,9 @@ function toggleFav() {
   toggle(String(productId.value))
 }
 
-const images = computed(() => {
+// NOTE: Avoid `computed<T>()` generics here because the Vue SFC macro transform in Nuxt 4
+// can mis-parse it as JSX in some build setups (Render/Vite).
+const images = computed((): string[] => {
   const p: any = product.value
   const arr: string[] = []
 
@@ -308,20 +310,18 @@ const images = computed(() => {
     arr.push(api.buildAssetUrl(s))
   }
 
-  const list = p?.images || p?.Images || []
-  if (Array.isArray(list)) {
-    for (const im of list) {
-      if (typeof im === 'string') pushResolved(im)
-      else {
-        pushResolved(
-          im?.url || im?.Url ||
-          im?.path || im?.Path ||
-          im?.src || im?.Src ||
-          im?.imageUrl || im?.ImageUrl
-        )
-      }
-    }
+const list = p?.images || p?.Images || []
+if (Array.isArray(list)) {
+  for (const im of list) {
+    if (typeof im === 'string') pushResolved(im)
+    else pushResolved(
+      im?.url || im?.Url ||
+      im?.path || im?.Path ||
+      im?.src || im?.Src ||
+      im?.imageUrl || im?.ImageUrl
+    )
   }
+}
 
   // cover fields
   pushResolved(p?.imageUrl || p?.ImageUrl || p?.coverImage || p?.CoverImage)
