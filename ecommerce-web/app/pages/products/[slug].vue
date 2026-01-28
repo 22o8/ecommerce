@@ -147,7 +147,7 @@
         </NuxtLink>
       </div>
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <ProductCard v-for="rp in related" :key="rp.id" :p="rp" />
+        <ProductCard v-for="rp in related" :key="rp.id ?? rp.Id" :p="rp" />
       </div>
     </div>
 
@@ -240,9 +240,6 @@ const { data: product, pending } = await useAsyncData(
   () => `product:${slug.value}`,
   async () => {
     if (!slug.value) return null
-
-    // Prefer fetching by id first (most reliable), then fallback to slug endpoint.
-    // This prevents blank/500 pages when the backend doesn't support slug routing.
     try {
       return await api.get<any>(`/Products/${encodeURIComponent(slug.value)}`)
     } catch {
@@ -256,10 +253,8 @@ const { data: product, pending } = await useAsyncData(
 )
 
 watch(
-  () => product.value?.id,
-  () => {
-    load()
-  },
+  () => product.value?.id ?? product.value?.Id,
+  () => load(),
   { immediate: true }
 )
 
@@ -289,13 +284,13 @@ const productPrice = computed(() => {
   return p?.price ?? p?.priceUsd ?? p?.PriceUsd ?? p?.Price ?? 0
 })
 
-const isFav = computed(() => (product.value ? has(String(product.value.id)) : false))
+const isFav = computed(() => (productId.value ? has(String(productId.value)) : false))
 function toggleFav() {
-  if (!product.value) return
-  toggle(String(product.value.id))
+  if (!productId.value) return
+  toggle(String(productId.value))
 }
 
-const images = computed<string[]>(() => {
+const images = computed(() => {
   const p: any = product.value
   const arr: string[] = []
 
@@ -303,27 +298,28 @@ const images = computed<string[]>(() => {
     if (!v) return
     const s = String(v).trim()
     if (!s) return
+
+    // إذا رابط كامل لا تبني عليه
+    if (s.startsWith('http://') || s.startsWith('https://')) {
+      arr.push(s)
+      return
+    }
+
     arr.push(api.buildAssetUrl(s))
   }
 
-  // API shapes supported:
-  // - images: string[]
-  // - images: [{ id, url/path }]
   const list = p?.images || p?.Images || []
   if (Array.isArray(list)) {
     for (const im of list) {
       if (typeof im === 'string') pushResolved(im)
-<<<<<<< HEAD
-      else if (im?.id) arr.push(api.buildAssetUrl(`/ProductImages/${im.id}`))
-      else pushResolved(im?.url || im?.path || im?.src || im?.imageUrl)
-=======
-      else pushResolved(
-        im?.url || im?.Url ||
-        im?.path || im?.Path ||
-        im?.src || im?.Src ||
-        im?.imageUrl || im?.ImageUrl
-      )
->>>>>>> 533303c (Fix product details routing (prefer id) + safe slug fallback)
+      else {
+        pushResolved(
+          im?.url || im?.Url ||
+          im?.path || im?.Path ||
+          im?.src || im?.Src ||
+          im?.imageUrl || im?.ImageUrl
+        )
+      }
     }
   }
 
@@ -331,7 +327,6 @@ const images = computed<string[]>(() => {
   pushResolved(p?.imageUrl || p?.ImageUrl || p?.coverImage || p?.CoverImage)
   pushResolved(p?.thumbnailUrl || p?.ThumbnailUrl)
 
-  // unique
   return Array.from(new Set(arr.filter(Boolean)))
 })
 
@@ -362,7 +357,6 @@ function buyNow(p: any) {
 }
 
 const waLink = computed(() => {
-  const p: any = product.value
   const name = productName.value || ''
   const url = process.client ? window.location.href : ''
   const msg = `${t('product.waMessage')}\n${name}\n${url}`
@@ -377,7 +371,7 @@ watch(product, async (p) => {
     const res = await api.get<any>(`/Products?page=1&pageSize=24`)
     const list = Array.isArray(res?.items) ? res.items : Array.isArray(res) ? res : []
     related.value = list
-      .filter((x: any) => String(x.id ?? x.Id) !== String(p?.id ?? p?.Id))
+      .filter((x: any) => String(x?.id ?? x?.Id) !== String(p?.id ?? p?.Id))
       .slice(0, 4)
   } catch {
     related.value = []
@@ -442,7 +436,6 @@ useHead(() => ({
 </script>
 
 <style scoped>
-/* Lens layer: a subtle zoom overlay that follows the cursor */
 div[style*="background-size"] {
   opacity: 0.9;
   mix-blend-mode: lighten;
