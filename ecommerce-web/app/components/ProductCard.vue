@@ -1,6 +1,6 @@
 <template>
   <NuxtLink
-    :to="`/products/${p.slug || p.id}`"
+    :to="`/products/${p.id ?? p.slug}`"
     class="group card-soft overflow-hidden transition duration-300 hover:-translate-y-0.5 hover:shadow-lg"
   >
     <div class="relative">

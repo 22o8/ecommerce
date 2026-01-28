@@ -116,7 +116,8 @@ function close() {
 function goTo() {
   if (!p.value) return
   close()
-  const slug = p.value.slug || p.value.Slug || p.value.id
+  // Prefer id for routing (backend guaranteed), fallback to slug if id missing
+  const slug = p.value.id ?? p.value.slug ?? p.value.Slug
   router.push(`/products/${slug}`)
 }
 

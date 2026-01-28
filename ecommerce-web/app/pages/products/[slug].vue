@@ -239,13 +239,14 @@ const { data: product, pending } = await useAsyncData(
   () => `product:${slug.value}`,
   async () => {
     if (!slug.value) return null
+
+    // Prefer fetching by id first (most reliable), then fallback to slug endpoint.
+    // This prevents blank/500 pages when the backend doesn't support slug routing.
     try {
-      // IMPORTANT: useApi.get returns the data directly (not {data})
-      return await api.get<any>(`/Products/slug/${encodeURIComponent(slug.value)}`)
+      return await api.get<any>(`/Products/${encodeURIComponent(slug.value)}`)
     } catch {
-      // fallback: sometimes route uses id instead of slug
       try {
-        return await api.get<any>(`/Products/${encodeURIComponent(slug.value)}`)
+        return await api.get<any>(`/Products/slug/${encodeURIComponent(slug.value)}`)
       } catch {
         return null
       }
