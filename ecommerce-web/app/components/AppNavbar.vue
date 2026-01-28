@@ -1,9 +1,9 @@
 <template>
   <header class="sticky top-0 z-50">
     <div class="bg-app/80 backdrop-blur supports-[backdrop-filter]:bg-app/70 border-b border-app">
-      <div class="mx-auto max-w-7xl px-4 py-3 flex items-center gap-3">
+      <div class="mx-auto max-w-7xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3">
         <NuxtLink to="/" class="flex items-center gap-3 min-w-0">
-          <div class="h-10 w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black">
+          <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black">
             <Icon name="mdi:shopping-outline" class="text-xl animate-floaty" />
           </div>
           <div class="leading-tight min-w-0">
@@ -31,10 +31,10 @@
         </div>
 
         <!-- Actions -->
-	        <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+	        <div class="flex items-center gap-0.5 sm:gap-2 flex-shrink-0">
 	          <!-- Cart: يظهر على الهاتف أيضاً (أيقونة فقط) -->
 	          <NuxtLink to="/cart" class="block">
-	            <UiButton variant="ghost" class="relative px-3">
+	            <UiButton variant="ghost" class="relative px-2 sm:px-3 shrink-0">
               <Icon name="mdi:cart-outline" class="text-lg" />
 	              <span class="hidden sm:inline rtl-text">{{ t('nav.cart') }}</span>
               <span
@@ -45,21 +45,16 @@
               </span>
             </UiButton>
           </NuxtLink>
-          <UiButton variant="ghost" class="px-3" @click="toggleLocale" :title="t('nav.language')">
+	          <UiButton variant="ghost" class="px-2 sm:px-3 shrink-0" @click="toggleLocale" :title="t('nav.language')">
             <Icon name="mdi:translate" class="text-lg" />
             <span class="hidden sm:inline keep-ltr">{{ ui.locale.toUpperCase() }}</span>
           </UiButton>
 
-          <UiButton variant="ghost" class="px-3" @click="toggleTheme" :title="ui.theme === 'dark' ? t('theme.dark') : t('theme.light')">
+	          <UiButton variant="ghost" class="px-2 sm:px-3 shrink-0" @click="toggleTheme" :title="ui.theme === 'dark' ? t('theme.dark') : t('theme.light')">
             <Icon :name="ui.theme === 'dark' ? 'mdi:weather-night' : 'mdi:white-balance-sunny'" class="text-lg" />
           </UiButton>
 
-	          <!-- Admin: زر صغير على الهاتف + زر كامل على الشاشات الكبيرة -->
-	          <NuxtLink v-if="isAdmin" to="/admin" class="sm:hidden">
-	            <UiButton variant="ghost" class="px-3" :title="t('dashboard')">
-	              <Icon name="mdi:view-dashboard-outline" class="text-lg" />
-	            </UiButton>
-	          </NuxtLink>
+	          <!-- Admin: نخليها فقط داخل زر المينيو على الهاتف -->
 	          <NuxtLink v-if="isAdmin" to="/admin" class="hidden sm:block">
 	            <UiButton variant="secondary">
               <Icon name="mdi:view-dashboard-outline" class="text-lg" />
@@ -70,15 +65,15 @@
           <NuxtLink v-if="!auth.isAuthed" to="/login">
             <UiButton>
               <Icon name="mdi:login-variant" class="text-lg" />
-              <span class="rtl-text">{{ t('nav.login') }}</span>
+              <span class="hidden sm:inline rtl-text">{{ t('nav.login') }}</span>
             </UiButton>
           </NuxtLink>
           <UiButton v-else variant="secondary" @click="logout">
             <Icon name="mdi:logout-variant" class="text-lg" />
-            <span class="rtl-text">{{ t('nav.logout') }}</span>
+            <span class="hidden sm:inline rtl-text">{{ t('nav.logout') }}</span>
           </UiButton>
 
-          <button class="lg:hidden rounded-2xl border border-app bg-surface px-3 py-2" @click="open = !open">
+	        <button class="lg:hidden shrink-0 min-w-[40px] rounded-2xl border border-app bg-surface px-2 py-2" @click="open = !open">
             <Icon name="mdi:menu" class="text-xl" />
           </button>
         </div>
@@ -86,7 +81,7 @@
 
       <!-- Mobile drawer -->
       <div v-if="open" class="lg:hidden border-t border-app bg-surface">
-        <div class="mx-auto max-w-7xl px-4 py-4 grid gap-3">
+        <div class="mx-auto max-w-7xl px-3 sm:px-4 py-4 grid gap-3">
           <div class="flex items-center gap-2 w-full rounded-2xl border border-app bg-surface px-3 py-2">
             <Icon name="mdi:magnify" class="text-lg opacity-70" />
             <input
