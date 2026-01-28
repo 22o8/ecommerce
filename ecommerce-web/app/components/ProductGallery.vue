@@ -30,7 +30,8 @@
         </div>
       </div>
 
-      <div class="hint rtl-text">
+      <!-- Mouse hint: hide on phones -->
+      <div class="hint rtl-text hidden md:flex">
         <Icon name="mdi:magnify-plus-outline" class="text-lg opacity-80" />
         <span>حرّك الماوس للتقريب — اضغط لعرض ملء الشاشة</span>
       </div>

@@ -55,11 +55,19 @@ const imgEl = ref<HTMLImageElement | null>(null)
 const loaded = ref(false)
 const failed = ref(false)
 
+<<<<<<< Updated upstream
 let preloader: HTMLImageElement | null = null
 
 function startPreload(src: string) {
   // SSR guard
   if (!import.meta.client) return
+=======
+// Preload the image with a detached Image() so we never miss the load event.
+// مهم: Image() غير موجودة على السيرفر (SSR)، لذلك نحميها بـ import.meta.client
+let preloader: HTMLImageElement | null = null
+
+function startPreload(src: string) {
+>>>>>>> Stashed changes
   if (!src) return
 
   // extra guard: Image constructor exists only in browser
@@ -74,9 +82,12 @@ function startPreload(src: string) {
     preloader = null
   }
 
+<<<<<<< Updated upstream
   const im = new ImgCtor() as HTMLImageElement
+=======
+  const im = new ImgCtor()
+>>>>>>> Stashed changes
   preloader = im
-
   im.onload = () => {
     loaded.value = true
     failed.value = false
@@ -90,7 +101,10 @@ function startPreload(src: string) {
 }
 
 async function syncIfAlreadyLoaded() {
+<<<<<<< Updated upstream
   // SSR: don't block rendering
+=======
+>>>>>>> Stashed changes
   if (!import.meta.client) {
     loaded.value = true
     return
@@ -140,7 +154,11 @@ watch(
     loaded.value = false
     failed.value = false
 
+<<<<<<< Updated upstream
     // SSR: no preload/decode
+=======
+    // SSR: لا نستخدم preloader ولا decode
+>>>>>>> Stashed changes
     if (!import.meta.client) {
       loaded.value = true
       return
@@ -171,6 +189,11 @@ const placeholderStyle = computed(() => ({
 const imgClassComputed = computed(() => {
   const base = `${props.rounded} ${props.imgClass}`.trim()
   const fit = props.fit === 'contain' ? 'object-contain' : 'object-cover'
+<<<<<<< Updated upstream
+=======
+
+  // Never fully hide the image (it can look blank if load event is missed).
+>>>>>>> Stashed changes
   const vis = loaded.value ? 'opacity-100' : 'opacity-80'
   const blur = loaded.value ? '' : 'blur-[0.6px]'
   return `${base} ${fit} ${vis} ${blur}`.trim()

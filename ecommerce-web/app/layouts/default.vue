@@ -6,6 +6,9 @@
       <slot />
     </main>
 
+    <!-- Global product quick preview (so pop-up works on Home + any page) -->
+    <ProductQuickPreviewModal />
+
     <AppFooter />
 
     <!-- Floating WhatsApp -->
@@ -25,6 +28,7 @@
 <script setup lang="ts">
 import AppNavbar from '~/components/AppNavbar.vue'
 import AppFooter from '~/components/AppFooter.vue'
+import ProductQuickPreviewModal from '~/components/ProductQuickPreviewModal.vue'
 const { t } = useI18n()
 const config = useRuntimeConfig()
 const whats = String((config.public as any).whatsappNumber || '').trim()

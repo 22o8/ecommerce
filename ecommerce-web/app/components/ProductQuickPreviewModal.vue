@@ -3,7 +3,7 @@
     <div v-if="open" class="fixed inset-0 z-[90]">
       <div class="absolute inset-0 bg-black/60" @click="close" />
       <div class="absolute inset-0 flex items-center justify-center p-4">
-        <div class="card-soft w-full max-w-5xl overflow-hidden">
+	        <div class="card-soft w-full max-w-5xl overflow-hidden max-h-[90vh] flex flex-col">
           <div class="flex items-center justify-between gap-3 border-b border-app px-4 py-3">
             <div class="font-extrabold rtl-text truncate">{{ displayName }}</div>
 
@@ -12,23 +12,19 @@
             </button>
           </div>
 
-          <div class="grid gap-4 p-4 md:grid-cols-2">
+	          <div class="flex-1 overflow-y-auto">
+	            <div class="grid gap-4 p-4 md:p-6 md:grid-cols-2">
             <ProductGallery :images="images" :title="displayName" />
 
             <div class="grid gap-4">
               <div class="flex items-center justify-between gap-3">
-                <div class="text-2xl font-black keep-ltr">{{ priceText }}</div>
+	                <div class="text-xl md:text-2xl font-black keep-ltr">{{ priceText }}</div>
                 <UiBadge v-if="p?.isFeatured" class="keep-ltr">Featured</UiBadge>
               </div>
 
               <div class="text-sm text-muted rtl-text" v-if="p?.description">{{ p.description }}</div>
 
-              <div class="flex flex-wrap gap-2">
-                <UiButton @click="goTo">
-                  <Icon name="mdi:open-in-new" class="text-lg" />
-                  <span class="rtl-text">{{ t('productsPage.viewDetails') }}</span>
-                </UiButton>
-
+	              <div class="flex flex-wrap gap-2">
                 <UiButton variant="secondary" @click="addToCart">
                   <Icon name="mdi:cart-plus" class="text-lg" />
                   <span class="rtl-text">{{ t('productsPage.addToCart') }}</span>
@@ -55,8 +51,9 @@
                   <Icon name="mdi:whatsapp" class="text-xl" />
                   <span class="rtl-text">{{ t('whatsapp.cta') }}</span>
                 </a>
-              </div>
-            </div>
+	            </div>
+	            </div>
+	          </div>
           </div>
         </div>
       </div>
@@ -74,7 +71,6 @@ import { useWishlist } from '~/composables/useWishlist'
 import { useQuickPreview } from '~/composables/useQuickPreview'
 
 const { t } = useI18n()
-const router = useRouter()
 const route = useRoute()
 const cart = useCartStore()
 const wl = useWishlist()
@@ -119,14 +115,6 @@ function close() {
     delete q.p
     router.replace({ query: q })
   }
-}
-
-function goTo() {
-  if (!p.value) return
-  close()
-  // بدل صفحة تفاصيل مستقلة: نفتح نفس النافذة عبر query ?p=<id>
-  const id = String(p.value.id ?? p.value.slug ?? p.value.Slug ?? '')
-  router.push({ path: '/products', query: { ...route.query, p: id } })
 }
 
 function addToCart() {
