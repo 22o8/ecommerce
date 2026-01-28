@@ -89,14 +89,16 @@ import SmartImage from '~/components/SmartImage.vue'
 const props = defineProps<{ p: any }>()
 const { t } = useI18n()
 const cart = useCartStore()
-const wl = useWishlist()
+const { isInWishlist, toggle } = useWishlist()
 const qp = useQuickPreview()
+const { buildAssetUrl } = useApi()
 
 const p = computed(() => props.p)
 
 const mainImage = computed(() => {
-  const img = p.value?.images?.[0]?.url || p.value?.imageUrl || p.value?.image || ''
-  return img || ''
+  const raw = p.value?.images?.[0]?.url || p.value?.images?.[0] || p.value?.imageUrl || p.value?.image || ''
+  const resolved = raw ? buildAssetUrl(String(raw)) : ''
+  return resolved || '/hero-placeholder.svg'
 })
 
 const isNew = computed(() => {
@@ -106,7 +108,7 @@ const isNew = computed(() => {
   return days <= 14
 })
 
-const fav = computed(() => wl.has(String(p.value?.id ?? '')))
+const fav = computed(() => isInWishlist(String(p.value?.id ?? '')))
 
 function formatPrice(v: any) {
   const n = Number(v ?? 0)

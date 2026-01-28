@@ -19,7 +19,7 @@ type FetchParams = {
 export const useProductsStore = defineStore('products', () => {
   const api = useApi()
 
-function normalizeProduct(p: any){
+  function normalizeProduct(p: any){
   if(!p) return p
   // API returns Title/PriceUsd/coverImage; UI expects name/priceUsd/imageUrl
   const name = p.name ?? p.title ?? p.Title ?? p.productName ?? ''
@@ -28,7 +28,18 @@ function normalizeProduct(p: any){
   const slug = p.slug ?? p.Slug ?? null
   const images = p.images ?? p.Images ?? null
   const description = p.description ?? p.Description ?? null
-  return { ...p, name, priceUsd, imageUrl: cover, slug, images, description }
+
+  const imageUrl = cover ? api.buildAssetUrl(String(cover)) : ''
+  const normImages = Array.isArray(images)
+    ? images
+        .map((im: any) => {
+          const u = typeof im === 'string' ? im : (im?.url || im?.path || im?.src || im?.imageUrl)
+          return u ? api.buildAssetUrl(String(u)) : ''
+        })
+        .filter(Boolean)
+    : []
+
+  return { ...p, name, priceUsd, imageUrl, slug, images: normImages, description }
 }
 
 
@@ -44,17 +55,24 @@ function normalizeProduct(p: any){
     loading.value = true
     try {
       const res = await api.get<Paged<any>>('/Products', {
-        page: params.page || 1,
-        pageSize: params.pageSize || 12,
-        q: params.q || undefined,
-        sort: params.sort || 'new',
-        isFeatured: params.isFeatured || undefined,
+        query: {
+          page: params.page || 1,
+          pageSize: params.pageSize || 12,
+          q: params.q || undefined,
+          sort: params.sort || 'new',
+          isFeatured: params.isFeatured || undefined,
+        },
       })
 
-      const raw = (res as any)?.items
-      const arr = Array.isArray(raw) ? raw : (Array.isArray(res as any) ? (res as any) : [])
+      // Support different API shapes
+      const raw = (res as any)?.items ?? (res as any)?.data?.items ?? (res as any)?.data
+      const arr = Array.isArray(raw)
+        ? raw
+        : (Array.isArray(res as any) ? (res as any) : [])
       items.value = arr.map(normalizeProduct)
-      totalCount.value = Number((res as any)?.totalCount || (res as any)?.total || items.value.length || 0)
+      totalCount.value = Number(
+        (res as any)?.totalCount ?? (res as any)?.data?.totalCount ?? (res as any)?.total ?? items.value.length ?? 0
+      )
       return res
     } finally {
       loading.value = false

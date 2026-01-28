@@ -2,13 +2,13 @@
   <header class="sticky top-0 z-50">
     <div class="bg-app/80 backdrop-blur supports-[backdrop-filter]:bg-app/70 border-b border-app">
       <div class="mx-auto max-w-7xl px-4 py-3 flex items-center gap-3">
-        <NuxtLink to="/" class="flex items-center gap-3">
+        <NuxtLink to="/" class="flex items-center gap-3 min-w-0">
           <div class="h-10 w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black">
             <Icon name="mdi:shopping-outline" class="text-xl animate-floaty" />
           </div>
-          <div class="leading-tight">
-            <div class="font-extrabold tracking-wide">ECOMMERCE</div>
-            <div class="text-xs text-muted -mt-0.5 rtl-text">{{ t('tagline') }}</div>
+          <div class="leading-tight min-w-0">
+            <div class="font-extrabold tracking-wide text-sm sm:text-base truncate">ECOMMERCE</div>
+            <div class="hidden sm:block text-xs text-muted -mt-0.5 rtl-text truncate">{{ t('tagline') }}</div>
           </div>
         </NuxtLink>
 
@@ -31,7 +31,7 @@
         </div>
 
         <!-- Actions -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
           <NuxtLink to="/cart" class="hidden sm:block">
             <UiButton variant="ghost" class="relative">
               <Icon name="mdi:cart-outline" class="text-lg" />

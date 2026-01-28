@@ -270,14 +270,28 @@ function toggleFav() {
 const images = computed<string[]>(() => {
   const p: any = product.value
   const arr: string[] = []
-  if (p?.images?.length) {
-    for (const im of p.images) {
-      if (typeof im === 'string') arr.push(im)
-      else if (im?.url) arr.push(im.url)
+
+  const pushResolved = (v: any) => {
+    if (!v) return
+    const s = String(v)
+    arr.push(api.buildAssetUrl(s))
+  }
+
+  // API shapes supported:
+  // - images: string[]
+  // - images: [{ id, url/path }]
+  const list = p?.images || p?.Images || []
+  if (Array.isArray(list)) {
+    for (const im of list) {
+      if (typeof im === 'string') pushResolved(im)
+      else if (im?.id) arr.push(api.buildProductImageUrl(im.id))
+      else pushResolved(im?.url || im?.path || im?.src || im?.imageUrl)
     }
   }
-  if (p?.imageUrl) arr.unshift(p.imageUrl)
-  if (p?.thumbnailUrl) arr.unshift(p.thumbnailUrl)
+
+  pushResolved(p?.imageUrl)
+  pushResolved(p?.thumbnailUrl)
+
   // unique
   return Array.from(new Set(arr.filter(Boolean)))
 })

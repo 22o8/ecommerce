@@ -225,10 +225,12 @@
   },
   "product": {
     "back": "Back to products",
+    "viewAll": "View all",
     "fullscreen": "Full screen",
     "price": "Price",
     "addToCart": "Add to cart",
     "buyNow": "Buy",
+    "whatsapp": "WhatsApp",
     "wa": "Order via WhatsApp",
     "waMessage": "Hello, I'm interested in this product:",
     "related": "Related products",

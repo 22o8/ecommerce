@@ -90,11 +90,25 @@
 import SmartImage from '~/components/SmartImage.vue'
 
 const props = defineProps<{
-  images: string[]
+  // Accept plain urls OR objects coming from API (e.g. { url }, { path })
+  images: any[]
   title?: string
 }>()
 
-const images = computed(() => (props.images || []).filter(Boolean))
+const { buildAssetUrl } = useApi()
+
+function normalizeSrc(v: any): string {
+  if (!v) return ''
+  // plain string
+  if (typeof v === 'string') return buildAssetUrl(v)
+  // common API shapes
+  const maybe = v.url || v.path || v.src || v.imageUrl || ''
+  return maybe ? buildAssetUrl(maybe) : ''
+}
+
+const images = computed(() => (props.images || []).map(normalizeSrc).filter(Boolean))
+
+const placeholder = '/hero-placeholder.svg'
 const index = ref(0)
 
 watch(images, (arr) => {
@@ -214,7 +228,15 @@ function onFsTouchEnd(ev: TouchEvent){
   display:flex; align-items:center; justify-content:center;
   background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
 }
-.fsStage{ position:relative; border-radius: 18px; overflow:hidden; margin-top: 12px; }
+.fsStage{
+  position:relative;
+  border-radius: 18px;
+  overflow:hidden;
+  margin-top: 12px;
+  /* Ensure the SmartImage wrapper has height on mobile/desktop */
+  height: min(72vh, 680px);
+  min-height: 320px;
+}
 .fsImg{ width:100%; height:100%; object-fit: contain; display:block; background: rgba(0,0,0,.2); }
 .fsNav{
   position:absolute; top:50%; transform: translateY(-50%);
