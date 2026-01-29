@@ -1,4 +1,4 @@
-using Ecommerce.Api.Data;
+using Ecommerce.Api.Infrastructure.Data;
 using Ecommerce.Api.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
