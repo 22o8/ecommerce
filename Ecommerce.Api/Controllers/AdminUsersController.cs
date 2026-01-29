@@ -34,6 +34,60 @@ public class AdminUsersController : ControllerBase
         int PageSize
     );
 
+    // =========================
+    // Helpers: support shadow/optional properties
+    // =========================
+    private bool HasProp(string propName)
+        => _db.Model.FindEntityType(typeof(User))?.FindProperty(propName) is not null;
+
+    private static string? SafeLike(string? s)
+        => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
+
+    private static string NormalizeEmail(string email)
+        => email.Trim().ToLowerInvariant();
+
+    private static string NormalizeRole(string? role)
+        => string.Equals(role?.Trim(), "admin", StringComparison.OrdinalIgnoreCase) ? "Admin" : "User";
+
+    private string? GetNameQuery(User u)
+        => HasProp("Name") ? EF.Property<string?>(u, "Name") : null;
+
+    private bool GetIsActiveQuery(User u)
+        => HasProp("IsActive") ? EF.Property<bool>(u, "IsActive") : true;
+
+    private void SetOptionalProps(User user, string? name, bool? isActive)
+    {
+        // Name (optional)
+        if (HasProp("Name"))
+        {
+            _db.Entry(user).Property("Name").CurrentValue = SafeLike(name);
+        }
+
+        // IsActive (optional)
+        if (HasProp("IsActive") && isActive.HasValue)
+        {
+            _db.Entry(user).Property("IsActive").CurrentValue = isActive.Value;
+        }
+    }
+
+    private UserListItem ToListItem(User u)
+    {
+        var name = HasProp("Name") ? EF.Property<string?>(u, "Name") : null;
+        var isActive = HasProp("IsActive") ? EF.Property<bool>(u, "IsActive") : true;
+
+        return new UserListItem(
+            u.Id,
+            u.Email,
+            name,
+            u.Role,
+            isActive,
+            u.CreatedAt
+        );
+    }
+
+    // =========================
+    // List
+    // =========================
     [HttpGet]
     public async Task<ActionResult<PagedResult<UserListItem>>> List(
         [FromQuery] int page = 1,
@@ -50,7 +104,18 @@ public class AdminUsersController : ControllerBase
         if (!string.IsNullOrWhiteSpace(q))
         {
             var s = q.Trim();
-            query = query.Where(u => u.Email.Contains(s) || (u.Name != null && u.Name.Contains(s)));
+
+            if (HasProp("Name"))
+            {
+                query = query.Where(u =>
+                    u.Email.Contains(s) ||
+                    (EF.Property<string?>(u, "Name") != null && EF.Property<string?>(u, "Name")!.Contains(s))
+                );
+            }
+            else
+            {
+                query = query.Where(u => u.Email.Contains(s));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(role))
@@ -59,8 +124,10 @@ public class AdminUsersController : ControllerBase
             query = query.Where(u => u.Role.ToLower() == r);
         }
 
-        if (isActive.HasValue)
-            query = query.Where(u => u.IsActive == isActive.Value);
+        if (isActive.HasValue && HasProp("IsActive"))
+        {
+            query = query.Where(u => EF.Property<bool>(u, "IsActive") == isActive.Value);
+        }
 
         var total = await query.CountAsync();
 
@@ -71,9 +138,11 @@ public class AdminUsersController : ControllerBase
             .Select(u => new UserListItem(
                 u.Id,
                 u.Email,
-                u.Name,
+                // Name (optional)
+                HasProp("Name") ? EF.Property<string?>(u, "Name") : null,
                 u.Role,
-                u.IsActive,
+                // IsActive (optional)
+                HasProp("IsActive") ? EF.Property<bool>(u, "IsActive") : true,
                 u.CreatedAt
             ))
             .ToListAsync();
@@ -81,6 +150,9 @@ public class AdminUsersController : ControllerBase
         return Ok(new PagedResult<UserListItem>(items, total, page, pageSize));
     }
 
+    // =========================
+    // Get single
+    // =========================
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<User>> Get(Guid id)
     {
@@ -92,6 +164,9 @@ public class AdminUsersController : ControllerBase
         return Ok(user);
     }
 
+    // =========================
+    // Create
+    // =========================
     public sealed record CreateUserRequest(
         string Email,
         string Password,
@@ -106,30 +181,36 @@ public class AdminUsersController : ControllerBase
         if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
             return BadRequest("Email and password are required");
 
-        var email = req.Email.Trim().ToLowerInvariant();
-        if (await _db.Users.AnyAsync(u => u.Email.ToLower() == email))
-            return Conflict("Email already exists");
+        var email = NormalizeEmail(req.Email);
 
-        var role = string.IsNullOrWhiteSpace(req.Role) ? "User" : req.Role.Trim();
-        role = role.Equals("admin", StringComparison.OrdinalIgnoreCase) ? "Admin" : "User";
+        var exists = await _db.Users.AnyAsync(u => u.Email.ToLower() == email);
+        if (exists) return Conflict("Email already exists");
 
         var user = new User
         {
             Id = Guid.NewGuid(),
             Email = email,
-            Name = req.Name?.Trim(),
-            Role = role,
-            IsActive = req.IsActive ?? true,
+            Role = NormalizeRole(req.Role),
             CreatedAt = DateTime.UtcNow,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password)
         };
 
+        // set optional fields safely (even if not in entity)
+        SetOptionalProps(user, req.Name, req.IsActive ?? true);
+
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
-        return Ok(new UserListItem(user.Id, user.Email, user.Name, user.Role, user.IsActive, user.CreatedAt));
+        // read back optional props via Entry (ensures values present even if shadow)
+        var name = HasProp("Name") ? _db.Entry(user).Property("Name").CurrentValue as string : null;
+        var active = HasProp("IsActive") ? (bool)(_db.Entry(user).Property("IsActive").CurrentValue ?? true) : true;
+
+        return Ok(new UserListItem(user.Id, user.Email, name, user.Role, active, user.CreatedAt));
     }
 
+    // =========================
+    // Update
+    // =========================
     public sealed record UpdateUserRequest(
         string? Email,
         string? Name,
@@ -146,32 +227,42 @@ public class AdminUsersController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(req.Email))
         {
-            var email = req.Email.Trim().ToLowerInvariant();
-            var exists = await _db.Users.AnyAsync(u => u.Id != id && u.Email.ToLower() == email);
-            if (exists) return Conflict("Email already exists");
+            var email = NormalizeEmail(req.Email);
+
+            var emailExists = await _db.Users.AnyAsync(u => u.Id != id && u.Email.ToLower() == email);
+            if (emailExists) return Conflict("Email already exists");
+
             user.Email = email;
         }
 
-        if (req.Name is not null)
-            user.Name = string.IsNullOrWhiteSpace(req.Name) ? null : req.Name.Trim();
-
         if (!string.IsNullOrWhiteSpace(req.Role))
         {
-            var role = req.Role.Trim();
-            user.Role = role.Equals("admin", StringComparison.OrdinalIgnoreCase) ? "Admin" : "User";
+            user.Role = NormalizeRole(req.Role);
         }
 
-        if (req.IsActive.HasValue)
-            user.IsActive = req.IsActive.Value;
-
         if (!string.IsNullOrWhiteSpace(req.NewPassword))
+        {
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
+        }
+
+        // optional fields
+        if (req.Name is not null || req.IsActive.HasValue)
+        {
+            SetOptionalProps(user, req.Name, req.IsActive);
+        }
 
         await _db.SaveChangesAsync();
 
-        return Ok(new UserListItem(user.Id, user.Email, user.Name, user.Role, user.IsActive, user.CreatedAt));
+        // build response (optional props)
+        var name = HasProp("Name") ? _db.Entry(user).Property("Name").CurrentValue as string : null;
+        var active = HasProp("IsActive") ? (bool)(_db.Entry(user).Property("IsActive").CurrentValue ?? true) : true;
+
+        return Ok(new UserListItem(user.Id, user.Email, name, user.Role, active, user.CreatedAt));
     }
 
+    // =========================
+    // Delete
+    // =========================
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
