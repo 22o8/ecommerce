@@ -1,4 +1,5 @@
 <template>
+<<<<<<< HEAD
   <div
     class="min-h-screen w-full bg-gray-50 text-gray-900
            dark:bg-[#020420] dark:text-white overflow-x-hidden"
@@ -138,6 +139,85 @@
       >
         <slot />
       </main>
+=======
+  <div class="min-h-screen bg-app text-fg">
+    <!-- Header -->
+    <header class="sticky top-0 z-40 border-b border-app bg-app/85 backdrop-blur supports-[backdrop-filter]:bg-app/70">
+      <div class="mx-auto max-w-7xl px-3 sm:px-4 py-3 flex items-center gap-2">
+        <!-- Menu button (mobile) -->
+        <button
+          class="md:hidden h-10 w-10 rounded-2xl border border-app bg-surface grid place-items-center"
+          @click="open = !open"
+          aria-label="Menu"
+        >
+          <Icon name="mdi:menu" class="text-xl" />
+        </button>
+
+        <div class="min-w-0">
+          <div class="font-extrabold rtl-text truncate">{{ t('admin.title') }}</div>
+          <div class="text-xs text-muted keep-ltr truncate">{{ auth.user?.email || '' }}</div>
+        </div>
+
+        <div class="flex-1" />
+
+        <div class="flex items-center gap-2">
+          <UiButton variant="ghost" class="px-2" @click="ui.toggleTheme()" :title="ui.theme === 'dark' ? t('theme.dark') : t('theme.light')">
+            <Icon :name="ui.theme === 'dark' ? 'mdi:weather-night' : 'mdi:white-balance-sunny'" class="text-lg" />
+          </UiButton>
+
+          <NuxtLink to="/" class="hidden sm:block">
+            <UiButton variant="secondary">
+              <Icon name="mdi:web" class="text-lg" />
+              <span class="rtl-text">{{ t('admin.viewSite') }}</span>
+            </UiButton>
+          </NuxtLink>
+        </div>
+      </div>
+    </header>
+
+    <div class="mx-auto max-w-7xl px-3 sm:px-4 py-4 md:py-6">
+      <div class="flex gap-4">
+        <!-- Sidebar -->
+        <aside
+          class="fixed inset-y-0 start-0 z-50 w-72 bg-surface border-e border-app
+                 md:static md:w-72 md:translate-x-0
+                 transition-transform duration-200"
+          :class="open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
+        >
+          <div class="p-4">
+            <nav class="grid gap-2">
+              <NuxtLink
+                v-for="item in links"
+                :key="item.to"
+                :to="item.to"
+                class="admin-link"
+                @click="open = false"
+              >
+                <Icon :name="item.icon" class="text-xl" />
+                <span class="rtl-text">{{ item.label }}</span>
+              </NuxtLink>
+            </nav>
+
+            <div class="mt-4 pt-4 border-t border-app">
+              <NuxtLink to="/" class="block" @click="open = false">
+                <UiButton variant="ghost" class="w-full justify-center">
+                  <Icon name="mdi:arrow-right" class="keep-ltr" />
+                  <span class="rtl-text">{{ t('admin.backToSite') }}</span>
+                </UiButton>
+              </NuxtLink>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Overlay (mobile) -->
+        <div v-if="open" class="fixed inset-0 z-40 bg-black/40 md:hidden" @click="open = false" />
+
+        <!-- Main -->
+        <main class="flex-1 min-w-0">
+          <slot />
+        </main>
+      </div>
+>>>>>>> 0898076 (feat(admin): improve light theme + full users management)
     </div>
   </div>
 </template>
@@ -145,6 +225,7 @@
 <script setup lang="ts">
 const open = ref(false)
 
+<<<<<<< HEAD
 // لو عندك auth store خليها ديناميكية، هسه خليتها نص ثابت حتى ما تخرب
 const emailHint = 'test@g.com'
 
@@ -199,5 +280,36 @@ const safeAreaTopStyle = computed(() => ({
   background-color: rgba(124, 58, 237, 0.18);
   color: rgb(224, 209, 255);
   border-color: rgba(255, 255, 255, 0.10);
+=======
+const ui = useUiStore()
+const auth = useAuthStore()
+const { t } = useI18n()
+
+const open = ref(false)
+
+const links = computed(() => [
+  { to: '/admin', label: t('admin.overview'), icon: 'mdi:view-dashboard-outline' },
+  { to: '/admin/products', label: t('admin.products'), icon: 'mdi:cube-outline' },
+  { to: '/admin/orders', label: t('admin.orders'), icon: 'mdi:receipt-text-outline' },
+  { to: '/admin/users', label: t('admin.users'), icon: 'mdi:account-multiple-outline' },
+])
+</script>
+
+<style scoped>
+.admin-link{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  padding:.85rem 1rem;
+  border-radius:1.25rem;
+  border:1px solid rgb(var(--border));
+  background: rgb(var(--surface-2));
+}
+.admin-link:hover{ filter: brightness(1.03); }
+.router-link-active{
+  background: rgba(var(--primary), .12);
+  border-color: rgba(var(--primary), .35);
+  color: rgb(var(--fg));
+>>>>>>> 0898076 (feat(admin): improve light theme + full users management)
 }
 </style>

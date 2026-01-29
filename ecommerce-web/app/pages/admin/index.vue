@@ -105,37 +105,37 @@ fetchStats()
 <style scoped>
 .admin-box{
   border-radius: 20px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface));
   padding: 16px;
 }
-.admin-muted{ color: rgba(255,255,255,.65); }
+.admin-muted{ color: rgb(var(--muted)); }
 
 .admin-ghost{
   padding: 10px 12px;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.85);
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface));
+  color: rgb(var(--fg));
   font-weight: 800;
 }
 
 .admin-card{
   border-radius: 20px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface));
   padding: 16px;
 }
 
 .admin-action{
   border-radius: 18px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface));
   padding: 14px;
   display: block;
 }
 .admin-action:hover{
-  background: rgba(255,255,255,.10);
+  background: rgb(var(--surface-2));
 }
 
 .admin-error{

@@ -125,27 +125,27 @@ fetchOrders()
 <style scoped>
 .admin-box{
   border-radius: 20px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface));
   padding: 16px;
 }
-.admin-muted{ color: rgba(255,255,255,.65); }
+.admin-muted{ color: rgb(var(--muted)); }
 
 .admin-ghost{
   padding: 10px 12px;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.85);
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface-2));
+  color: rgb(var(--fg));
   font-weight: 800;
 }
 
 .admin-pill{
   padding: 8px 10px;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.9);
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface-2));
+  color: rgb(var(--fg));
   font-weight: 800;
 }
 
@@ -154,7 +154,7 @@ fetchOrders()
   border-radius: 14px;
   border: 1px solid rgba(239,68,68,.35);
   background: rgba(239,68,68,.12);
-  color: rgba(255,255,255,.95);
+  color: rgb(var(--fg));
   font-weight: 800;
 }
 
@@ -169,16 +169,16 @@ fetchOrders()
   grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 12px;
   padding: 12px 16px;
-  border-top: 1px solid rgba(255,255,255,.08);
+  border-top: 1px solid rgb(var(--border));
   align-items: center;
 }
 .admin-th{
   border-top: none;
-  background: rgba(0,0,0,.18);
+  background: rgb(var(--surface-2));
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: .08em;
-  color: rgba(255,255,255,.65);
+  color: rgb(var(--muted));
 }
 
 .badge-on{
@@ -192,9 +192,9 @@ fetchOrders()
 .badge-off{
   padding: 6px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.75);
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface-2));
+  color: rgb(var(--muted));
   font-weight: 800;
   display: inline-flex;
 }

@@ -378,123 +378,27 @@ onMounted(() => fetchList(1))
 </script>
 
 <style scoped>
-.admin-box{
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  padding: 16px;
-}
-.admin-muted{ color: rgba(255,255,255,.65); }
+.admin-box{ border-radius: 20px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); padding: 16px; }
+.admin-muted{ color: rgb(var(--muted)); }
 
-.admin-input{
-  width: 100%;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  padding: 10px 12px;
-  color: rgba(255,255,255,.9);
-  outline: none;
-}
-.admin-input:focus{
-  border-color: rgba(99,102,241,.35);
-  box-shadow: 0 0 0 3px rgba(99,102,241,.12);
-}
+.admin-input{ width: 100%; border-radius: 14px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface-2)); padding: 10px 12px; color: rgb(var(--fg)); outline: none; }
+.admin-input:focus{ border-color: rgba(99,102,241,.45); box-shadow: 0 0 0 3px rgba(99,102,241,.14); }
 
-.admin-primary{
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(99,102,241,.22);
-  border: 1px solid rgba(99,102,241,.35);
-  color: white;
-  font-weight: 900;
-}
-.admin-ghost{
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.85);
-  font-weight: 800;
-}
-.admin-pill{
-  padding: 8px 10px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.9);
-  font-weight: 800;
-}
-.admin-btn-danger{
-  padding: 8px 10px;
-  border-radius: 14px;
-  border: 1px solid rgba(239,68,68,.35);
-  background: rgba(239,68,68,.14);
-  color: rgba(255,255,255,.95);
-  font-weight: 900;
-}
+.admin-primary{ padding: 10px 12px; border-radius: 14px; background: rgba(99,102,241,.18); border: 1px solid rgba(99,102,241,.38); color: rgb(var(--fg)); font-weight: 900; }
+.admin-ghost{ padding: 10px 12px; border-radius: 14px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); color: rgb(var(--fg)); font-weight: 800; }
+.admin-pill{ padding: 8px 10px; border-radius: 14px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface-2)); color: rgb(var(--fg)); font-weight: 800; }
+.admin-btn-danger{ padding: 8px 10px; border-radius: 14px; border: 1px solid rgba(239,68,68,.45); background: rgba(239,68,68,.14); color: rgb(var(--fg)); font-weight: 900; }
 
 .admin-table{ display: grid; }
-.admin-tr{
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 2fr;
-  gap: 12px;
-  padding: 12px 16px;
-  border-top: 1px solid rgba(255,255,255,.08);
-}
-.admin-th{
-  border-top: none;
-  background: rgba(0,0,0,.18);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  color: rgba(255,255,255,.65);
-}
+.admin-tr{ display: grid; grid-template-columns: 2fr 1fr 1fr 2fr; gap: 12px; padding: 12px 16px; border-top: 1px solid rgb(var(--border)); }
+.admin-th{ border-top: none; background: rgb(var(--surface-2)); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: rgb(var(--muted)); }
 
-.badge-on{
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(16,185,129,.35);
-  background: rgba(16,185,129,.14);
-  font-weight: 800;
-  display: inline-flex;
-}
-.badge-off{
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.75);
-  font-weight: 800;
-  display: inline-flex;
-}
+.badge-on{ padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(16,185,129,.40); background: rgba(16,185,129,.12); font-weight: 800; display: inline-flex; }
+.badge-off{ padding: 6px 10px; border-radius: 999px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); color: rgb(var(--muted)); font-weight: 800; display: inline-flex; }
 
-.admin-error{
-  border-radius: 16px;
-  border: 1px solid rgba(239,68,68,.35);
-  background: rgba(239,68,68,.10);
-  padding: 12px 14px;
-}
-.admin-success{
-  border-radius: 16px;
-  border: 1px solid rgba(16,185,129,.35);
-  background: rgba(16,185,129,.10);
-  padding: 12px 14px;
-}
+.admin-error{ border-radius: 16px; border: 1px solid rgba(239,68,68,.45); background: rgba(239,68,68,.10); padding: 12px 14px; }
+.admin-success{ border-radius: 16px; border: 1px solid rgba(16,185,129,.40); background: rgba(16,185,129,.10); padding: 12px 14px; }
 
-.thumb{
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  flex: 0 0 auto;
-  overflow: hidden;
-}
-.thumb-inner{
-  width: 100%;
-  height: 100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+.thumb{ width: 46px; height: 46px; border-radius: 14px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); flex: 0 0 auto; overflow: hidden; }
+.thumb-inner{ width: 100%; height: 100%; display:flex; align-items:center; justify-content:center; }
 </style>
