@@ -1,112 +1,95 @@
-/// <reference lib="dom" />
-// server/api/bff/[...path].ts
-import {
-  defineEventHandler,
-  getRouterParams,
-  getQuery,
-  getRequestHeaders,
-  getHeader,
-  getCookie,
-  readMultipartFormData,
-  readBody,
-  setHeader,
-  setResponseStatus,
-} from "h3"
-import { $fetch } from "ofetch"
+import { defineEventHandler, getQuery, readBody, setResponseStatus, setHeader, getRouterParams } from 'h3'
 
+/**
+ * BFF Proxy:
+ * - يوجّه أي طلب /api/bff/* إلى الـ API الحقيقي (مثلاً Fly.io)
+ * - يدعم GET/POST/PUT/PATCH/DELETE
+ * - يمنع مشكلة تكرار /api (إذا المستخدم حاط apiOrigin ينتهي بـ /api)
+ * - يرجّع نفس Status/Headers من السيرفر الهدف بدل ما يحولها دائماً إلى 500
+ */
 export default defineEventHandler(async (event) => {
-  // ✅ SSL محلي للتطوير فقط
-  if (process.env.NODE_ENV !== "production") {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
+  const config = useRuntimeConfig()
+
+  // apiOrigin يمكن يجي بصيغ مختلفة:
+  // - https://domain
+  // - https://domain/
+  // - https://domain/api
+  // نخليه دائماً base = https://domain/api بدون تكرار
+  const rawOrigin = String(config.apiOrigin || config.public?.apiOrigin || '').trim()
+  if (!rawOrigin) {
+    setResponseStatus(event, 500)
+    return { error: 'Missing apiOrigin. Set NUXT_API_ORIGIN in Vercel.' }
   }
 
-  const config = useRuntimeConfig()
-  const apiOrigin = String((config as any).apiOrigin || '').replace(/\/$/, '')
-  const apiBase = `${apiOrigin}/api` // مثال: https://localhost:7043/api
+  const origin = rawOrigin.replace(/\/+$/, '')
+  const apiBase = origin.toLowerCase().endsWith('/api') ? origin : `${origin}/api`
 
-  const method = (event.node.req.method || "GET").toUpperCase()
-  const params = getRouterParams(event)
-  const restPath = String(params.path || "")
+  const method = (event.node.req.method || 'GET').toUpperCase()
+
+  // Path بعد /api/bff/
+  const params = getRouterParams(event) as { path?: string }
+  const restPath = params.path || ''
+  const targetUrl = `${apiBase}/${restPath}`
+
   const query = getQuery(event)
 
-  const targetUrl = `${apiBase}/${restPath}`.replace(/([^:]\/)\/+/g, "$1")
-
-  // ✅ Forward headers (بدون host/content-length)
+  // نفس الهيدرات اللي نحتاجها بالـ proxy (Authorization/Cookie ...إلخ)
   const headers: Record<string, string> = {}
-  for (const [k, v] of Object.entries(getRequestHeaders(event))) {
-    if (!v) continue
-    const key = k.toLowerCase()
-    if (key === "host") continue
-    if (key === "content-length") continue
-    headers[key] = Array.isArray(v) ? v.join(",") : String(v)
-  }
+  const auth = event.node.req.headers['authorization']
+  if (auth) headers.authorization = String(auth)
 
-  // ✅ Authorization من الهيدر أو من cookie token
-  const authHeader = getHeader(event, "authorization")
-  if (authHeader) headers["authorization"] = authHeader
-  else {
-    const token = getCookie(event, "token")
-    if (token) headers["authorization"] = `Bearer ${token}`
-  }
+  const cookie = event.node.req.headers['cookie']
+  if (cookie) headers.cookie = String(cookie)
 
-  const contentType = (getHeader(event, "content-type") || "").toLowerCase()
-  const hasBody = !["GET", "HEAD"].includes(method)
-
-  let body: any = undefined
-
-  // ✅ multipart/form-data (رفع صور / ملفات)
-  if (hasBody && contentType.includes("multipart/form-data")) {
-    const parts = await readMultipartFormData(event)
-    const fd = new globalThis.FormData()
-
-    for (const part of parts || []) {
-      if (!part) continue
-
-      // ملف
-      if (part.filename) {
-        const type = (part as any).type || "application/octet-stream"
-
-        // ✅ تحويل مضمون إلى Buffer حتى نتجنب SharedArrayBuffer typing
-        const buf = Buffer.isBuffer(part.data)
-          ? part.data
-          : Buffer.from(part.data as any)
-
-        const blob = new globalThis.Blob([buf], { type })
-        fd.append(part.name || "file", blob, part.filename || "file")
-      } else {
-        // حقل نصي
-        fd.append(part.name || "field", part.data?.toString?.() ?? "")
-      }
-    }
-
-    body = fd
-
-    // مهم: لا ترسل content-type حتى الـ fetch يولّد boundary
-    delete headers["content-type"]
-  } else if (hasBody) {
-    // ✅ JSON
-    body = await readBody(event).catch(() => undefined)
-    headers["accept"] = "application/json"
-  } else {
-    headers["accept"] = "application/json"
-  }
+  // Forward content-type لو موجود
+  const contentType = event.node.req.headers['content-type']
+  if (contentType) headers['content-type'] = String(contentType)
 
   try {
+    // إذا ميثود يسمح بالبودي اقرأه
+    let body: any = undefined
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      // readBody يرمي error لو ماكو body لبعض الحالات، نخليها safe
+      try { body = await readBody(event) } catch { body = undefined }
+    }
+
+    // raw حتى نقدر نمرر status والـ headers مثل ما هي
     const res = await $fetch.raw(targetUrl, {
-      method: method as any,
-      headers,
+      method,
       query,
       body,
+      headers,
+      retry: 0,
     })
 
-    const setCookie = res.headers.get("set-cookie")
-    if (setCookie) setHeader(event, "set-cookie", setCookie)
+    // مرر status
+    setResponseStatus(event, res.status)
+
+    // مرر أهم الهيدرات (خصوصاً content-type)
+    const ct = res.headers.get('content-type')
+    if (ct) setHeader(event, 'content-type', ct)
+
+    // مرر الباقي إذا تحب (ممكن تضيف headers أخرى عند الحاجة)
+    // مثال: cache-control, etag ...
+    const cache = res.headers.get('cache-control')
+    if (cache) setHeader(event, 'cache-control', cache)
 
     return res._data
   } catch (err: any) {
-    const statusCode = err?.statusCode || err?.response?.status || 500
-    const message = err?.data?.message || err?.message || "fetch failed"
-    setResponseStatus(event, statusCode)
-    return { message, targetUrl, method }
+    // إذا API رجّع status (مثلاً 401/404/500) نرجعه مثل ما هو بدل 500 ثابت
+    const status = err?.response?.status || err?.statusCode || 500
+    setResponseStatus(event, status)
+
+    const msg =
+      err?.data?.message ||
+      err?.response?._data?.message ||
+      err?.message ||
+      'BFF proxy error'
+
+    return {
+      error: msg,
+      targetUrl,
+      status,
+    }
   }
 })
