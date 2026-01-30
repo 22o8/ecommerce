@@ -1,95 +1,86 @@
-import { defineEventHandler, getQuery, readBody, setResponseStatus, setHeader, getRouterParams } from 'h3'
-
-/**
- * BFF Proxy:
- * - يوجّه أي طلب /api/bff/* إلى الـ API الحقيقي (مثلاً Fly.io)
- * - يدعم GET/POST/PUT/PATCH/DELETE
- * - يمنع مشكلة تكرار /api (إذا المستخدم حاط apiOrigin ينتهي بـ /api)
- * - يرجّع نفس Status/Headers من السيرفر الهدف بدل ما يحولها دائماً إلى 500
- */
+// ecommerce-web/server/api/bff/[...path].ts
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-
-  // apiOrigin يمكن يجي بصيغ مختلفة:
-  // - https://domain
-  // - https://domain/
-  // - https://domain/api
-  // نخليه دائماً base = https://domain/api بدون تكرار
-  const rawOrigin = String(config.apiOrigin || config.public?.apiOrigin || '').trim()
-  if (!rawOrigin) {
-    setResponseStatus(event, 500)
-    return { error: 'Missing apiOrigin. Set NUXT_API_ORIGIN in Vercel.' }
-  }
-
-  const origin = rawOrigin.replace(/\/+$/, '')
-  const apiBase = origin.toLowerCase().endsWith('/api') ? origin : `${origin}/api`
-
-  const method = (event.node.req.method || 'GET').toUpperCase()
-
-  // Path بعد /api/bff/
-  const params = getRouterParams(event) as { path?: string }
-  const restPath = params.path || ''
-  const targetUrl = `${apiBase}/${restPath}`
-
-  const query = getQuery(event)
-
-  // نفس الهيدرات اللي نحتاجها بالـ proxy (Authorization/Cookie ...إلخ)
-  const headers: Record<string, string> = {}
-  const auth = event.node.req.headers['authorization']
-  if (auth) headers.authorization = String(auth)
-
-  const cookie = event.node.req.headers['cookie']
-  if (cookie) headers.cookie = String(cookie)
-
-  // Forward content-type لو موجود
-  const contentType = event.node.req.headers['content-type']
-  if (contentType) headers['content-type'] = String(contentType)
-
   try {
-    // إذا ميثود يسمح بالبودي اقرأه
-    let body: any = undefined
-    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
-      // readBody يرمي error لو ماكو body لبعض الحالات، نخليها safe
-      try { body = await readBody(event) } catch { body = undefined }
+    const config = useRuntimeConfig()
+
+    // لازم يكون مضبوط على Vercel (Production)
+    const apiOrigin =
+      (config.public as any).apiOrigin ||
+      (config.public as any).apiBase ||
+      process.env.NUXT_API_ORIGIN ||
+      process.env.NUXT_PUBLIC_API_ORIGIN
+
+    if (!apiOrigin) {
+      setResponseStatus(event, 500)
+      return {
+        error: "Missing API origin. Set NUXT_API_ORIGIN on Vercel.",
+      }
     }
 
-    // raw حتى نقدر نمرر status والـ headers مثل ما هي
-    const res = await $fetch.raw(targetUrl, {
+    const method = (event.node.req.method || "GET").toUpperCase()
+    const routePath = getRouterParam(event, "path") || ""
+    const targetBase = apiOrigin.replace(/\/$/, "")
+    const targetUrl = new URL(`${targetBase}/api/${routePath}`)
+
+    // انقل كل query params عادي
+    const incomingQuery = getQuery(event) as Record<string, any>
+
+    // ✅ إذا اكو query=JSON حوله لباراميترات منفصلة
+    if (typeof incomingQuery.query === "string" && incomingQuery.query.trim()) {
+      try {
+        const obj = JSON.parse(incomingQuery.query)
+        if (obj && typeof obj === "object") {
+          for (const [k, v] of Object.entries(obj)) {
+            if (v === undefined || v === null) continue
+            targetUrl.searchParams.set(k, String(v))
+          }
+        }
+      } catch {
+        // إذا JSON مو صالح، خليه مثل ما هو حتى ما يطيح السيرفر
+        targetUrl.searchParams.set("query", incomingQuery.query)
+      }
+      delete incomingQuery.query
+    }
+
+    // باقي الباراميترات
+    for (const [k, v] of Object.entries(incomingQuery)) {
+      if (v === undefined || v === null) continue
+      if (Array.isArray(v)) {
+        v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
+      } else {
+        targetUrl.searchParams.set(k, String(v))
+      }
+    }
+
+    const headers = getRequestHeaders(event)
+    // لا تمرر host/connection… الخ
+    delete (headers as any).host
+    delete (headers as any).connection
+    delete (headers as any)["content-length"]
+
+    const body =
+      method === "GET" || method === "HEAD" ? undefined : await readRawBody(event)
+
+    const res = await fetch(targetUrl.toString(), {
       method,
-      query,
-      body,
-      headers,
-      retry: 0,
+      headers: {
+        ...headers,
+        // ضمان نوع محتوى JSON إذا اكو body
+        ...(body ? { "content-type": headers["content-type"] || "application/json" } : {}),
+      },
+      body: body || undefined,
     })
 
-    // مرر status
+    // رجّع نفس الستاتس
     setResponseStatus(event, res.status)
 
-    // مرر أهم الهيدرات (خصوصاً content-type)
-    const ct = res.headers.get('content-type')
-    if (ct) setHeader(event, 'content-type', ct)
-
-    // مرر الباقي إذا تحب (ممكن تضيف headers أخرى عند الحاجة)
-    // مثال: cache-control, etag ...
-    const cache = res.headers.get('cache-control')
-    if (cache) setHeader(event, 'cache-control', cache)
-
-    return res._data
+    const ct = res.headers.get("content-type") || ""
+    if (ct.includes("application/json")) return await res.json()
+    return await res.text()
   } catch (err: any) {
-    // إذا API رجّع status (مثلاً 401/404/500) نرجعه مثل ما هو بدل 500 ثابت
-    const status = err?.response?.status || err?.statusCode || 500
-    setResponseStatus(event, status)
-
-    const msg =
-      err?.data?.message ||
-      err?.response?._data?.message ||
-      err?.message ||
-      'BFF proxy error'
-
-    return {
-      error: msg,
-      targetUrl,
-      status,
-    }
+    // ✅ لا تخليها UnhandledRejection
+    console.error("BFF error:", err)
+    setResponseStatus(event, 500)
+    return { error: err?.message || "BFF failed" }
   }
 })
