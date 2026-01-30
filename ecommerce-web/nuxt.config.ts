@@ -61,6 +61,7 @@ export default defineNuxtConfig({
     compressPublicAssets: true,
 
     routeRules: {
+      '/': { prerender: true },
       // Long-term cache for built assets
       '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
       '/icons/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
