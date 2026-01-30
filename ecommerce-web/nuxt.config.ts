@@ -61,12 +61,15 @@ export default defineNuxtConfig({
     compressPublicAssets: true,
 
     routeRules: {
-      '/': { prerender: true },
+      // ✅ صفحات رئيسية نضمنها موجودة حتى لو صار Static/ISR
+      '/': { prerender: true, swr: 60 },
+      '/products': { prerender: true, swr: 60 },
+
       // Long-term cache for built assets
       '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
       '/icons/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
 
-      // ✅ كاش للصور (قواعد منفصلة - مضمونة)
+      // ✅ كاش للصور
       '/**/*.png': { headers: { 'cache-control': 'public, max-age=2592000' } },
       '/**/*.jpg': { headers: { 'cache-control': 'public, max-age=2592000' } },
       '/**/*.jpeg': { headers: { 'cache-control': 'public, max-age=2592000' } },
@@ -75,9 +78,13 @@ export default defineNuxtConfig({
       '/**/*.ico': { headers: { 'cache-control': 'public, max-age=2592000' } },
 
       // Micro-caching (SWR)
-      '/': { swr: 60 },
       '/products/**': { swr: 60 },
       '/services/**': { swr: 60 },
+    },
+
+    // ✅ لو Vercel اشتغل بوضع Static/ISR، هذا يضمن توليد الصفحات
+    prerender: {
+      routes: ['/', '/products'],
     },
   },
 
