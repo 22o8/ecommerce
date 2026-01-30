@@ -92,16 +92,15 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var runMigrations =
-    config["RUN_MIGRATIONS"] ??
-    Environment.GetEnvironmentVariable("RUN_MIGRATIONS");
 
-if (string.Equals(runMigrations, "true", StringComparison.OrdinalIgnoreCase))
-{
-    db.Database.Migrate();
+    var runMigrations = Environment.GetEnvironmentVariable("RUN_MIGRATIONS") == "1";
+
+    if (runMigrations)
+    {
+        db.Database.Migrate();
+    }
 }
 
-}
 
 // Render / Reverse Proxy Support (مهم)
 app.UseForwardedHeaders(new ForwardedHeadersOptions
