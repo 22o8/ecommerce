@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     const method = (event.node.req.method || "GET").toUpperCase()
     const routePath = getRouterParam(event, "path") || ""
     const targetBase = apiOrigin.replace(/\/$/, "")
-    const targetUrl = new URL(`${targetBase}/api/${routePath}`)
+    const targetUrl = new URL(`${targetBase}/${routePath}`)
 
     // انقل كل query params عادي
     const incomingQuery = getQuery(event) as Record<string, any>
