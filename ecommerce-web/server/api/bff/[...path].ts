@@ -3,7 +3,7 @@ export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
 
-    // لازم يكون مضبوط على Vercel (Production)
+    // Source of API origin (Vercel)
     const apiOrigin =
       (config.public as any).apiOrigin ||
       (config.public as any).apiBase ||
@@ -12,24 +12,20 @@ export default defineEventHandler(async (event) => {
 
     if (!apiOrigin) {
       setResponseStatus(event, 500)
-      return {
-        error: "Missing API origin. Set NUXT_API_ORIGIN on Vercel.",
-      }
+      return { error: "Missing API origin. Set NUXT_API_ORIGIN on Vercel." }
     }
 
     const method = (event.node.req.method || "GET").toUpperCase()
     const routePath = getRouterParam(event, "path") || ""
+
     const targetBase = apiOrigin.replace(/\/$/, "")
-<<<<<<< HEAD
-    const targetUrl = new URL(`${targetBase}/${routePath}`)
-=======
 
-    // إذا apiOrigin ينتهي بـ /api لا نكررها، وإلا نضيف /api
-    const apiBase = targetBase.endsWith('/api') ? targetBase : `${targetBase}/api`
+    // ✅ إذا apiOrigin ينتهي بـ /api لا نكررها، وإلا نضيف /api
+    const apiBase = targetBase.endsWith("/api") ? targetBase : `${targetBase}/api`
+
     const targetUrl = new URL(`${apiBase}/${routePath}`)
->>>>>>> 22de004 (Fix Fly deploy + apply migrations toggle + SSR BFF routing)
 
-    // انقل كل query params عادي
+    // Query params
     const incomingQuery = getQuery(event) as Record<string, any>
 
     // ✅ إذا اكو query=JSON حوله لباراميترات منفصلة
@@ -39,11 +35,15 @@ export default defineEventHandler(async (event) => {
         if (obj && typeof obj === "object") {
           for (const [k, v] of Object.entries(obj)) {
             if (v === undefined || v === null) continue
-            targetUrl.searchParams.set(k, String(v))
+            if (Array.isArray(v)) {
+              v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
+            } else {
+              targetUrl.searchParams.set(k, String(v))
+            }
           }
         }
       } catch {
-        // إذا JSON مو صالح، خليه مثل ما هو حتى ما يطيح السيرفر
+        // إذا JSON مو صالح، خليه مثل ما هو
         targetUrl.searchParams.set("query", incomingQuery.query)
       }
       delete incomingQuery.query
@@ -72,20 +72,17 @@ export default defineEventHandler(async (event) => {
       method,
       headers: {
         ...headers,
-        // ضمان نوع محتوى JSON إذا اكو body
         ...(body ? { "content-type": headers["content-type"] || "application/json" } : {}),
       },
       body: body || undefined,
     })
 
-    // رجّع نفس الستاتس
     setResponseStatus(event, res.status)
 
     const ct = res.headers.get("content-type") || ""
     if (ct.includes("application/json")) return await res.json()
     return await res.text()
   } catch (err: any) {
-    // ✅ لا تخليها UnhandledRejection
     console.error("BFF error:", err)
     setResponseStatus(event, 500)
     return { error: err?.message || "BFF failed" }
