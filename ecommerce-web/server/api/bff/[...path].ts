@@ -18,7 +18,6 @@ export default defineEventHandler(async (event) => {
     const method = (event.node.req.method || "GET").toUpperCase()
     const routePath = getRouterParam(event, "path") || ""
 
-    // base
     const targetBase = apiOrigin.replace(/\/$/, "")
 
     // ✅ إذا apiOrigin ينتهي بـ /api لا نكررها، وإلا نضيف /api
@@ -41,13 +40,11 @@ export default defineEventHandler(async (event) => {
           }
         }
       } catch {
-        // إذا JSON مو صالح، خليه مثل ما هو
         targetUrl.searchParams.set("query", incomingQuery.query)
       }
       delete incomingQuery.query
     }
 
-    // باقي الباراميترات
     for (const [k, v] of Object.entries(incomingQuery)) {
       if (v === undefined || v === null) continue
       if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
@@ -62,12 +59,18 @@ export default defineEventHandler(async (event) => {
     delete headers.connection
     delete headers["content-length"]
 
-    // ✅ Forward Authorization تلقائياً من Cookie إذا موجود (حل SSR/Admin جذري)
-    // اسم الكوكي: access_token
-    const tokenFromCookie = getCookie(event, "access_token")
+    // ✅ الحل الجذري: خذ التوكن من أي مكان منطقي
+    // 1) من Authorization header (إذا موجود)
+    // 2) أو من Cookie token
+    // 3) أو من Cookie access_token
+    const tokenFromCookie =
+      getCookie(event, "token") || getCookie(event, "access_token")
 
-    // إذا الفرونت ما مرّر Authorization، نضيفه من الكوكي
-    if (!headers.authorization && tokenFromCookie) {
+    const authHeader =
+      headers.authorization || headers.Authorization
+
+    // إذا ماكو Authorization، نبنيه من الكوكي
+    if (!authHeader && tokenFromCookie) {
       headers.authorization = `Bearer ${tokenFromCookie}`
     }
 
