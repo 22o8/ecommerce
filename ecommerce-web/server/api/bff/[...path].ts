@@ -12,12 +12,13 @@ export default defineEventHandler(async (event) => {
 
     if (!apiOrigin) {
       setResponseStatus(event, 500)
-      return { error: "Missing API origin. Set NUXT_API_ORIGIN on Vercel." }
+      return { error: "Missing API origin. Set NUXT_API_ORIGIN / NUXT_PUBLIC_API_ORIGIN." }
     }
 
     const method = (event.node.req.method || "GET").toUpperCase()
     const routePath = getRouterParam(event, "path") || ""
 
+    // base
     const targetBase = apiOrigin.replace(/\/$/, "")
 
     // ✅ إذا apiOrigin ينتهي بـ /api لا نكررها، وإلا نضيف /api
@@ -35,11 +36,8 @@ export default defineEventHandler(async (event) => {
         if (obj && typeof obj === "object") {
           for (const [k, v] of Object.entries(obj)) {
             if (v === undefined || v === null) continue
-            if (Array.isArray(v)) {
-              v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
-            } else {
-              targetUrl.searchParams.set(k, String(v))
-            }
+            if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
+            else targetUrl.searchParams.set(k, String(v))
           }
         }
       } catch {
@@ -52,19 +50,28 @@ export default defineEventHandler(async (event) => {
     // باقي الباراميترات
     for (const [k, v] of Object.entries(incomingQuery)) {
       if (v === undefined || v === null) continue
-      if (Array.isArray(v)) {
-        v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
-      } else {
-        targetUrl.searchParams.set(k, String(v))
-      }
+      if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
+      else targetUrl.searchParams.set(k, String(v))
     }
 
-    const headers = getRequestHeaders(event)
-    // لا تمرر host/connection… الخ
-    delete (headers as any).host
-    delete (headers as any).connection
-    delete (headers as any)["content-length"]
+    // Headers
+    const headers = getRequestHeaders(event) as Record<string, any>
 
+    // لا تمرر host/connection/content-length… الخ
+    delete headers.host
+    delete headers.connection
+    delete headers["content-length"]
+
+    // ✅ Forward Authorization تلقائياً من Cookie إذا موجود (حل SSR/Admin جذري)
+    // اسم الكوكي: access_token
+    const tokenFromCookie = getCookie(event, "access_token")
+
+    // إذا الفرونت ما مرّر Authorization، نضيفه من الكوكي
+    if (!headers.authorization && tokenFromCookie) {
+      headers.authorization = `Bearer ${tokenFromCookie}`
+    }
+
+    // Body
     const body =
       method === "GET" || method === "HEAD" ? undefined : await readRawBody(event)
 
