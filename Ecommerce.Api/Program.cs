@@ -4,10 +4,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// اختصار للكونفيغ حتى ما يصير خطأ (config غير معرّف / مكرر)
 var config = builder.Configuration;
 
 // ============================
@@ -16,26 +15,88 @@ var config = builder.Configuration;
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(c =>
 {
-    // ✅ يمنع تعارض أسماء الـ Schemas لما يكون عندك DTOs/Requests بنفس الاسم
-    // في أكثر من مكان. هذا كان يسبب 500 في /swagger/v1/swagger.json على Render.
+    // ✅ يمنع تعارض أسماء الـ Schemas
     c.CustomSchemaIds(t => t.FullName!.Replace("+", "."));
+
+    // ✅ Swagger Authorize (JWT Bearer)
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "اكتب بهذا الشكل: Bearer {token}"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 
-// DbContext
-var conn = builder.Configuration.GetConnectionString("Default")
-          ?? builder.Configuration["ConnectionStrings__Default"];
+// ============================
+// DbContext (Connection String Fix)
+// ============================
+
+static string NormalizeConn(string raw)
+{
+    raw = (raw ?? "").Trim();
+
+    // إذا واحد مخزنها بالخطأ: psql 'postgresql://...'
+    if (raw.StartsWith("psql", StringComparison.OrdinalIgnoreCase))
+    {
+        // remove leading "psql"
+        raw = raw.Substring(4).Trim();
+    }
+
+    // remove wrapping quotes: '...' or "..."
+    if ((raw.StartsWith("'") && raw.EndsWith("'")) || (raw.StartsWith("\"") && raw.EndsWith("\"")))
+    {
+        raw = raw.Substring(1, raw.Length - 2).Trim();
+    }
+
+    return raw;
+}
+
+var connRaw =
+    builder.Configuration.GetConnectionString("Default")
+    ?? builder.Configuration["ConnectionStrings__Default"]
+    ?? builder.Configuration["ConnectionStrings:Default"]
+    ?? Environment.GetEnvironmentVariable("ConnectionStrings__Default")
+    ?? Environment.GetEnvironmentVariable("ConnectionStrings:Default")
+    ?? "";
+
+var conn = NormalizeConn(connRaw);
 
 if (string.IsNullOrWhiteSpace(conn))
     throw new Exception("Missing connection string: ConnectionStrings:Default");
+
+// لو تريد تشوفها باللوغ (بدون كشفها كاملة) تقدر تطبع جزء:
+Console.WriteLine($"DB Conn set (len={conn.Length})");
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
 {
     opt.UseNpgsql(conn);
 });
 
-// CORS (عدّل origins حسب موقعك)
+// ============================
+// CORS
+// ============================
+
 builder.Services.AddCors(opt =>
 {
     opt.AddPolicy("cors", p =>
@@ -43,44 +104,39 @@ builder.Services.AddCors(opt =>
         p.AllowAnyHeader()
          .AllowAnyMethod()
          .AllowCredentials()
-         // اذا تبي تربط دومين الفرونت المحدد بدل AllowAnyOrigin:
          .SetIsOriginAllowed(_ => true);
     });
 });
 
-// JWT Auth (إذا عندك Secret بالكونفيغ)
-var jwtKey = config["Jwt:Key"]
+// ============================
+// JWT Auth
+// ============================
+
+var jwtKey =
+    config["Jwt:Key"]
     ?? config["JWT_SECRET"]
     ?? config["JWT_KEY"]
     ?? Environment.GetEnvironmentVariable("JWT_SECRET")
     ?? Environment.GetEnvironmentVariable("JWT_KEY")
     ?? Environment.GetEnvironmentVariable("Jwt__Key")
     ?? "DEV_ONLY_CHANGE_ME";
-if (!string.IsNullOrWhiteSpace(jwtKey))
-{
-    var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(options =>
+var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
-                ClockSkew = TimeSpan.Zero
-            };
-        });
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
-    builder.Services.AddAuthorization();
-}
-else
-{
-    // اذا أنت أصلاً مستخدم JWT بطريقة ثانية/جاهزة.. اترك هذا حسب مشروعك
-    builder.Services.AddAuthentication();
-    builder.Services.AddAuthorization();
-}
+builder.Services.AddAuthorization();
 
 // ============================
 // App
@@ -88,12 +144,45 @@ else
 
 var app = builder.Build();
 
-// تطبيق الـ migrations تلقائياً لتفادي مشاكل النشر
+// ✅ Forwarded Headers (Fly/Proxy)
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    // أحياناً لازم حتى يقبل الهيدرز من البروكسي
+    KnownNetworks = { },
+    KnownProxies = { }
+});
+
+// Swagger
+app.UseSwagger();
+app.UseSwaggerUI();
+
+// HTTPS Redirect (اختياري - Fly عادة يضبطه)
+app.UseHttpsRedirection();
+
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseCors("cors");
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+// ============================
+// Apply Migrations Toggle
+// ============================
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    var runMigrationsRaw = (Environment.GetEnvironmentVariable("RUN_MIGRATIONS") ?? "").Trim().ToLowerInvariant();
+    var runMigrationsRaw = (Environment.GetEnvironmentVariable("RUN_MIGRATIONS") ?? "")
+        .Trim()
+        .ToLowerInvariant();
+
     var runMigrations = runMigrationsRaw is "1" or "true" or "yes" or "y" or "on";
 
     if (runMigrations)
@@ -107,33 +196,5 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine("RUN_MIGRATIONS disabled -> skipping EF migrations.");
     }
 }
-
-
-// Render / Reverse Proxy Support (مهم)
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-});
-
-// Swagger
-app.UseSwagger();
-app.UseSwaggerUI();
-
-// HTTPS (إذا أنت مفعّل https بالبيئة)
-app.UseHttpsRedirection();
-
-// Static Files (ضروري حتى /uploads يفتح)
-app.UseStaticFiles();
-
-app.UseRouting();
-
-// CORS
-app.UseCors("cors");
-
-// Auth
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
 
 app.Run();
