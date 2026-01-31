@@ -20,7 +20,14 @@ export default defineEventHandler(async (event) => {
     const method = (event.node.req.method || "GET").toUpperCase()
     const routePath = getRouterParam(event, "path") || ""
     const targetBase = apiOrigin.replace(/\/$/, "")
+<<<<<<< HEAD
     const targetUrl = new URL(`${targetBase}/${routePath}`)
+=======
+
+    // إذا apiOrigin ينتهي بـ /api لا نكررها، وإلا نضيف /api
+    const apiBase = targetBase.endsWith('/api') ? targetBase : `${targetBase}/api`
+    const targetUrl = new URL(`${apiBase}/${routePath}`)
+>>>>>>> 22de004 (Fix Fly deploy + apply migrations toggle + SSR BFF routing)
 
     // انقل كل query params عادي
     const incomingQuery = getQuery(event) as Record<string, any>
