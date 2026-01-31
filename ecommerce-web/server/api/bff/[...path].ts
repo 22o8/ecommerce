@@ -1,20 +1,8 @@
-import {
-  defineEventHandler,
-  getCookie,
-  getQuery,
-  getRequestHeaders,
-  getRouterParam,
-  readRawBody,
-  setCookie,
-  setResponseHeader,
-  setResponseStatus,
-} from "h3"
-
+// ecommerce-web/server/api/bff/[...path].ts
 export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
 
-    // Source of API origin (Vercel)
     const apiOrigin =
       (config.public as any).apiOrigin ||
       (config.public as any).apiBase ||
@@ -27,19 +15,16 @@ export default defineEventHandler(async (event) => {
     }
 
     const method = (event.node.req.method || "GET").toUpperCase()
-    const routePath = (getRouterParam(event, "path") || "").replace(/^\/+/, "")
+    const routePath = getRouterParam(event, "path") || ""
 
     const targetBase = apiOrigin.replace(/\/$/, "")
-    // إذا apiOrigin ينتهي بـ /api لا نكررها، وإلا نضيف /api
     const apiBase = targetBase.endsWith("/api") ? targetBase : `${targetBase}/api`
-
     const targetUrl = new URL(`${apiBase}/${routePath}`)
 
-    // -----------------------
-    // Query params (يدعم query كـ JSON)
-    // -----------------------
+    // Query params
     const incomingQuery = getQuery(event) as Record<string, any>
 
+    // ✅ query=JSON => params
     if (typeof incomingQuery.query === "string" && incomingQuery.query.trim()) {
       try {
         const obj = JSON.parse(incomingQuery.query)
@@ -62,20 +47,13 @@ export default defineEventHandler(async (event) => {
       else targetUrl.searchParams.set(k, String(v))
     }
 
-    // -----------------------
     // Headers
-    // -----------------------
     const headers = getRequestHeaders(event) as Record<string, any>
-
-    // لا تمرر host/connection/content-length
     delete headers.host
     delete headers.connection
     delete headers["content-length"]
 
-    // ✅ الحل الجذري للـ 401 بالفرونت:
-    // خذ التوكن من:
-    // 1) Authorization header (إذا موجود)
-    // 2) أو Cookie token / access_token
+    // ✅ خذ التوكن من Cookie إذا ماكو Authorization
     const tokenFromCookie = getCookie(event, "token") || getCookie(event, "access_token")
     const authHeader = headers.authorization || headers.Authorization
 
@@ -83,9 +61,7 @@ export default defineEventHandler(async (event) => {
       headers.authorization = `Bearer ${tokenFromCookie}`
     }
 
-    // -----------------------
     // Body
-    // -----------------------
     const body =
       method === "GET" || method === "HEAD" ? undefined : await readRawBody(event)
 
@@ -98,53 +74,64 @@ export default defineEventHandler(async (event) => {
       body: body || undefined,
     })
 
+    // ✅ إذا login: نخزن token بالكوكي + role + auth flag
+    const isLogin = routePath.toLowerCase() === "auth/login" && method === "POST"
+    const isLogout = routePath.toLowerCase() === "auth/logout"
+
+    if (isLogin) {
+      const json = await res.json().catch(() => null)
+
+      const token = json?.token
+      const role = json?.user?.role || "User"
+
+      if (token) {
+        // token httpOnly (أمني)
+        setCookie(event, "token", token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60 * 24 * 30,
+        })
+
+        // role غير httpOnly حتى الـ client middleware يكدر يقراه
+        setCookie(event, "role", String(role), {
+          httpOnly: false,
+          secure: true,
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60 * 24 * 30,
+        })
+
+        // ✅ auth flag غير httpOnly (حل جذري للـ middleware)
+        setCookie(event, "auth", "1", {
+          httpOnly: false,
+          secure: true,
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60 * 24 * 30,
+        })
+      }
+
+      setResponseStatus(event, res.status)
+      return json
+    }
+
+    // ✅ logout: امسح الكوكيز
+    if (isLogout) {
+      deleteCookie(event, "token", { path: "/" })
+      deleteCookie(event, "role", { path: "/" })
+      deleteCookie(event, "auth", { path: "/" })
+
+      setResponseStatus(event, 200)
+      return { ok: true }
+    }
+
     setResponseStatus(event, res.status)
 
     const ct = res.headers.get("content-type") || ""
-    const isJson = ct.includes("application/json") || ct.includes("application/problem+json")
-
-    // -----------------------
-    // ✅ إذا هذا Login: خزّن التوكن كـ Cookie على دومين Vercel
-    // حتى كل طلبات admin تصير Authorized تلقائياً
-    // -----------------------
-    const isLogin =
-      method === "POST" &&
-      (routePath.toLowerCase() === "auth/login" || routePath.toLowerCase().endsWith("/auth/login"))
-
-    if (isJson) {
-      const data = await res.json()
-
-      if (isLogin && res.ok && data?.token) {
-        const secure = process.env.NODE_ENV === "production"
-
-        setCookie(event, "token", String(data.token), {
-          httpOnly: true,
-          secure,
-          sameSite: "lax",
-          path: "/",
-          maxAge: 60 * 60 * 24 * 30, // 30 يوم
-        })
-
-        // مفيد للفرونت إذا تحب تقرأ role بدون فك JWT
-        if (data?.user?.role) {
-          setCookie(event, "role", String(data.user.role), {
-            httpOnly: false,
-            secure,
-            sameSite: "lax",
-            path: "/",
-            maxAge: 60 * 60 * 24 * 30,
-          })
-        }
-      }
-
-      return data
-    }
-
-    // رجّع نص إذا مو JSON
-    const text = await res.text()
-    // بعض الأحيان Vercel يرجّع text/html للـ 401
-    setResponseHeader(event, "content-type", ct || "text/plain; charset=utf-8")
-    return text
+    if (ct.includes("application/json")) return await res.json()
+    return await res.text()
   } catch (err: any) {
     console.error("BFF error:", err)
     setResponseStatus(event, 500)
