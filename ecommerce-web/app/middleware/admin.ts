@@ -1,3 +1,4 @@
+// ecommerce-web/app/middleware/admin.ts
 function parseJwt(token: string) {
   try {
     const part = token.split(".")[1]
@@ -30,24 +31,30 @@ function parseJwt(token: string) {
 export default defineNuxtRouteMiddleware((to) => {
   const route = (to as any) ?? (typeof useRoute === "function" ? useRoute() : null)
   const path = String(route?.path ?? "").toLowerCase()
-
-  // هذا middleware ينادي فقط لما الصفحة تطلبه بـ definePageMeta({ middleware: ['admin'] })
-  // فـ ما نحتاج نفحص startsWith('/admin') لكن نخليه Guard احتياطي
   if (path && !path.startsWith("/admin")) return
 
   const token = useCookie<string | null>("token").value
-  if (!token) {
+  const roleCookie = (useCookie<string | null>("role").value || "").toLowerCase()
+  const auth = useCookie<string | null>("auth").value
+
+  // إذا ماكو لا token (SSR) ولا role/auth (client) -> روح login
+  if (!token && auth !== "1" && !roleCookie) {
     const redirect = encodeURIComponent(route?.fullPath || "/admin")
     return navigateTo(`/login?redirect=${redirect}`)
   }
 
-  const payload = parseJwt(token)
-  const rawRole =
-    payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
-    payload?.role
+  // SSR: تحقق من JWT
+  if (token) {
+    const payload = parseJwt(token)
+    const rawRole =
+      payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
+      payload?.role
 
-  const role = Array.isArray(rawRole) ? rawRole[0] : rawRole
-  if (String(role ?? "").toLowerCase() !== "admin") {
-    return navigateTo("/")
+    const role = (Array.isArray(rawRole) ? rawRole[0] : rawRole || "").toString().toLowerCase()
+    if (role !== "admin") return navigateTo("/")
+    return
   }
+
+  // Client: تحقق من role cookie (غير httpOnly)
+  if (roleCookie !== "admin") return navigateTo("/")
 })
