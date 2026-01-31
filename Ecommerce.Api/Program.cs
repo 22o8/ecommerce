@@ -93,11 +93,18 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    var runMigrations = Environment.GetEnvironmentVariable("RUN_MIGRATIONS") == "1";
+    var runMigrationsRaw = (Environment.GetEnvironmentVariable("RUN_MIGRATIONS") ?? "").Trim().ToLowerInvariant();
+    var runMigrations = runMigrationsRaw is "1" or "true" or "yes" or "y" or "on";
 
     if (runMigrations)
     {
+        Console.WriteLine("RUN_MIGRATIONS enabled -> applying EF migrations...");
         db.Database.Migrate();
+        Console.WriteLine("EF migrations applied.");
+    }
+    else
+    {
+        Console.WriteLine("RUN_MIGRATIONS disabled -> skipping EF migrations.");
     }
 }
 
