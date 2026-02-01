@@ -1,50 +1,32 @@
-// ecommerce-web/server/api/uploads/[...path].ts
+import { defineEventHandler, getRequestHeader, sendProxy, createError } from "h3"
+
 export default defineEventHandler(async (event) => {
-  try {
-    const config = useRuntimeConfig()
+  const config = useRuntimeConfig()
 
-    const apiOrigin =
-      (config.public as any).apiOrigin ||
-      (config.public as any).apiBase ||
-      process.env.NUXT_API_ORIGIN ||
-      process.env.NUXT_PUBLIC_API_ORIGIN
+  const apiOriginRaw =
+    (config.public as any).apiOrigin ||
+    (config.public as any).apiBase ||
+    process.env.NUXT_PUBLIC_API_ORIGIN ||
+    process.env.NUXT_API_ORIGIN
 
-    if (!apiOrigin) {
-      setResponseStatus(event, 500)
-      return { error: "Missing API origin. Set NUXT_API_ORIGIN / NUXT_PUBLIC_API_ORIGIN." }
-    }
+  const apiOrigin = String(apiOriginRaw || "").replace(/\/+$/, "")
 
-    const routePath = getRouterParam(event, "path") || ""
-    const targetBase = apiOrigin.replace(/\/$/, "")
-
-    // لاحظ: uploads بدون /api
-    const targetUrl = new URL(`${targetBase}/uploads/${routePath}`)
-
-    // مرر query params إذا موجودة
-    const q = getQuery(event) as Record<string, any>
-    for (const [k, v] of Object.entries(q)) {
-      if (v === undefined || v === null) continue
-      if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
-      else targetUrl.searchParams.set(k, String(v))
-    }
-
-    const res = await fetch(targetUrl.toString(), { method: "GET" })
-
-    setResponseStatus(event, res.status)
-
-    // مرر نوع المحتوى وكاش
-    const ct = res.headers.get("content-type") || "application/octet-stream"
-    setResponseHeader(event, "content-type", ct)
-
-    const cache = res.headers.get("cache-control")
-    if (cache) setResponseHeader(event, "cache-control", cache)
-
-    // رجع bytes (مهم للصور)
-    const buf = Buffer.from(await res.arrayBuffer())
-    return buf
-  } catch (err: any) {
-    console.error("Uploads proxy error:", err)
-    setResponseStatus(event, 500)
-    return { error: err?.message || "Uploads proxy failed" }
+  if (!apiOrigin) {
+    throw createError({
+      statusCode: 500,
+      statusMessage:
+        "Missing API origin. Set runtimeConfig.public.apiOrigin (NUXT_PUBLIC_API_ORIGIN).",
+    })
   }
+
+  const p = (event.context.params as any)?.path
+  const rest = Array.isArray(p) ? p.join("/") : String(p || "")
+  const target = `${apiOrigin}/uploads/${rest}`
+
+  // مرّر الكوكيز لو موجودة (مو ضرورية للصور غالباً، بس مفيدة)
+  const headers: Record<string, string> = {}
+  const cookie = getRequestHeader(event, "cookie")
+  if (cookie) headers.cookie = cookie
+
+  return sendProxy(event, target, { headers })
 })

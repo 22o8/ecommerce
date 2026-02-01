@@ -62,14 +62,14 @@ export default defineEventHandler(async (event) => {
     }
 
     // Body
+    // مهم: نقرأه كـ Buffer حتى ملفات multipart/صور ما تنكسر.
     const body =
-      method === "GET" || method === "HEAD" ? undefined : await readRawBody(event)
+      method === "GET" || method === "HEAD" ? undefined : await readRawBody(event, false)
 
     const res = await fetch(targetUrl.toString(), {
       method,
       headers: {
         ...headers,
-        ...(body ? { "content-type": headers["content-type"] || "application/json" } : {}),
       },
       body: body || undefined,
     })
