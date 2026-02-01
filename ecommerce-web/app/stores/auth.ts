@@ -22,22 +22,35 @@ export const useAuthStore = defineStore('auth', () => {
     maxAge: 60 * 60 * 24 * 30, // 30 days
   }
 
-  // ✅ ملاحظة مهمة (حل جذري لمشكلة الداشبورد يرجع للّوغن):
-  // الـ BFF يضبط cookie اسمها "token" كـ HttpOnly.
-  // هذا يعني المتصفح/JS ما يقدر يقراها (useCookie على client راح يرجع null)
-  // فلو نعتمد على token.value حتى نحدد isAuthed راح يصير دائماً false بالفرونت.
-  // لذلك نعتمد على كوكيز غير HttpOnly يضبطها الـ BFF: auth=1 و role.
+  /**
+   * ✅ ملاحظة مهمة:
+   * الـ BFF يضبط cookie اسمها "token" كـ HttpOnly.
+   * يعني المتصفح/JS ما يقدر يقراها (على client useCookie يرجع null).
+   * لذلك نعتمد على كوكيز غير HttpOnly يضبطها الـ BFF: auth=1 و role و user.
+   */
   const token = useCookie<string | null>('token', cookieOptions) // مفيد للـ SSR فقط
   const auth = useCookie<string | null>('auth', cookieOptions)
   const role = useCookie<string | null>('role', cookieOptions)
   const user = useCookie<User | null>('user', cookieOptions)
 
   const isAuthed = computed(() => auth.value === '1' || !!role.value)
-  const userData = computed(() => user.value) // ✅ هذا اللي نستخدمه بكل مكان
+  const userData = computed(() => user.value)
+
+  /**
+   * ✅ مهم للـ Plugin auth-init.ts
+   * يمنع 500: auth.initFromCookies is not a function
+   * ويضمن تثبيت الحالة من الكوكيز بعد أي Refresh.
+   */
+  function initFromCookies() {
+    // ما نحتاج نسوي شي كبير لأن state أصلاً مبني على useCookie
+    // بس نخليها حتى أي مكان يناديها (plugin) ما يطيح.
+    // (اختياري) إذا role موجود و auth فاضي نخليه 1
+    if (!auth.value && role.value) auth.value = '1'
+  }
 
   function authHeaders(): Record<string, string> {
-    // على الـ client ما نقدر نقرأ token (HttpOnly) لذلك نرجع {}
-    // وعلى الـ server (SSR) ممكن يكون متوفر.
+    // على الـ client ما نقدر نقرأ token (HttpOnly)
+    // على الـ server (SSR) ممكن يكون متوفر.
     const t = process.server ? token.value : null
     if (t && typeof t === 'string' && t.trim().length > 0) {
       return { Authorization: `Bearer ${t}` }
@@ -45,27 +58,29 @@ export const useAuthStore = defineStore('auth', () => {
     return {}
   }
 
+  function applyAuthFromResponse(res: any) {
+    // الـ token يضبطه الـ BFF كـ HttpOnly (Set-Cookie) — لا نحاول نخزنه من هنا
+    auth.value = '1'
+    role.value = (res?.user?.role ?? role.value ?? null) as any
+    user.value = (res?.user ?? user.value ?? null) as any
+  }
+
   async function login(payload: LoginRequest) {
     const api = useApi()
     const res: any = await api.post('/Auth/login', payload)
-    // token cookie ينضبط من الـ BFF كـ HttpOnly — لا نحاول نخزنه من هنا
-    auth.value = '1'
-    role.value = res?.user?.role ?? role.value ?? null
-    user.value = res?.user ?? null
+    applyAuthFromResponse(res)
     return res
   }
 
   async function register(payload: RegisterRequest) {
     const api = useApi()
     const res: any = await api.post('/Auth/register', payload)
-    auth.value = '1'
-    role.value = res?.user?.role ?? role.value ?? null
-    user.value = res?.user ?? null
+    applyAuthFromResponse(res)
     return res
   }
 
   async function logout() {
-    // ✅ امسح كوكيز الـ BFF (خصوصاً token اللي هو HttpOnly)
+    // ✅ امسح كوكيز الـ BFF (خصوصاً token HttpOnly)
     try {
       await $fetch('/api/bff/Auth/logout', {
         method: 'POST',
@@ -75,11 +90,14 @@ export const useAuthStore = defineStore('auth', () => {
       // ignore
     }
 
-    // نظف محلياً
+    // ✅ نظف محلياً (غير HttpOnly)
     auth.value = null
     role.value = null
-    token.value = null
     user.value = null
+
+    // ملاحظة: token HttpOnly ما نكدر نمسحه من JS فعلياً
+    // لكن خليها null حتى SSR إذا قرأه من نفس السياق ما يبقى متذبذب
+    token.value = null
   }
 
   return {
@@ -89,6 +107,7 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     userData,
     isAuthed,
+    initFromCookies,
     authHeaders,
     login,
     register,
