@@ -1,5 +1,4 @@
 // ecommerce-web/server/api/bff/[...path].ts
-
 export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
@@ -54,14 +53,22 @@ export default defineEventHandler(async (event) => {
     delete headers.connection
     delete headers['content-length']
 
-    // ✅ إذا ماكو Authorization وخليته بالكوكي، سوّله Bearer (لـ SSR/أحياناً)
-    const tokenFromCookie = getCookie(event, 'token') || getCookie(event, 'access_token')
+    // ✅ 1) إذا الفرونت مرسل Authorization خليّه مثل ما هو
     const authHeader = headers.authorization || headers.Authorization
-    if (!authHeader && tokenFromCookie) headers.authorization = `Bearer ${tokenFromCookie}`
 
-    // Body (raw للحفاظ على multipart)
-    const body =
-      method === 'GET' || method === 'HEAD' ? undefined : await readRawBody(event, false)
+    // ✅ 2) fallback: خذ التوكن من Cookie إذا ماكو Authorization
+    const tokenFromCookie =
+      getCookie(event, 'token') ||
+      getCookie(event, 'access_token') ||
+      getCookie(event, 'access') // ✅ نسمح لـ access هم
+    if (!authHeader && tokenFromCookie) {
+      headers.authorization = `Bearer ${tokenFromCookie}`
+    }
+
+    // Body
+    const body = method === 'GET' || method === 'HEAD'
+      ? undefined
+      : await readRawBody(event, false)
 
     const res = await fetch(targetUrl.toString(), {
       method,
@@ -69,54 +76,65 @@ export default defineEventHandler(async (event) => {
       body: body || undefined,
     })
 
-    const lower = routePath.toLowerCase()
+    const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
+    const isLogout = routePath.toLowerCase() === 'auth/logout'
 
-    const isLogin = lower === 'auth/login' && method === 'POST'
-    const isRegister = lower === 'auth/register' && method === 'POST'
-    const isLogout = lower === 'auth/logout'
-
-    // ✅ Helpers for cookies options
-    const isProd = process.env.NODE_ENV === 'production'
-
-    const commonCookie = {
-      secure: isProd, // مهم: محلياً لازم false
-      sameSite: 'lax' as const,
-      path: '/',
-      maxAge: 60 * 60 * 24 * 30, // 30d
-    }
-
-    // ✅ login/register: خزّن token + role + auth + user
-    if (isLogin || isRegister) {
+    // ✅ login: خزن cookies
+    if (isLogin) {
       const json = await res.json().catch(() => null)
 
       const token = json?.token
-      const role = String(json?.user?.role || 'User')
-      const user = json?.user || null
+      const role = json?.user?.role || 'User'
 
       if (token) {
+        const secure = process.env.NODE_ENV === 'production'
+
         // token httpOnly (أمني)
         setCookie(event, 'token', token, {
-          ...commonCookie,
           httpOnly: true,
+          secure,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 30,
         })
 
-        // role غير httpOnly حتى الفرونت يقراه للميدلوير
-        setCookie(event, 'role', role, {
-          ...commonCookie,
+        // ✅ access غير httpOnly (حل iOS/Telegram 401)
+        setCookie(event, 'access', token, {
           httpOnly: false,
+          secure,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 30,
         })
 
-        // auth flag
+        // role غير httpOnly
+        setCookie(event, 'role', String(role), {
+          httpOnly: false,
+          secure,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 30,
+        })
+
+        // auth flag غير httpOnly
         setCookie(event, 'auth', '1', {
-          ...commonCookie,
           httpOnly: false,
+          secure,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 30,
         })
 
-        // user (مفيد للواجهة)
-        setCookie(event, 'user', JSON.stringify(user), {
-          ...commonCookie,
-          httpOnly: false,
-        })
+        // (اختياري) خزن user كـ JSON
+        if (json?.user) {
+          setCookie(event, 'user', JSON.stringify(json.user), {
+            httpOnly: false,
+            secure,
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 30,
+          })
+        }
       }
 
       setResponseStatus(event, res.status)
@@ -126,6 +144,7 @@ export default defineEventHandler(async (event) => {
     // ✅ logout: امسح الكوكيز
     if (isLogout) {
       deleteCookie(event, 'token', { path: '/' })
+      deleteCookie(event, 'access', { path: '/' })
       deleteCookie(event, 'role', { path: '/' })
       deleteCookie(event, 'auth', { path: '/' })
       deleteCookie(event, 'user', { path: '/' })
@@ -136,7 +155,6 @@ export default defineEventHandler(async (event) => {
 
     setResponseStatus(event, res.status)
 
-    // مرر نوع الاستجابة
     const ct = res.headers.get('content-type') || ''
     if (ct.includes('application/json')) return await res.json()
     return await res.text()
