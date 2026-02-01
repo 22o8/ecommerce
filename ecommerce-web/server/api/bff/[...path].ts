@@ -1,4 +1,5 @@
 // ecommerce-web/server/api/bff/[...path].ts
+
 export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
@@ -11,24 +12,24 @@ export default defineEventHandler(async (event) => {
 
     if (!apiOrigin) {
       setResponseStatus(event, 500)
-      return { error: "Missing API origin. Set NUXT_API_ORIGIN / NUXT_PUBLIC_API_ORIGIN." }
+      return { error: 'Missing API origin. Set NUXT_API_ORIGIN / NUXT_PUBLIC_API_ORIGIN.' }
     }
 
-    const method = (event.node.req.method || "GET").toUpperCase()
-    const routePath = getRouterParam(event, "path") || ""
+    const method = (event.node.req.method || 'GET').toUpperCase()
+    const routePath = getRouterParam(event, 'path') || ''
 
-    const targetBase = apiOrigin.replace(/\/$/, "")
-    const apiBase = targetBase.endsWith("/api") ? targetBase : `${targetBase}/api`
+    const targetBase = String(apiOrigin).replace(/\/$/, '')
+    const apiBase = targetBase.endsWith('/api') ? targetBase : `${targetBase}/api`
     const targetUrl = new URL(`${apiBase}/${routePath}`)
 
     // Query params
     const incomingQuery = getQuery(event) as Record<string, any>
 
     // ✅ query=JSON => params
-    if (typeof incomingQuery.query === "string" && incomingQuery.query.trim()) {
+    if (typeof incomingQuery.query === 'string' && incomingQuery.query.trim()) {
       try {
         const obj = JSON.parse(incomingQuery.query)
-        if (obj && typeof obj === "object") {
+        if (obj && typeof obj === 'object') {
           for (const [k, v] of Object.entries(obj)) {
             if (v === undefined || v === null) continue
             if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
@@ -36,7 +37,7 @@ export default defineEventHandler(async (event) => {
           }
         }
       } catch {
-        targetUrl.searchParams.set("query", incomingQuery.query)
+        targetUrl.searchParams.set('query', incomingQuery.query)
       }
       delete incomingQuery.query
     }
@@ -51,65 +52,70 @@ export default defineEventHandler(async (event) => {
     const headers = getRequestHeaders(event) as Record<string, any>
     delete headers.host
     delete headers.connection
-    delete headers["content-length"]
+    delete headers['content-length']
 
-    // ✅ خذ التوكن من Cookie إذا ماكو Authorization
-    const tokenFromCookie = getCookie(event, "token") || getCookie(event, "access_token")
+    // ✅ إذا ماكو Authorization وخليته بالكوكي، سوّله Bearer (لـ SSR/أحياناً)
+    const tokenFromCookie = getCookie(event, 'token') || getCookie(event, 'access_token')
     const authHeader = headers.authorization || headers.Authorization
+    if (!authHeader && tokenFromCookie) headers.authorization = `Bearer ${tokenFromCookie}`
 
-    if (!authHeader && tokenFromCookie) {
-      headers.authorization = `Bearer ${tokenFromCookie}`
-    }
-
-    // Body
-    // مهم: نقرأه كـ Buffer حتى ملفات multipart/صور ما تنكسر.
+    // Body (raw للحفاظ على multipart)
     const body =
-      method === "GET" || method === "HEAD" ? undefined : await readRawBody(event, false)
+      method === 'GET' || method === 'HEAD' ? undefined : await readRawBody(event, false)
 
     const res = await fetch(targetUrl.toString(), {
       method,
-      headers: {
-        ...headers,
-      },
+      headers: { ...headers },
       body: body || undefined,
     })
 
-    // ✅ إذا login: نخزن token بالكوكي + role + auth flag
-    const isLogin = routePath.toLowerCase() === "auth/login" && method === "POST"
-    const isLogout = routePath.toLowerCase() === "auth/logout"
+    const lower = routePath.toLowerCase()
 
-    if (isLogin) {
+    const isLogin = lower === 'auth/login' && method === 'POST'
+    const isRegister = lower === 'auth/register' && method === 'POST'
+    const isLogout = lower === 'auth/logout'
+
+    // ✅ Helpers for cookies options
+    const isProd = process.env.NODE_ENV === 'production'
+
+    const commonCookie = {
+      secure: isProd, // مهم: محلياً لازم false
+      sameSite: 'lax' as const,
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30, // 30d
+    }
+
+    // ✅ login/register: خزّن token + role + auth + user
+    if (isLogin || isRegister) {
       const json = await res.json().catch(() => null)
 
       const token = json?.token
-      const role = json?.user?.role || "User"
+      const role = String(json?.user?.role || 'User')
+      const user = json?.user || null
 
       if (token) {
         // token httpOnly (أمني)
-        setCookie(event, "token", token, {
+        setCookie(event, 'token', token, {
+          ...commonCookie,
           httpOnly: true,
-          secure: true,
-          sameSite: "lax",
-          path: "/",
-          maxAge: 60 * 60 * 24 * 30,
         })
 
-        // role غير httpOnly حتى الـ client middleware يكدر يقراه
-        setCookie(event, "role", String(role), {
+        // role غير httpOnly حتى الفرونت يقراه للميدلوير
+        setCookie(event, 'role', role, {
+          ...commonCookie,
           httpOnly: false,
-          secure: true,
-          sameSite: "lax",
-          path: "/",
-          maxAge: 60 * 60 * 24 * 30,
         })
 
-        // ✅ auth flag غير httpOnly (حل جذري للـ middleware)
-        setCookie(event, "auth", "1", {
+        // auth flag
+        setCookie(event, 'auth', '1', {
+          ...commonCookie,
           httpOnly: false,
-          secure: true,
-          sameSite: "lax",
-          path: "/",
-          maxAge: 60 * 60 * 24 * 30,
+        })
+
+        // user (مفيد للواجهة)
+        setCookie(event, 'user', JSON.stringify(user), {
+          ...commonCookie,
+          httpOnly: false,
         })
       }
 
@@ -119,9 +125,10 @@ export default defineEventHandler(async (event) => {
 
     // ✅ logout: امسح الكوكيز
     if (isLogout) {
-      deleteCookie(event, "token", { path: "/" })
-      deleteCookie(event, "role", { path: "/" })
-      deleteCookie(event, "auth", { path: "/" })
+      deleteCookie(event, 'token', { path: '/' })
+      deleteCookie(event, 'role', { path: '/' })
+      deleteCookie(event, 'auth', { path: '/' })
+      deleteCookie(event, 'user', { path: '/' })
 
       setResponseStatus(event, 200)
       return { ok: true }
@@ -129,12 +136,13 @@ export default defineEventHandler(async (event) => {
 
     setResponseStatus(event, res.status)
 
-    const ct = res.headers.get("content-type") || ""
-    if (ct.includes("application/json")) return await res.json()
+    // مرر نوع الاستجابة
+    const ct = res.headers.get('content-type') || ''
+    if (ct.includes('application/json')) return await res.json()
     return await res.text()
   } catch (err: any) {
-    console.error("BFF error:", err)
+    console.error('BFF error:', err)
     setResponseStatus(event, 500)
-    return { error: err?.message || "BFF failed" }
+    return { error: err?.message || 'BFF failed' }
   }
 })
