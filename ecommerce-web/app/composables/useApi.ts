@@ -1,5 +1,4 @@
 // ecommerce-web/app/composables/useApi.ts
-
 type HttpMethod =
   | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   | 'get' | 'post' | 'put' | 'patch' | 'delete'
@@ -17,24 +16,48 @@ export function useApi() {
 
   const config = useRuntimeConfig()
   // رابط الباك (للتطوير) مثل: https://localhost:7043
-  const apiOrigin = String((config.public as any)?.apiOrigin || (config as any)?.apiOrigin || '').replace(/\/$/, '')
+  const apiOrigin = String(
+    (config.public as any)?.apiOrigin ||
+    (config.public as any)?.apiBase ||
+    (config as any)?.apiOrigin ||
+    ''
+  ).replace(/\/$/, '')
+
+  // ✅ توكن عميل (غير HttpOnly) — مهم للموبايل/Telegram
+  // إذا HttpOnly token ما ينحفظ/ينرسل على iOS، هذا ينقذك.
+  const access = useCookie<string | null>('access', {
+    default: () => null,
+    path: '/',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 60 * 60 * 24 * 30,
+  })
 
   const request = async <T>(path: string, opts: FetchOpts = {}): Promise<T> => {
     const url = `${base}${path.startsWith('/') ? path : `/${path}`}`
 
-    // ✅ SSR: انقل cookie header من المستخدم إلى /api/bff حتى لا يصير 401 على Vercel
-    const ssrCookieHeaders = process.server ? (useRequestHeaders(['cookie']) as Record<string, string>) : {}
+    // ✅ SSR: انقل Cookie header من ريكوست المستخدم إلى ريكوست الـ BFF
+    const ssrCookieHeaders = process.server
+      ? (useRequestHeaders(['cookie']) as Record<string, string>)
+      : {}
 
     const mergedHeaders: Record<string, string> = {
       ...ssrCookieHeaders,
       ...(opts.headers || {}),
     }
 
+    // ✅ Client: إذا عندنا access token غير httpOnly، ارسله كـ Authorization
+    // (لا تكتب Authorization إذا موجود أصلًا)
+    if (process.client && !mergedHeaders.Authorization && !mergedHeaders.authorization) {
+      const t = (access.value || '').trim()
+      if (t) mergedHeaders.Authorization = `Bearer ${t}`
+    }
+
     return (await $fetch(url, {
       method: opts.method as any,
       query: opts.query,
       headers: mergedHeaders,
-      // ✅ ضروري جداً للموبايل حتى يرسل الكوكيز
+      // على المتصفح: خليه يرسل الكوكيز دائماً
       credentials: 'include',
       body: opts.body,
     })) as unknown as T
@@ -61,17 +84,25 @@ export function useApi() {
   ): Promise<T> => {
     const url = `${base}${path.startsWith('/') ? path : `/${path}`}`
 
-    const ssrCookieHeaders = process.server ? (useRequestHeaders(['cookie']) as Record<string, string>) : {}
+    const ssrCookieHeaders = process.server
+      ? (useRequestHeaders(['cookie']) as Record<string, string>)
+      : {}
+
     const mergedHeaders: Record<string, string> = {
       ...ssrCookieHeaders,
       ...(headers || {}),
     }
 
-    // لا تضيف content-type حتى المتصفح يضيف boundary
+    // ✅ Client: Authorization من access
+    if (process.client && !mergedHeaders.Authorization && !mergedHeaders.authorization) {
+      const t = (access.value || '').trim()
+      if (t) mergedHeaders.Authorization = `Bearer ${t}`
+    }
+
     return (await $fetch(url, {
       method: 'POST',
       query,
-      headers: mergedHeaders,
+      headers: mergedHeaders, // لا تضيف content-type
       credentials: 'include',
       body: formData,
     })) as unknown as T
@@ -95,28 +126,23 @@ export function useApi() {
       }
     }
 
-    // normalize
     const path = p.startsWith('/') ? p : `/${p}`
 
-    // لو /uploads/... مرره عبر proxy
     if (path.startsWith('/uploads/')) {
       const rest = path.replace(/^\/uploads\//, '')
       return `/api/uploads/${rest}`
     }
 
-    // لو داخل سترنغ أكو /uploads/
     const idx = path.indexOf('/uploads/')
     if (idx !== -1) {
       const rest = path.slice(idx).replace(/^\/uploads\//, '')
       return `/api/uploads/${rest}`
     }
 
-    // fallback: رجع path نسبي على نفس الدومين
     return path
   }
 
-  // ✅ Alias للتوافق
   const upload = postForm
 
-  return { request, get, post, put, del, postForm, upload, buildAssetUrl, apiOrigin }
+  return { request, get, post, put, del, postForm, upload, buildAssetUrl }
 }
