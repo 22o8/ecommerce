@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
+import { useApi } from '~/composables/useApi'
 
 type LoginRequest = { email: string; password: string }
 type RegisterRequest = { fullName: string; phone: string; email: string; password: string }
@@ -17,60 +18,69 @@ export const useAuthStore = defineStore('auth', () => {
     default: () => null,
     path: '/',
     sameSite: 'lax' as const,
-    // على Vercel دائما https، فخليها true بالإنتاج
     secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60 * 24 * 30, // 30 days
   }
 
-  // token يكون HttpOnly من الـ BFF (مفيد للـ SSR فقط)
-  const token = useCookie<string | null>('token', cookieOptions)
-
-  // كوكيز غير HttpOnly نستخدمها بالفرونت حتى ما نحتاج نقرا token
+  /**
+   * ✅ ملاحظة مهمة:
+   * الـ BFF يضبط cookie اسمها "token" كـ HttpOnly.
+   * يعني المتصفح/JS ما يقدر يقراها (على client useCookie يرجع null).
+   * لذلك نعتمد على كوكيز غير HttpOnly يضبطها الـ BFF: auth=1 و role و user.
+   */
+  const token = useCookie<string | null>('token', cookieOptions) // مفيد للـ SSR فقط
   const auth = useCookie<string | null>('auth', cookieOptions)
   const role = useCookie<string | null>('role', cookieOptions)
   const user = useCookie<User | null>('user', cookieOptions)
 
-  const isAuthed = computed(() => auth.value === '1' || !!(role.value && role.value.trim()))
+  const isAuthed = computed(() => auth.value === '1' || !!role.value)
   const userData = computed(() => user.value)
 
-  // لا تعتمد Authorization header بالـ client (لأن token HttpOnly)
+  /**
+   * ✅ مهم للـ Plugin auth-init.ts
+   * يمنع 500: auth.initFromCookies is not a function
+   * ويضمن تثبيت الحالة من الكوكيز بعد أي Refresh.
+   */
+  function initFromCookies() {
+    // ما نحتاج نسوي شي كبير لأن state أصلاً مبني على useCookie
+    // بس نخليها حتى أي مكان يناديها (plugin) ما يطيح.
+    // (اختياري) إذا role موجود و auth فاضي نخليه 1
+    if (!auth.value && role.value) auth.value = '1'
+  }
+
   function authHeaders(): Record<string, string> {
+    // على الـ client ما نقدر نقرأ token (HttpOnly)
+    // على الـ server (SSR) ممكن يكون متوفر.
     const t = process.server ? token.value : null
-    if (t && typeof t === 'string' && t.trim().length > 0) return { Authorization: `Bearer ${t}` }
+    if (t && typeof t === 'string' && t.trim().length > 0) {
+      return { Authorization: `Bearer ${t}` }
+    }
     return {}
   }
 
-  async function login(payload: LoginRequest) {
-    // ✅ مهم جداً: خلي اللوجن يروح للـ BFF حتى يكتب الكوكيز على نفس دومين Vercel
-    const res: any = await $fetch('/api/bff/Auth/login', {
-      method: 'POST',
-      body: payload,
-      credentials: 'include',
-    })
-
-    // ✅ ثبّت كوكيز الفرونت حتى الأدمن يشتغل حتى لو token ما ينقري
+  function applyAuthFromResponse(res: any) {
+    // الـ token يضبطه الـ BFF كـ HttpOnly (Set-Cookie) — لا نحاول نخزنه من هنا
     auth.value = '1'
-    role.value = (res?.user?.role || res?.role || role.value || '').toString()
-    user.value = res?.user ?? null
+    role.value = (res?.user?.role ?? role.value ?? null) as any
+    user.value = (res?.user ?? user.value ?? null) as any
+  }
 
+  async function login(payload: LoginRequest) {
+    const api = useApi()
+    const res: any = await api.post('/Auth/login', payload)
+    applyAuthFromResponse(res)
     return res
   }
 
   async function register(payload: RegisterRequest) {
-    const res: any = await $fetch('/api/bff/Auth/register', {
-      method: 'POST',
-      body: payload,
-      credentials: 'include',
-    })
-
-    auth.value = '1'
-    role.value = (res?.user?.role || res?.role || role.value || '').toString()
-    user.value = res?.user ?? null
-
+    const api = useApi()
+    const res: any = await api.post('/Auth/register', payload)
+    applyAuthFromResponse(res)
     return res
   }
 
   async function logout() {
+    // ✅ امسح كوكيز الـ BFF (خصوصاً token HttpOnly)
     try {
       await $fetch('/api/bff/Auth/logout', {
         method: 'POST',
@@ -80,10 +90,14 @@ export const useAuthStore = defineStore('auth', () => {
       // ignore
     }
 
+    // ✅ نظف محلياً (غير HttpOnly)
     auth.value = null
     role.value = null
-    token.value = null
     user.value = null
+
+    // ملاحظة: token HttpOnly ما نكدر نمسحه من JS فعلياً
+    // لكن خليها null حتى SSR إذا قرأه من نفس السياق ما يبقى متذبذب
+    token.value = null
   }
 
   return {
@@ -93,6 +107,7 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     userData,
     isAuthed,
+    initFromCookies,
     authHeaders,
     login,
     register,
