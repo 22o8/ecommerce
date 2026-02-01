@@ -37,11 +37,7 @@ export default defineNuxtRouteMiddleware((to) => {
   if (path && !path.startsWith("/admin")) return
 
   const token = useCookie<string | null>("token").value
-<<<<<<< HEAD
-  const roleCookie = (useCookie<string | null>("role").value || "").toLowerCase()
-=======
   const roleCookie = (useCookie<string | null>("role").value || "").trim().toLowerCase()
->>>>>>> f731330 (Fix)
   const auth = useCookie<string | null>("auth").value
 
   // إذا ماكو لا token (SSR) ولا role/auth (client) -> روح login
@@ -50,21 +46,7 @@ export default defineNuxtRouteMiddleware((to) => {
     return navigateTo(`/login?redirect=${redirect}`)
   }
 
-<<<<<<< HEAD
-  // SSR: تحقق من JWT
-  if (token) {
-    const payload = parseJwt(token)
-    const rawRole =
-      payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
-      payload?.role
-
-    const role = (Array.isArray(rawRole) ? rawRole[0] : rawRole || "").toString().toLowerCase()
-    if (role !== "admin") return navigateTo("/")
-    return
-  }
-
-=======
-  // إذا role cookie موجود وواضح، نعتمده حتى لو token httpOnly
+  // إذا role cookie موجود وواضح، نعتمده
   if (roleCookie) {
     if (roleCookie !== "admin") return navigateTo("/")
     return
@@ -82,7 +64,6 @@ export default defineNuxtRouteMiddleware((to) => {
     return
   }
 
->>>>>>> f731330 (Fix)
-  // Client: تحقق من role cookie (غير httpOnly)
+  // Client: تحقق أخير
   if (roleCookie !== "admin") return navigateTo("/")
 })
