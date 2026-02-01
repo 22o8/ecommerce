@@ -1,4 +1,5 @@
-// app/composables/useApi.ts
+// ecommerce-web/app/composables/useApi.ts
+
 type HttpMethod =
   | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   | 'get' | 'post' | 'put' | 'patch' | 'delete'
@@ -21,25 +22,22 @@ export function useApi() {
   const request = async <T>(path: string, opts: FetchOpts = {}): Promise<T> => {
     const url = `${base}${path.startsWith('/') ? path : `/${path}`}`
 
-    // ✅ حل جذري لمشكلة: "أنا مسجل دخول بس الداشبورد يرجعني للّوغن"
-    // السبب: أثناء SSR على Vercel، $fetch ما ينقل كوكيز المتصفح تلقائياً.
-    // وبالتالي طلبات /api/bff ما توصلها كوكيز (token/role) فيصير 401.
-    // هنا ننقل cookie header من ريكوست المستخدم إلى ريكوست الـ BFF.
+    // ✅ SSR: انقل cookie header من المستخدم إلى /api/bff حتى لا يصير 401 على Vercel
     const ssrCookieHeaders = process.server ? (useRequestHeaders(['cookie']) as Record<string, string>) : {}
+
     const mergedHeaders: Record<string, string> = {
       ...ssrCookieHeaders,
       ...(opts.headers || {}),
     }
 
-    // ✅ حل مشكلة TypedInternalResponse في TS
-    return await $fetch(url, {
+    return (await $fetch(url, {
       method: opts.method as any,
       query: opts.query,
       headers: mergedHeaders,
-      // على المتصفح: خليه يرسل الكوكيز دائماً
+      // ✅ ضروري جداً للموبايل حتى يرسل الكوكيز
       credentials: 'include',
       body: opts.body,
-    }) as unknown as T
+    })) as unknown as T
   }
 
   const get = <T>(path: string, query?: any, headers?: Record<string, string>) =>
@@ -62,24 +60,24 @@ export function useApi() {
     headers?: Record<string, string>
   ): Promise<T> => {
     const url = `${base}${path.startsWith('/') ? path : `/${path}`}`
+
     const ssrCookieHeaders = process.server ? (useRequestHeaders(['cookie']) as Record<string, string>) : {}
     const mergedHeaders: Record<string, string> = {
       ...ssrCookieHeaders,
       ...(headers || {}),
     }
-    return await $fetch(url, {
+
+    // لا تضيف content-type حتى المتصفح يضيف boundary
+    return (await $fetch(url, {
       method: 'POST',
       query,
-      headers: mergedHeaders, // لا تضيف content-type
+      headers: mergedHeaders,
       credentials: 'include',
       body: formData,
-    }) as unknown as T
+    })) as unknown as T
   }
 
   // ✅ بناء رابط آمن للصور/الملفات
-  // - لو الباك يرجّع /uploads/... نخليه يمر عبر proxy داخلي: /api/uploads/...
-  // - لو رجّع URL كامل https://localhost:7043/uploads/... نقتطع المسار ونفس الشي
-  // - أي مسار نسبي آخر نرجّعه absolute على نفس الدومين
   const buildAssetUrl = (p?: string | null) => {
     if (!p) return ''
 
@@ -87,7 +85,6 @@ export function useApi() {
     if (p.startsWith('http://') || p.startsWith('https://')) {
       try {
         const u = new URL(p)
-        // لو هو /uploads خلّيه يمر عبر proxy
         if (u.pathname.startsWith('/uploads/')) {
           const rest = u.pathname.replace(/^\/uploads\//, '')
           return `/api/uploads/${rest}`
@@ -107,20 +104,19 @@ export function useApi() {
       return `/api/uploads/${rest}`
     }
 
-    // لو الباك رجّع uploads/... داخل سترنغ
+    // لو داخل سترنغ أكو /uploads/
     const idx = path.indexOf('/uploads/')
     if (idx !== -1) {
       const rest = path.slice(idx).replace(/^\/uploads\//, '')
       return `/api/uploads/${rest}`
     }
 
-    // fallback: خليها absolute على apiOrigin إذا أحبّيت (مفيد للروابط اللي مو proxy)
-    // لكن افتراضيًا نخليها relative حتى تشتغل على نفس الدومين
+    // fallback: رجع path نسبي على نفس الدومين
     return path
   }
 
-  // ✅ Alias حتى بعض الكومبوننتات القديمة تشتغل
+  // ✅ Alias للتوافق
   const upload = postForm
 
-  return { request, get, post, put, del, postForm, upload, buildAssetUrl }
+  return { request, get, post, put, del, postForm, upload, buildAssetUrl, apiOrigin }
 }
