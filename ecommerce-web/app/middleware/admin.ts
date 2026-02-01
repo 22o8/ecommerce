@@ -4,7 +4,10 @@ function parseJwt(token: string) {
     const part = token.split(".")[1]
     if (!part) return null
 
-    const base64 = part.replace(/-/g, "+").replace(/_/g, "/")
+    // base64url -> base64 + padding
+    let base64 = part.replace(/-/g, "+").replace(/_/g, "/")
+    const pad = base64.length % 4
+    if (pad) base64 += "=".repeat(4 - pad)
 
     const bin =
       typeof atob === "function"
@@ -34,7 +37,11 @@ export default defineNuxtRouteMiddleware((to) => {
   if (path && !path.startsWith("/admin")) return
 
   const token = useCookie<string | null>("token").value
+<<<<<<< HEAD
   const roleCookie = (useCookie<string | null>("role").value || "").toLowerCase()
+=======
+  const roleCookie = (useCookie<string | null>("role").value || "").trim().toLowerCase()
+>>>>>>> f731330 (Fix)
   const auth = useCookie<string | null>("auth").value
 
   // إذا ماكو لا token (SSR) ولا role/auth (client) -> روح login
@@ -43,6 +50,7 @@ export default defineNuxtRouteMiddleware((to) => {
     return navigateTo(`/login?redirect=${redirect}`)
   }
 
+<<<<<<< HEAD
   // SSR: تحقق من JWT
   if (token) {
     const payload = parseJwt(token)
@@ -55,6 +63,26 @@ export default defineNuxtRouteMiddleware((to) => {
     return
   }
 
+=======
+  // إذا role cookie موجود وواضح، نعتمده حتى لو token httpOnly
+  if (roleCookie) {
+    if (roleCookie !== "admin") return navigateTo("/")
+    return
+  }
+
+  // SSR: تحقق من JWT (fallback)
+  if (token) {
+    const payload = parseJwt(token)
+    const rawRole =
+      payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
+      payload?.role
+
+    const role = (Array.isArray(rawRole) ? rawRole[0] : rawRole || "").toString().toLowerCase()
+    if (role !== "admin") return navigateTo("/")
+    return
+  }
+
+>>>>>>> f731330 (Fix)
   // Client: تحقق من role cookie (غير httpOnly)
   if (roleCookie !== "admin") return navigateTo("/")
 })

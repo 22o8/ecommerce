@@ -21,11 +21,23 @@ export function useApi() {
   const request = async <T>(path: string, opts: FetchOpts = {}): Promise<T> => {
     const url = `${base}${path.startsWith('/') ? path : `/${path}`}`
 
+    // ✅ حل جذري لمشكلة: "أنا مسجل دخول بس الداشبورد يرجعني للّوغن"
+    // السبب: أثناء SSR على Vercel، $fetch ما ينقل كوكيز المتصفح تلقائياً.
+    // وبالتالي طلبات /api/bff ما توصلها كوكيز (token/role) فيصير 401.
+    // هنا ننقل cookie header من ريكوست المستخدم إلى ريكوست الـ BFF.
+    const ssrCookieHeaders = process.server ? (useRequestHeaders(['cookie']) as Record<string, string>) : {}
+    const mergedHeaders: Record<string, string> = {
+      ...ssrCookieHeaders,
+      ...(opts.headers || {}),
+    }
+
     // ✅ حل مشكلة TypedInternalResponse في TS
     return await $fetch(url, {
       method: opts.method as any,
       query: opts.query,
-      headers: opts.headers,
+      headers: mergedHeaders,
+      // على المتصفح: خليه يرسل الكوكيز دائماً
+      credentials: 'include',
       body: opts.body,
     }) as unknown as T
   }
@@ -50,10 +62,16 @@ export function useApi() {
     headers?: Record<string, string>
   ): Promise<T> => {
     const url = `${base}${path.startsWith('/') ? path : `/${path}`}`
+    const ssrCookieHeaders = process.server ? (useRequestHeaders(['cookie']) as Record<string, string>) : {}
+    const mergedHeaders: Record<string, string> = {
+      ...ssrCookieHeaders,
+      ...(headers || {}),
+    }
     return await $fetch(url, {
       method: 'POST',
       query,
-      headers, // لا تضيف content-type
+      headers: mergedHeaders, // لا تضيف content-type
+      credentials: 'include',
       body: formData,
     }) as unknown as T
   }
