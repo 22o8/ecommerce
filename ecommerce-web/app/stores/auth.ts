@@ -1,5 +1,4 @@
 // ecommerce-web/app/stores/auth.ts
-
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
 
@@ -24,51 +23,49 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * ✅ ملاحظة مهمة:
-   * الـ BFF يضبط cookie اسمها "token" كـ HttpOnly.
-   * يعني المتصفح/JS ما يقدر يقراها على الـ client.
-   * لذلك نعتمد على كوكيز غير HttpOnly يضبطها الـ BFF: auth=1 و role و user.
+   * token = HttpOnly (من BFF) - قد لا ينرسل بثبات على iOS in-app
+   * access = غير HttpOnly - نستخدمه لإرسال Authorization من الفرونت للـ BFF
    */
-  const token = useCookie<string | null>('token', cookieOptions) // SSR فقط
+  const token = useCookie<string | null>('token', cookieOptions)  // SSR فقط
+  const access = useCookie<string | null>('access', cookieOptions) // Client fallback (حل iOS)
   const auth = useCookie<string | null>('auth', cookieOptions)
   const role = useCookie<string | null>('role', cookieOptions)
-
-  // user قد تكون JSON string لأن BFF يخزنها JSON.stringify
-  const userRaw = useCookie<any>('user', cookieOptions)
-
-  const user = computed<User | null>(() => {
-    const v = userRaw.value
-    if (!v) return null
-    if (typeof v === 'object') return v as User
-    if (typeof v === 'string') {
-      try {
-        return JSON.parse(v) as User
-      } catch {
-        return null
-      }
-    }
-    return null
-  })
+  const user = useCookie<any>('user', cookieOptions)
 
   const isAuthed = computed(() => auth.value === '1' || !!(role.value && String(role.value).trim()))
-  const userData = computed(() => user.value)
+  const userData = computed<User | null>(() => {
+    const v = user.value
+    if (!v) return null
+    if (typeof v === 'string') {
+      try { return JSON.parse(v) } catch { return null }
+    }
+    return v as User
+  })
 
   /**
-   * ✅ مهم للـ Plugin auth-init.ts
-   * يمنع: auth.initFromCookies is not a function
+   * ✅ لا تحذفها أبدًا
+   * تمنع 500: auth.initFromCookies is not a function
    */
   function initFromCookies() {
     if (!auth.value && role.value) auth.value = '1'
-    if (role.value && typeof role.value === 'string') role.value = role.value.trim()
+    if (typeof role.value === 'string') role.value = role.value.trim() as any
+    if (typeof access.value === 'string') access.value = access.value.trim()
   }
 
   function applyAuthFromResponse(res: any) {
+    // الـ BFF راح يضبط cookies، بس إحنا هم نخزن fallback
     auth.value = '1'
-    const r = (res?.user?.role ?? res?.role ?? role.value ?? null)
+
+    const r = res?.user?.role ?? res?.role ?? role.value ?? null
     role.value = typeof r === 'string' ? r.trim() : (r as any)
 
-    // نخزن user كسترنغ JSON حتى تبقى ثابتة
-    if (res?.user) userRaw.value = JSON.stringify(res.user)
+    // user ممكن يجي object
+    const u = res?.user ?? null
+    if (u) user.value = u
+
+    // ✅ access fallback من token اللي يرجع بالـ JSON
+    const t = (res?.token ?? res?.accessToken ?? null)
+    if (t && typeof t === 'string') access.value = t.trim()
   }
 
   async function login(payload: LoginRequest) {
@@ -103,16 +100,20 @@ export const useAuthStore = defineStore('auth', () => {
 
     auth.value = null
     role.value = null
-    userRaw.value = null
+    user.value = null
+
+    // token httpOnly ما ينمسح من JS — الـ BFF يمسحه
     token.value = null
+    access.value = null
   }
 
   return {
     // state
     token,
+    access,
     auth,
     role,
-    user: userRaw,
+    user,
 
     // getters
     userData,
