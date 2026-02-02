@@ -30,7 +30,7 @@
     "empty": "لا توجد عناصر للعرض حالياً",
     "section": {
       "new": "جديد",
-      "featured": "مميز"
+      "featured": "منتجات"
     }
   },
   "products": {
@@ -229,6 +229,8 @@
   "productsPage": {
     "title": "المنتجات",
     "subtitle": "اختر ما يناسبك وقم بالشراء مباشرة",
+    "brandsTitle": "العلامات",
+    "allBrands": "الكل",
     "viewDetails": "عرض التفاصيل",
     "addToCart": "إضافة للسلة",
     "searchPlaceholder": "ابحث عن منتج...",

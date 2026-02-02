@@ -3,7 +3,40 @@
     <div class="flex flex-wrap items-end justify-between gap-3">
       <div>
         <h1 class="text-2xl md:text-3xl font-black rtl-text">{{ t('productsPage.title') }}</h1>
-        <p class="text-muted rtl-text">{{ t('productsPage.subtitle') }}</p>
+
+        <!-- Brand options (بديل عن النص التوضيحي) -->
+        <div class="mt-3">
+          <div class="text-xs font-bold text-muted rtl-text mb-2">{{ t('productsPage.brandsTitle') }}</div>
+
+          <!-- Chips: سكرول على الهاتف / التفاف على الشاشات الأكبر -->
+          <div class="-mx-1">
+            <div
+              class="px-1 flex gap-2 overflow-x-auto no-scrollbar pb-1 md:flex-wrap md:overflow-visible"
+              style="-webkit-overflow-scrolling: touch"
+            >
+              <button
+                type="button"
+                class="shrink-0 rounded-2xl border border-app bg-surface-2 px-3 py-2 text-xs font-bold whitespace-nowrap"
+                :class="selectedBrand ? 'opacity-70 hover:opacity-100' : 'ring-2 ring-[rgb(var(--primary))]'"
+                @click="clearBrand"
+              >
+                {{ t('productsPage.allBrands') }}
+              </button>
+
+              <button
+                v-for="b in brands"
+                :key="b.key"
+                type="button"
+                class="shrink-0 rounded-2xl border border-app bg-surface px-3 py-2 text-xs font-bold whitespace-nowrap hover:bg-surface-2"
+                :class="selectedBrand === b.key ? 'ring-2 ring-[rgb(var(--primary))]' : ''"
+                @click="selectBrand(b)"
+                :title="b.label"
+              >
+                {{ b.label }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="flex flex-wrap gap-2">
@@ -93,6 +126,42 @@ const page = computed(() => Number(route.query.page || 1))
 const q = ref(String(route.query.q || ''))
 const sort = ref(String(route.query.sort || 'new'))
 
+// ✅ خيارات العلامات التجارية (مرتبة وسلسة)
+// ملاحظة: الـ API الحالي يدعم فلترة عبر q فقط، فالنقر على أي خيار يضبط q ويعمل apply().
+const brands = [
+  'Anua',
+  'APRILSKIN',
+  'VT (VT Global)',
+  'Skinfood',
+  'Medicube',
+  'Numbuzin',
+  'K-SECRET',
+  'Equal Berry',
+  'SKIN1004',
+  'Beauty of Joseon',
+  'JMsolution',
+  'Tenzero',
+  'Dr.Ceuracle',
+  'Rejuran',
+  'Celimax',
+  'Medipeel',
+  'Biodance',
+  'Dr.CPU',
+  'Anua KR',
+]
+
+const selectedBrand = computed(() => String(route.query.brand || ''))
+
+function pickBrand(label: string) {
+  q.value = label
+  apply({ brand: label })
+}
+
+function clearBrand() {
+  q.value = ''
+  apply({ brand: undefined })
+}
+
 watch(
   () => route.query.q,
   (v) => {
@@ -158,15 +227,39 @@ const { pending: loading } = await useAsyncData(
 )
 
 function apply(){
-  router.push({ query: { ...(q.value ? { q: q.value } : {}), sort: sort.value, page: 1 } })
+  const brand = selectedBrand.value
+  router.push({
+    query: {
+      ...(q.value ? { q: q.value } : {}),
+      ...(brand ? { brand } : {}),
+      sort: sort.value,
+      page: 1,
+    },
+  })
 }
 
 function prev(){
   if (page.value <= 1) return
-  router.push({ query: { ...(q.value ? { q: q.value } : {}), sort: sort.value, page: page.value - 1 } })
+  const brand = selectedBrand.value
+  router.push({
+    query: {
+      ...(q.value ? { q: q.value } : {}),
+      ...(brand ? { brand } : {}),
+      sort: sort.value,
+      page: page.value - 1,
+    },
+  })
 }
 
 function next(){
-  router.push({ query: { ...(q.value ? { q: q.value } : {}), sort: sort.value, page: page.value + 1 } })
+  const brand = selectedBrand.value
+  router.push({
+    query: {
+      ...(q.value ? { q: q.value } : {}),
+      ...(brand ? { brand } : {}),
+      sort: sort.value,
+      page: page.value + 1,
+    },
+  })
 }
 </script>

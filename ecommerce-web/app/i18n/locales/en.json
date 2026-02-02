@@ -223,6 +223,8 @@
   "productsPage": {
     "title": "Products",
     "subtitle": "Pick what you need and buy instantly",
+    "brandsTitle": "Brands",
+    "allBrands": "All",
     "viewDetails": "View details",
     "addToCart": "Add to cart",
     "searchPlaceholder": "Search products...",
