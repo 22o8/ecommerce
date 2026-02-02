@@ -191,28 +191,30 @@ const sortMenu = ref<HTMLDetailsElement | null>(null)
 const brandMenu = ref<HTMLDetailsElement | null>(null)
 
 // ✅ خيارات العلامات التجارية (مرتبة وسلسة)
-// ملاحظة: الـ API الحالي يدعم فلترة عبر q فقط، فالنقر على أي خيار يضبط q ويعمل apply().
+// مهم: نخليها Objects لأن الـ template يستعمل b.key و b.label
 const brands = [
-  'Anua',
-  'APRILSKIN',
-  'VT (VT Global)',
-  'Skinfood',
-  'Medicube',
-  'Numbuzin',
-  'K-SECRET',
-  'Equal Berry',
-  'SKIN1004',
-  'Beauty of Joseon',
-  'JMsolution',
-  'Tenzero',
-  'Dr.Ceuracle',
-  'Rejuran',
-  'Celimax',
-  'Medipeel',
-  'Biodance',
-  'Dr.CPU',
-  'Anua KR',
+  { key: 'Anua', label: 'Anua' },
+  { key: 'APRILSKIN', label: 'APRILSKIN' },
+  { key: 'VT (VT Global)', label: 'VT (VT Global)' },
+  { key: 'Skinfood', label: 'Skinfood' },
+  { key: 'Medicube', label: 'Medicube' },
+  { key: 'Numbuzin', label: 'Numbuzin' },
+  { key: 'K-SECRET', label: 'K-SECRET' },
+  { key: 'Equal Berry', label: 'Equal Berry' },
+  { key: 'SKIN1004', label: 'SKIN1004' },
+  { key: 'Beauty of Joseon', label: 'Beauty of Joseon' },
+  { key: 'JMsolution', label: 'JMsolution' },
+  { key: 'Tenzero', label: 'Tenzero' },
+  { key: 'Dr.Ceuracle', label: 'Dr.Ceuracle' },
+  { key: 'Rejuran', label: 'Rejuran' },
+  { key: 'Celimax', label: 'Celimax' },
+  { key: 'Medipeel', label: 'Medipeel' },
+  { key: 'Biodance', label: 'Biodance' },
+  { key: 'Dr.CPU', label: 'Dr.CPU' },
+  { key: 'Anua KR', label: 'Anua KR' },
 ]
+
+const brandKeys = computed(() => brands.map((b) => b.key))
 
 const sortOptions = computed(() => [
   { value: 'new', label: t('productsPage.sort.new') },
@@ -224,7 +226,7 @@ const sortLabel = computed(() => sortOptions.value.find((o) => o.value === sort.
 
 const selectedBrand = computed(() => {
   const b = String((route.query.brand as any) || 'All')
-  return brands.includes(b) ? b : 'All'
+  return brandKeys.value.includes(b) ? b : 'All'
 })
 
 const selectedBrandLabel = computed(() =>
