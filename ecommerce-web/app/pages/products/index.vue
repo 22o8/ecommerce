@@ -5,8 +5,8 @@
       <div>
         <h1 class="text-2xl md:text-3xl font-black rtl-text">{{ t('productsPage.title') }}</h1>
 
-        <!-- Brand options (بديل عن النص التوضيحي) -->
-        <div class="mt-3">
+        <!-- Brand chips (Desktop فقط) -->
+        <div class="mt-3 hidden md:block">
           <div class="text-xs font-bold text-muted rtl-text mb-2">{{ t('productsPage.brandsTitle') }}</div>
 
           <!-- Chips: سكرول على الهاتف / التفاف على الشاشات الأكبر -->
@@ -51,11 +51,70 @@
           />
         </div>
 
-        <select v-model="sort" class="rounded-2xl border border-app bg-surface px-4 py-2 text-sm w-full sm:w-auto">
+        <!-- Sort (Desktop/Tablet) -->
+        <select v-model="sort" class="hidden sm:block rounded-2xl border border-app bg-surface px-4 py-2 text-sm w-full sm:w-auto">
           <option value="new">{{ t('productsPage.sort.new') }}</option>
           <option value="priceAsc">{{ t('productsPage.sort.priceAsc') }}</option>
           <option value="priceDesc">{{ t('productsPage.sort.priceDesc') }}</option>
         </select>
+
+        <!-- Mobile menus: Sort + Brands (مرتب وسلس) -->
+        <div class="sm:hidden grid grid-cols-1 gap-2">
+          <!-- Sort menu button -->
+          <details ref="sortMenu" class="relative">
+            <summary class="list-none cursor-pointer">
+              <div class="rounded-2xl border border-app bg-surface px-4 py-2 text-sm w-full flex items-center justify-between">
+                <span class="rtl-text">{{ sortLabel }}</span>
+                <Icon name="mdi:chevron-down" class="text-lg opacity-70" />
+              </div>
+            </summary>
+            <div class="absolute z-40 mt-2 w-full rounded-2xl border border-app bg-surface shadow-soft overflow-hidden">
+              <button
+                v-for="o in sortOptions"
+                :key="o.value"
+                type="button"
+                class="w-full px-4 py-3 text-sm rtl-text flex items-center justify-between hover:bg-surface-2"
+                @click="setSort(o.value)"
+              >
+                <span>{{ o.label }}</span>
+                <Icon v-if="sort === o.value" name="mdi:check" class="text-lg" />
+              </button>
+            </div>
+          </details>
+
+          <!-- Brands menu button -->
+          <details ref="brandMenu" class="relative">
+            <summary class="list-none cursor-pointer">
+              <div class="rounded-2xl border border-app bg-surface px-4 py-2 text-sm w-full flex items-center justify-between">
+                <span class="rtl-text">{{ selectedBrandLabel }}</span>
+                <Icon name="mdi:chevron-down" class="text-lg opacity-70" />
+              </div>
+            </summary>
+            <div class="absolute z-40 mt-2 w-full rounded-2xl border border-app bg-surface shadow-soft overflow-hidden">
+              <div class="px-4 py-3 text-xs font-bold text-muted rtl-text border-b border-app">{{ t('productsPage.brandsTitle') }}</div>
+              <div class="max-h-[55vh] overflow-auto p-2 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  class="rounded-2xl border border-app bg-surface-2 px-3 py-2 text-xs font-bold rtl-text"
+                  :class="!selectedBrand ? 'ring-2 ring-[rgb(var(--primary))]' : 'opacity-80'"
+                  @click="clearBrand()"
+                >
+                  {{ t('productsPage.allBrands') }}
+                </button>
+                <button
+                  v-for="b in brands"
+                  :key="b.key"
+                  type="button"
+                  class="rounded-2xl border border-app bg-surface px-3 py-2 text-xs font-bold rtl-text hover:bg-surface-2"
+                  :class="selectedBrand === b.key ? 'ring-2 ring-[rgb(var(--primary))]' : ''"
+                  @click="selectBrand(b)"
+                >
+                  {{ b.label }}
+                </button>
+              </div>
+            </div>
+          </details>
+        </div>
 
         <UiButton variant="secondary" class="w-full sm:w-auto" @click="apply">
           <Icon name="mdi:filter-outline" class="text-lg" />
@@ -127,6 +186,10 @@ const page = computed(() => Number(route.query.page || 1))
 const q = ref(String(route.query.q || ''))
 const sort = ref(String(route.query.sort || 'new'))
 
+// تفاصيل قائمة الفرز/البراندات (مهم للموبايل حتى نسدّ أي مشاكل بالسلوك)
+const sortMenu = ref<HTMLDetailsElement | null>(null)
+const brandMenu = ref<HTMLDetailsElement | null>(null)
+
 // ✅ خيارات العلامات التجارية (مرتبة وسلسة)
 // ملاحظة: الـ API الحالي يدعم فلترة عبر q فقط، فالنقر على أي خيار يضبط q ويعمل apply().
 const brands = [
@@ -151,7 +214,29 @@ const brands = [
   'Anua KR',
 ]
 
-const selectedBrand = computed(() => String(route.query.brand || ''))
+const sortOptions = computed(() => [
+  { value: 'new', label: t('productsPage.sort.new') },
+  { value: 'priceAsc', label: t('productsPage.sort.priceAsc') },
+  { value: 'priceDesc', label: t('productsPage.sort.priceDesc') },
+])
+
+const sortLabel = computed(() => sortOptions.value.find((o) => o.value === sort.value)?.label || t('productsPage.sort.new'))
+
+const selectedBrand = computed(() => {
+  const b = String((route.query.brand as any) || 'All')
+  return brands.includes(b) ? b : 'All'
+})
+
+const selectedBrandLabel = computed(() =>
+  selectedBrand.value === 'All' ? t('productsPage.brands.all') : String(selectedBrand.value)
+)
+
+function setSort(v: string) {
+  const value = String(v || 'new')
+  sort.value = value
+  apply({ sort: value, page: 1 })
+  sortMenu.value?.removeAttribute('open')
+}
 
 function pickBrand(label: string) {
   const next = String(label || '').trim()
@@ -166,6 +251,15 @@ function pickBrand(label: string) {
 function clearBrand() {
   q.value = ''
   apply({ brand: undefined, q: undefined, page: 1 })
+  brandMenu.value?.removeAttribute('open')
+}
+
+function selectBrand(b: string) {
+  const v = String(b || '').trim()
+  if (!v || v === 'All') return clearBrand()
+  q.value = v
+  apply({ brand: v, q: v, page: 1 })
+  brandMenu.value?.removeAttribute('open')
 }
 
 watch(
