@@ -1,69 +1,35 @@
 // ecommerce-web/app/middleware/admin.ts
-function parseJwt(token: string) {
-  try {
-    const part = token.split(".")[1]
-    if (!part) return null
-
-    // base64url -> base64 + padding
-    let base64 = part.replace(/-/g, "+").replace(/_/g, "/")
-    const pad = base64.length % 4
-    if (pad) base64 += "=".repeat(4 - pad)
-
-    const bin =
-      typeof atob === "function"
-        ? atob(base64)
-        : typeof Buffer !== "undefined"
-          ? Buffer.from(base64, "base64").toString("binary")
-          : ""
-
-    if (!bin) return null
-
-    const json = decodeURIComponent(
-      bin
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    )
-
-    return JSON.parse(json)
-  } catch {
-    return null
-  }
-}
-
 export default defineNuxtRouteMiddleware((to) => {
-  const route = (to as any) ?? (typeof useRoute === "function" ? useRoute() : null)
-  const path = String(route?.path ?? "").toLowerCase()
-  if (path && !path.startsWith("/admin")) return
+  const path = String(to?.path || '').toLowerCase()
+  if (!path.startsWith('/admin')) return
 
-  const token = useCookie<string | null>("token").value
-  const roleCookie = (useCookie<string | null>("role").value || "").trim().toLowerCase()
-  const auth = useCookie<string | null>("auth").value
+  const authStore = useAuthStore()
+  authStore.initFromCookies()
 
-  // إذا ماكو لا token (SSR) ولا role/auth (client) -> روح login
-  if (!token && auth !== "1" && !roleCookie) {
-    const redirect = encodeURIComponent(route?.fullPath || "/admin")
+  // ✅ نعتمد على role/auth/user (غير HttpOnly)
+  const roleCookie = String(useCookie<string | null>('role').value || '').trim().toLowerCase()
+  const authFlag = String(useCookie<string | null>('auth').value || '').trim()
+
+  const userCookie = useCookie<any>('user').value
+  let userRole = ''
+  if (userCookie) {
+    if (typeof userCookie === 'string') {
+      try { userRole = (JSON.parse(userCookie)?.role || '').toString().trim().toLowerCase() } catch {}
+    } else {
+      userRole = (userCookie?.role || '').toString().trim().toLowerCase()
+    }
+  }
+
+  const finalRole = (authStore.userData?.role || userRole || roleCookie || '').toString().trim().toLowerCase()
+
+  // إذا ما مسجل دخول أصلاً
+  if (authFlag !== '1' && !finalRole) {
+    const redirect = encodeURIComponent(to.fullPath || '/admin')
     return navigateTo(`/login?redirect=${redirect}`)
   }
 
-  // إذا role cookie موجود وواضح، نعتمده
-  if (roleCookie) {
-    if (roleCookie !== "admin") return navigateTo("/")
-    return
+  // إذا مو أدمن
+  if (finalRole !== 'admin') {
+    return navigateTo('/')
   }
-
-  // SSR: تحقق من JWT (fallback)
-  if (token) {
-    const payload = parseJwt(token)
-    const rawRole =
-      payload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
-      payload?.role
-
-    const role = (Array.isArray(rawRole) ? rawRole[0] : rawRole || "").toString().toLowerCase()
-    if (role !== "admin") return navigateTo("/")
-    return
-  }
-
-  // Client: تحقق أخير
-  if (roleCookie !== "admin") return navigateTo("/")
 })
