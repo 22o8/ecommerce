@@ -1,6 +1,7 @@
 <template>
   <div class="grid gap-6">
-    <div class="flex flex-wrap items-end justify-between gap-3">
+    <!-- العنوان + الأدوات: متوازن على الهاتف والحاسوب -->
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
       <div>
         <h1 class="text-2xl md:text-3xl font-black rtl-text">{{ t('productsPage.title') }}</h1>
 
@@ -39,24 +40,24 @@
         </div>
       </div>
 
-      <div class="flex flex-wrap gap-2">
-        <div class="flex items-center gap-2 rounded-2xl border border-app bg-surface px-3 py-2">
+      <div class="w-full md:w-auto flex flex-col sm:flex-row sm:flex-wrap gap-2">
+        <div class="flex items-center gap-2 rounded-2xl border border-app bg-surface px-3 py-2 w-full sm:w-auto">
           <Icon name="mdi:magnify" class="text-lg opacity-70" />
           <input
             v-model="q"
-            class="bg-transparent outline-none text-sm rtl-text w-56"
+            class="bg-transparent outline-none text-sm rtl-text w-full sm:w-56"
             :placeholder="t('productsPage.searchPlaceholder')"
             @keydown.enter="apply()"
           />
         </div>
 
-        <select v-model="sort" class="rounded-2xl border border-app bg-surface px-4 py-2 text-sm">
+        <select v-model="sort" class="rounded-2xl border border-app bg-surface px-4 py-2 text-sm w-full sm:w-auto">
           <option value="new">{{ t('productsPage.sort.new') }}</option>
           <option value="priceAsc">{{ t('productsPage.sort.priceAsc') }}</option>
           <option value="priceDesc">{{ t('productsPage.sort.priceDesc') }}</option>
         </select>
 
-        <UiButton variant="secondary" @click="apply">
+        <UiButton variant="secondary" class="w-full sm:w-auto" @click="apply">
           <Icon name="mdi:filter-outline" class="text-lg" />
           <span class="rtl-text">{{ t('productsPage.search') }}</span>
         </UiButton>
@@ -122,58 +123,49 @@ const api = useApi()
 
 const pageSize = 12
 const page = computed(() => Number(route.query.page || 1))
-
-// v-model needs writable refs; computed() بدون setter يسبب مشاكل بالـ SSR/CSR.
+// v-model needs writable refs; computed() without setter throws and breaks rendering.
 const q = ref(String(route.query.q || ''))
 const sort = ref(String(route.query.sort || 'new'))
 
 // ✅ خيارات العلامات التجارية (مرتبة وسلسة)
-// ملاحظة: الـ API الحالي يدعم فلترة عبر q فقط، لذلك نضبط q إلى اسم البراند.
+// ملاحظة: الـ API الحالي يدعم فلترة عبر q فقط، فالنقر على أي خيار يضبط q ويعمل apply().
 const brands = [
-  { key: 'Anua', label: 'Anua' },
-  { key: 'APRILSKIN', label: 'APRILSKIN' },
-  { key: 'VT (VT Global)', label: 'VT (VT Global)' },
-  { key: 'Skinfood', label: 'Skinfood' },
-  { key: 'Medicube', label: 'Medicube' },
-  { key: 'Numbuzin', label: 'Numbuzin' },
-  { key: 'K-SECRET', label: 'K-SECRET' },
-  { key: 'Equal Berry', label: 'Equal Berry' },
-  { key: 'SKIN1004', label: 'SKIN1004' },
-  { key: 'Beauty of Joseon', label: 'Beauty of Joseon' },
-  { key: 'JMsolution', label: 'JMsolution' },
-  { key: 'Tenzero', label: 'Tenzero' },
-  { key: 'Dr.Ceuracle', label: 'Dr.Ceuracle' },
-  { key: 'Rejuran', label: 'Rejuran' },
-  { key: 'Celimax', label: 'Celimax' },
-  { key: 'Medipeel', label: 'Medipeel' },
-  { key: 'Biodance', label: 'Biodance' },
-  { key: 'Dr.CPU', label: 'Dr.CPU' },
-  { key: 'Anua KR', label: 'Anua KR' },
-] as const
+  'Anua',
+  'APRILSKIN',
+  'VT (VT Global)',
+  'Skinfood',
+  'Medicube',
+  'Numbuzin',
+  'K-SECRET',
+  'Equal Berry',
+  'SKIN1004',
+  'Beauty of Joseon',
+  'JMsolution',
+  'Tenzero',
+  'Dr.Ceuracle',
+  'Rejuran',
+  'Celimax',
+  'Medipeel',
+  'Biodance',
+  'Dr.CPU',
+  'Anua KR',
+]
 
 const selectedBrand = computed(() => String(route.query.brand || ''))
 
-function selectBrand(b: { key: string; label: string }) {
-  // خزن البراند بالـ query حتى تبقى الهايلايت واضحة، وفلتر عبر q
-  q.value = b.label
-  router.push({
-    query: {
-      q: b.label,
-      brand: b.key,
-      sort: sort.value,
-      page: 1,
-    },
-  })
+function pickBrand(label: string) {
+  const next = String(label || '').trim()
+  const current = String(route.query.brand || '').trim()
+  // نفس البراند؟ اعتبره إلغاء تحديد
+  const chosen = current === next ? '' : next
+  // ✅ نخلي q = اسم البراند حتى يفلتر المنتجات مباشرة
+  q.value = chosen
+  apply({ brand: chosen || undefined, q: chosen || undefined, page: 1 })
 }
 
 function clearBrand() {
   q.value = ''
-  router.push({
-    query: {
-      sort: sort.value,
-      page: 1,
-    },
-  })
+  apply({ brand: undefined, q: undefined, page: 1 })
 }
 
 watch(
@@ -220,7 +212,8 @@ watch(
     if (!prod) {
       try {
         prod = await api.get(`/Products/${id}`)
-      } catch {
+      } catch (e) {
+        // إذا المنتج غير موجود لا نكسر الصفحة
         return
       }
     }
@@ -229,7 +222,7 @@ watch(
   { immediate: true }
 )
 
-// SSR + CSR: حمّل المنتجات من أول تحميل وبأي تغيير بالـ query
+// SSR + CSR: حمّل المنتجات بشكل مضمون من أول تحميل
 const { pending: loading } = await useAsyncData(
   () => `products:${route.fullPath}`,
   async () => {
@@ -239,19 +232,22 @@ const { pending: loading } = await useAsyncData(
   { watch: [() => route.fullPath] }
 )
 
-function apply() {
-  const brand = selectedBrand.value
+function apply(extra?: { q?: string; brand?: string | undefined; page?: number }){
+  const brand = typeof extra?.brand !== 'undefined' ? extra.brand : selectedBrand.value
+  const qq = typeof extra?.q !== 'undefined' ? extra.q : q.value
+  const p = typeof extra?.page === 'number' ? extra.page : 1
+
   router.push({
     query: {
-      ...(q.value ? { q: q.value } : {}),
+      ...(qq ? { q: qq } : {}),
       ...(brand ? { brand } : {}),
       sort: sort.value,
-      page: 1,
+      page: p,
     },
   })
 }
 
-function prev() {
+function prev(){
   if (page.value <= 1) return
   const brand = selectedBrand.value
   router.push({
@@ -264,7 +260,7 @@ function prev() {
   })
 }
 
-function next() {
+function next(){
   const brand = selectedBrand.value
   router.push({
     query: {
