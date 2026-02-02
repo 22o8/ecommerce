@@ -122,44 +122,58 @@ const api = useApi()
 
 const pageSize = 12
 const page = computed(() => Number(route.query.page || 1))
-// v-model needs writable refs; computed() without setter throws and breaks rendering.
+
+// v-model needs writable refs; computed() بدون setter يسبب مشاكل بالـ SSR/CSR.
 const q = ref(String(route.query.q || ''))
 const sort = ref(String(route.query.sort || 'new'))
 
 // ✅ خيارات العلامات التجارية (مرتبة وسلسة)
-// ملاحظة: الـ API الحالي يدعم فلترة عبر q فقط، فالنقر على أي خيار يضبط q ويعمل apply().
+// ملاحظة: الـ API الحالي يدعم فلترة عبر q فقط، لذلك نضبط q إلى اسم البراند.
 const brands = [
-  'Anua',
-  'APRILSKIN',
-  'VT (VT Global)',
-  'Skinfood',
-  'Medicube',
-  'Numbuzin',
-  'K-SECRET',
-  'Equal Berry',
-  'SKIN1004',
-  'Beauty of Joseon',
-  'JMsolution',
-  'Tenzero',
-  'Dr.Ceuracle',
-  'Rejuran',
-  'Celimax',
-  'Medipeel',
-  'Biodance',
-  'Dr.CPU',
-  'Anua KR',
-]
+  { key: 'Anua', label: 'Anua' },
+  { key: 'APRILSKIN', label: 'APRILSKIN' },
+  { key: 'VT (VT Global)', label: 'VT (VT Global)' },
+  { key: 'Skinfood', label: 'Skinfood' },
+  { key: 'Medicube', label: 'Medicube' },
+  { key: 'Numbuzin', label: 'Numbuzin' },
+  { key: 'K-SECRET', label: 'K-SECRET' },
+  { key: 'Equal Berry', label: 'Equal Berry' },
+  { key: 'SKIN1004', label: 'SKIN1004' },
+  { key: 'Beauty of Joseon', label: 'Beauty of Joseon' },
+  { key: 'JMsolution', label: 'JMsolution' },
+  { key: 'Tenzero', label: 'Tenzero' },
+  { key: 'Dr.Ceuracle', label: 'Dr.Ceuracle' },
+  { key: 'Rejuran', label: 'Rejuran' },
+  { key: 'Celimax', label: 'Celimax' },
+  { key: 'Medipeel', label: 'Medipeel' },
+  { key: 'Biodance', label: 'Biodance' },
+  { key: 'Dr.CPU', label: 'Dr.CPU' },
+  { key: 'Anua KR', label: 'Anua KR' },
+] as const
 
 const selectedBrand = computed(() => String(route.query.brand || ''))
 
-function pickBrand(label: string) {
-  q.value = label
-  apply({ brand: label })
+function selectBrand(b: { key: string; label: string }) {
+  // خزن البراند بالـ query حتى تبقى الهايلايت واضحة، وفلتر عبر q
+  q.value = b.label
+  router.push({
+    query: {
+      q: b.label,
+      brand: b.key,
+      sort: sort.value,
+      page: 1,
+    },
+  })
 }
 
 function clearBrand() {
   q.value = ''
-  apply({ brand: undefined })
+  router.push({
+    query: {
+      sort: sort.value,
+      page: 1,
+    },
+  })
 }
 
 watch(
@@ -206,8 +220,7 @@ watch(
     if (!prod) {
       try {
         prod = await api.get(`/Products/${id}`)
-      } catch (e) {
-        // إذا المنتج غير موجود لا نكسر الصفحة
+      } catch {
         return
       }
     }
@@ -216,7 +229,7 @@ watch(
   { immediate: true }
 )
 
-// SSR + CSR: حمّل المنتجات بشكل مضمون من أول تحميل
+// SSR + CSR: حمّل المنتجات من أول تحميل وبأي تغيير بالـ query
 const { pending: loading } = await useAsyncData(
   () => `products:${route.fullPath}`,
   async () => {
@@ -226,7 +239,7 @@ const { pending: loading } = await useAsyncData(
   { watch: [() => route.fullPath] }
 )
 
-function apply(){
+function apply() {
   const brand = selectedBrand.value
   router.push({
     query: {
@@ -238,7 +251,7 @@ function apply(){
   })
 }
 
-function prev(){
+function prev() {
   if (page.value <= 1) return
   const brand = selectedBrand.value
   router.push({
@@ -251,7 +264,7 @@ function prev(){
   })
 }
 
-function next(){
+function next() {
   const brand = selectedBrand.value
   router.push({
     query: {
