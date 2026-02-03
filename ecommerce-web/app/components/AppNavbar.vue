@@ -149,7 +149,7 @@ const router = useRouter()
 const open = ref(false)
 const q = ref(String(route.query.q || ''))
 
-const isAdmin = computed(() => auth.isAdmin)
+const isAdmin = computed(() => auth.user?.role?.toLowerCase?.() === 'admin')
 
 function toggleTheme(){ ui.toggleTheme() }
 function toggleLocale(){ ui.setLocale(ui.locale === 'ar' ? 'en' : 'ar') }

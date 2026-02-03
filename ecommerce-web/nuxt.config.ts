@@ -61,13 +61,9 @@ export default defineNuxtConfig({
     compressPublicAssets: true,
 
     routeRules: {
-      // ✅ صفحات ديناميكية لازم تكون دائمًا أحدث نسخة
-      // حتى ما تحتاج Redeploy حتى يبان المنتج/التعديل.
-      '/': { headers: { 'cache-control': 'no-store' } },
-      '/products': { headers: { 'cache-control': 'no-store' } },
-      '/products/**': { headers: { 'cache-control': 'no-store' } },
-      '/services': { headers: { 'cache-control': 'no-store' } },
-      '/services/**': { headers: { 'cache-control': 'no-store' } },
+      // ✅ صفحات رئيسية نضمنها موجودة حتى لو صار Static/ISR
+      '/': { prerender: true, swr: 60 },
+      '/products': { prerender: true, swr: 60 },
 
       // Long-term cache for built assets
       '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
@@ -81,7 +77,14 @@ export default defineNuxtConfig({
       '/**/*.svg': { headers: { 'cache-control': 'public, max-age=2592000' } },
       '/**/*.ico': { headers: { 'cache-control': 'public, max-age=2592000' } },
 
-      // NOTE: لا نستخدم SWR للمنتجات حتى ما يصير تأخير/بيانات قديمة
+      // Micro-caching (SWR)
+      '/products/**': { swr: 60 },
+      '/services/**': { swr: 60 },
+    },
+
+    // ✅ لو Vercel اشتغل بوضع Static/ISR، هذا يضمن توليد الصفحات
+    prerender: {
+      routes: ['/', '/products'],
     },
   },
 

@@ -8,7 +8,7 @@
 
     <div class="admin-box">
       <form class="space-y-3" @submit.prevent="create">
-        <div class="grid gap-3 md:grid-cols-3">
+        <div class="grid gap-3 md:grid-cols-2">
           <div>
             <div class="label">Title</div>
             <input v-model="form.title" class="admin-input" placeholder="Website Development" />
@@ -17,14 +17,6 @@
           <div>
             <div class="label">Slug</div>
             <input v-model="form.slug" class="admin-input" placeholder="website-development" />
-          </div>
-
-          <div>
-            <div class="label">Brand *</div>
-            <select v-model="form.brand" class="admin-input">
-              <option value="" disabled>Select brand</option>
-              <option v-for="b in BRANDS" :key="b" :value="b">{{ b }}</option>
-            </select>
           </div>
         </div>
 
@@ -64,8 +56,6 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
-
-const BRANDS = ["Anua", "APRILSKIN", "VT (VT Global)", "Skinfood", "Medicube", "Numbuzin", "K-SECRET", "Equal Berry", "SKIN1004", "Beauty of Joseon", "JMsolution", "Tenzero", "Dr.Ceuracle", "Rejuran", "Celimax", "Medipeel", "Biodance", "Dr.CPU", "Anua KR"] as const
 const api = useAdminApi()
 
 const pending = ref(false)
@@ -75,10 +65,11 @@ const success = ref('')
 const form = reactive({
   title: '',
   slug: '',
-  brand: '',
   description: '',
   priceUsd: 0,
   isPublished: true,
+  // مؤقتاً نخلي البراند ثابت حتى ما تنكسر العملية
+  brand: 'Anua',
 })
 
 function slugify(v: string) {
@@ -99,8 +90,8 @@ watch(
 async function create() {
   error.value = ''
   success.value = ''
-    if (!form.title.trim() || !form.slug.trim() || !form.brand.trim()) {
-      error.value = 'Title, Slug and Brand are required'
+  if (!form.title.trim() || !form.slug.trim()) {
+    error.value = 'Title and Slug are required'
     return
   }
 
