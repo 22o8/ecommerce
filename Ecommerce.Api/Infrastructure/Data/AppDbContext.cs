@@ -49,6 +49,12 @@ public class AppDbContext : DbContext
             .Property(x => x.Url)
             .HasMaxLength(2000);
 
+
+        modelBuilder.Entity<Product>()
+            .Property(p => p.Brand)
+            .HasMaxLength(120)
+            .HasDefaultValue("Unspecified");
+
         modelBuilder.Entity<Product>()
             .Property(x => x.RatingAvg)
             .HasPrecision(3, 2); // مثل 4.50

@@ -192,7 +192,7 @@ const brandMenu = ref<HTMLDetailsElement | null>(null)
 
 // ✅ خيارات العلامات التجارية (مرتبة وسلسة)
 // مهم: نخليها Objects لأن الـ template يستعمل b.key و b.label
-const brands = [
+const defaultBrands = [
   { key: 'Anua', label: 'Anua' },
   { key: 'APRILSKIN', label: 'APRILSKIN' },
   { key: 'VT (VT Global)', label: 'VT (VT Global)' },
@@ -214,7 +214,23 @@ const brands = [
   { key: 'Anua KR', label: 'Anua KR' },
 ]
 
-const brandKeys = computed(() => brands.map((b) => b.key))
+const brands = ref<{ key: string; label: string }[]>(defaultBrands)
+
+// حمّل البراندات من الباك (إذا متاح) حتى تكون الفهرسة ديناميكية
+await useAsyncData('brands', async () => {
+  try {
+    const res: any = await api.get('/Brands')
+    const items = (res as any)?.items ?? (res as any)?.data?.items ?? []
+    if (Array.isArray(items) && items.length) {
+      brands.value = items
+    }
+  } catch (e) {
+    // خليه على defaultBrands
+  }
+  return true
+})
+
+const brandKeys = computed(() => brands.value.map((b) => b.key))
 
 const sortOptions = computed(() => [
   { value: 'new', label: t('productsPage.sort.new') },
@@ -322,7 +338,7 @@ watch(
 const { pending: loading } = await useAsyncData(
   () => `products:${route.fullPath}`,
   async () => {
-    await products.fetch({ page: page.value, pageSize, q: q.value, sort: sort.value })
+    await products.fetch({ page: page.value, pageSize, q: q.value, sort: sort.value, brand: selectedBrand.value !== "All" ? selectedBrand.value : undefined })
     return true
   },
   { watch: [() => route.fullPath] }

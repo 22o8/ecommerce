@@ -38,6 +38,7 @@ public class AdminProductsController : ControllerBase
                 p.Slug,
                 p.PriceUsd,
                 p.IsPublished,
+                p.Brand,
                 p.CreatedAt,
                 imagesCount = _db.ProductImages.Count(i => i.ProductId == p.Id),
             })
@@ -60,6 +61,7 @@ public class AdminProductsController : ControllerBase
                 x.Description,
                 x.PriceUsd,
                 x.IsPublished,
+                x.Brand,
                 x.CreatedAt,
                 x.RatingAvg,
                 x.RatingCount,
@@ -81,6 +83,12 @@ public class AdminProductsController : ControllerBase
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
+        if (!BrandCatalog.IsAllowed(req.Brand))
+            return BadRequest(new { message = "Invalid brand" });
+
+        if (!BrandCatalog.IsAllowed(req.Brand))
+            return BadRequest(new { message = "Invalid brand" });
+
         var slug = NormalizeSlug(req.Slug);
         if (string.IsNullOrWhiteSpace(slug))
             slug = Slugify(req.Title);
@@ -96,6 +104,7 @@ public class AdminProductsController : ControllerBase
             Description = (req.Description ?? "").Trim(),
             PriceUsd = req.PriceUsd,
             IsPublished = req.IsPublished,
+            Brand = BrandCatalog.Normalize(req.Brand),
             CreatedAt = DateTime.UtcNow
         };
 
@@ -125,6 +134,7 @@ public class AdminProductsController : ControllerBase
         p.Description = (req.Description ?? "").Trim();
         p.PriceUsd = req.PriceUsd;
         p.IsPublished = req.IsPublished;
+        p.Brand = BrandCatalog.Normalize(req.Brand);
 
         await _db.SaveChangesAsync();
         return Ok(new { message = "Updated" });
@@ -370,6 +380,10 @@ public class UpsertProductRequest
 
     [Range(0, 999999)]
     public decimal PriceUsd { get; set; }
+
+    [Required]
+    [MinLength(1)]
+    public string Brand { get; set; } = "Unspecified";
 
     public bool IsPublished { get; set; }
 }
