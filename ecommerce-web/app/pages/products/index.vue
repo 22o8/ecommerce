@@ -256,11 +256,18 @@ function clearBrand() {
   brandMenu.value?.removeAttribute('open')
 }
 
-function selectBrand(b: string) {
-  const v = String(b || '').trim()
-  if (!v || v === 'All') return clearBrand()
-  q.value = v
-  apply({ brand: v, q: v, page: 1 })
+function selectBrand(b: any) {
+  // (Mobile menu) b ممكن يكون string أو object { key, label }
+  const v = typeof b === 'string' ? b : (b?.key ?? b?.label ?? '')
+  const key = String(v || '').trim()
+  if (!key || key === 'All') {
+    clearBrand()
+    brandMenu.value?.removeAttribute('open')
+    return
+  }
+
+  // لا تلمس q هنا حتى ما يتحول إلى "[object Object]"
+  apply({ brand: key, page: 1 })
   brandMenu.value?.removeAttribute('open')
 }
 

@@ -372,6 +372,11 @@ public class UpsertProductRequest
     [Range(0, 999999)]
     public decimal PriceUsd { get; set; }
 
+    // ✅ البراند (إجباري) لأجل الفهرسة والفلترة
+    [Required]
+    [MinLength(2)]
+    public string Brand { get; set; } = "";
+
     public bool IsPublished { get; set; }
 }
 

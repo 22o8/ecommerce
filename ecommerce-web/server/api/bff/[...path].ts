@@ -146,18 +146,7 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      
-      // ✅ user cookie (غير HttpOnly) حتى واجهة الأدمن تشتغل بكل الأجهزة
-      if (json?.user) {
-        setCookie(event, "user", JSON.stringify(json.user), {
-          httpOnly: false,
-          secure: true,
-          sameSite: "lax",
-          path: "/",
-          maxAge: 60 * 60 * 24 * 30,
-        })
-      }
-setResponseStatus(event, res.status)
+	    setResponseStatus(event, res.status)
       return json
     }
 
