@@ -153,6 +153,20 @@ export default defineEventHandler(async (event) => {
       return { ok: true }
     }
 
+	    // ✅ إذا صار 500 من الـ API بصفحات العرض (Brands/Products) ما نخلي Nuxt يوقع SSR
+	    // نرجّع قائمة فارغة + 200 حتى الواجهة تشتغل وتعرض "لا توجد بيانات" بدل 500.
+	    const safeListRoutes = new Set([
+	      'products',
+	      'brands',
+	      'admin/products',
+	      'admin/brands',
+	    ])
+	    const rp = routePath.toLowerCase()
+	    if (method === 'GET' && res.status >= 500 && safeListRoutes.has(rp)) {
+	      setResponseStatus(event, 200)
+	      return []
+	    }
+
     setResponseStatus(event, res.status)
 
     const ct = res.headers.get('content-type') || ''
