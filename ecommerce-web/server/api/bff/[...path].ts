@@ -48,7 +48,6 @@ export default defineEventHandler(async (event) => {
 
       delete (incomingQuery as any).query
     }
-    }
 
     for (const [k, v] of Object.entries(incomingQuery)) {
       if (v === undefined || v === null) continue
