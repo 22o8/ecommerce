@@ -56,6 +56,8 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
+
+const BRANDS = ["Anua", "APRILSKIN", "VT (VT Global)", "Skinfood", "Medicube", "Numbuzin", "K-SECRET", "Equal Berry", "SKIN1004", "Beauty of Joseon", "JMsolution", "Tenzero", "Dr.Ceuracle", "Rejuran", "Celimax", "Medipeel", "Biodance", "Dr.CPU", "Anua KR"] as const
 const api = useAdminApi()
 
 const pending = ref(false)
@@ -65,11 +67,10 @@ const success = ref('')
 const form = reactive({
   title: '',
   slug: '',
+  brand: '',
   description: '',
   priceUsd: 0,
   isPublished: true,
-  // مؤقتاً نخلي البراند ثابت حتى ما تنكسر العملية
-  brand: 'Anua',
 })
 
 function slugify(v: string) {

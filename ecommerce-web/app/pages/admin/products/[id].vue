@@ -222,7 +222,6 @@ const form = reactive({
   description: '',
   priceUsd: 0,
   isPublished: true,
-  brand: 'Anua',
   ratingAvg: 0,
   ratingCount: 0,
 })
@@ -271,7 +270,6 @@ async function load() {
       id: String(found.id),
       title: String(found.title || ''),
       slug: String(found.slug || ''),
-      brand: String(found.brand || 'Anua'),
       description: String(found.description || ''),
       priceUsd: Number(found.priceUsd || 0),
       isPublished: !!found.isPublished,
@@ -281,7 +279,6 @@ async function load() {
 
     form.title = model.value.title
     form.slug = model.value.slug
-    form.brand = model.value.brand || 'Anua'
     form.description = model.value.description
     form.priceUsd = model.value.priceUsd
     form.isPublished = model.value.isPublished

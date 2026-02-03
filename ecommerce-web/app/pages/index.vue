@@ -2,18 +2,18 @@
   <div class="grid gap-8">
     <!-- Hero -->
     <section class="card-soft overflow-hidden">
-      <div class="grid gap-6 p-6 md:p-10 lg:grid-cols-2 lg:items-center">
+      <div class="grid gap-6 p-4 sm:p-6 md:p-10 lg:grid-cols-2 lg:items-center">
         <div class="grid gap-4">
 
-          <h1 class="text-3xl md:text-5xl font-black leading-tight rtl-text">
+          <h1 class="text-3xl md:text-5xl font-black leading-tight rtl-text text-center md:text-right">
             {{ t('heroTitle') }}
           </h1>
 
-          <p class="text-muted text-base md:text-lg rtl-text">
+          <p class="text-muted text-base md:text-lg rtl-text text-center md:text-right">
             {{ t('home.subtitle') }}
           </p>
 
-          <div class="flex flex-wrap gap-3">
+          <div class="flex flex-wrap gap-3 justify-center md:justify-start">
             <NuxtLink to="/products">
               <UiButton>
                 <Icon name="mdi:shopping-search-outline" class="text-lg" />
@@ -41,7 +41,7 @@
               <img
                 src="/hero-placeholder.svg"
                 alt="Hero"
-                class="h-[320px] md:h-[420px] w-full object-cover"
+                class="h-56 sm:h-72 md:h-[420px] w-full object-cover"
                 loading="lazy"
                 decoding="async"
               />

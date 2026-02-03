@@ -13,7 +13,7 @@ namespace Ecommerce.Api.Migrations
                 table: "Products",
                 type: "text",
                 nullable: false,
-                defaultValue: "Anua");
+                defaultValue: "");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

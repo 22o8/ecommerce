@@ -1,6 +1,6 @@
+// ecommerce-web/app/stores/auth.ts
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
-import { useApi } from '~/composables/useApi'
 
 type LoginRequest = { email: string; password: string }
 type RegisterRequest = { fullName: string; phone: string; email: string; password: string }
@@ -19,50 +19,124 @@ export const useAuthStore = defineStore('auth', () => {
     path: '/',
     sameSite: 'lax' as const,
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 30, // 30 days
+    maxAge: 60 * 60 * 24 * 30,
   }
 
-  const token = useCookie<string | null>('token', cookieOptions)
-  const user = useCookie<User | null>('user', cookieOptions)
+  /**
+   * token = HttpOnly (من BFF) - غالباً JS ما يقره، وأحياناً in-app ما يثبته
+   * access = غير HttpOnly - fallback حتى نرسل Authorization للـ BFF إذا احتجنا
+   */
+  const token = useCookie<string | null>('token', cookieOptions)      // SSR غالباً فقط
+  const access = useCookie<string | null>('access', cookieOptions)    // Client fallback
+  const auth = useCookie<string | null>('auth', cookieOptions)
+  const role = useCookie<string | null>('role', cookieOptions)
+  const user = useCookie<any>('user', cookieOptions)
 
-  const isAuthed = computed(() => !!token.value)
-  const userData = computed(() => user.value) // ✅ هذا اللي نستخدمه بكل مكان
-
-  function authHeaders(): Record<string, string> {
-    const t = token.value
-    if (t && typeof t === 'string' && t.trim().length > 0) {
-      return { Authorization: `Bearer ${t}` }
+  const userData = computed<User | null>(() => {
+    const v = user.value
+    if (!v) return null
+    if (typeof v === 'string') {
+      try { return JSON.parse(v) } catch { return null }
     }
-    return {}
+    return v as User
+  })
+
+  const normalizedRole = computed(() => {
+    const r1 = userData.value?.role
+    const r2 = role.value
+    return String(r1 || r2 || '').trim().toLowerCase()
+  })
+
+  const isAuthed = computed(() => auth.value === '1' || !!normalizedRole.value)
+  const isAdmin = computed(() => {
+    const r = (userData.value?.role ?? role.value ?? '').toString().trim().toLowerCase()
+    return r === 'admin'
+  })
+
+  /**
+   * ✅ لا تحذفها أبدًا
+   * تمنع 500: auth.initFromCookies is not a function
+   */
+  function initFromCookies() {
+    // إذا عندنا role أو user وماكو auth، ثبّت auth=1
+    if (!auth.value && (role.value || user.value)) auth.value = '1'
+
+    // نظّف مسافات
+    if (typeof role.value === 'string') role.value = role.value.trim() as any
+    if (typeof access.value === 'string') access.value = access.value.trim()
+  }
+
+  function applyAuthFromResponse(res: any) {
+    auth.value = '1'
+
+    // role
+    const r = res?.user?.role ?? res?.role ?? role.value ?? null
+    role.value = typeof r === 'string' ? r.trim() : (r as any)
+
+    // user
+    const u = res?.user ?? null
+    if (u) user.value = u
+
+    // ✅ access fallback من token اللي يرجع بالـ JSON
+    const t = (res?.token ?? res?.accessToken ?? null)
+    if (t && typeof t === 'string') access.value = t.trim()
   }
 
   async function login(payload: LoginRequest) {
-    const api = useApi()
-    const res: any = await api.post('/Auth/login', payload)
-    token.value = res?.token ?? null
-    user.value = res?.user ?? null
+    const res: any = await $fetch('/api/bff/Auth/login', {
+      method: 'POST',
+      body: payload,
+      credentials: 'include',
+    })
+    applyAuthFromResponse(res)
     return res
   }
 
   async function register(payload: RegisterRequest) {
-    const api = useApi()
-    const res: any = await api.post('/Auth/register', payload)
-    token.value = res?.token ?? null
-    user.value = res?.user ?? null
+    const res: any = await $fetch('/api/bff/Auth/register', {
+      method: 'POST',
+      body: payload,
+      credentials: 'include',
+    })
+    applyAuthFromResponse(res)
     return res
   }
 
-  function logout() {
-    token.value = null
+  async function logout() {
+    try {
+      await $fetch('/api/bff/Auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch {
+      // ignore
+    }
+
+    // نظف محلياً
+    auth.value = null
+    role.value = null
     user.value = null
+    token.value = null
+    access.value = null
   }
 
   return {
+    // state
     token,
+    access,
+    auth,
+    role,
     user,
+
+    // getters
     userData,
     isAuthed,
-    authHeaders,
+    isAdmin,
+
+    // helpers
+    initFromCookies,
+
+    // actions
     login,
     register,
     logout,

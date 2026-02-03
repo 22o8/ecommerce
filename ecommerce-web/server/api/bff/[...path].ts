@@ -3,7 +3,6 @@ export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
 
-    // لازم يكون مضبوط على Vercel (Production)
     const apiOrigin =
       (config.public as any).apiOrigin ||
       (config.public as any).apiBase ||
@@ -12,78 +11,164 @@ export default defineEventHandler(async (event) => {
 
     if (!apiOrigin) {
       setResponseStatus(event, 500)
-      return {
-        error: "Missing API origin. Set NUXT_API_ORIGIN on Vercel.",
-      }
+      return { error: 'Missing API origin. Set NUXT_API_ORIGIN / NUXT_PUBLIC_API_ORIGIN.' }
     }
 
-    const method = (event.node.req.method || "GET").toUpperCase()
-    const routePath = getRouterParam(event, "path") || ""
-    const targetBase = apiOrigin.replace(/\/$/, "")
+    const method = (event.node.req.method || 'GET').toUpperCase()
+    const routePath = getRouterParam(event, 'path') || ''
 
-    // إذا apiOrigin ينتهي بـ /api لا نكررها، وإلا نضيف /api
+    const targetBase = String(apiOrigin).replace(/\/$/, '')
     const apiBase = targetBase.endsWith('/api') ? targetBase : `${targetBase}/api`
     const targetUrl = new URL(`${apiBase}/${routePath}`)
 
-    // انقل كل query params عادي
+    // Query params
     const incomingQuery = getQuery(event) as Record<string, any>
 
-    // ✅ إذا اكو query=JSON حوله لباراميترات منفصلة
-    if (typeof incomingQuery.query === "string" && incomingQuery.query.trim()) {
-      try {
-        const obj = JSON.parse(incomingQuery.query)
-        if (obj && typeof obj === "object") {
-          for (const [k, v] of Object.entries(obj)) {
-            if (v === undefined || v === null) continue
-            targetUrl.searchParams.set(k, String(v))
-          }
+    // ✅ query=JSON => params (يدعم string أو object)
+    const qAny: any = (incomingQuery as any).query
+    if (qAny) {
+      let obj: any = null
+      if (typeof qAny === 'string' && qAny.trim()) {
+        try { obj = JSON.parse(qAny) } catch { obj = null }
+        if (!obj) {
+          // fallback: اعتبره query عادي
+          targetUrl.searchParams.set('query', qAny)
         }
-      } catch {
-        // إذا JSON مو صالح، خليه مثل ما هو حتى ما يطيح السيرفر
-        targetUrl.searchParams.set("query", incomingQuery.query)
+      } else if (typeof qAny === 'object') {
+        obj = qAny
       }
-      delete incomingQuery.query
+
+      if (obj && typeof obj === 'object') {
+        for (const [k, v] of Object.entries(obj)) {
+          if (v === undefined || v === null) continue
+          if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
+          else targetUrl.searchParams.set(k, String(v))
+        }
+      }
+
+      delete (incomingQuery as any).query
     }
 
-    // باقي الباراميترات
     for (const [k, v] of Object.entries(incomingQuery)) {
       if (v === undefined || v === null) continue
-      if (Array.isArray(v)) {
-        v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
-      } else {
-        targetUrl.searchParams.set(k, String(v))
-      }
+      if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
+      else targetUrl.searchParams.set(k, String(v))
     }
 
-    const headers = getRequestHeaders(event)
-    // لا تمرر host/connection… الخ
-    delete (headers as any).host
-    delete (headers as any).connection
-    delete (headers as any)["content-length"]
+    // Headers
+    const headers = getRequestHeaders(event) as Record<string, any>
+    delete headers.host
+    delete headers.connection
+    delete headers['content-length']
 
-    const body =
-      method === "GET" || method === "HEAD" ? undefined : await readRawBody(event)
+    // ✅ 1) إذا الفرونت مرسل Authorization خليّه مثل ما هو
+    const authHeader = headers.authorization || headers.Authorization
+
+    // ✅ 2) fallback: خذ التوكن من Cookie إذا ماكو Authorization
+    const tokenFromCookie =
+      getCookie(event, 'token') ||
+      getCookie(event, 'access_token') ||
+      getCookie(event, 'access') // ✅ نسمح لـ access هم
+    if (!authHeader && tokenFromCookie) {
+      headers.authorization = `Bearer ${tokenFromCookie}`
+    }
+
+    // Body
+    const body = method === 'GET' || method === 'HEAD'
+      ? undefined
+      : await readRawBody(event, false)
 
     const res = await fetch(targetUrl.toString(), {
       method,
-      headers: {
-        ...headers,
-        // ضمان نوع محتوى JSON إذا اكو body
-        ...(body ? { "content-type": headers["content-type"] || "application/json" } : {}),
-      },
+      headers: { ...headers },
       body: body || undefined,
     })
 
-    // رجّع نفس الستاتس
+    const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
+    const isLogout = routePath.toLowerCase() === 'auth/logout'
+
+    // ✅ login: خزن cookies
+    if (isLogin) {
+      const json = await res.json().catch(() => null)
+
+      const token = json?.token
+      const role = json?.user?.role || 'User'
+
+      if (token) {
+        const secure = process.env.NODE_ENV === 'production'
+
+        // token httpOnly (أمني)
+        setCookie(event, 'token', token, {
+          httpOnly: true,
+          secure,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 30,
+        })
+
+        // ✅ access غير httpOnly (حل iOS/Telegram 401)
+        setCookie(event, 'access', token, {
+          httpOnly: false,
+          secure,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 30,
+        })
+
+        // role غير httpOnly
+        setCookie(event, 'role', String(role), {
+          httpOnly: false,
+          secure,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 30,
+        })
+
+        // auth flag غير httpOnly
+        setCookie(event, 'auth', '1', {
+          httpOnly: false,
+          secure,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 30,
+        })
+
+        // (اختياري) خزن user كـ JSON
+        if (json?.user) {
+          setCookie(event, 'user', JSON.stringify(json.user), {
+            httpOnly: false,
+            secure,
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 30,
+          })
+        }
+      }
+
+	    setResponseStatus(event, res.status)
+      return json
+    }
+
+    // ✅ logout: امسح الكوكيز
+    if (isLogout) {
+      deleteCookie(event, 'token', { path: '/' })
+      deleteCookie(event, 'access', { path: '/' })
+      deleteCookie(event, 'role', { path: '/' })
+      deleteCookie(event, 'auth', { path: '/' })
+      deleteCookie(event, 'user', { path: '/' })
+
+      setResponseStatus(event, 200)
+      return { ok: true }
+    }
+
     setResponseStatus(event, res.status)
 
-    const ct = res.headers.get("content-type") || ""
-    if (ct.includes("application/json")) return await res.json()
+    const ct = res.headers.get('content-type') || ''
+    if (ct.includes('application/json')) return await res.json()
     return await res.text()
   } catch (err: any) {
-    // ✅ لا تخليها UnhandledRejection
-    console.error("BFF error:", err)
+    console.error('BFF error:', err)
     setResponseStatus(event, 500)
-    return { error: err?.message || "BFF failed" }
+    return { error: err?.message || 'BFF failed' }
   }
 })

@@ -1,4 +1,4 @@
-// app/composables/useApi.ts
+// ecommerce-web/app/composables/useApi.ts
 type HttpMethod =
   | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   | 'get' | 'post' | 'put' | 'patch' | 'delete'
@@ -16,18 +16,54 @@ export function useApi() {
 
   const config = useRuntimeConfig()
   // رابط الباك (للتطوير) مثل: https://localhost:7043
-  const apiOrigin = String((config.public as any)?.apiOrigin || (config as any)?.apiOrigin || '').replace(/\/$/, '')
+  const apiOrigin = String(
+    (config.public as any)?.apiOrigin ||
+    (config.public as any)?.apiBase ||
+    (config as any)?.apiOrigin ||
+    ''
+  ).replace(/\/$/, '')
+
+  // ✅ توكن عميل (غير HttpOnly) — مهم للموبايل/Telegram
+  // إذا HttpOnly token ما ينحفظ/ينرسل على iOS، هذا ينقذك.
+  const access = useCookie<string | null>('access', {
+    default: () => null,
+    path: '/',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 60 * 60 * 24 * 30,
+  })
 
   const request = async <T>(path: string, opts: FetchOpts = {}): Promise<T> => {
     const url = `${base}${path.startsWith('/') ? path : `/${path}`}`
 
-    // ✅ حل مشكلة TypedInternalResponse في TS
-    return await $fetch(url, {
+    // ✅ SSR: انقل Cookie header من ريكوست المستخدم إلى ريكوست الـ BFF
+    const ssrCookieHeaders = process.server
+      ? (useRequestHeaders(['cookie']) as Record<string, string>)
+      : {}
+
+    const mergedHeaders: Record<string, string> = {
+      ...ssrCookieHeaders,
+      ...(opts.headers || {}),
+    }
+
+    // ✅ iOS / in-app browsers أحيانًا لا يرسلون HttpOnly cookie بثبات.
+    // لذلك نستخدم access cookie (غير HttpOnly) كـ Bearer token fallback.
+    // ملاحظة: هذا الهيدر يُرسل إلى الـ BFF (نفس الدومين) فقط.
+    const hasAuthHeader = !!(mergedHeaders.authorization || mergedHeaders.Authorization)
+    const t = (access.value || '').trim()
+    if (!hasAuthHeader && t) {
+      // نستخدم lowercase (node/fetch) والـ BFF يمرره للـ API
+      mergedHeaders.authorization = `Bearer ${t}`
+    }
+
+    return (await $fetch(url, {
       method: opts.method as any,
       query: opts.query,
-      headers: opts.headers,
+      headers: mergedHeaders,
+      // على المتصفح: خليه يرسل الكوكيز دائماً
+      credentials: 'include',
       body: opts.body,
-    }) as unknown as T
+    })) as unknown as T
   }
 
   const get = <T>(path: string, query?: any, headers?: Record<string, string>) =>
@@ -50,18 +86,32 @@ export function useApi() {
     headers?: Record<string, string>
   ): Promise<T> => {
     const url = `${base}${path.startsWith('/') ? path : `/${path}`}`
-    return await $fetch(url, {
+
+    const ssrCookieHeaders = process.server
+      ? (useRequestHeaders(['cookie']) as Record<string, string>)
+      : {}
+
+    const mergedHeaders: Record<string, string> = {
+      ...ssrCookieHeaders,
+      ...(headers || {}),
+    }
+
+    // ✅ Client: Authorization من access
+    if (process.client && !mergedHeaders.Authorization && !mergedHeaders.authorization) {
+      const t = (access.value || '').trim()
+      if (t) mergedHeaders.Authorization = `Bearer ${t}`
+    }
+
+    return (await $fetch(url, {
       method: 'POST',
       query,
-      headers, // لا تضيف content-type
+      headers: mergedHeaders, // لا تضيف content-type
+      credentials: 'include',
       body: formData,
-    }) as unknown as T
+    })) as unknown as T
   }
 
   // ✅ بناء رابط آمن للصور/الملفات
-  // - لو الباك يرجّع /uploads/... نخليه يمر عبر proxy داخلي: /api/uploads/...
-  // - لو رجّع URL كامل https://localhost:7043/uploads/... نقتطع المسار ونفس الشي
-  // - أي مسار نسبي آخر نرجّعه absolute على نفس الدومين
   const buildAssetUrl = (p?: string | null) => {
     if (!p) return ''
 
@@ -69,7 +119,6 @@ export function useApi() {
     if (p.startsWith('http://') || p.startsWith('https://')) {
       try {
         const u = new URL(p)
-        // لو هو /uploads خلّيه يمر عبر proxy
         if (u.pathname.startsWith('/uploads/')) {
           const rest = u.pathname.replace(/^\/uploads\//, '')
           return `/api/uploads/${rest}`
@@ -80,28 +129,22 @@ export function useApi() {
       }
     }
 
-    // normalize
     const path = p.startsWith('/') ? p : `/${p}`
 
-    // لو /uploads/... مرره عبر proxy
     if (path.startsWith('/uploads/')) {
       const rest = path.replace(/^\/uploads\//, '')
       return `/api/uploads/${rest}`
     }
 
-    // لو الباك رجّع uploads/... داخل سترنغ
     const idx = path.indexOf('/uploads/')
     if (idx !== -1) {
       const rest = path.slice(idx).replace(/^\/uploads\//, '')
       return `/api/uploads/${rest}`
     }
 
-    // fallback: خليها absolute على apiOrigin إذا أحبّيت (مفيد للروابط اللي مو proxy)
-    // لكن افتراضيًا نخليها relative حتى تشتغل على نفس الدومين
     return path
   }
 
-  // ✅ Alias حتى بعض الكومبوننتات القديمة تشتغل
   const upload = postForm
 
   return { request, get, post, put, del, postForm, upload, buildAssetUrl }

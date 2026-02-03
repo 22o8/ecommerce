@@ -36,7 +36,6 @@ public class AdminProductsController : ControllerBase
                 p.Id,
                 p.Title,
                 p.Slug,
-                p.Brand,
                 p.PriceUsd,
                 p.IsPublished,
                 p.CreatedAt,
@@ -58,7 +57,6 @@ public class AdminProductsController : ControllerBase
                 x.Id,
                 x.Title,
                 x.Slug,
-                x.Brand,
                 x.Description,
                 x.PriceUsd,
                 x.IsPublished,
@@ -95,7 +93,6 @@ public class AdminProductsController : ControllerBase
             Id = Guid.NewGuid(),
             Title = req.Title.Trim(),
             Slug = slug,
-            Brand = string.IsNullOrWhiteSpace(req.Brand) ? "Anua" : req.Brand.Trim(),
             Description = (req.Description ?? "").Trim(),
             PriceUsd = req.PriceUsd,
             IsPublished = req.IsPublished,
@@ -124,8 +121,8 @@ public class AdminProductsController : ControllerBase
         if (exists) return BadRequest(new { message = "Slug already exists" });
 
         p.Title = req.Title.Trim();
+        p.Brand = req.Brand.Trim();
         p.Slug = slug;
-        p.Brand = string.IsNullOrWhiteSpace(req.Brand) ? (string.IsNullOrWhiteSpace(p.Brand) ? "Anua" : p.Brand) : req.Brand.Trim();
         p.Description = (req.Description ?? "").Trim();
         p.PriceUsd = req.PriceUsd;
         p.IsPublished = req.IsPublished;
@@ -372,12 +369,13 @@ public class UpsertProductRequest
     public string? Slug { get; set; }
     public string? Description { get; set; }
 
-    // ✅ Brand إجباري عندك بالمشروع، لكن نخليه افتراضي مؤقتاً حتى ما تنكسر الطلبات الحالية
-    // لاحقاً تقدر تخليه [Required] بعد ما تتأكد كل الواجهات تبعثه.
-    public string Brand { get; set; } = "Anua";
-
     [Range(0, 999999)]
     public decimal PriceUsd { get; set; }
+
+    // ✅ البراند (إجباري) لأجل الفهرسة والفلترة
+    [Required]
+    [MinLength(2)]
+    public string Brand { get; set; } = "";
 
     public bool IsPublished { get; set; }
 }

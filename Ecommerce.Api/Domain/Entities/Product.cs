@@ -5,9 +5,8 @@ public class Product
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Title { get; set; } = "";
+    public string Brand { get; set; } = ""; // ✅ إجباري (فهرسة البراند)
     public string Slug { get; set; } = "";
-    // ✅ Brand (فهرسة) - افتراضي مؤقتاً "Anua" حتى ما تنكسر البيانات القديمة
-    public string Brand { get; set; } = "Anua";
     public string Description { get; set; } = "";
     public decimal PriceUsd { get; set; }
     public bool IsPublished { get; set; } = true;

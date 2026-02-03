@@ -200,12 +200,11 @@ namespace Ecommerce.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Brand")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasDefaultValue("Anua");
-
                     b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Brand")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -303,6 +302,10 @@ namespace Ecommerce.Api.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Brand")
                         .IsRequired()
                         .HasColumnType("text");
 

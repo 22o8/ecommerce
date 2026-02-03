@@ -1,37 +1,32 @@
-// server/api/uploads/[...path].ts
-import { defineEventHandler, getRouterParams, setHeader, setResponseStatus } from 'h3'
+import { defineEventHandler, getRequestHeader, sendProxy, createError } from "h3"
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
 
-  const rawOrigin = String((config as any).apiOrigin || (config as any).public?.apiOrigin || '').trim()
-  if (!rawOrigin) {
-    setResponseStatus(event, 500)
-    return Buffer.from('')
+  const apiOriginRaw =
+    (config.public as any).apiOrigin ||
+    (config.public as any).apiBase ||
+    process.env.NUXT_PUBLIC_API_ORIGIN ||
+    process.env.NUXT_API_ORIGIN
+
+  const apiOrigin = String(apiOriginRaw || "").replace(/\/+$/, "")
+
+  if (!apiOrigin) {
+    throw createError({
+      statusCode: 500,
+      statusMessage:
+        "Missing API origin. Set runtimeConfig.public.apiOrigin (NUXT_PUBLIC_API_ORIGIN).",
+    })
   }
 
-  // uploads تكون على جذر الدومين: https://domain/uploads/...
-  // لذلك إذا المستخدم حاط apiOrigin ينتهي بـ /api، نشيله
-  const origin0 = rawOrigin.replace(/\/+$/, '')
-  const origin = origin0.toLowerCase().endsWith('/api') ? origin0.slice(0, -4) : origin0
+  const p = (event.context.params as any)?.path
+  const rest = Array.isArray(p) ? p.join("/") : String(p || "")
+  const target = `${apiOrigin}/uploads/${rest}`
 
-  const params = getRouterParams(event)
-  const rest = String((params as any).path || '')
+  // مرّر الكوكيز لو موجودة (مو ضرورية للصور غالباً، بس مفيدة)
+  const headers: Record<string, string> = {}
+  const cookie = getRequestHeader(event, "cookie")
+  if (cookie) headers.cookie = cookie
 
-  const target = `${origin}/uploads/${rest}`.replace(/([^:]\/)\/+?/g, '$1')
-
-  const res = await fetch(target, {
-    method: 'GET',
-    headers: {
-      ...(event.node.req.headers?.cookie ? { cookie: String(event.node.req.headers.cookie) } : {}),
-    },
-  })
-
-  setResponseStatus(event, res.status)
-
-  const contentType = res.headers.get('content-type')
-  if (contentType) setHeader(event, 'content-type', contentType)
-
-  const arrayBuffer = await res.arrayBuffer()
-  return Buffer.from(arrayBuffer)
+  return sendProxy(event, target, { headers })
 })
