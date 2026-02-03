@@ -179,21 +179,23 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    var runMigrationsRaw = (Environment.GetEnvironmentVariable("RUN_MIGRATIONS") ?? "")
+    // افتراضياً: نطبّق الـ migrations حتى لا يصير (relation does not exist) على Fly/Neon.
+    // إذا تريد توقفها: خلّي RUN_MIGRATIONS=0 أو false.
+    var runMigrationsRaw = (Environment.GetEnvironmentVariable("RUN_MIGRATIONS") ?? "true")
         .Trim()
         .ToLowerInvariant();
 
-    var runMigrations = runMigrationsRaw is "1" or "true" or "yes" or "y" or "on";
+    var runMigrations = !(runMigrationsRaw is "0" or "false" or "no" or "n" or "off");
 
     if (runMigrations)
     {
-        Console.WriteLine("RUN_MIGRATIONS enabled -> applying EF migrations...");
+        Console.WriteLine("Applying EF migrations (RUN_MIGRATIONS default=ON)...");
         db.Database.Migrate();
         Console.WriteLine("EF migrations applied.");
     }
     else
     {
-        Console.WriteLine("RUN_MIGRATIONS disabled -> skipping EF migrations.");
+        Console.WriteLine("RUN_MIGRATIONS=OFF -> skipping EF migrations.");
     }
 }
 
