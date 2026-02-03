@@ -183,12 +183,19 @@ const api = useApi()
 const pageSize = 12
 const page = computed(() => Number(route.query.page || 1))
 // v-model needs writable refs; computed() without setter throws and breaks rendering.
-const q = ref(typeof route.query.q === 'string' ? route.query.q : (Array.isArray(route.query.q) ? (route.query.q[0] || '') : ''))
-const sort = ref(String(route.query.sort || 'new'))
+const q = ref(qv(route.query.q, ''))
+const sort = ref(qv(route.query.sort, 'new'))
 
 // تفاصيل قائمة الفرز/البراندات (مهم للموبايل حتى نسدّ أي مشاكل بالسلوك)
 const sortMenu = ref<HTMLDetailsElement | null>(null)
 const brandMenu = ref<HTMLDetailsElement | null>(null)
+
+// Nuxt ممكن يرجّع query كـ array أو object إذا انحط غلط بالـ URL
+function qv(v: any, fallback = ''): string {
+  if (typeof v === 'string') return v
+  if (Array.isArray(v)) return typeof v[0] === 'string' ? v[0] : fallback
+  return fallback
+}
 
 // ✅ خيارات العلامات التجارية (مرتبة وسلسة)
 // مهم: نخليها Objects لأن الـ template يستعمل b.key و b.label
@@ -242,7 +249,7 @@ function setSort(v: string) {
 
 function pickBrand(label: string) {
   const next = String(label || '').trim()
-  const current = String(route.query.brand || '').trim()
+  const current = qv(route.query.brand, '').trim()
   // نفس البراند؟ اعتبره إلغاء تحديد
   const chosen = current === next ? '' : next
   // ✅ نخلي q = اسم البراند حتى يفلتر المنتجات مباشرة

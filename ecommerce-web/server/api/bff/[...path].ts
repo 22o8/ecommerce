@@ -161,10 +161,23 @@ export default defineEventHandler(async (event) => {
       return { ok: true }
     }
 
+    // ✅ 204/205: لا يوجد محتوى (خصوصاً DELETE)
+    if (res.status === 204 || res.status === 205) {
+      setResponseStatus(event, 200)
+      return { ok: true }
+    }
+
     setResponseStatus(event, res.status)
 
     const ct = res.headers.get('content-type') || ''
-    if (ct.includes('application/json')) return await res.json()
+    if (ct.includes('application/json')) {
+      // بعض الـ APIs ترجع JSON header لكن بدون body
+      try {
+        return await res.json()
+      } catch {
+        return null
+      }
+    }
     return await res.text()
   } catch (err: any) {
     console.error('BFF error:', err)

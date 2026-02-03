@@ -8,7 +8,7 @@
 
     <div class="admin-box">
       <form class="space-y-3" @submit.prevent="create">
-        <div class="grid gap-3 md:grid-cols-2">
+        <div class="grid gap-3 md:grid-cols-3">
           <div>
             <div class="label">Title</div>
             <input v-model="form.title" class="admin-input" placeholder="Website Development" />
@@ -17,6 +17,14 @@
           <div>
             <div class="label">Slug</div>
             <input v-model="form.slug" class="admin-input" placeholder="website-development" />
+          </div>
+
+          <div>
+            <div class="label">Brand *</div>
+            <select v-model="form.brand" class="admin-input">
+              <option value="" disabled>Select brand</option>
+              <option v-for="b in BRANDS" :key="b" :value="b">{{ b }}</option>
+            </select>
           </div>
         </div>
 
@@ -91,8 +99,8 @@ watch(
 async function create() {
   error.value = ''
   success.value = ''
-  if (!form.title.trim() || !form.slug.trim()) {
-    error.value = 'Title and Slug are required'
+    if (!form.title.trim() || !form.slug.trim() || !form.brand.trim()) {
+      error.value = 'Title, Slug and Brand are required'
     return
   }
 
