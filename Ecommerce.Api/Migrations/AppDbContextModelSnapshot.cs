@@ -204,10 +204,6 @@ namespace Ecommerce.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Brand")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
 
                     b.ToTable("Products");
@@ -302,10 +298,6 @@ namespace Ecommerce.Api.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Brand")
                         .IsRequired()
                         .HasColumnType("text");
 

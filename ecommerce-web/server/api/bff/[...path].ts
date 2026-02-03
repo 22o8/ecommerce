@@ -3,25 +3,11 @@ export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
 
-    // ملاحظة مهمة:
-    // على Vercel/Nuxt أحيانًا يتم خلط متغيرات البيئة، فيصير apiOrigin قيمة نسبية مثل "/api/bff"
-    // وهذا يسبب: new URL(...) => Invalid URL وبالتالي 500 من الـ BFF.
-    // لذلك نعطي أولوية للـ server runtimeConfig.apiOrigin (المفروض يكون رابط كامل)،
-    // وبعدها نأخذ public.apiOrigin، ونتجاهل القيم النسبية.
-    const pickAbsolute = (v: any) => {
-      const s = String(v || '').trim()
-      if (!s) return ''
-      // اعتبره صالح فقط إذا يبدأ بـ http/https
-      if (s.startsWith('http://') || s.startsWith('https://')) return s
-      return ''
-    }
-
     const apiOrigin =
-      pickAbsolute((config as any).apiOrigin) ||
-      pickAbsolute(process.env.NUXT_API_ORIGIN) ||
-      pickAbsolute((config.public as any).apiOrigin) ||
-      pickAbsolute(process.env.NUXT_PUBLIC_API_ORIGIN) ||
-      ''
+      (config.public as any).apiOrigin ||
+      (config.public as any).apiBase ||
+      process.env.NUXT_API_ORIGIN ||
+      process.env.NUXT_PUBLIC_API_ORIGIN
 
     if (!apiOrigin) {
       setResponseStatus(event, 500)
@@ -38,29 +24,21 @@ export default defineEventHandler(async (event) => {
     // Query params
     const incomingQuery = getQuery(event) as Record<string, any>
 
-    // ✅ query=JSON => params (يدعم string أو object)
-    const qAny: any = (incomingQuery as any).query
-    if (qAny) {
-      let obj: any = null
-      if (typeof qAny === 'string' && qAny.trim()) {
-        try { obj = JSON.parse(qAny) } catch { obj = null }
-        if (!obj) {
-          // fallback: اعتبره query عادي
-          targetUrl.searchParams.set('query', qAny)
+    // ✅ query=JSON => params
+    if (typeof incomingQuery.query === 'string' && incomingQuery.query.trim()) {
+      try {
+        const obj = JSON.parse(incomingQuery.query)
+        if (obj && typeof obj === 'object') {
+          for (const [k, v] of Object.entries(obj)) {
+            if (v === undefined || v === null) continue
+            if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
+            else targetUrl.searchParams.set(k, String(v))
+          }
         }
-      } else if (typeof qAny === 'object') {
-        obj = qAny
+      } catch {
+        targetUrl.searchParams.set('query', incomingQuery.query)
       }
-
-      if (obj && typeof obj === 'object') {
-        for (const [k, v] of Object.entries(obj)) {
-          if (v === undefined || v === null) continue
-          if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
-          else targetUrl.searchParams.set(k, String(v))
-        }
-      }
-
-      delete (incomingQuery as any).query
+      delete incomingQuery.query
     }
 
     for (const [k, v] of Object.entries(incomingQuery)) {
@@ -159,7 +137,7 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-	    setResponseStatus(event, res.status)
+      setResponseStatus(event, res.status)
       return json
     }
 

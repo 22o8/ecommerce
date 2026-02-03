@@ -12,7 +12,6 @@ type FetchParams = {
   page?: number
   pageSize?: number
   q?: string
-  brand?: string
   sort?: 'new' | 'priceAsc' | 'priceDesc' | string
   isFeatured?: boolean
 }
@@ -56,12 +55,13 @@ export const useProductsStore = defineStore('products', () => {
     loading.value = true
     try {
       const res = await api.get<Paged<any>>('/Products', {
+        query: {
           page: params.page || 1,
           pageSize: params.pageSize || 12,
           q: params.q || undefined,
           sort: params.sort || 'new',
           isFeatured: params.isFeatured || undefined,
-        brand: params.brand || undefined,
+        },
       })
 
       // Support different API shapes

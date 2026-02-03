@@ -133,5 +133,3 @@ onMounted(load);
 .msg { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: #f7f7f7; }
 .note { margin-top: 10px; font-size: 13px; opacity: .8; line-height: 1.7; }
 </style>
-const BRANDS = ["Anua", "APRILSKIN", "VT (VT Global)", "Skinfood", "Medicube", "Numbuzin", "K-SECRET", "Equal Berry", "SKIN1004", "Beauty of Joseon", "JMsolution", "Tenzero", "Dr.Ceuracle", "Rejuran", "Celimax", "Medipeel", "Biodance", "Dr.CPU", "Anua KR"] as const
-

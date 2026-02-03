@@ -121,7 +121,6 @@ public class AdminProductsController : ControllerBase
         if (exists) return BadRequest(new { message = "Slug already exists" });
 
         p.Title = req.Title.Trim();
-        p.Brand = req.Brand.Trim();
         p.Slug = slug;
         p.Description = (req.Description ?? "").Trim();
         p.PriceUsd = req.PriceUsd;
@@ -371,11 +370,6 @@ public class UpsertProductRequest
 
     [Range(0, 999999)]
     public decimal PriceUsd { get; set; }
-
-    // ✅ البراند (إجباري) لأجل الفهرسة والفلترة
-    [Required]
-    [MinLength(2)]
-    public string Brand { get; set; } = "";
 
     public bool IsPublished { get; set; }
 }
