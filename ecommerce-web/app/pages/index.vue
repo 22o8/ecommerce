@@ -1,110 +1,134 @@
 <template>
-  <div class="grid gap-8">
+  <div class="pb-10">
     <!-- Hero -->
-    <section class="card-soft overflow-hidden">
-      <div class="grid gap-6 p-4 sm:p-6 md:p-10 lg:grid-cols-2 lg:items-center">
-        <div class="grid gap-4">
-
-          <h1 class="text-3xl md:text-5xl font-black leading-tight rtl-text text-center md:text-right">
-            {{ t('heroTitle') }}
+    <section
+      class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-6 md:p-10"
+    >
+      <div class="grid gap-8 md:grid-cols-2 md:items-center">
+        <div>
+          <h1 class="text-4xl font-extrabold tracking-tight md:text-5xl">
+            {{ t('home.hero.title') }}
           </h1>
-
-          <p class="text-muted text-base md:text-lg rtl-text text-center md:text-right">
-            {{ t('home.subtitle') }}
+          <p class="mt-3 max-w-xl text-white/70">
+            {{ t('home.hero.subtitle') }}
           </p>
 
-          <div class="flex flex-wrap gap-3 justify-center md:justify-start">
-            <NuxtLink to="/products">
-              <UiButton>
-                <Icon name="mdi:shopping-search-outline" class="text-lg" />
-                <span class="rtl-text">{{ t('browseProducts') }}</span>
-              </UiButton>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <NuxtLink to="/products" class="btn-primary">
+              <span class="i-lucide-shopping-bag mr-2" />
+              {{ t('home.hero.browse') }}
             </NuxtLink>
 
-            <NuxtLink to="/contact">
-              <UiButton variant="secondary">
-                <Icon name="mdi:message-text-outline" class="text-lg" />
-                <span class="rtl-text">{{ t('contact') }}</span>
-              </UiButton>
-            </NuxtLink>
+            <a href="#contact" class="btn-ghost">
+              <span class="i-lucide-message-square mr-2" />
+              {{ t('home.hero.contact') }}
+            </a>
           </div>
-
-          <!-- تم حذف قسم: (تسليم فوري بعد الدفع / لماذا نحن؟ / دفع آمن ومنظم / دعم سريع) حسب الطلب -->
         </div>
 
-        <!-- Hero Image -->
         <div class="relative">
-          <div class="absolute -inset-10 bg-[rgba(var(--primary),.08)] blur-3xl" />
-          <div class="relative rounded-3xl border border-app bg-surface overflow-hidden">
-            <picture>
-              <source srcset="/hero/images.avif" type="image/avif" />
-              <img
-                src="/hero-placeholder.svg"
-                alt="Hero"
-                class="h-56 sm:h-72 md:h-[420px] w-full object-cover"
-                loading="lazy"
-                decoding="async"
-              />
-            </picture>
-
-            <div
-              class="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,.45)] via-transparent to-transparent pointer-events-none"
+          <div class="aspect-[4/3] overflow-hidden rounded-3xl border border-white/10">
+            <img
+              src="/hero-placeholder.svg"
+              alt="Hero"
+              class="h-full w-full object-cover"
+              loading="lazy"
             />
-
-            <!-- removed bottom badge (Latest/New) -->
           </div>
+
+          <div class="pointer-events-none absolute -inset-6 rounded-[2rem] bg-purple-500/10 blur-3xl" />
         </div>
       </div>
     </section>
 
-    <!-- Featured products -->
-    <section class="grid gap-4">
-      <div class="flex items-center justify-between gap-3">
-        <h2 class="text-xl md:text-2xl font-extrabold rtl-text">
-          {{ t('home.section.featured') }}
+    <!-- Brands (بدل Featured/Products) -->
+    <section class="mt-10">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-2xl font-bold">
+          {{ t('home.section.brands') }}
         </h2>
 
-        <NuxtLink to="/products">
-          <UiButton variant="ghost">
-            <span class="rtl-text">{{ t('home.viewAll') }}</span>
-            <Icon name="mdi:arrow-right" class="keep-ltr text-lg" />
-          </UiButton>
+        <NuxtLink to="/products" class="text-sm text-white/70 hover:text-white">
+          {{ t('home.section.viewAll') }}
+          <span class="i-lucide-arrow-right ml-1" />
         </NuxtLink>
       </div>
 
-      <div v-if="loading" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div v-for="i in 6" :key="i" class="card-soft p-4 grid gap-3">
-          <div class="skeleton h-40" />
-          <div class="skeleton h-5 w-3/4" />
-          <div class="skeleton h-4 w-1/2" />
-          <div class="skeleton h-10" />
+      <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+        <div v-if="loading" class="py-10 text-center text-white/60">
+          {{ t('common.loading') }}
+        </div>
+
+        <div v-else-if="brands.length === 0" class="py-10 text-center">
+          <div class="mx-auto mb-2 h-10 w-10 opacity-60 i-lucide-store" />
+          <div class="text-white/70">{{ t('brands.empty.title') }}</div>
+          <div class="text-sm text-white/50">{{ t('brands.empty.subtitle') }}</div>
+        </div>
+
+        <div v-else class="marquee">
+          <div class="marquee__track">
+            <div class="marquee__row">
+              <BrandCard v-for="b in brands" :key="b.id" :b="b" />
+            </div>
+            <!-- تكرار نفس الصف حتى يصير تحريك مستمر -->
+            <div class="marquee__row" aria-hidden="true">
+              <BrandCard v-for="b in brands" :key="`dup-${b.id}`" :b="b" />
+            </div>
+          </div>
         </div>
       </div>
-
-      <div v-else-if="items.length === 0" class="card-soft p-8 text-center">
-        <Icon name="mdi:package-variant-closed" class="text-4xl opacity-70 mx-auto" />
-        <div class="mt-3 font-bold rtl-text">{{ t('home.empty') }}</div>
-      </div>
-
-      <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <ProductCard v-for="p in items" :key="p.id" :p="p" />
-      </div>
     </section>
+
+    <div id="contact" class="mt-16" />
   </div>
 </template>
 
 <script setup lang="ts">
-import UiButton from '~/components/ui/UiButton.vue'
-import ProductCard from '~/components/ProductCard.vue'
-import { useProductsStore } from '~/stores/products'
+import { storeToRefs } from 'pinia'
 
 const { t } = useI18n()
-const products = useProductsStore()
-const items = computed(() => products.items.slice(0, 6))
 
-// SSR + Client: حتى ما يصير "فارغ" بالبداية ويطلع بس بعد تبديل اللغة
-const { pending: loading } = await useAsyncData('home-featured-products', async () => {
-  await products.fetchFeatured({ page: 1, pageSize: 12 })
-  return true
-})
+const brandsStore = useBrandsStore()
+const { items: brands, loading } = storeToRefs(brandsStore)
+
+// SSR-safe: حتى لو فشل الطلب، تبقى arrays فارغة بدون أخطاء
+await brandsStore.fetchPublic({ page: 1, pageSize: 30, sort: 'new' })
 </script>
+
+<style scoped>
+.btn-primary {
+  @apply inline-flex items-center rounded-xl bg-purple-500 px-4 py-2 text-sm font-semibold text-black shadow-sm hover:bg-purple-400;
+}
+.btn-ghost {
+  @apply inline-flex items-center rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10;
+}
+
+.marquee {
+  overflow: hidden;
+}
+.marquee__track {
+  display: flex;
+  gap: 16px;
+  width: max-content;
+  animation: marquee 20s linear infinite;
+}
+.marquee__row {
+  display: flex;
+  gap: 16px;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee__track {
+    animation: none;
+  }
+}
+</style>
