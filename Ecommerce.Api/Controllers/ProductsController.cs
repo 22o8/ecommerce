@@ -37,12 +37,12 @@ public class ProductsController : ControllerBase
             );
         }
 
-		// ✅ Brand filter (optional)
-		var brand = (query.Brand ?? "").Trim();
-		if (!string.IsNullOrWhiteSpace(brand) && !brand.Equals("All", StringComparison.OrdinalIgnoreCase))
-		{
-			baseQuery = baseQuery.Where(p => p.Brand == brand);
-		}
+        // brand filter
+        if (!string.IsNullOrWhiteSpace(query.Brand))
+        {
+            var b = query.Brand.Trim().ToLowerInvariant();
+            baseQuery = baseQuery.Where(p => p.Brand.ToLower() == b);
+        }
 
         baseQuery = (query.Sort ?? "new") switch
         {
@@ -61,6 +61,7 @@ public class ProductsController : ControllerBase
                 p.Id,
                 p.Title,
                 p.Slug,
+                p.Brand,
                 p.Description,
                 p.PriceUsd,
                 p.RatingAvg,

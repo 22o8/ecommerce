@@ -1,6 +1,7 @@
 # build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+
 # انسخ csproj فقط حتى يستفيد من cache
 COPY Ecommerce.Api.csproj ./
 RUN dotnet restore "./Ecommerce.Api.csproj"
