@@ -159,7 +159,8 @@
     "sortTitle": "By title",
     "orderDetails": "Order details",
     "orderNotFound": "Order not found.",
-    "raw": "Raw"
+    "raw": "Raw",
+    "title": "Admin Panel"
   },
   "cartTitle": "Shopping cart",
   "cartHint": "Review your items and continue to checkout.",

@@ -183,7 +183,7 @@ const api = useApi()
 const pageSize = 12
 const page = computed(() => Number(route.query.page || 1))
 // v-model needs writable refs; computed() without setter throws and breaks rendering.
-const q = ref(String(route.query.q || ''))
+const q = ref(typeof route.query.q === 'string' ? route.query.q : (Array.isArray(route.query.q) ? (route.query.q[0] || '') : ''))
 const sort = ref(String(route.query.sort || 'new'))
 
 // تفاصيل قائمة الفرز/البراندات (مهم للموبايل حتى نسدّ أي مشاكل بالسلوك)

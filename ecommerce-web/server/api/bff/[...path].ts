@@ -24,21 +24,30 @@ export default defineEventHandler(async (event) => {
     // Query params
     const incomingQuery = getQuery(event) as Record<string, any>
 
-    // ✅ query=JSON => params
-    if (typeof incomingQuery.query === 'string' && incomingQuery.query.trim()) {
-      try {
-        const obj = JSON.parse(incomingQuery.query)
-        if (obj && typeof obj === 'object') {
-          for (const [k, v] of Object.entries(obj)) {
-            if (v === undefined || v === null) continue
-            if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
-            else targetUrl.searchParams.set(k, String(v))
-          }
+    // ✅ query=JSON => params (يدعم string أو object)
+    const qAny: any = (incomingQuery as any).query
+    if (qAny) {
+      let obj: any = null
+      if (typeof qAny === 'string' && qAny.trim()) {
+        try { obj = JSON.parse(qAny) } catch { obj = null }
+        if (!obj) {
+          // fallback: اعتبره query عادي
+          targetUrl.searchParams.set('query', qAny)
         }
-      } catch {
-        targetUrl.searchParams.set('query', incomingQuery.query)
+      } else if (typeof qAny === 'object') {
+        obj = qAny
       }
-      delete incomingQuery.query
+
+      if (obj && typeof obj === 'object') {
+        for (const [k, v] of Object.entries(obj)) {
+          if (v === undefined || v === null) continue
+          if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
+          else targetUrl.searchParams.set(k, String(v))
+        }
+      }
+
+      delete (incomingQuery as any).query
+    }
     }
 
     for (const [k, v] of Object.entries(incomingQuery)) {
@@ -137,7 +146,18 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      setResponseStatus(event, res.status)
+      
+      // ✅ user cookie (غير HttpOnly) حتى واجهة الأدمن تشتغل بكل الأجهزة
+      if (json?.user) {
+        setCookie(event, "user", JSON.stringify(json.user), {
+          httpOnly: false,
+          secure: true,
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60 * 24 * 30,
+        })
+      }
+setResponseStatus(event, res.status)
       return json
     }
 

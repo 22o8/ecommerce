@@ -48,7 +48,10 @@ export const useAuthStore = defineStore('auth', () => {
   })
 
   const isAuthed = computed(() => auth.value === '1' || !!normalizedRole.value)
-  const isAdmin = computed(() => normalizedRole.value === 'admin')
+  const isAdmin = computed(() => {
+    const r = (userData.value?.role ?? role.value ?? '').toString().trim().toLowerCase()
+    return r === 'admin'
+  })
 
   /**
    * ✅ لا تحذفها أبدًا

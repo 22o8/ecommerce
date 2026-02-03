@@ -121,6 +121,7 @@ public class AdminProductsController : ControllerBase
         if (exists) return BadRequest(new { message = "Slug already exists" });
 
         p.Title = req.Title.Trim();
+        p.Brand = req.Brand.Trim();
         p.Slug = slug;
         p.Description = (req.Description ?? "").Trim();
         p.PriceUsd = req.PriceUsd;
