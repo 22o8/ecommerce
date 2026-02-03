@@ -1,6 +1,5 @@
-using Ecommerce.Api.Infrastructure.Data;
+using Ecommerce.Api.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerce.Api.Controllers;
 
@@ -8,53 +7,13 @@ namespace Ecommerce.Api.Controllers;
 [Route("api/[controller]")]
 public class BrandsController : ControllerBase
 {
-    private readonly AppDbContext _db;
-
-    public BrandsController(AppDbContext db)
-    {
-        _db = db;
-    }
-
-    // Public brands list (for storefront)
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public IActionResult GetAll()
     {
-        var items = await _db.Brands
-            .AsNoTracking()
-            .Where(b => b.IsActive)
-            .OrderBy(b => b.Name)
-            .Select(b => new
-            {
-                id = b.Id,
-                slug = b.Slug,
-                name = b.Name,
-                description = b.Description,
-                logoUrl = b.LogoUrl
-            })
-            .ToListAsync();
-
+        var items = BrandCatalog.Allowed
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => new { key = x, label = x })
+            .ToList();
         return Ok(new { items });
-    }
-
-    [HttpGet("slug/{slug}")]
-    public async Task<IActionResult> GetBySlug([FromRoute] string slug)
-    {
-        slug = (slug ?? "").Trim().ToLowerInvariant();
-
-        var b = await _db.Brands
-            .AsNoTracking()
-            .Where(x => x.IsActive && x.Slug.ToLower() == slug)
-            .Select(x => new
-            {
-                id = x.Id,
-                slug = x.Slug,
-                name = x.Name,
-                description = x.Description,
-                logoUrl = x.LogoUrl
-            })
-            .FirstOrDefaultAsync();
-
-        if (b == null) return NotFound(new { message = "Brand not found" });
-        return Ok(b);
     }
 }

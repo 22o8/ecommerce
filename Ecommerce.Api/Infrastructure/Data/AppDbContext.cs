@@ -9,7 +9,6 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<User> Users => Set<User>();
-    public DbSet<Brand> Brands => Set<Brand>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Service> Services => Set<Service>();
     public DbSet<ServicePackage> ServicePackages => Set<ServicePackage>();
@@ -38,27 +37,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>()
             .Property(u => u.Role)
             .HasMaxLength(50);
-
-        // Brands
-        modelBuilder.Entity<Brand>()
-            .HasIndex(b => b.Slug)
-            .IsUnique();
-
-        modelBuilder.Entity<Brand>()
-            .Property(b => b.Slug)
-            .HasMaxLength(80);
-
-        modelBuilder.Entity<Brand>()
-            .Property(b => b.Name)
-            .HasMaxLength(120);
-
-        modelBuilder.Entity<Brand>()
-            .Property(b => b.Description)
-            .HasMaxLength(400);
-
-        modelBuilder.Entity<Brand>()
-            .Property(b => b.LogoUrl)
-            .HasMaxLength(400);
 
         // Product - Images relation
         modelBuilder.Entity<Product>()

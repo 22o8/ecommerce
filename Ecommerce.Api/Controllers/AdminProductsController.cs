@@ -82,14 +82,14 @@ public class AdminProductsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] UpsertProductRequest req)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
-        var brandSlug = NormalizeSlug(req.Brand);
-        if (string.IsNullOrWhiteSpace(brandSlug))
-            return BadRequest(new { message = "Brand is required" });
 
-        var brandOk = await _db.Brands.AsNoTracking().AnyAsync(b => b.IsActive && b.Slug.ToLower() == brandSlug);
-        if (!brandOk)
+        if (!BrandCatalog.IsAllowed(req.Brand))
             return BadRequest(new { message = "Invalid brand" });
-var slug = NormalizeSlug(req.Slug);
+
+        if (!BrandCatalog.IsAllowed(req.Brand))
+            return BadRequest(new { message = "Invalid brand" });
+
+        var slug = NormalizeSlug(req.Slug);
         if (string.IsNullOrWhiteSpace(slug))
             slug = Slugify(req.Title);
 
@@ -104,7 +104,7 @@ var slug = NormalizeSlug(req.Slug);
             Description = (req.Description ?? "").Trim(),
             PriceUsd = req.PriceUsd,
             IsPublished = req.IsPublished,
-            Brand = brandSlug,
+            Brand = BrandCatalog.Normalize(req.Brand),
             CreatedAt = DateTime.UtcNow
         };
 
@@ -134,16 +134,9 @@ var slug = NormalizeSlug(req.Slug);
         p.Description = (req.Description ?? "").Trim();
         p.PriceUsd = req.PriceUsd;
         p.IsPublished = req.IsPublished;
-        var brandSlug = NormalizeSlug(req.Brand);
-        if (string.IsNullOrWhiteSpace(brandSlug))
-            return BadRequest(new { message = "Brand is required" });
+        p.Brand = BrandCatalog.Normalize(req.Brand);
 
-        var brandOk = await _db.Brands.AsNoTracking().AnyAsync(b => b.IsActive && b.Slug.ToLower() == brandSlug);
-        if (!brandOk)
-            return BadRequest(new { message = "Invalid brand" });
-
-        p.Brand = brandSlug;
-await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync();
         return Ok(new { message = "Updated" });
     }
 

@@ -25,7 +25,6 @@
           <div>
             <div class="label">Brand</div>
             <select v-model="form.brand" class="admin-input" required>
-              <option value="" disabled>{{ t('admin.selectBrand') }}</option>
               <option v-for="b in brands" :key="b.key" :value="b.key">{{ b.label }}</option>
             </select>
           </div>
@@ -75,7 +74,7 @@ const brands = ref<{ key: string; label: string }[]>([])
 await useAsyncData('admin-brands', async () => {
   try {
     const res: any = await api.get('/Brands')
-    brands.value = (res?.items || []).map((b:any) => ({ key: b.slug ?? b.key, label: b.name ?? b.label ?? b.slug })).filter((x:any) => x.key && x.label)
+    brands.value = (res?.items || []).filter(Boolean)
     if (!form.brand && brands.value.length) form.brand = brands.value[0].key
   } catch (e) {
     brands.value = []

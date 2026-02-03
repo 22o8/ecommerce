@@ -48,22 +48,33 @@ export default defineEventHandler(async (event) => {
     }
 
     // Headers
-    const headers = getRequestHeaders(event) as Record<string, any>
-    delete headers.host
-    delete headers.connection
-    delete headers['content-length']
+    // ملاحظة: على Vercel وبعض البيئات، تمرير كل هيدرز المتصفح قد يسبب 500
+    // (بسبب هيدرز محجوزة/غير مدعومة مثل sec-* / accept-encoding ...)
+    // لذلك نعتمد Allowlist آمن.
+    const incomingHeaders = getRequestHeaders(event) as Record<string, any>
+
+    const headers: Record<string, any> = {}
+    const pick = (k: string) => {
+      const v = (incomingHeaders as any)[k]
+      if (v !== undefined && v !== null && String(v).trim() !== '') headers[k] = v
+    }
+
+    // الأساسيات فقط
+    pick('accept')
+    pick('accept-language')
+    pick('content-type')
+    pick('user-agent')
 
     // ✅ 1) إذا الفرونت مرسل Authorization خليّه مثل ما هو
-    const authHeader = headers.authorization || headers.Authorization
+    const authHeader = incomingHeaders.authorization || incomingHeaders.Authorization
+    if (authHeader) headers.authorization = authHeader
 
     // ✅ 2) fallback: خذ التوكن من Cookie إذا ماكو Authorization
     const tokenFromCookie =
       getCookie(event, 'token') ||
       getCookie(event, 'access_token') ||
       getCookie(event, 'access') // ✅ نسمح لـ access هم
-    if (!authHeader && tokenFromCookie) {
-      headers.authorization = `Bearer ${tokenFromCookie}`
-    }
+    if (!authHeader && tokenFromCookie) headers.authorization = `Bearer ${tokenFromCookie}`
 
     // Body
     const body = method === 'GET' || method === 'HEAD'
