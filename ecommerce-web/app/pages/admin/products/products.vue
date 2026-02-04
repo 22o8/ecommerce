@@ -196,9 +196,7 @@ async function fetchList() {
   loading.value = true
   error.value = ''
   try {
-    const res: any = await api.get('/admin/products', {
-      query: { Page: page.value, PageSize: pageSize.value, Q: q.value || undefined, Sort: sort.value || undefined },
-    })
+    const res: any = await api.get('/admin/products', { Page: page.value, PageSize: pageSize.value, Q: q.value || undefined, Sort: sort.value || undefined })
     // دعم أكثر من شكل للباك
     items.value = res?.items || res || []
     totalCount.value = res?.totalCount ?? items.value.length

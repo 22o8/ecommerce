@@ -173,8 +173,21 @@ export default defineEventHandler(async (event) => {
 
     setResponseStatus(event, res.status)
 
+    // ✅ لا تكسر إذا الـ API رجّع 204 أو body فارغ
+    if (res.status === 204) return null
+
     const ct = res.headers.get('content-type') || ''
-    if (ct.includes('application/json')) return await res.json()
+    if (ct.includes('application/json')) {
+      try {
+        const t = await res.text()
+        if (!t || !t.trim()) return null
+        return JSON.parse(t)
+      } catch {
+        // fallback
+        try { return await res.text() } catch { return null }
+      }
+    }
+
     return await res.text()
   } catch (err: any) {
     console.error('BFF error:', err)
