@@ -13,10 +13,12 @@ namespace Ecommerce.Api.Controllers;
 public class AdminBrandsController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly IWebHostEnvironment _env;
 
-    public AdminBrandsController(AppDbContext db)
+    public AdminBrandsController(AppDbContext db, IWebHostEnvironment env)
     {
         _db = db;
+        _env = env;
     }
 
     [HttpGet]
@@ -28,116 +30,157 @@ public class AdminBrandsController : ControllerBase
             .Select(b => new
             {
                 b.Id,
-                b.Name,
                 b.Slug,
-                b.LogoUrl,
-                b.BannerUrl,
+                b.Name,
                 b.Description,
+                b.LogoUrl,
                 b.IsActive,
                 b.CreatedAt
             })
             .ToListAsync();
 
-        return Ok(items);
+        return Ok(new { items });
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById([FromRoute] Guid id)
+    {
+        var b = await _db.Brands.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+        if (b == null) return NotFound(new { message = "Brand not found" });
+        return Ok(b);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] UpsertBrandRequest req)
     {
-        if (string.IsNullOrWhiteSpace(req.Name))
-            return BadRequest("Name is required");
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var name = req.Name.Trim();
-        var slug = string.IsNullOrWhiteSpace(req.Slug)
-            ? Slugify(name)
-            : Slugify(req.Slug);
+        var slug = NormalizeSlug(req.Slug);
+        if (string.IsNullOrWhiteSpace(slug)) slug = NormalizeSlug(req.Name);
 
-        var exists = await _db.Brands.AnyAsync(x => x.Slug == slug);
-        if (exists)
-            return Conflict("Slug already exists");
+        if (string.IsNullOrWhiteSpace(slug))
+            return BadRequest(new { message = "Slug is required" });
 
-        var brand = new Brand
+        var exists = await _db.Brands.AnyAsync(x => x.Slug.ToLower() == slug);
+        if (exists) return BadRequest(new { message = "Slug already exists" });
+
+        var b = new Brand
         {
             Id = Guid.NewGuid(),
-            Name = name,
             Slug = slug,
-            Description = string.IsNullOrWhiteSpace(req.Description) ? null : req.Description.Trim(),
-            LogoUrl = string.IsNullOrWhiteSpace(req.LogoUrl) ? null : req.LogoUrl.Trim(),
-            BannerUrl = string.IsNullOrWhiteSpace(req.BannerUrl) ? null : req.BannerUrl.Trim(),
+            Name = req.Name.Trim(),
+            Description = (req.Description ?? "").Trim(),
             IsActive = req.IsActive,
             CreatedAt = DateTime.UtcNow
         };
 
-        _db.Brands.Add(brand);
+        _db.Brands.Add(b);
         await _db.SaveChangesAsync();
 
-        return Ok(brand);
+        return CreatedAtAction(nameof(GetById), new { id = b.Id }, new { b.Id });
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UpsertBrandRequest req)
+    public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpsertBrandRequest req)
     {
-        var brand = await _db.Brands.FirstOrDefaultAsync(b => b.Id == id);
-        if (brand is null) return NotFound();
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        if (!string.IsNullOrWhiteSpace(req.Name))
-            brand.Name = req.Name.Trim();
+        var b = await _db.Brands.FirstOrDefaultAsync(x => x.Id == id);
+        if (b == null) return NotFound(new { message = "Brand not found" });
 
-        if (!string.IsNullOrWhiteSpace(req.Slug))
-        {
-            var slug = Slugify(req.Slug);
-            var exists = await _db.Brands.AnyAsync(x => x.Slug == slug && x.Id != id);
-            if (exists) return Conflict("Slug already exists");
-            brand.Slug = slug;
-        }
+        var slug = NormalizeSlug(req.Slug);
+        if (string.IsNullOrWhiteSpace(slug)) slug = NormalizeSlug(req.Name);
 
-        brand.Description = string.IsNullOrWhiteSpace(req.Description) ? null : req.Description.Trim();
-        brand.LogoUrl = string.IsNullOrWhiteSpace(req.LogoUrl) ? null : req.LogoUrl.Trim();
-        brand.BannerUrl = string.IsNullOrWhiteSpace(req.BannerUrl) ? null : req.BannerUrl.Trim();
-        brand.IsActive = req.IsActive;
+        if (string.IsNullOrWhiteSpace(slug))
+            return BadRequest(new { message = "Slug is required" });
+
+        var exists = await _db.Brands.AnyAsync(x => x.Id != id && x.Slug.ToLower() == slug);
+        if (exists) return BadRequest(new { message = "Slug already exists" });
+
+        b.Slug = slug;
+        b.Name = req.Name.Trim();
+        b.Description = (req.Description ?? "").Trim();
+        b.IsActive = req.IsActive;
 
         await _db.SaveChangesAsync();
-        return Ok(brand);
+        return Ok(new { message = "Updated" });
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Delete([FromRoute] Guid id)
     {
-        var brand = await _db.Brands.FirstOrDefaultAsync(b => b.Id == id);
-        if (brand is null) return NotFound();
+        var b = await _db.Brands.FirstOrDefaultAsync(x => x.Id == id);
+        if (b == null) return NotFound(new { message = "Brand not found" });
 
-        _db.Brands.Remove(brand);
+        var hasProducts = await _db.Products.AnyAsync(p => p.Brand.ToLower() == b.Slug.ToLower());
+        if (hasProducts)
+            return BadRequest(new { message = "Cannot delete brand because it has products. Disable it instead." });
+
+        _db.Brands.Remove(b);
         await _db.SaveChangesAsync();
-        return NoContent();
+        return Ok(new { message = "Deleted" });
     }
 
-    private static string Slugify(string text)
+    // Upload square logo
+    [HttpPost("{id:guid}/logo")]
+    [RequestSizeLimit(10_000_000)]
+    public async Task<IActionResult> UploadLogo([FromRoute] Guid id, [FromForm] IFormFile file)
     {
-        text = text.Trim().ToLowerInvariant();
-        // تبسيط سريع
-        var chars = text.Select(ch => char.IsLetterOrDigit(ch) ? ch : '-').ToArray();
-        var slug = new string(chars);
-        while (slug.Contains("--")) slug = slug.Replace("--", "-");
-        return slug.Trim('-');
+        var b = await _db.Brands.FirstOrDefaultAsync(x => x.Id == id);
+        if (b == null) return NotFound(new { message = "Brand not found" });
+
+        if (file == null || file.Length == 0)
+            return BadRequest(new { message = "No file uploaded" });
+
+        var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        { ".jpg", ".jpeg", ".png", ".webp" };
+
+        var ext = Path.GetExtension(file.FileName);
+        if (!allowed.Contains(ext))
+            return BadRequest(new { message = $"File type not allowed: {ext}" });
+
+        var webRoot = _env.WebRootPath;
+        if (string.IsNullOrWhiteSpace(webRoot))
+            webRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+
+        var dir = Path.Combine(webRoot, "uploads", "brands", id.ToString());
+        Directory.CreateDirectory(dir);
+
+        var fileName = $"logo{ext.ToLowerInvariant()}";
+
+        var absPath = Path.Combine(dir, fileName);
+        await using (var fs = new FileStream(absPath, FileMode.Create))
+        {
+            await file.CopyToAsync(fs);
+        }
+
+        b.LogoUrl = $"/uploads/brands/{id}/{fileName}";
+        await _db.SaveChangesAsync();
+
+        return Ok(new { logoUrl = b.LogoUrl });
     }
-}
 
-public class UpsertBrandRequest
-{
-    [MaxLength(200)]
-    public string Name { get; set; } = string.Empty;
+    public class UpsertBrandRequest
+    {
+        [Required, MaxLength(120)]
+        public string Name { get; set; } = "";
 
-    [MaxLength(250)]
-    public string? Slug { get; set; }
+        [MaxLength(80)]
+        public string? Slug { get; set; }
 
-    [MaxLength(5000)]
-    public string? Description { get; set; }
+        [MaxLength(400)]
+        public string? Description { get; set; }
 
-    [MaxLength(2000)]
-    public string? LogoUrl { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
 
-    [MaxLength(2000)]
-    public string? BannerUrl { get; set; }
-
-    public bool IsActive { get; set; } = true;
+    private static string NormalizeSlug(string? s)
+    {
+        s = (s ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(s)) return "";
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"\s+", "-");
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"[^a-z0-9\-]", "");
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"-+", "-").Trim('-');
+        return s;
+    }
 }
