@@ -177,18 +177,31 @@ export default defineEventHandler(async (event) => {
     if (res.status === 204) return null
 
     const ct = res.headers.get('content-type') || ''
-    if (ct.includes('application/json')) {
+
+    // ✅ اقرأ الـ body مرة وحدة وبشكل آمن
+    let rawText = ''
+    try {
+      const ab = await res.arrayBuffer()
+      rawText = Buffer.from(ab).toString('utf-8')
+    } catch {
+      rawText = ''
+    }
+
+    if (!rawText || !rawText.trim()) return null
+
+    // ✅ إذا الـ API رجّع JSON حتى لو كان content-type غلط (text/plain)
+    const looksLikeJson = ct.includes('application/json') || rawText.trim().startsWith('{') || rawText.trim().startsWith('[')
+
+    if (looksLikeJson) {
       try {
-        const t = await res.text()
-        if (!t || !t.trim()) return null
-        return JSON.parse(t)
+        return JSON.parse(rawText)
       } catch {
-        // fallback
-        try { return await res.text() } catch { return null }
+        // fallback نص
+        return rawText
       }
     }
 
-    return await res.text()
+    return rawText
   } catch (err: any) {
     console.error('BFF error:', err)
     setResponseStatus(event, 500)

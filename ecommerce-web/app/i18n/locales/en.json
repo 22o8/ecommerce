@@ -88,7 +88,9 @@
     "save": "Save",
     "cancel": "Cancel",
     "back": "Back",
-    "delete": "Delete"
+    "delete": "Delete",
+    "upload": "Upload",
+    "saved": "Saved"
   },
   "admin": {
     "overview": "Overview",
@@ -206,7 +208,9 @@
     "brand": "Brand",
     "title": "Admin Dashboard",
     "viewSite": "View site",
-    "backToSite": "Back to site"
+    "backToSite": "Back to site",
+    "slug": "Slug",
+    "description": "Description"
   },
   "cartTitle": "Shopping cart",
   "cartHint": "Review your items and continue to checkout.",
