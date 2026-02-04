@@ -1,3 +1,4 @@
+// Ecommerce.Api/Controllers/AdminBrandsController.cs
 using System.ComponentModel.DataAnnotations;
 using Ecommerce.Api.Domain.Entities;
 using Ecommerce.Api.Infrastructure.Data;
@@ -61,7 +62,8 @@ public class AdminBrandsController : ControllerBase
         if (string.IsNullOrWhiteSpace(slug))
             return BadRequest(new { message = "Slug is required" });
 
-        var exists = await _db.Brands.AnyAsync(x => x.Slug.ToLower() == slug);
+        var lower = slug.ToLowerInvariant();
+        var exists = await _db.Brands.AnyAsync(x => x.Slug.ToLower() == lower);
         if (exists) return BadRequest(new { message = "Slug already exists" });
 
         var b = new Brand
@@ -94,7 +96,8 @@ public class AdminBrandsController : ControllerBase
         if (string.IsNullOrWhiteSpace(slug))
             return BadRequest(new { message = "Slug is required" });
 
-        var exists = await _db.Brands.AnyAsync(x => x.Id != id && x.Slug.ToLower() == slug);
+        var lower = slug.ToLowerInvariant();
+        var exists = await _db.Brands.AnyAsync(x => x.Id != id && x.Slug.ToLower() == lower);
         if (exists) return BadRequest(new { message = "Slug already exists" });
 
         b.Slug = slug;
@@ -112,7 +115,12 @@ public class AdminBrandsController : ControllerBase
         var b = await _db.Brands.FirstOrDefaultAsync(x => x.Id == id);
         if (b == null) return NotFound(new { message = "Brand not found" });
 
-        var hasProducts = await _db.Products.AnyAsync(p => p.Brand.ToLower() == b.Slug.ToLower());
+        var brandSlug = (b.Slug ?? "").Trim().ToLowerInvariant();
+
+        var hasProducts = await _db.Products.AnyAsync(p =>
+            (p.Brand ?? "").ToLower() == brandSlug
+        );
+
         if (hasProducts)
             return BadRequest(new { message = "Cannot delete brand because it has products. Disable it instead." });
 
@@ -136,7 +144,7 @@ public class AdminBrandsController : ControllerBase
         { ".jpg", ".jpeg", ".png", ".webp" };
 
         var ext = Path.GetExtension(file.FileName);
-        if (!allowed.Contains(ext))
+        if (string.IsNullOrWhiteSpace(ext) || !allowed.Contains(ext))
             return BadRequest(new { message = $"File type not allowed: {ext}" });
 
         var webRoot = _env.WebRootPath;
@@ -147,8 +155,8 @@ public class AdminBrandsController : ControllerBase
         Directory.CreateDirectory(dir);
 
         var fileName = $"logo{ext.ToLowerInvariant()}";
-
         var absPath = Path.Combine(dir, fileName);
+
         await using (var fs = new FileStream(absPath, FileMode.Create))
         {
             await file.CopyToAsync(fs);
@@ -178,9 +186,11 @@ public class AdminBrandsController : ControllerBase
     {
         s = (s ?? "").Trim().ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(s)) return "";
+
         s = System.Text.RegularExpressions.Regex.Replace(s, @"\s+", "-");
         s = System.Text.RegularExpressions.Regex.Replace(s, @"[^a-z0-9\-]", "");
         s = System.Text.RegularExpressions.Regex.Replace(s, @"-+", "-").Trim('-');
+
         return s;
     }
 }
