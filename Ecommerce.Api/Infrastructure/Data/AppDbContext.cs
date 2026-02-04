@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Product> Products => Set<Product>();
+	public DbSet<Brand> Brands => Set<Brand>();
     public DbSet<Service> Services => Set<Service>();
     public DbSet<ServicePackage> ServicePackages => Set<ServicePackage>();
     public DbSet<ServiceRequirementTemplate> ServiceRequirements => Set<ServiceRequirementTemplate>();
@@ -25,6 +26,23 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+		// Brand
+		modelBuilder.Entity<Brand>(b =>
+		{
+			b.HasIndex(x => x.Slug).IsUnique();
+			b.Property(x => x.Name).HasMaxLength(200).IsRequired();
+			b.Property(x => x.Slug).HasMaxLength(200).IsRequired();
+			b.Property(x => x.LogoUrl).HasMaxLength(2048);
+			b.Property(x => x.BannerUrl).HasMaxLength(2048);
+		});
+
+		// Product -> Brand (اختياري)
+		modelBuilder.Entity<Product>()
+			.HasOne(p => p.Brand)
+			.WithMany()
+			.HasForeignKey(p => p.BrandId)
+			.OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)

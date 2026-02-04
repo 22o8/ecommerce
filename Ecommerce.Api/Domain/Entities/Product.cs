@@ -5,7 +5,6 @@ public class Product
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Title { get; set; } = "";
-    public string Brand { get; set; } = ""; // ✅ إجباري (فهرسة البراند)
     public string Slug { get; set; } = "";
     public string Description { get; set; } = "";
     public decimal PriceUsd { get; set; }
@@ -19,4 +18,8 @@ public class Product
 
     public ProductAsset? Asset { get; set; }
     public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
+
+    // Brand (اختياري)
+    public Guid? BrandId { get; set; }
+    public Brand? Brand { get; set; }
 }

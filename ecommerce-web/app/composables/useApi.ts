@@ -46,14 +46,11 @@ export function useApi() {
       ...(opts.headers || {}),
     }
 
-    // ✅ iOS / in-app browsers أحيانًا لا يرسلون HttpOnly cookie بثبات.
-    // لذلك نستخدم access cookie (غير HttpOnly) كـ Bearer token fallback.
-    // ملاحظة: هذا الهيدر يُرسل إلى الـ BFF (نفس الدومين) فقط.
-    const hasAuthHeader = !!(mergedHeaders.authorization || mergedHeaders.Authorization)
-    const t = (access.value || '').trim()
-    if (!hasAuthHeader && t) {
-      // نستخدم lowercase (node/fetch) والـ BFF يمرره للـ API
-      mergedHeaders.authorization = `Bearer ${t}`
+    // ✅ Client: إذا عندنا access token غير httpOnly، ارسله كـ Authorization
+    // (لا تكتب Authorization إذا موجود أصلًا)
+    if (process.client && !mergedHeaders.Authorization && !mergedHeaders.authorization) {
+      const t = (access.value || '').trim()
+      if (t) mergedHeaders.Authorization = `Bearer ${t}`
     }
 
     return (await $fetch(url, {
