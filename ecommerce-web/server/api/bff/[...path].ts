@@ -3,9 +3,13 @@ export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
 
+    // IMPORTANT:
+    // لا تستخدم apiBase هنا إطلاقاً.
+    // إذا apiOrigin صار فاضي/غلط، كان الكود ياخذ "/api/bff" (apiBase)
+    // ويسوي recursion على نفسه -> 500 على Vercel.
     const apiOrigin =
+      (config as any).apiOrigin ||
       (config.public as any).apiOrigin ||
-      (config.public as any).apiBase ||
       process.env.NUXT_API_ORIGIN ||
       process.env.NUXT_PUBLIC_API_ORIGIN
 

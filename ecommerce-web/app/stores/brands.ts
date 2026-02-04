@@ -15,6 +15,12 @@ export const useBrandsStore = defineStore('brands', () => {
   const items = ref<BrandDto[]>([])
   const loading = ref(false)
 
+  // ✅ واجهة المتجر تعتمد على publicItems
+  // حتى ما تنكسر صفحات الهوم/البراندات إذا تغيّر شكل البيانات.
+  const publicItems = computed(() =>
+    (items.value || []).filter((b: any) => b && b.slug && (b.isActive ?? true))
+  )
+
   const { get, post, put, del, postForm } = useApi()
 
   const fetchPublic = async () => {
@@ -62,6 +68,7 @@ export const useBrandsStore = defineStore('brands', () => {
   return {
     items,
     loading,
+    publicItems,
     fetchPublic,
     fetchAdmin,
     getBySlug,

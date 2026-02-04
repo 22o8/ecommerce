@@ -51,8 +51,15 @@ async function submit(){
   error.value = ''
   try{
     await auth.login({ email: email.value, password: password.value })
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
-    router.push(redirect)
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+
+    // ✅ إذا أدمن وما محدد redirect -> روح للوحة التحكم
+    if (!redirect && auth.isAdmin) {
+      router.push('/admin')
+      return
+    }
+
+    router.push(redirect || '/')
   }catch(e:any){
     error.value = e?.data?.message || e?.message || t('loginFailed')
   }finally{

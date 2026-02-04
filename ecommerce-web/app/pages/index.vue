@@ -15,8 +15,8 @@
 
             <div class="mt-6 flex flex-wrap gap-3">
               <NuxtLink
-                to="/products"
-                class="rounded-xl bg-violet-500 px-4 py-2 font-semibold text-black hover:bg-violet-400"
+                to="/brands"
+                class="rounded-xl bg-[rgb(var(--primary))] px-4 py-2 font-semibold text-black hover:opacity-90"
               >
                 {{ t('home.browseBrands') }}
               </NuxtLink>
@@ -57,7 +57,7 @@
           <h2 class="text-2xl font-bold">{{ t('home.brands') }}</h2>
           <p class="mt-1 text-[rgba(var(--muted),0.9)]">{{ t('home.brandsSubtitle') }}</p>
         </div>
-        <NuxtLink to="/products" class="text-sm font-semibold text-[rgba(var(--muted),0.95)] hover:text-[rgb(var(--text))]">
+        <NuxtLink to="/brands" class="text-sm font-semibold text-[rgba(var(--muted),0.95)] hover:text-[rgb(var(--text))]">
           {{ t('home.viewAllBrands') }}
         </NuxtLink>
       </div>
@@ -111,7 +111,7 @@ const { pending } = await useAsyncData('home_brands', async () => {
   return true
 })
 
-const brands = computed(() => brandsStore.publicItems || [])
+const brands = computed(() => brandsStore.publicItems || brandsStore.items || [])
 
 const marqueeItems = computed(() => {
   const list = brands.value || []
@@ -120,11 +120,9 @@ const marqueeItems = computed(() => {
   return doubled.map((b: any, idx: number) => ({ ...b, _k: `${b.id || b.slug}-${idx}` }))
 })
 
+const { buildAssetUrl } = useApi()
 function resolveImage(url?: string | null) {
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  // backend already serves /uploads... from the same domain
-  return url
+  return buildAssetUrl(url || '')
 }
 </script>
 

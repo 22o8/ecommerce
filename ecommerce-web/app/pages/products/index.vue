@@ -1,111 +1,146 @@
-<script setup lang="ts">
-import { useBrandsStore } from '@/stores/brands'
-import { useI18n } from '@/composables/useI18n'
-
-const { t } = useI18n()
-const brandsStore = useBrandsStore()
-
-await useAsyncData('public-brands', async () => {
-  await brandsStore.fetchPublic()
-})
-
-// Helpers
-const q = ref('')
-const normalize = (s: string) => (s || '').trim().toLowerCase()
-
-const presetNames = [
-  'Anua',
-  'APRILSKIN',
-  'VT (VT Global)',
-  'Skinfood',
-  'Medicube',
-  'Numbuzin',
-  'K-SECRET',
-  'Equal Berry',
-  'SKIN1004',
-  'Beauty of Joseon',
-  'JMsolution',
-  'Tenzero',
-  'Dr.Ceuracle',
-  'Rejuran',
-  'Celimax',
-  'Medipeel',
-  'Biodance',
-  'Dr.CPU',
-  'Anua KR',
-]
-
-const apiBrands = computed(() => brandsStore.publicItems || [])
-
-const optionItems = computed(() => {
-  const map = new Map<string, { name: string; slug?: string }>()
-  // from API
-  for (const b of apiBrands.value) {
-    if (!b?.name) continue
-    map.set(normalize(b.name), { name: b.name, slug: b.slug })
-  }
-  // presets (fallback)
-  for (const name of presetNames) {
-    if (!map.has(normalize(name))) map.set(normalize(name), { name })
-  }
-  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
-})
-
-const filteredBrands = computed(() => {
-  const needle = normalize(q.value)
-  if (!needle) return apiBrands.value
-  return apiBrands.value.filter(b =>
-    normalize(b.name).includes(needle) || normalize(b.slug).includes(needle)
-  )
-})
-</script>
-
 <template>
-  <div class="min-h-[70vh]">
-    <section class="container mx-auto px-4 pt-10 pb-6">
-      <div class="mb-6">
-        <h1 class="text-3xl font-black tracking-tight text-[rgb(var(--text))]">
-          {{ t('brands.title') }}
-        </h1>
-        <p class="mt-2 text-sm text-[rgba(var(--muted),0.95)]">
-          {{ t('brands.subtitle') }}
-        </p>
+  <div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold rtl-text">{{ t('productsPage.title') }}</h1>
+        <p class="mt-2 text-muted rtl-text">{{ t('productsPage.subtitle') }}</p>
       </div>
 
-      <!-- Brand options -->
-      <div class="rounded-3xl border border-[rgba(var(--border),1)] bg-[rgba(var(--surface),0.9)] p-4">
-        <div class="flex items-center gap-3 flex-wrap">
-          <div class="relative flex-1 min-w-[240px]">
-            <input
-              v-model="q"
-              class="input"
-              :placeholder="t('common.search')"
-              aria-label="Search brands"
-            />
-          </div>
-
-          <div class="flex-1 min-w-[240px] flex flex-wrap gap-2 justify-end">
-            <NuxtLink
-              v-for="it in optionItems"
-              :key="it.name"
-              :to="it.slug ? `/brands/${it.slug}` : `/products?search=${encodeURIComponent(it.name)}`"
-              class="px-4 py-2 rounded-2xl border border-[rgba(var(--border),1)] bg-[rgba(var(--surface-2),1)] text-sm font-semibold text-[rgb(var(--text))] hover:opacity-90 transition"
-            >
-              {{ it.name }}
-            </NuxtLink>
-          </div>
+      <div class="w-full lg:w-[560px] grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="relative">
+          <input
+            v-model="q"
+            :placeholder="t('productsPage.searchPlaceholder')"
+            class="input"
+            @keydown.enter="applyFilters"
+          />
+          <button
+            v-if="q"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-muted hover:opacity-80"
+            @click="q = ''"
+            aria-label="clear"
+          >
+            ✕
+          </button>
         </div>
-      </div>
-    </section>
 
-    <section class="container mx-auto px-4 pb-14">
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
-        <BrandCard v-for="b in filteredBrands" :key="b.id" :brand="b" />
-      </div>
+        <select v-model="sort" class="input py-3">
+          <option value="new">{{ t('productsPage.sort.new') }}</option>
+          <option value="priceAsc">{{ t('productsPage.sort.priceAsc') }}</option>
+          <option value="priceDesc">{{ t('productsPage.sort.priceDesc') }}</option>
+        </select>
 
-      <div v-if="!brandsStore.publicLoading && filteredBrands.length === 0" class="mt-10 text-center">
-        <p class="text-[rgba(var(--muted),0.95)]">{{ t('home.noBrandsFound') }}</p>
+        <select v-model="brand" class="input py-3 sm:col-span-2">
+          <option value="">{{ t('productsPage.allBrands') }}</option>
+          <option v-for="b in brandOptions" :key="b.slug" :value="b.slug">
+            {{ b.name }}
+          </option>
+        </select>
       </div>
-    </section>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <ProductCard v-for="p in products.items" :key="p.id" :p="p" />
+    </div>
+
+    <div v-if="!products.loading && products.items.length === 0" class="mt-10 card-soft p-10 text-center text-muted rtl-text">
+      <div class="font-extrabold">{{ t('productsPage.emptyTitle') }}</div>
+      <div class="mt-2 text-sm">{{ t('productsPage.emptyDesc') }}</div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-8 flex items-center justify-between gap-3">
+      <button class="btn-secondary" :disabled="page <= 1 || products.loading" @click="goPage(page - 1)">
+        {{ t('productsPage.prev') }}
+      </button>
+      <div class="text-sm text-muted keep-ltr">
+        {{ t('productsPage.page') }}: {{ page }}
+      </div>
+      <button class="btn-secondary" :disabled="!hasNext || products.loading" @click="goPage(page + 1)">
+        {{ t('productsPage.next') }}
+      </button>
+    </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import ProductCard from '~/components/ProductCard.vue'
+
+const { t } = useI18n()
+const route = useRoute()
+const router = useRouter()
+
+const brandsStore = useBrandsStore()
+const products = useProductsStore()
+
+const q = ref(String(route.query.q || ''))
+const sort = ref(String(route.query.sort || 'new'))
+const brand = ref(String(route.query.brand || ''))
+const page = ref(Number(route.query.page || 1) || 1)
+
+await useAsyncData('products_page_boot', async () => {
+  // نجيب البراندات مرة حتى يشتغل فلتر البراند
+  await brandsStore.fetchPublic()
+  await fetchProducts()
+  return true
+})
+
+const brandOptions = computed(() => (brandsStore.publicItems || []).map((b: any) => ({ name: b.name, slug: b.slug })))
+
+const hasNext = computed(() => {
+  const total = Number(products.totalCount || 0)
+  const pageSize = 12
+  return page.value * pageSize < total
+})
+
+async function fetchProducts() {
+  await products.fetch({
+    page: page.value,
+    pageSize: 12,
+    q: q.value || undefined,
+    sort: sort.value as any,
+    brand: brand.value || undefined,
+  })
+}
+
+function applyFilters() {
+  page.value = 1
+  router.push({
+    path: '/products',
+    query: {
+      ...(q.value ? { q: q.value } : {}),
+      ...(sort.value && sort.value !== 'new' ? { sort: sort.value } : {}),
+      ...(brand.value ? { brand: brand.value } : {}),
+      page: '1',
+    },
+  })
+}
+
+function goPage(p: number) {
+  page.value = Math.max(1, p)
+  router.push({
+    path: '/products',
+    query: {
+      ...route.query,
+      page: String(page.value),
+    },
+  })
+}
+
+watch([q, sort, brand], () => {
+  // لا نسوي fetch مباشر هنا حتى ما يصير spam...
+  // المستخدم يقدر يضغط Enter أو يغير sort/brand فتتحدث URL وتعمل watcher أدناه
+})
+
+watch(
+  () => route.query,
+  async (qv) => {
+    q.value = String(qv.q || '')
+    sort.value = String(qv.sort || 'new')
+    brand.value = String(qv.brand || '')
+    page.value = Number(qv.page || 1) || 1
+    await fetchProducts()
+  },
+  { deep: true }
+)
+</script>

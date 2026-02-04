@@ -32,6 +32,13 @@
 
         <!-- Actions -->
 	        <div class="flex items-center gap-0.5 sm:gap-2 flex-shrink-0">
+	          <!-- Brands -->
+	          <NuxtLink to="/brands" class="hidden sm:block">
+	            <UiButton variant="ghost" class="px-2 sm:px-3">
+              <Icon name="mdi:storefront-outline" class="text-lg" />
+              <span class="hidden md:inline rtl-text">{{ t('home.brands') }}</span>
+            </UiButton>
+          </NuxtLink>
 	          <!-- Cart: يظهر على الهاتف أيضاً (أيقونة فقط) -->
 	          <NuxtLink to="/cart" class="block">
 	            <UiButton variant="ghost" class="relative px-2 sm:px-3 shrink-0">
@@ -50,7 +57,7 @@
             <span class="hidden sm:inline keep-ltr">{{ ui.locale.toUpperCase() }}</span>
           </UiButton>
 
-	          <UiButton variant="ghost" class="px-2 sm:px-3 shrink-0" @click="toggleTheme" :title="ui.theme === 'dark' ? t('theme.dark') : t('theme.light')">
+	          <UiButton variant="ghost" class="px-2 sm:px-3 shrink-0" @click="toggleTheme" :title="ui.theme === 'dark' ? t('ui.dark') : t('ui.light')">
             <Icon :name="ui.theme === 'dark' ? 'mdi:weather-night' : 'mdi:white-balance-sunny'" class="text-lg" />
           </UiButton>
 
@@ -58,7 +65,7 @@
 	          <NuxtLink v-if="isAdmin" to="/admin" class="hidden sm:block">
 	            <UiButton variant="secondary">
               <Icon name="mdi:view-dashboard-outline" class="text-lg" />
-              <span class="rtl-text">{{ t('dashboard') }}</span>
+              <span class="rtl-text">{{ t('home.dashboard') }}</span>
             </UiButton>
           </NuxtLink>
 
@@ -105,6 +112,12 @@
                 <span class="rtl-text">{{ t('nav.products') }}</span>
               </div>
             </NuxtLink>
+	          <NuxtLink to="/brands" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
+	            <div class="flex items-center gap-2">
+	              <Icon name="mdi:storefront-outline" class="text-lg" />
+	              <span class="rtl-text">{{ t('home.brands') }}</span>
+	            </div>
+	          </NuxtLink>
             <NuxtLink to="/cart" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
               <div class="flex items-center gap-2">
                 <Icon name="mdi:cart-outline" class="text-lg" />

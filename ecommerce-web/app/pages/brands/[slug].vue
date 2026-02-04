@@ -22,7 +22,7 @@
             <input
               v-model="q"
               :placeholder="t('brandPage.search')"
-              class="w-full rounded-xl bg-white/[0.04] border border-[rgba(var(--border),1)] px-4 py-3 outline-none focus:ring-2 focus:ring-white/10"
+              class="input"
             />
             <button
               v-if="q"
@@ -34,7 +34,7 @@
             </button>
           </div>
 
-          <select v-model="sort" class="rounded-xl bg-white/[0.04] border border-[rgba(var(--border),1)] px-4 py-3 outline-none">
+          <select v-model="sort" class="input py-3">
             <option value="new">{{ t('products.sortNew') }}</option>
             <option value="priceAsc">{{ t('products.sortPriceAsc') }}</option>
             <option value="priceDesc">{{ t('products.sortPriceDesc') }}</option>

@@ -4,8 +4,8 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
 
   const apiOriginRaw =
+    (config as any).apiOrigin ||
     (config.public as any).apiOrigin ||
-    (config.public as any).apiBase ||
     process.env.NUXT_PUBLIC_API_ORIGIN ||
     process.env.NUXT_API_ORIGIN
 
