@@ -21,7 +21,7 @@ builder.Services.AddSwaggerGen(c =>
     // ✅ يمنع تعارض أسماء الـ Schemas
     c.CustomSchemaIds(t => t.FullName!.Replace("+", "."));
 
-    // ✅ Swagger Authorize (JWT Bearer) - (اختياري) حتى Swagger ما يصير "مقفول".
+    // ✅ Swagger Authorize (JWT Bearer)
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -32,8 +32,20 @@ builder.Services.AddSwaggerGen(c =>
         Description = "اكتب بهذا الشكل: Bearer {token}"
     });
 
-    // ملاحظة: ما نضيف SecurityRequirement بشكل Global
-    // حتى يبقى Swagger UI و swagger.json يشتغلون بدون Token.
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 
 // ============================
@@ -160,68 +172,28 @@ app.UseAuthorization();
 app.MapControllers();
 
 // ============================
-// DB Init (Auto)
+// Apply Migrations Toggle
 // ============================
-
-// الفكرة: حتى ما تبقى المشكلة "relation does not exist".
-// إذا المشروع بيه Migrations -> نسوي Migrate.
-// وإذا ما بيه Migrations (مثل النسخة الحالية) -> نسوي EnsureCreated.
 
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    var disableInitRaw = (Environment.GetEnvironmentVariable("DISABLE_DB_INIT") ?? "")
+    var runMigrationsRaw = (Environment.GetEnvironmentVariable("RUN_MIGRATIONS") ?? "")
         .Trim()
         .ToLowerInvariant();
-    var disableInit = disableInitRaw is "1" or "true" or "yes" or "y" or "on";
 
-    if (!disableInit)
+    var runMigrations = runMigrationsRaw is "1" or "true" or "yes" or "y" or "on";
+
+    if (runMigrations)
     {
-        try
-        {
-            var hasMigrations = db.Database.GetMigrations().Any();
-            if (hasMigrations)
-            {
-                Console.WriteLine("DB init: applying EF migrations...");
-                db.Database.Migrate();
-                Console.WriteLine("DB init: migrations done.");
-            }
-            else
-            {
-                Console.WriteLine("DB init: no migrations found -> EnsureCreated...");
-                db.Database.EnsureCreated();
-                Console.WriteLine("DB init: EnsureCreated done.");
-            }
-
-            // ✅ Hotfix: إذا قاعدة البيانات كانت موجودة سابقاً بدون جدول Brands
-            // EnsureCreated ما يضيف جداول جديدة لقاعدة موجودة، لذلك نسوي إنشاء/تعديل آمن.
-            // ملاحظة: داخل verbatim string (@"...") لازم نستخدم "" بدل \" للهروب من علامة الاقتباس.
-            db.Database.ExecuteSqlRaw(@"
-                CREATE TABLE IF NOT EXISTS ""Brands"" (
-                    ""Id"" uuid NOT NULL,
-                    ""Name"" text NOT NULL,
-                    ""Slug"" text NOT NULL,
-                    ""Description"" text NULL,
-                    ""LogoUrl"" text NULL,
-                    ""BannerUrl"" text NULL,
-                    ""IsActive"" boolean NOT NULL DEFAULT true,
-                    ""CreatedAt"" timestamp with time zone NOT NULL,
-                    ""UpdatedAt"" timestamp with time zone NULL,
-                    CONSTRAINT ""PK_Brands"" PRIMARY KEY (""Id"")
-                );
-                CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Brands_Slug"" ON ""Brands"" (""Slug"");
-                ALTER TABLE ""Products"" ADD COLUMN IF NOT EXISTS ""BrandId"" uuid NULL;
-            ");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"DB init failed: {ex.Message}");
-        }
+        Console.WriteLine("RUN_MIGRATIONS enabled -> applying EF migrations...");
+        db.Database.Migrate();
+        Console.WriteLine("EF migrations applied.");
     }
     else
     {
-        Console.WriteLine("DISABLE_DB_INIT enabled -> skipping DB init.");
+        Console.WriteLine("RUN_MIGRATIONS disabled -> skipping EF migrations.");
     }
 }
 

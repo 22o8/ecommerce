@@ -18,8 +18,4 @@ public class Product
 
     public ProductAsset? Asset { get; set; }
     public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
-
-    // Brand (اختياري)
-    public Guid? BrandId { get; set; }
-    public Brand? Brand { get; set; }
 }

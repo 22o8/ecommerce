@@ -95,7 +95,6 @@ public class AdminProductsController : ControllerBase
             Slug = slug,
             Description = (req.Description ?? "").Trim(),
             PriceUsd = req.PriceUsd,
-            BrandId = req.BrandId,
             IsPublished = req.IsPublished,
             CreatedAt = DateTime.UtcNow
         };
@@ -125,7 +124,6 @@ public class AdminProductsController : ControllerBase
         p.Slug = slug;
         p.Description = (req.Description ?? "").Trim();
         p.PriceUsd = req.PriceUsd;
-        p.BrandId = req.BrandId;
         p.IsPublished = req.IsPublished;
 
         await _db.SaveChangesAsync();
@@ -372,9 +370,6 @@ public class UpsertProductRequest
 
     [Range(0, 999999)]
     public decimal PriceUsd { get; set; }
-
-    // Brand (اختياري)
-    public Guid? BrandId { get; set; }
 
     public bool IsPublished { get; set; }
 }
