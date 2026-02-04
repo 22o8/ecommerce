@@ -1,208 +1,226 @@
-<!-- app/pages/admin/products/new.vue -->
 <template>
-  <div class="space-y-4">
-    <div class="admin-box">
-      <div class="text-xl font-extrabold">{{ $t('admin.newProduct') }}</div>
-      <div class="text-sm admin-muted">{{ $t('admin.newProductHint') }}</div>
+  <div class="w-full">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-bold">{{ t('admin.addProduct') }}</h1>
+        <p class="text-sm text-white/70">{{ t('admin.addProductHint') }}</p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <UiButton variant="ghost" @click="navigateTo('/admin/products')">{{ t('common.back') }}</UiButton>
+      </div>
     </div>
 
-    <div class="admin-box">
-      <form class="space-y-3" @submit.prevent="create">
-        <div class="grid gap-3 md:grid-cols-2">
-          <div>
-            <div class="label">{{ $t('admin.name') }}</div>
-            <input v-model="form.title" class="admin-input" :placeholder="$t('admin.namePlaceholder')" />
+    <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <!-- Form -->
+      <UiCard class="lg:col-span-2">
+        <UiCardHeader>
+          <UiCardTitle>{{ t('admin.productDetails') }}</UiCardTitle>
+          <UiCardDescription>{{ t('admin.productDetailsHint') }}</UiCardDescription>
+        </UiCardHeader>
+        <UiCardContent>
+          <form class="grid grid-cols-1 gap-4 md:grid-cols-2" @submit.prevent="onCreate">
+            <div class="md:col-span-2">
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.brand') }}</label>
+              <select
+                v-model="form.brandSlug"
+                class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20"
+                required
+              >
+                <option value="" disabled>{{ t('admin.selectBrand') }}</option>
+                <option v-for="b in brands" :key="b.id" :value="b.slug">
+                  {{ b.name }} (/{{ b.slug }})
+                </option>
+              </select>
+              <p v-if="brands.length === 0" class="mt-2 text-xs text-amber-200/90">
+                {{ t('admin.noBrandsYet') }}
+              </p>
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.name') }}</label>
+              <UiInput v-model="form.name" :placeholder="t('admin.namePlaceholder')" required />
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.slug') }}</label>
+              <UiInput v-model="form.slug" :placeholder="t('admin.slugPlaceholder')" required />
+              <p class="mt-1 text-xs text-white/60">{{ t('admin.slugHint') }}</p>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.description') }}</label>
+              <textarea
+                v-model="form.description"
+                rows="4"
+                class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20"
+                :placeholder="t('admin.descriptionPlaceholder')"
+              />
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.price') }}</label>
+              <UiInput v-model.number="form.price" type="number" min="0" step="0.01" />
+            </div>
+
+            <div class="flex items-end gap-3">
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-white/80">
+                <input v-model="form.isActive" type="checkbox" class="h-4 w-4" />
+                {{ t('common.active') }}
+              </label>
+            </div>
+
+            <div class="md:col-span-2 flex flex-wrap items-center gap-2 pt-2">
+              <UiButton :disabled="loading" type="submit">
+                {{ loading ? t('common.saving') : t('common.create') }}
+              </UiButton>
+              <UiButton
+                variant="secondary"
+                :disabled="loading"
+                type="button"
+                @click="navigateTo('/admin/products')"
+              >
+                {{ t('common.cancel') }}
+              </UiButton>
+            </div>
+          </form>
+        </UiCardContent>
+      </UiCard>
+
+      <!-- Images -->
+      <UiCard>
+        <UiCardHeader>
+          <UiCardTitle>{{ t('admin.images') }}</UiCardTitle>
+          <UiCardDescription>{{ t('admin.imagesCreateHint') }}</UiCardDescription>
+        </UiCardHeader>
+        <UiCardContent>
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <input
+              ref="fileInput"
+              type="file"
+              accept="image/*"
+              multiple
+              class="hidden"
+              @change="onPickFiles"
+            />
+
+            <div class="flex items-center justify-between gap-2">
+              <div class="text-sm text-white/80">{{ t('admin.imagesSelected', { count: files.length }) }}</div>
+              <UiButton size="sm" variant="ghost" type="button" @click="fileInput?.click()">
+                {{ t('common.chooseFiles') }}
+              </UiButton>
+            </div>
+
+            <div v-if="files.length" class="mt-4 grid grid-cols-3 gap-2">
+              <div
+                v-for="(f, idx) in files"
+                :key="idx"
+                class="group relative overflow-hidden rounded-xl border border-white/10 bg-black/20"
+              >
+                <img :src="f.preview" class="h-20 w-full object-cover" />
+                <button
+                  type="button"
+                  class="absolute right-2 top-2 rounded-lg bg-black/60 px-2 py-1 text-xs opacity-0 transition group-hover:opacity-100"
+                  @click="removeFile(idx)"
+                >
+                  {{ t('common.remove') }}
+                </button>
+              </div>
+            </div>
+
+            <p v-else class="mt-3 text-sm text-white/60">{{ t('admin.imagesEmpty') }}</p>
           </div>
-
-          <div>
-            <div class="label">{{ $t('admin.slug') }}</div>
-            <input v-model="form.slug" class="admin-input" :placeholder="$t('admin.slugPlaceholder')" />
-          </div>
-        </div>
-
-        <div class="grid gap-3 md:grid-cols-2">
-
-          <div>
-            <div class="label">{{ $t('admin.brand') }}</div>
-            <select v-model="form.brand" class="admin-input" required>
-              <option value="" disabled>{{ t('admin.selectBrand') }}</option>
-              <option v-for="b in brands" :key="b.key" :value="b.key">{{ b.label }}</option>
-            </select>
-          </div>
-
-        </div>
-
-        <div>
-          <div class="label">{{ $t('admin.description') }}</div>
-          <textarea v-model="form.description" class="admin-input" rows="5" :placeholder="$t('admin.descriptionPlaceholder')" />
-        </div>
-
-        <div class="grid gap-3 md:grid-cols-2">
-          <div>
-            <div class="label">{{ $t('admin.price') }} (USD)</div>
-            <input v-model.number="form.priceUsd" type="number" class="admin-input" />
-          </div>
-
-          <div class="flex items-end gap-2">
-            <label class="check">
-              <input v-model="form.isPublished" type="checkbox" />
-              <span>{{ $t('admin.published') }}</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="flex gap-2">
-          <button class="admin-primary" type="submit" :disabled="pending">
-            {{ pending ? $t('common.saving') : $t('common.create') }}
-          </button>
-          <NuxtLink to="/admin/products" class="admin-ghost">{{ $t('common.cancel') }}</NuxtLink>
-        </div>
-
-        <div v-if="error" class="admin-error">{{ error }}</div>
-        <div v-if="success" class="admin-success">{{ success }}</div>
-      </form>
+        </UiCardContent>
+      </UiCard>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: 'admin', middleware: ['admin'] })
-
-const api = useAdminApi()
-
-const brands = ref<{ key: string; label: string }[]>([])
-
-await useAsyncData('admin-brands', async () => {
-  try {
-    const res: any = await api.get('/Brands')
-    brands.value = (res?.items || []).map((b:any) => ({ key: b.slug ?? b.key, label: b.name ?? b.label ?? b.slug })).filter((x:any) => x.key && x.label)
-    if (!form.brand && brands.value.length) form.brand = brands.value[0].key
-  } catch (e) {
-    brands.value = []
-  }
-  return true
-})
-
-const pending = ref(false)
-const error = ref('')
-const success = ref('')
+definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const { t } = useI18n()
+const toast = useToast()
+const { listBrands, createProduct, uploadProductImages } = useAdminApi()
+
+type BrandItem = { id: string; slug: string; name: string }
+
+const brands = ref<BrandItem[]>([])
+const loading = ref(false)
 
 const form = reactive({
-  title: '',
+  name: '',
   slug: '',
   description: '',
-  priceUsd: 0,
-  brand: '',
-  isPublished: true,
+  price: 0,
+  brandSlug: '',
+  isActive: true,
 })
 
-function slugify(v: string) {
-  return v
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '')
+type PickedFile = { file: File; preview: string }
+const files = ref<PickedFile[]>([])
+const fileInput = ref<HTMLInputElement | null>(null)
+
+onMounted(async () => {
+  try {
+    const res: any = await listBrands()
+    brands.value = (res?.items || res || []) as BrandItem[]
+  } catch (e: any) {
+    toast.error(e?.message || t('common.error'))
+  }
+})
+
+function onPickFiles(e: Event) {
+  const input = e.target as HTMLInputElement
+  const list = input.files ? Array.from(input.files) : []
+  for (const f of list) {
+    files.value.push({ file: f, preview: URL.createObjectURL(f) })
+  }
+  // reset to allow re-pick same files
+  input.value = ''
 }
 
-watch(
-  () => form.title,
-  (v) => {
-    if (!form.slug) form.slug = slugify(v || '')
-  }
-)
+function removeFile(idx: number) {
+  const item = files.value[idx]
+  if (item?.preview) URL.revokeObjectURL(item.preview)
+  files.value.splice(idx, 1)
+}
 
-async function create() {
-  error.value = ''
-  success.value = ''
-  if (!form.title.trim() || !form.slug.trim()) {
-    error.value = t('admin.productTitleSlugRequired')
-    return
+onBeforeUnmount(() => {
+  for (const f of files.value) {
+    if (f.preview) URL.revokeObjectURL(f.preview)
   }
+})
 
-  pending.value = true
+async function onCreate() {
+  if (loading.value) return
+  loading.value = true
   try {
-    const res: any = await api.createProduct({ ...form })
-    success.value = t('admin.created')
-    await navigateTo(`/admin/products/${res.id}`)
+    const created: any = await createProduct({
+      name: form.name,
+      slug: form.slug,
+      description: form.description,
+      price: form.price,
+      brandSlug: form.brandSlug,
+      isActive: form.isActive,
+    })
+
+    const productId = created?.id || created?.productId
+
+    if (productId && files.value.length) {
+      await uploadProductImages(productId, files.value.map(x => x.file))
+    }
+
+    toast.success(t('common.saved'))
+    if (productId) {
+      await navigateTo(`/admin/products/${productId}`)
+    } else {
+      await navigateTo('/admin/products')
+    }
   } catch (e: any) {
-    error.value = e?.data?.message || e?.message || t('admin.createFailed')
+    toast.error(e?.message || t('common.error'))
   } finally {
-    pending.value = false
+    loading.value = false
   }
 }
 </script>
-
-<style scoped>
-.admin-box{
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  padding: 16px;
-}
-.admin-muted{ color: rgba(255,255,255,.65); }
-
-.label{
-  font-size: 12px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,.65);
-  margin-bottom: 6px;
-}
-
-.admin-input{
-  width: 100%;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  padding: 10px 12px;
-  color: rgba(255,255,255,.9);
-  outline: none;
-}
-.admin-input:focus{
-  border-color: rgba(99,102,241,.35);
-  box-shadow: 0 0 0 3px rgba(99,102,241,.12);
-}
-
-.admin-primary{
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(99,102,241,.22);
-  border: 1px solid rgba(99,102,241,.35);
-  color: white;
-  font-weight: 800;
-}
-.admin-ghost{
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.85);
-  font-weight: 700;
-}
-
-.check{
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.85);
-}
-
-.admin-error{
-  border-radius: 16px;
-  border: 1px solid rgba(239,68,68,.35);
-  background: rgba(239,68,68,.10);
-  padding: 12px 14px;
-}
-.admin-success{
-  border-radius: 16px;
-  border: 1px solid rgba(16,185,129,.35);
-  background: rgba(16,185,129,.10);
-  padding: 12px 14px;
-}
-</style>

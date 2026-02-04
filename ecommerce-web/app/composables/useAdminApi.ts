@@ -36,6 +36,26 @@ export function useAdminApi() {
       if (alt) fd.append('alt', alt)
       return await api.postForm<T>(`/admin/products/${productId}/images`, fd)
     },
+
+    /**
+     * Upload multiple images sequentially (stable on serverless + avoids timeouts).
+     */
+    uploadProductImages: async <T>(productId: string, files: File[], altPrefix: string = '') => {
+      const results: T[] = []
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i]
+        const alt = altPrefix ? `${altPrefix} ${i + 1}` : ''
+        // reuse single-upload endpoint
+        const r = await (api.postForm<T>(`/admin/products/${productId}/images`, (() => {
+          const fd = new FormData()
+          fd.append('images', f)
+          if (alt) fd.append('alt', alt)
+          return fd
+        })()))
+        results.push(r)
+      }
+      return results
+    },
     deleteProductImage: <T>(productId: string, imageId: string) =>
       api.del<T>(`/admin/products/${productId}/images/${imageId}`),
 
