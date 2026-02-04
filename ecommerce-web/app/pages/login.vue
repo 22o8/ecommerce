@@ -51,9 +51,8 @@ async function submit(){
   error.value = ''
   try{
     await auth.login({ email: email.value, password: password.value })
-    const queryRedirect = typeof route.query.redirect === 'string' ? route.query.redirect : null
-    const fallback = auth.isAdmin ? '/admin/dashboard' : '/'
-    router.push(queryRedirect || fallback)
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
+    router.push(redirect)
   }catch(e:any){
     error.value = e?.data?.message || e?.message || t('loginFailed')
   }finally{
