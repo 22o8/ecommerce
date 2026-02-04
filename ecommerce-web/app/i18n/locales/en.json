@@ -31,13 +31,17 @@
     "section": {
       "new": "New",
       "featured": "Featured"
-    }
+    },
+    "brands": "Brands"
   },
   "products": {
     "title": "Products",
     "subtitle": "Browse and search quickly",
     "search": "Search for a product...",
-    "quickPreview": "Quick preview"
+    "quickPreview": "Quick preview",
+    "sortNew": "Newest",
+    "sortPriceAsc": "Price: Low to High",
+    "sortPriceDesc": "Price: High to Low"
   },
   "auth": {
     "welcome": "Welcome 👋",
@@ -123,7 +127,7 @@
     "actionsHint": "Actions",
     "edit": "Edit",
     "delete": "Delete",
-    "confirmDelete": "Are you sure you want to delete this item?",
+    "confirmDelete": "Are you sure you want to delete?",
     "published": "Published",
     "unpublish": "Unpublish",
     "publish": "Publish",
@@ -159,7 +163,24 @@
     "sortTitle": "By title",
     "orderDetails": "Order details",
     "orderNotFound": "Order not found.",
-    "raw": "Raw"
+    "raw": "Raw",
+    "brands": "Brands",
+    "brandsHint": "Create and manage brands. Each product must belong to a brand.",
+    "newBrand": "New Brand",
+    "newBrandHint": "Create a new brand, then upload a square logo.",
+    "editBrand": "Edit Brand",
+    "backToBrands": "Back to brands",
+    "logo": "Logo",
+    "logoHint": "Square image (recommended). JPG/PNG/WEBP",
+    "searchBrands": "Search brands...",
+    "noBrands": "No brands yet",
+    "noBrandsHint": "Add your first brand to start organizing products.",
+    "addFirstBrand": "Add first brand",
+    "selectBrand": "Select brand",
+    "disable": "Disable",
+    "active": "Active",
+    "disabled": "Disabled",
+    "brand": "Brand"
   },
   "cartTitle": "Shopping cart",
   "cartHint": "Review your items and continue to checkout.",
@@ -317,5 +338,16 @@
   "termsPlaceholder": "Terms page is being prepared.",
   "privacyPlaceholder": "Privacy page is being prepared.",
   "account": "My account",
-  "accountPlaceholder": "Account page is being prepared."
+  "accountPlaceholder": "Account page is being prepared.",
+  "brandsPage": {
+    "title": "Brands",
+    "subtitle": "Choose your favorite brand then browse its products.",
+    "search": "Search brands...",
+    "empty": "No brands found"
+  },
+  "brandPage": {
+    "search": "Search in this brand...",
+    "defaultDesc": "Official products collection.",
+    "empty": "No products found for this brand"
+  }
 }

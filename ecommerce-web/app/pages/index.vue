@@ -95,16 +95,36 @@
 
 <script setup lang="ts">
 import UiButton from '~/components/ui/UiButton.vue'
-import ProductCard from '~/components/ProductCard.vue'
-import { useProductsStore } from '~/stores/products'
+import SmartImage from '~/components/SmartImage.vue'
 
 const { t } = useI18n()
-const products = useProductsStore()
-const items = computed(() => products.items.slice(0, 6))
+const brands = useBrandsStore()
+const { buildAssetUrl } = useApi()
 
-// SSR + Client: حتى ما يصير "فارغ" بالبداية ويطلع بس بعد تبديل اللغة
-const { pending: loading } = await useAsyncData('home-featured-products', async () => {
-  await products.fetchFeatured({ page: 1, pageSize: 12 })
+const marqueeBrands = computed(() => (brands.items || []).slice(0, 20))
+
+// SSR + Client: حتى ما يصير "فارغ" بالبداية
+await useAsyncData('home-brands', async () => {
+  await brands.fetchPublic()
   return true
 })
 </script>
+
+
+<style scoped>
+.marquee {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+.marquee__inner {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+</style>
