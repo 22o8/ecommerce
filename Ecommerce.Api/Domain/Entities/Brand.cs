@@ -1,3 +1,4 @@
+// Ecommerce.Api/Domain/Entities/Brand.cs
 using System.ComponentModel.DataAnnotations;
 
 namespace Ecommerce.Api.Domain.Entities;
@@ -23,4 +24,4 @@ public class Brand
     public bool IsActive { get; set; } = true;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-}
+} // ✅ لازم هذا القوس
