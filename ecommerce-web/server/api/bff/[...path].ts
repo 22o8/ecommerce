@@ -3,11 +3,25 @@ export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
 
+    // ملاحظة مهمة:
+    // على Vercel/Nuxt أحيانًا يتم خلط متغيرات البيئة، فيصير apiOrigin قيمة نسبية مثل "/api/bff"
+    // وهذا يسبب: new URL(...) => Invalid URL وبالتالي 500 من الـ BFF.
+    // لذلك نعطي أولوية للـ server runtimeConfig.apiOrigin (المفروض يكون رابط كامل)،
+    // وبعدها نأخذ public.apiOrigin، ونتجاهل القيم النسبية.
+    const pickAbsolute = (v: any) => {
+      const s = String(v || '').trim()
+      if (!s) return ''
+      // اعتبره صالح فقط إذا يبدأ بـ http/https
+      if (s.startsWith('http://') || s.startsWith('https://')) return s
+      return ''
+    }
+
     const apiOrigin =
-      (config.public as any).apiOrigin ||
-      (config.public as any).apiBase ||
-      process.env.NUXT_API_ORIGIN ||
-      process.env.NUXT_PUBLIC_API_ORIGIN
+      pickAbsolute((config as any).apiOrigin) ||
+      pickAbsolute(process.env.NUXT_API_ORIGIN) ||
+      pickAbsolute((config.public as any).apiOrigin) ||
+      pickAbsolute(process.env.NUXT_PUBLIC_API_ORIGIN) ||
+      ''
 
     if (!apiOrigin) {
       setResponseStatus(event, 500)

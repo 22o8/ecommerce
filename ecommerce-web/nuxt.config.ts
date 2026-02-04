@@ -9,9 +9,7 @@ export default defineNuxtConfig({
     // Server-only backend origin (WITHOUT /api)
     apiOrigin:
       process.env.NUXT_API_ORIGIN ||
-      (process.env.NUXT_PUBLIC_API_BASE
-        ? process.env.NUXT_PUBLIC_API_BASE.replace(/\/api\/?$/, '')
-        : undefined) ||
+      process.env.NUXT_PUBLIC_API_ORIGIN ||
       // ✅ غيّرته لـ Fly كافتراضي أفضل من Render
       'https://ecommerce-api-22o8.fly.dev',
 
@@ -24,9 +22,7 @@ export default defineNuxtConfig({
       // Public backend origin (WITHOUT /api)
       apiOrigin:
         process.env.NUXT_API_ORIGIN ||
-        (process.env.NUXT_PUBLIC_API_BASE
-          ? process.env.NUXT_PUBLIC_API_BASE.replace(/\/api\/?$/, '')
-          : undefined) ||
+        process.env.NUXT_PUBLIC_API_ORIGIN ||
         'https://ecommerce-api-22o8.fly.dev',
 
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
