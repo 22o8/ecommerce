@@ -74,11 +74,25 @@ export default defineEventHandler(async (event) => {
       ? undefined
       : await readRawBody(event, false)
 
-    const res = await fetch(targetUrl.toString(), {
-      method,
-      headers: { ...headers },
-      body: body || undefined,
-    })
+    const targetUrlStr = targetUrl.toString()
+
+    let res: Response
+    try {
+      res = await fetch(targetUrlStr, {
+        method,
+        headers: { ...headers },
+        body: body || undefined,
+      })
+    } catch (e: any) {
+      console.error('BFF upstream fetch failed:', {
+        routePath,
+        targetUrl: targetUrlStr,
+        apiOrigin,
+        message: e?.message,
+      })
+      setResponseStatus(event, 502)
+      return { error: 'Upstream API unreachable', targetUrl: targetUrlStr }
+    }
 
     const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
     const isLogout = routePath.toLowerCase() === 'auth/logout'
