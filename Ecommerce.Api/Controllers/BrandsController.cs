@@ -1,3 +1,4 @@
+// Ecommerce.Api/Controllers/BrandsController.cs
 using Ecommerce.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -39,11 +40,16 @@ public class BrandsController : ControllerBase
     [HttpGet("slug/{slug}")]
     public async Task<IActionResult> GetBySlug([FromRoute] string slug)
     {
-        slug = (slug ?? "").Trim().ToLowerInvariant();
+        slug = (slug ?? "").Trim();
+
+        if (string.IsNullOrWhiteSpace(slug))
+            return BadRequest(new { message = "Slug is required" });
+
+        var lower = slug.ToLowerInvariant();
 
         var b = await _db.Brands
             .AsNoTracking()
-            .Where(x => x.IsActive && x.Slug.ToLower() == slug)
+            .Where(x => x.IsActive && x.Slug.ToLower() == lower)
             .Select(x => new
             {
                 id = x.Id,
