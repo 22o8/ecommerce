@@ -196,21 +196,22 @@ using (var scope = app.Services.CreateScope())
 
             // ✅ Hotfix: إذا قاعدة البيانات كانت موجودة سابقاً بدون جدول Brands
             // EnsureCreated ما يضيف جداول جديدة لقاعدة موجودة، لذلك نسوي إنشاء/تعديل آمن.
+            // ملاحظة: داخل verbatim string (@"...") لازم نستخدم "" بدل \" للهروب من علامة الاقتباس.
             db.Database.ExecuteSqlRaw(@"
-                CREATE TABLE IF NOT EXISTS \"Brands\" (
-                    \"Id\" uuid NOT NULL,
-                    \"Name\" text NOT NULL,
-                    \"Slug\" text NOT NULL,
-                    \"Description\" text NULL,
-                    \"LogoUrl\" text NULL,
-                    \"BannerUrl\" text NULL,
-                    \"IsActive\" boolean NOT NULL DEFAULT true,
-                    \"CreatedAt\" timestamp with time zone NOT NULL,
-                    \"UpdatedAt\" timestamp with time zone NULL,
-                    CONSTRAINT \"PK_Brands\" PRIMARY KEY (\"Id\")
+                CREATE TABLE IF NOT EXISTS ""Brands"" (
+                    ""Id"" uuid NOT NULL,
+                    ""Name"" text NOT NULL,
+                    ""Slug"" text NOT NULL,
+                    ""Description"" text NULL,
+                    ""LogoUrl"" text NULL,
+                    ""BannerUrl"" text NULL,
+                    ""IsActive"" boolean NOT NULL DEFAULT true,
+                    ""CreatedAt"" timestamp with time zone NOT NULL,
+                    ""UpdatedAt"" timestamp with time zone NULL,
+                    CONSTRAINT ""PK_Brands"" PRIMARY KEY (""Id"")
                 );
-                CREATE UNIQUE INDEX IF NOT EXISTS \"IX_Brands_Slug\" ON \"Brands\" (\"Slug\");
-                ALTER TABLE \"Products\" ADD COLUMN IF NOT EXISTS \"BrandId\" uuid NULL;
+                CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Brands_Slug"" ON ""Brands"" (""Slug"");
+                ALTER TABLE ""Products"" ADD COLUMN IF NOT EXISTS ""BrandId"" uuid NULL;
             ");
         }
         catch (Exception ex)
