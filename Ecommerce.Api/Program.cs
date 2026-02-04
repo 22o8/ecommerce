@@ -144,6 +144,26 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// ============================
+// Global exception -> JSON (حتى ما يصير body فارغ مع 500)
+// ============================
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json; charset=utf-8";
+
+        // trace id يفيدك تربط الخطأ باللوغ على Fly
+        var traceId = context.TraceIdentifier;
+        await context.Response.WriteAsJsonAsync(new
+        {
+            error = "Internal Server Error",
+            traceId
+        });
+    });
+});
+
 // ✅ Forwarded Headers (Fly/Proxy)
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
@@ -187,10 +207,11 @@ try
 
     var skipMigrations = skipRaw is "1" or "true" or "yes" or "y" or "on";
 
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
     if (!skipMigrations)
     {
-        using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         Console.WriteLine("Applying EF migrations (auto)...");
         db.Database.Migrate();
         Console.WriteLine("EF migrations applied.");
@@ -199,11 +220,16 @@ try
     {
         Console.WriteLine("SKIP_MIGRATIONS enabled -> skipping EF migrations.");
     }
+
+    // ✅ حتى لو ماكو Migrations داخل المشروع/أو ما تنطبق، نصلّح أقل سكيمة مطلوبة
+    // هذا يحل غالباً 500 بـ AdminProducts + حذف البراند.
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DbBootstrapper");
+    DbBootstrapper.EnsureCoreSchemaAsync(db, logger).GetAwaiter().GetResult();
 }
 catch (Exception ex)
 {
     // لا نسقط التطبيق إذا فشل المايغريشن، حتى تقدر تشوف اللوج وتصلح DB لاحقاً.
-    Console.WriteLine("❌ Failed to apply EF migrations: " + ex.Message);
+    Console.WriteLine("❌ Failed to apply EF migrations/bootstrap: " + ex);
 }
 
 app.Run();
