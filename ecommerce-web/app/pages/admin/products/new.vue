@@ -20,18 +20,6 @@
           </div>
         </div>
 
-        <div class="grid gap-3 md:grid-cols-2">
-
-          <div>
-            <div class="label">Brand</div>
-            <select v-model="form.brand" class="admin-input" required>
-              <option value="" disabled>{{ t('admin.selectBrand') }}</option>
-              <option v-for="b in brands" :key="b.key" :value="b.key">{{ b.label }}</option>
-            </select>
-          </div>
-
-        </div>
-
         <div>
           <div class="label">Description</div>
           <textarea v-model="form.description" class="admin-input" rows="5" placeholder="Short description..." />
@@ -70,19 +58,6 @@ definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
 const api = useAdminApi()
 
-const brands = ref<{ key: string; label: string }[]>([])
-
-await useAsyncData('admin-brands', async () => {
-  try {
-    const res: any = await api.get('/Brands')
-    brands.value = (res?.items || []).map((b:any) => ({ key: b.slug ?? b.key, label: b.name ?? b.label ?? b.slug })).filter((x:any) => x.key && x.label)
-    if (!form.brand && brands.value.length) form.brand = brands.value[0].key
-  } catch (e) {
-    brands.value = []
-  }
-  return true
-})
-
 const pending = ref(false)
 const error = ref('')
 const success = ref('')
@@ -92,7 +67,6 @@ const form = reactive({
   slug: '',
   description: '',
   priceUsd: 0,
-  brand: '',
   isPublished: true,
 })
 

@@ -6,5 +6,4 @@ public class PublicProductQuery
     public int PageSize { get; set; } = 12;
     public string? Q { get; set; }
     public string? Sort { get; set; } = "new";
-    public string? Brand { get; set; }
 }

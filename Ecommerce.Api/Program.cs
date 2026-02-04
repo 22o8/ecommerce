@@ -144,6 +144,16 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// ============================
+// DB: Auto-migrate on startup
+// ============================
+// يحل مشاكل الجداول الناقصة بعد النشر (مثل relation "Brands" does not exist).
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
+
 // ✅ Forwarded Headers (Fly/Proxy)
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {

@@ -1,6 +1,4 @@
-using Ecommerce.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerce.Api.Controllers;
 
@@ -8,53 +6,45 @@ namespace Ecommerce.Api.Controllers;
 [Route("api/[controller]")]
 public class BrandsController : ControllerBase
 {
-    private readonly AppDbContext _db;
-
-    public BrandsController(AppDbContext db)
+    // Catalog ثابت حتى ما نعتمد على جدول Brands (ويصير 500 إذا ما انعملت migrations).
+    private static readonly string[] Brands = new[]
     {
-        _db = db;
-    }
+        "Anua",
+        "APRILSKIN",
+        "VT (VT Global)",
+        "Skinfood",
+        "Medicube",
+        "Numbuzin",
+        "K-SECRET",
+        "Equal Berry",
+        "SKIN1004",
+        "Beauty of Joseon",
+        "JMsolution",
+        "Tenzero",
+        "Dr.Ceuracle",
+        "Rejuran",
+        "Celimax",
+        "Medipeel",
+        "Biodance",
+        "Dr.CPU",
+        "Anua KR",
+    };
 
-    // Public brands list (for storefront)
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public IActionResult Get()
     {
-        var items = await _db.Brands
-            .AsNoTracking()
-            .Where(b => b.IsActive)
-            .OrderBy(b => b.Name)
-            .Select(b => new
-            {
-                id = b.Id,
-                slug = b.Slug,
-                name = b.Name,
-                description = b.Description,
-                logoUrl = b.LogoUrl
-            })
-            .ToListAsync();
+        // يرجّعها بشكل بسيط { id, name } حتى تكون جاهزة للفلترة بالفرونت.
+        var data = Brands.Select((name, i) => new
+        {
+            id = i + 1,
+            name,
+            key = name
+                .ToLowerInvariant()
+                .Replace("(", "")
+                .Replace(")", "")
+                .Replace(" ", "-")
+        });
 
-        return Ok(new { items });
-    }
-
-    [HttpGet("slug/{slug}")]
-    public async Task<IActionResult> GetBySlug([FromRoute] string slug)
-    {
-        slug = (slug ?? "").Trim().ToLowerInvariant();
-
-        var b = await _db.Brands
-            .AsNoTracking()
-            .Where(x => x.IsActive && x.Slug.ToLower() == slug)
-            .Select(x => new
-            {
-                id = x.Id,
-                slug = x.Slug,
-                name = x.Name,
-                description = x.Description,
-                logoUrl = x.LogoUrl
-            })
-            .FirstOrDefaultAsync();
-
-        if (b == null) return NotFound(new { message = "Brand not found" });
-        return Ok(b);
+        return Ok(data);
     }
 }

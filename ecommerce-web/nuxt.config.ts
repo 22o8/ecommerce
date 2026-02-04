@@ -45,7 +45,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      htmlAttrs: { lang: 'ar', dir: 'ltr', class: 'theme-light lang-ar' },
+      htmlAttrs: { lang: 'ar', dir: 'rtl', class: 'theme-light lang-ar' },
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },

@@ -8,9 +8,6 @@ public class Product
     public string Slug { get; set; } = "";
     public string Description { get; set; } = "";
     public decimal PriceUsd { get; set; }
-
-    // Brand / فهرسة
-    public string Brand { get; set; } = "Unspecified";
     public bool IsPublished { get; set; } = true;
 
     // تقييم (يدوي/إداري حالياً)

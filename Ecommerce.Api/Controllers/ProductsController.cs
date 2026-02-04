@@ -37,13 +37,6 @@ public class ProductsController : ControllerBase
             );
         }
 
-        var brand = (query.Brand ?? "").Trim();
-
-        if (!string.IsNullOrWhiteSpace(brand) && !brand.Equals("All", StringComparison.OrdinalIgnoreCase))
-        {
-            baseQuery = baseQuery.Where(p => p.Brand != null && p.Brand.ToLower() == brand.ToLower());
-        }
-
         baseQuery = (query.Sort ?? "new") switch
         {
             "price:asc" or "priceAsc" => baseQuery.OrderBy(p => p.PriceUsd),
@@ -64,7 +57,6 @@ public class ProductsController : ControllerBase
                 p.Description,
                 p.PriceUsd,
                 p.RatingAvg,
-                p.Brand,
                 p.RatingCount,
                 p.CreatedAt,
                 coverImage = _db.ProductImages
@@ -100,7 +92,6 @@ public class ProductsController : ControllerBase
                 x.Description,
                 x.PriceUsd,
                 x.RatingAvg,
-                x.Brand,
                 x.RatingCount,
                 x.CreatedAt,
                 images = _db.ProductImages
@@ -150,7 +141,6 @@ public class ProductsController : ControllerBase
                 x.Description,
                 x.PriceUsd,
                 x.RatingAvg,
-                x.Brand,
                 x.RatingCount,
                 x.CreatedAt,
                 images = _db.ProductImages
