@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<Brand> Brands => Set<Brand>();
     public DbSet<Service> Services => Set<Service>();
     public DbSet<ServicePackage> ServicePackages => Set<ServicePackage>();
     public DbSet<ServiceRequirementTemplate> ServiceRequirements => Set<ServiceRequirementTemplate>();
