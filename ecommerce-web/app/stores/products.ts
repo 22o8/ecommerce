@@ -56,13 +56,15 @@ export const useProductsStore = defineStore('products', () => {
     loading.value = true
     try {
       const res = await api.get<Paged<any>>('/Products', {
-  page: params.page || 1,
-  pageSize: params.pageSize || 12,
-  q: params.q || undefined,
-  sort: params.sort || 'new',
-  isFeatured: params.isFeatured || undefined,
-  brand: params.brand || undefined,
-})
+        query: {
+          page: params.page || 1,
+          pageSize: params.pageSize || 12,
+          q: params.q || undefined,
+          sort: params.sort || 'new',
+          isFeatured: params.isFeatured || undefined,
+          brand: params.brand || undefined,
+        },
+      })
 
       // Support different API shapes
       const raw = (res as any)?.items ?? (res as any)?.data?.items ?? (res as any)?.data

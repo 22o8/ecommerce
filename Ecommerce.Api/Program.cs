@@ -172,29 +172,38 @@ app.UseAuthorization();
 app.MapControllers();
 
 // ============================
-// Apply Migrations Toggle
+// ✅ Apply EF Migrations (Auto)
 // ============================
+// المشكلة اللي عندك (500 على /api/admin/products و DELETE brand) غالباً بسبب إن
+// قاعدة البيانات على Fly ما مطبّقة آخر Migrations (مثلاً عمود Product.Brand).
+// عشان ما تعتمد على إعدادات يدوية، نخلي التطبيق يطبّق المايغريشن تلقائياً
+// إلا إذا حبيت توقفه بإضافة: SKIP_MIGRATIONS=true
 
-using (var scope = app.Services.CreateScope())
+try
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-    var runMigrationsRaw = (Environment.GetEnvironmentVariable("RUN_MIGRATIONS") ?? "")
+    var skipRaw = (Environment.GetEnvironmentVariable("SKIP_MIGRATIONS") ?? "")
         .Trim()
         .ToLowerInvariant();
 
-    var runMigrations = runMigrationsRaw is "1" or "true" or "yes" or "y" or "on";
+    var skipMigrations = skipRaw is "1" or "true" or "yes" or "y" or "on";
 
-    if (runMigrations)
+    if (!skipMigrations)
     {
-        Console.WriteLine("RUN_MIGRATIONS enabled -> applying EF migrations...");
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Console.WriteLine("Applying EF migrations (auto)...");
         db.Database.Migrate();
         Console.WriteLine("EF migrations applied.");
     }
     else
     {
-        Console.WriteLine("RUN_MIGRATIONS disabled -> skipping EF migrations.");
+        Console.WriteLine("SKIP_MIGRATIONS enabled -> skipping EF migrations.");
     }
+}
+catch (Exception ex)
+{
+    // لا نسقط التطبيق إذا فشل المايغريشن، حتى تقدر تشوف اللوج وتصلح DB لاحقاً.
+    Console.WriteLine("❌ Failed to apply EF migrations: " + ex.Message);
 }
 
 app.Run();

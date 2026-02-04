@@ -74,25 +74,11 @@ export default defineEventHandler(async (event) => {
       ? undefined
       : await readRawBody(event, false)
 
-    const targetUrlStr = targetUrl.toString()
-
-    let res: Response
-    try {
-      res = await fetch(targetUrlStr, {
-        method,
-        headers: { ...headers },
-        body: body || undefined,
-      })
-    } catch (e: any) {
-      console.error('BFF upstream fetch failed:', {
-        routePath,
-        targetUrl: targetUrlStr,
-        apiOrigin,
-        message: e?.message,
-      })
-      setResponseStatus(event, 502)
-      return { error: 'Upstream API unreachable', targetUrl: targetUrlStr }
-    }
+    const res = await fetch(targetUrl.toString(), {
+      method,
+      headers: { ...headers },
+      body: body || undefined,
+    })
 
     const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
     const isLogout = routePath.toLowerCase() === 'auth/logout'
@@ -173,35 +159,9 @@ export default defineEventHandler(async (event) => {
 
     setResponseStatus(event, res.status)
 
-    // ✅ لا تكسر إذا الـ API رجّع 204 أو body فارغ
-    if (res.status === 204) return null
-
     const ct = res.headers.get('content-type') || ''
-
-    // ✅ اقرأ الـ body مرة وحدة وبشكل آمن
-    let rawText = ''
-    try {
-      const ab = await res.arrayBuffer()
-      rawText = Buffer.from(ab).toString('utf-8')
-    } catch {
-      rawText = ''
-    }
-
-    if (!rawText || !rawText.trim()) return null
-
-    // ✅ إذا الـ API رجّع JSON حتى لو كان content-type غلط (text/plain)
-    const looksLikeJson = ct.includes('application/json') || rawText.trim().startsWith('{') || rawText.trim().startsWith('[')
-
-    if (looksLikeJson) {
-      try {
-        return JSON.parse(rawText)
-      } catch {
-        // fallback نص
-        return rawText
-      }
-    }
-
-    return rawText
+    if (ct.includes('application/json')) return await res.json()
+    return await res.text()
   } catch (err: any) {
     console.error('BFF error:', err)
     setResponseStatus(event, 500)

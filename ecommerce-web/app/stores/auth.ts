@@ -47,11 +47,8 @@ export const useAuthStore = defineStore('auth', () => {
     return String(r1 || r2 || '').trim().toLowerCase()
   })
 
-  const isAuthed = computed(() => auth.value === '1' || !!access.value || !!token.value)
-  const isAdmin = computed(() => {
-    const r = String(userData.value?.role || '').trim().toLowerCase()
-    return r === 'admin' && isAuthed.value
-  })
+  const isAuthed = computed(() => auth.value === '1' || !!normalizedRole.value)
+  const isAdmin = computed(() => normalizedRole.value === 'admin')
 
   /**
    * ✅ لا تحذفها أبدًا

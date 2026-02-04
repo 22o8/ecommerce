@@ -219,7 +219,7 @@
     "title": "لوحة الإدارة",
     "viewSite": "عرض الموقع",
     "backToSite": "العودة للموقع",
-    "slug": "الرابط المختصر",
+    "slug": "Slug",
     "description": "الوصف"
   },
   "loginToCheckout": "سجّل الدخول لإكمال الطلب.",
