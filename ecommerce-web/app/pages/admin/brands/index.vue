@@ -34,13 +34,13 @@
       </div>
 
       <div v-else class="admin-table">
-        <div class="admin-tr admin-th">
+        <div class="admin-tr brands-tr admin-th">
           <div class="rtl-text">{{ t('admin.brand') }}</div>
           <div class="rtl-text">{{ t('admin.status') }}</div>
           <div class="text-right rtl-text">{{ t('common.actions') }}</div>
         </div>
 
-        <div v-for="b in filtered" :key="b.id" class="admin-tr">
+        <div v-for="b in filtered" :key="b.id" class="admin-tr brands-tr">
           <div class="flex items-center gap-3 min-w-0">
             <div class="thumb">
               <div class="thumb-inner overflow-hidden">

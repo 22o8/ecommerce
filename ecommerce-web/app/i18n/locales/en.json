@@ -90,7 +90,9 @@
     "back": "Back",
     "delete": "Delete",
     "upload": "Upload",
-    "saved": "Saved"
+    "saved": "Saved",
+    "create": "Create",
+    "saving": "Saving..."
   },
   "admin": {
     "overview": "Overview",
@@ -210,7 +212,16 @@
     "viewSite": "View site",
     "backToSite": "Back to site",
     "slug": "Slug",
-    "description": "Description"
+    "description": "Description",
+    "slugHint": "Used in the URL (letters/numbers/dash)",
+    "creating": "Creating...",
+    "actions": "Actions",
+    "inactive": "Inactive",
+    "newProductHint": "Create the product, then add images from the details page.",
+    "namePlaceholder": "e.g. Vitamin C Serum",
+    "productTitleSlugRequired": "Title and slug are required",
+    "created": "Created",
+    "createFailed": "Create failed"
   },
   "cartTitle": "Shopping cart",
   "cartHint": "Review your items and continue to checkout.",

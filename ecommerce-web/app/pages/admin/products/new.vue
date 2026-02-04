@@ -2,28 +2,28 @@
 <template>
   <div class="space-y-4">
     <div class="admin-box">
-      <div class="text-xl font-extrabold">New Product</div>
-      <div class="text-sm admin-muted">Create a new product in seconds</div>
+      <div class="text-xl font-extrabold">{{ $t('admin.newProduct') }}</div>
+      <div class="text-sm admin-muted">{{ $t('admin.newProductHint') }}</div>
     </div>
 
     <div class="admin-box">
       <form class="space-y-3" @submit.prevent="create">
         <div class="grid gap-3 md:grid-cols-2">
           <div>
-            <div class="label">Title</div>
-            <input v-model="form.title" class="admin-input" placeholder="Website Development" />
+            <div class="label">{{ $t('admin.name') }}</div>
+            <input v-model="form.title" class="admin-input" :placeholder="$t('admin.namePlaceholder')" />
           </div>
 
           <div>
-            <div class="label">Slug</div>
-            <input v-model="form.slug" class="admin-input" placeholder="website-development" />
+            <div class="label">{{ $t('admin.slug') }}</div>
+            <input v-model="form.slug" class="admin-input" :placeholder="$t('admin.slugPlaceholder')" />
           </div>
         </div>
 
         <div class="grid gap-3 md:grid-cols-2">
 
           <div>
-            <div class="label">Brand</div>
+            <div class="label">{{ $t('admin.brand') }}</div>
             <select v-model="form.brand" class="admin-input" required>
               <option value="" disabled>{{ t('admin.selectBrand') }}</option>
               <option v-for="b in brands" :key="b.key" :value="b.key">{{ b.label }}</option>
@@ -33,29 +33,29 @@
         </div>
 
         <div>
-          <div class="label">Description</div>
-          <textarea v-model="form.description" class="admin-input" rows="5" placeholder="Short description..." />
+          <div class="label">{{ $t('admin.description') }}</div>
+          <textarea v-model="form.description" class="admin-input" rows="5" :placeholder="$t('admin.descriptionPlaceholder')" />
         </div>
 
         <div class="grid gap-3 md:grid-cols-2">
           <div>
-            <div class="label">Price (USD)</div>
+            <div class="label">{{ $t('admin.price') }} (USD)</div>
             <input v-model.number="form.priceUsd" type="number" class="admin-input" />
           </div>
 
           <div class="flex items-end gap-2">
             <label class="check">
               <input v-model="form.isPublished" type="checkbox" />
-              <span>Published</span>
+              <span>{{ $t('admin.published') }}</span>
             </label>
           </div>
         </div>
 
         <div class="flex gap-2">
           <button class="admin-primary" type="submit" :disabled="pending">
-            {{ pending ? 'Saving...' : 'Create' }}
+            {{ pending ? $t('common.saving') : $t('common.create') }}
           </button>
-          <NuxtLink to="/admin/products" class="admin-ghost">Cancel</NuxtLink>
+          <NuxtLink to="/admin/products" class="admin-ghost">{{ $t('common.cancel') }}</NuxtLink>
         </div>
 
         <div v-if="error" class="admin-error">{{ error }}</div>
@@ -87,6 +87,8 @@ const pending = ref(false)
 const error = ref('')
 const success = ref('')
 
+const { t } = useI18n()
+
 const form = reactive({
   title: '',
   slug: '',
@@ -115,17 +117,17 @@ async function create() {
   error.value = ''
   success.value = ''
   if (!form.title.trim() || !form.slug.trim()) {
-    error.value = 'Title and Slug are required'
+    error.value = t('admin.productTitleSlugRequired')
     return
   }
 
   pending.value = true
   try {
     const res: any = await api.createProduct({ ...form })
-    success.value = 'Created.'
+    success.value = t('admin.created')
     await navigateTo(`/admin/products/${res.id}`)
   } catch (e: any) {
-    error.value = e?.data?.message || e?.message || 'Create failed'
+    error.value = e?.data?.message || e?.message || t('admin.createFailed')
   } finally {
     pending.value = false
   }

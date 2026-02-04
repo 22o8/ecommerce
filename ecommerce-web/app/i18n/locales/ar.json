@@ -89,7 +89,9 @@
     "back": "رجوع",
     "delete": "حذف",
     "upload": "رفع",
-    "saved": "تم الحفظ"
+    "saved": "تم الحفظ",
+    "create": "إنشاء",
+    "saving": "جارِ الحفظ..."
   },
   "cartTitle": "سلة الشراء",
   "cartHint": "راجع المنتجات ثم أكمل الدفع.",
@@ -220,7 +222,16 @@
     "viewSite": "عرض الموقع",
     "backToSite": "العودة للموقع",
     "slug": "Slug",
-    "description": "الوصف"
+    "description": "الوصف",
+    "slugHint": "يُستخدم في الرابط (أحرف/أرقام وشرطة فقط)",
+    "creating": "جارِ الإنشاء...",
+    "actions": "الإجراءات",
+    "inactive": "معطل",
+    "newProductHint": "أنشئ المنتج ثم أضف الصور من صفحة التفاصيل.",
+    "namePlaceholder": "مثال: سيروم فيتامين C",
+    "productTitleSlugRequired": "الاسم و الـ Slug مطلوبان",
+    "created": "تم الإنشاء",
+    "createFailed": "فشل الإنشاء"
   },
   "loginToCheckout": "سجّل الدخول لإكمال الطلب.",
   "cartSubtitle": "راجع منتجاتك قبل إكمال الطلب.",

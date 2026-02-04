@@ -96,6 +96,27 @@ html[data-theme="light"] .side-link {
   color: rgb(var(--dark-text));
 }
 
+/* Page-specific column layouts */
+.admin-tr.brands-tr {
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+}
+
+.admin-tr.orders-tr {
+  grid-template-columns: 2fr 1fr 1fr 2fr;
+}
+
+@media (max-width: 900px) {
+  .admin-tr,
+  .admin-tr.brands-tr,
+  .admin-tr.orders-tr {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .admin-th {
+    display: none;
+  }
+}
+
 .admin-th {
   font-size: 12px;
   letter-spacing: 0.08em;
