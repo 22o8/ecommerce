@@ -35,7 +35,13 @@
     "brands": "Brands",
     "browseBrands": "Browse brands",
     "brandsSubtitle": "Pick a brand and explore its products.",
-    "viewAllBrands": "View all"
+    "viewAllBrands": "View all",
+    "heroSubtitle": "A store ready for instant selling & downloads",
+    "dashboard": "Dashboard",
+    "quick": "Quick access",
+    "quickBrands": "Browse brands",
+    "quickProducts": "Browse products",
+    "noBrandsFound": "No brands found"
   },
   "products": {
     "title": "Products",
@@ -101,7 +107,21 @@
       "save": "Save",
       "cancel": "Cancel",
       "deleteConfirm": "Delete this user?",
-      "createdAt": "Created"
+      "createdAt": "Created",
+      "search": "Search users...",
+      "allRoles": "All roles",
+      "filter": "Filter",
+      "create": "Create user",
+      "status": "Status",
+      "name": "Name",
+      "email": "Email",
+      "blocked": "Blocked",
+      "editTitle": "Edit user",
+      "createTitle": "Create user",
+      "deleteTitle": "Delete user",
+      "deleteHint": "Are you sure you want to delete this user?",
+      "optional": "Optional",
+      "password": "Password"
     },
     "ordersHint": "View and manage orders",
     "noOrders": "No orders yet",
@@ -183,7 +203,10 @@
     "disable": "Disable",
     "active": "Active",
     "disabled": "Disabled",
-    "brand": "Brand"
+    "brand": "Brand",
+    "title": "Admin Dashboard",
+    "viewSite": "View site",
+    "backToSite": "Back to site"
   },
   "cartTitle": "Shopping cart",
   "cartHint": "Review your items and continue to checkout.",
@@ -198,7 +221,13 @@
   "clearCart": "Clear cart",
   "total": "Total",
   "sendWhatsApp": "Send via WhatsApp",
-  "checkout": "Checkout",
+  "checkout": {
+    "title": "Checkout",
+    "items": "Items",
+    "total": "Total",
+    "createOrder": "Create order",
+    "sendWhatsapp": "Send via WhatsApp"
+  },
   "orderFailed": "Failed to create order",
   "registerTitle": "Register",
   "loginTitle": "Login",
@@ -355,6 +384,14 @@
   },
   "brands": {
     "empty": "No brands found",
-    "noDescription": "No description"
+    "noDescription": "No description",
+    "title": "Brands",
+    "subtitle": "Choose your favorite brand and explore its products."
+  },
+  "cart": {
+    "title": "Shopping cart",
+    "subtitle": "Review your items before checkout.",
+    "empty": "Your cart is empty.",
+    "browseProducts": "Browse products"
   }
 }

@@ -35,7 +35,13 @@
     "brands": "البراندات",
     "browseBrands": "تصفح البراندات",
     "brandsSubtitle": "اختر البراند المناسب واستعرض منتجاته.",
-    "viewAllBrands": "عرض الكل"
+    "viewAllBrands": "عرض الكل",
+    "heroSubtitle": "متجر جاهز للبيع والتحميل الفوري",
+    "dashboard": "لوحة التحكم",
+    "quick": "وصول سريع",
+    "quickBrands": "تصفح البراندات",
+    "quickProducts": "تصفح المنتجات",
+    "noBrandsFound": "لا توجد براندات"
   },
   "products": {
     "title": "المنتجات",
@@ -113,7 +119,19 @@
       "roleUser": "مستخدم",
       "roleAdmin": "أدمن",
       "newPassword": "كلمة مرور جديدة",
-      "newPasswordHint": "اختياري - اتركه فارغاً إذا ما تريد تغيرها"
+      "newPasswordHint": "اختياري - اتركه فارغاً إذا ما تريد تغيرها",
+      "search": "بحث عن مستخدم...",
+      "allRoles": "كل الأدوار",
+      "filter": "فلترة",
+      "create": "إضافة مستخدم",
+      "status": "الحالة",
+      "blocked": "محظور",
+      "editTitle": "تعديل مستخدم",
+      "createTitle": "إضافة مستخدم",
+      "deleteTitle": "حذف مستخدم",
+      "deleteHint": "هل أنت متأكد من حذف هذا المستخدم؟",
+      "optional": "اختياري",
+      "password": "كلمة المرور"
     },
     "ordersHint": "عرض وإدارة الطلبات",
     "noOrders": "لا توجد طلبات",
@@ -195,7 +213,10 @@
     "disable": "تعطيل",
     "active": "مفعّل",
     "disabled": "معطّل",
-    "brand": "البراند"
+    "brand": "البراند",
+    "title": "لوحة الإدارة",
+    "viewSite": "عرض الموقع",
+    "backToSite": "العودة للموقع"
   },
   "loginToCheckout": "سجّل الدخول لإكمال الطلب.",
   "cartSubtitle": "راجع منتجاتك قبل إكمال الطلب.",
@@ -204,7 +225,13 @@
   "clearCart": "تفريغ السلة",
   "total": "المجموع",
   "sendWhatsApp": "إرسال عبر واتساب",
-  "checkout": "إكمال الطلب",
+  "checkout": {
+    "title": "إكمال الطلب",
+    "items": "العناصر",
+    "total": "المجموع",
+    "createOrder": "إنشاء طلب",
+    "sendWhatsapp": "إرسال عبر واتساب"
+  },
   "orderFailed": "فشل إنشاء الطلب",
   "registerTitle": "إنشاء حساب",
   "loginTitle": "تسجيل الدخول",
@@ -364,6 +391,14 @@
   },
   "brands": {
     "empty": "لا توجد براندات",
-    "noDescription": "بدون وصف"
+    "noDescription": "بدون وصف",
+    "title": "البراندات",
+    "subtitle": "اختر البراند المناسب وتصفح منتجاته."
+  },
+  "cart": {
+    "title": "سلة التسوق",
+    "subtitle": "راجع مشترياتك قبل إتمام الطلب.",
+    "empty": "سلتك فارغة.",
+    "browseProducts": "تصفح المنتجات"
   }
 }

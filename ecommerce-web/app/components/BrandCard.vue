@@ -1,11 +1,11 @@
 <template>
   <NuxtLink
     :to="`/brands/${b.slug}`"
-    class="group block rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] transition overflow-hidden"
+    class="group block rounded-2xl border border-[rgba(var(--border),1)] bg-white/[0.03] hover:bg-white/[0.06] transition overflow-hidden"
   >
     <div class="p-4 flex gap-4 items-center">
       <div
-        class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-black/20 border border-white/10 overflow-hidden flex items-center justify-center"
+        class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-black/20 border border-[rgba(var(--border),1)] overflow-hidden flex items-center justify-center"
       >
         <SmartImage
           v-if="logo"
@@ -13,17 +13,17 @@
           :alt="b.name"
           class="w-full h-full object-cover"
         />
-        <div v-else class="text-xs text-white/50">Logo</div>
+        <div v-else class="text-xs text-[rgb(var(--text))]/50">Logo</div>
       </div>
 
       <div class="min-w-0">
-        <div class="font-semibold text-white truncate">{{ b.name }}</div>
-        <div class="text-sm text-white/60 line-clamp-2">
+        <div class="font-semibold text-[rgb(var(--text))] truncate">{{ b.name }}</div>
+        <div class="text-sm text-[rgba(var(--muted),0.9)] line-clamp-2">
           {{ b.description || '' }}
         </div>
       </div>
 
-      <div class="ms-auto text-white/40 group-hover:text-white/70 transition">
+      <div class="ms-auto text-[rgb(var(--text))]/40 group-hover:text-[rgba(var(--muted),0.95)] transition">
         <span class="i-lucide-chevron-right" />
       </div>
     </div>

@@ -2,14 +2,14 @@
   <div>
     <!-- Hero -->
     <section class="mx-auto max-w-7xl px-4 pt-10 md:pt-14">
-      <div class="rounded-3xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-6 md:p-10">
+      <div class="rounded-3xl border border-[rgba(var(--border),1)] bg-gradient-to-b from-white/5 to-transparent p-6 md:p-10">
         <div class="grid gap-8 md:grid-cols-2 md:items-center">
           <div>
             <h1 class="text-3xl font-extrabold tracking-tight md:text-5xl">
               <span class="block">{{ t('home.heroTitle1') }}</span>
-              <span class="block text-white/80">{{ t('home.heroTitle2') }}</span>
+              <span class="block text-[rgba(var(--text),0.9)]">{{ t('home.heroTitle2') }}</span>
             </h1>
-            <p class="mt-4 text-white/70">
+            <p class="mt-4 text-[rgba(var(--muted),0.95)]">
               {{ t('home.heroSubtitle') }}
             </p>
 
@@ -23,7 +23,7 @@
 
               <NuxtLink
                 to="/admin"
-                class="rounded-xl border border-white/15 bg-white/5 px-4 py-2 font-semibold text-white hover:bg-white/10"
+                class="rounded-xl border border-white/15 bg-[rgba(var(--surface),0.85)] px-4 py-2 font-semibold text-[rgb(var(--text))] hover:bg-white/10"
               >
                 {{ t('home.dashboard') }}
               </NuxtLink>
@@ -31,16 +31,16 @@
           </div>
 
           <div class="hidden md:block">
-            <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
-              <div class="text-sm text-white/60">{{ t('home.brands') }}</div>
+            <div class="rounded-3xl border border-[rgba(var(--border),1)] bg-[rgba(var(--surface),0.85)] p-6">
+              <div class="text-sm text-[rgba(var(--muted),0.9)]">{{ t('home.brands') }}</div>
               <div class="mt-2 text-2xl font-bold">{{ brands.length }}</div>
               <div class="mt-6 grid grid-cols-2 gap-3">
-                <div class="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <div class="text-xs text-white/60">{{ t('home.quick') }}</div>
+                <div class="rounded-2xl border border-[rgba(var(--border),1)] bg-black/20 p-4">
+                  <div class="text-xs text-[rgba(var(--muted),0.9)]">{{ t('home.quick') }}</div>
                   <div class="mt-1 font-semibold">{{ t('home.quickBrands') }}</div>
                 </div>
-                <div class="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <div class="text-xs text-white/60">{{ t('home.quick') }}</div>
+                <div class="rounded-2xl border border-[rgba(var(--border),1)] bg-black/20 p-4">
+                  <div class="text-xs text-[rgba(var(--muted),0.9)]">{{ t('home.quick') }}</div>
                   <div class="mt-1 font-semibold">{{ t('home.quickProducts') }}</div>
                 </div>
               </div>
@@ -55,16 +55,16 @@
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 class="text-2xl font-bold">{{ t('home.brands') }}</h2>
-          <p class="mt-1 text-white/60">{{ t('home.brandsSubtitle') }}</p>
+          <p class="mt-1 text-[rgba(var(--muted),0.9)]">{{ t('home.brandsSubtitle') }}</p>
         </div>
-        <NuxtLink to="/products" class="text-sm font-semibold text-white/70 hover:text-white">
+        <NuxtLink to="/products" class="text-sm font-semibold text-[rgba(var(--muted),0.95)] hover:text-[rgb(var(--text))]">
           {{ t('home.viewAllBrands') }}
         </NuxtLink>
       </div>
 
-      <div class="mt-5 overflow-hidden rounded-3xl border border-white/10 bg-white/5">
-        <div v-if="pending" class="p-6 text-white/60">{{ t('common.loading') }}</div>
-        <div v-else-if="!marqueeItems.length" class="p-6 text-white/60">{{ t('brands.empty') }}</div>
+      <div class="mt-5 overflow-hidden rounded-3xl border border-[rgba(var(--border),1)] bg-[rgba(var(--surface),0.85)]">
+        <div v-if="pending" class="p-6 text-[rgba(var(--muted),0.9)]">{{ t('common.loading') }}</div>
+        <div v-else-if="!marqueeItems.length" class="p-6 text-[rgba(var(--muted),0.9)]">{{ t('brands.empty') }}</div>
 
         <div v-else class="relative">
           <div class="marquee" :class="{ paused: hover }" @mouseenter="hover = true" @mouseleave="hover = false">
@@ -85,7 +85,7 @@
 
                 <div class="min-w-0">
                   <div class="truncate font-semibold">{{ b.name }}</div>
-                  <div class="truncate text-xs text-white/60">
+                  <div class="truncate text-xs text-[rgba(var(--muted),0.9)]">
                     {{ b.description || t('brands.noDescription') }}
                   </div>
                 </div>
@@ -93,8 +93,8 @@
             </div>
           </div>
 
-          <div class="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-black/60 to-transparent" />
-          <div class="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-black/60 to-transparent" />
+          <div class="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[rgba(var(--bg),0.85)] to-transparent" />
+          <div class="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[rgba(var(--bg),0.85)] to-transparent" />
         </div>
       </div>
     </section>

@@ -1,18 +1,18 @@
 <template>
   <div class="container mx-auto px-4 py-8">
     <!-- Brand hero -->
-    <div class="rounded-3xl border border-white/10 bg-white/[0.03] overflow-hidden">
+    <div class="rounded-3xl border border-[rgba(var(--border),1)] bg-[rgba(var(--surface),0.7)] overflow-hidden">
       <div class="p-6 sm:p-8 flex flex-col sm:flex-row gap-6 sm:items-center">
-        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-black/20 border border-white/10 overflow-hidden flex items-center justify-center">
+        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-black/20 border border-[rgba(var(--border),1)] overflow-hidden flex items-center justify-center">
           <SmartImage v-if="brandLogo" :src="brandLogo" :alt="brand?.name" class="w-full h-full object-cover" />
-          <div v-else class="text-xs text-white/50">Logo</div>
+          <div v-else class="text-xs text-[rgba(var(--muted),0.85)]">Logo</div>
         </div>
 
         <div class="min-w-0">
-          <h1 class="text-3xl sm:text-4xl font-extrabold text-white">
+          <h1 class="text-3xl sm:text-4xl font-extrabold text-[rgb(var(--text))]">
             {{ brand?.name || slug }}
           </h1>
-          <p class="text-white/60 mt-2 max-w-2xl">
+          <p class="text-[rgba(var(--muted),0.9)] mt-2 max-w-2xl">
             {{ brand?.description || t('brandPage.defaultDesc') }}
           </p>
         </div>
@@ -22,11 +22,11 @@
             <input
               v-model="q"
               :placeholder="t('brandPage.search')"
-              class="w-full rounded-xl bg-white/[0.04] border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-white/10"
+              class="w-full rounded-xl bg-white/[0.04] border border-[rgba(var(--border),1)] px-4 py-3 outline-none focus:ring-2 focus:ring-white/10"
             />
             <button
               v-if="q"
-              class="absolute right-2 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+              class="absolute right-2 top-1/2 -translate-y-1/2 text-[rgba(var(--muted),0.85)] hover:text-[rgb(var(--text))]"
               @click="q = ''"
               aria-label="clear"
             >
@@ -34,7 +34,7 @@
             </button>
           </div>
 
-          <select v-model="sort" class="rounded-xl bg-white/[0.04] border border-white/10 px-4 py-3 outline-none">
+          <select v-model="sort" class="rounded-xl bg-white/[0.04] border border-[rgba(var(--border),1)] px-4 py-3 outline-none">
             <option value="new">{{ t('products.sortNew') }}</option>
             <option value="priceAsc">{{ t('products.sortPriceAsc') }}</option>
             <option value="priceDesc">{{ t('products.sortPriceDesc') }}</option>
@@ -48,7 +48,7 @@
       <ProductCard v-for="p in products.items" :key="p.id" :p="p" />
     </div>
 
-    <div v-if="!products.loading && products.items.length === 0" class="mt-10 rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center text-white/70">
+    <div v-if="!products.loading && products.items.length === 0" class="mt-10 rounded-2xl border border-[rgba(var(--border),1)] bg-[rgba(var(--surface),0.7)] p-10 text-center text-[rgba(var(--muted),0.95)]">
       {{ t('brandPage.empty') }}
     </div>
   </div>
