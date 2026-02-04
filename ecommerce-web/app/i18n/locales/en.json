@@ -32,7 +32,10 @@
       "new": "New",
       "featured": "Featured"
     },
-    "brands": "Brands"
+    "brands": "Brands",
+    "browseBrands": "Browse brands",
+    "brandsSubtitle": "Pick a brand and explore its products.",
+    "viewAllBrands": "View all"
   },
   "products": {
     "title": "Products",
@@ -349,5 +352,9 @@
     "search": "Search in this brand...",
     "defaultDesc": "Official products collection.",
     "empty": "No products found for this brand"
+  },
+  "brands": {
+    "empty": "No brands found",
+    "noDescription": "No description"
   }
 }
