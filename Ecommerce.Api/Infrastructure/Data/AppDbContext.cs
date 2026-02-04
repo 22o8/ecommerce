@@ -10,7 +10,10 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Product> Products => Set<Product>();
+
+    // ✅ مهم جداً (كان ناقص ويسبب AppDbContext doesn't contain Brands)
     public DbSet<Brand> Brands => Set<Brand>();
+
     public DbSet<Service> Services => Set<Service>();
     public DbSet<ServicePackage> ServicePackages => Set<ServicePackage>();
     public DbSet<ServiceRequirementTemplate> ServiceRequirements => Set<ServiceRequirementTemplate>();
@@ -50,7 +53,6 @@ public class AppDbContext : DbContext
             .Property(x => x.Url)
             .HasMaxLength(2000);
 
-
         modelBuilder.Entity<Product>()
             .Property(p => p.Brand)
             .HasMaxLength(120)
@@ -59,5 +61,28 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Product>()
             .Property(x => x.RatingAvg)
             .HasPrecision(3, 2); // مثل 4.50
+
+        // =========================
+        // ✅ Brand config
+        // =========================
+        modelBuilder.Entity<Brand>()
+            .HasIndex(b => b.Slug)
+            .IsUnique();
+
+        modelBuilder.Entity<Brand>()
+            .Property(b => b.Slug)
+            .HasMaxLength(80);
+
+        modelBuilder.Entity<Brand>()
+            .Property(b => b.Name)
+            .HasMaxLength(120);
+
+        modelBuilder.Entity<Brand>()
+            .Property(b => b.Description)
+            .HasMaxLength(400);
+
+        modelBuilder.Entity<Brand>()
+            .Property(b => b.LogoUrl)
+            .HasMaxLength(400);
     }
 }
