@@ -183,7 +183,7 @@ const api = useApi()
 const pageSize = 12
 const page = computed(() => Number(route.query.page || 1))
 // v-model needs writable refs; computed() without setter throws and breaks rendering.
-const q = ref(String(route.query.q || ''))
+const q = ref(typeof route.query.q === 'string' ? route.query.q : (Array.isArray(route.query.q) ? (route.query.q[0] || '') : ''))
 const sort = ref(String(route.query.sort || 'new'))
 
 // تفاصيل قائمة الفرز/البراندات (مهم للموبايل حتى نسدّ أي مشاكل بالسلوك)
@@ -256,11 +256,18 @@ function clearBrand() {
   brandMenu.value?.removeAttribute('open')
 }
 
-function selectBrand(b: string) {
-  const v = String(b || '').trim()
-  if (!v || v === 'All') return clearBrand()
-  q.value = v
-  apply({ brand: v, q: v, page: 1 })
+function selectBrand(b: any) {
+  // (Mobile menu) b ممكن يكون string أو object { key, label }
+  const v = typeof b === 'string' ? b : (b?.key ?? b?.label ?? '')
+  const key = String(v || '').trim()
+  if (!key || key === 'All') {
+    clearBrand()
+    brandMenu.value?.removeAttribute('open')
+    return
+  }
+
+  // لا تلمس q هنا حتى ما يتحول إلى "[object Object]"
+  apply({ brand: key, page: 1 })
   brandMenu.value?.removeAttribute('open')
 }
 

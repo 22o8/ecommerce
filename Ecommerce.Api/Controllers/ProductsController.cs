@@ -37,6 +37,13 @@ public class ProductsController : ControllerBase
             );
         }
 
+		// ✅ Brand filter (optional)
+		var brand = (query.Brand ?? "").Trim();
+		if (!string.IsNullOrWhiteSpace(brand) && !brand.Equals("All", StringComparison.OrdinalIgnoreCase))
+		{
+			baseQuery = baseQuery.Where(p => p.Brand == brand);
+		}
+
         baseQuery = (query.Sort ?? "new") switch
         {
             "price:asc" or "priceAsc" => baseQuery.OrderBy(p => p.PriceUsd),
