@@ -14,7 +14,6 @@ type FetchParams = {
   q?: string
   sort?: 'new' | 'priceAsc' | 'priceDesc' | string
   isFeatured?: boolean
-  brand?: string
 }
 
 export const useProductsStore = defineStore('products', () => {
@@ -62,7 +61,6 @@ export const useProductsStore = defineStore('products', () => {
           q: params.q || undefined,
           sort: params.sort || 'new',
           isFeatured: params.isFeatured || undefined,
-          brand: params.brand || undefined,
         },
       })
 

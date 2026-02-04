@@ -8,9 +8,6 @@ public class Product
     public string Slug { get; set; } = "";
     public string Description { get; set; } = "";
     public decimal PriceUsd { get; set; }
-
-    // Brand / فهرسة
-    public string Brand { get; set; } = "Unspecified";
     public bool IsPublished { get; set; } = true;
 
     // تقييم (يدوي/إداري حالياً)
@@ -21,4 +18,8 @@ public class Product
 
     public ProductAsset? Asset { get; set; }
     public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
+
+    // Brand (اختياري)
+    public Guid? BrandId { get; set; }
+    public Brand? Brand { get; set; }
 }

@@ -1,24 +1,21 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Ecommerce.Api.Domain.Entities;
 
 public class Brand
 {
     public Guid Id { get; set; }
 
-    // slug used in URLs and as Product.Brand value
-    [Required, MaxLength(80)]
-    public string Slug { get; set; } = "";
+    public string Name { get; set; } = string.Empty;
 
-    [Required, MaxLength(120)]
-    public string Name { get; set; } = "";
+    // slug (للروابط) - نستخدمه بالفرونت
+    public string Slug { get; set; } = string.Empty;
 
-    [MaxLength(400)]
     public string? Description { get; set; }
 
-    // Square logo URL (served from /uploads/brands/...)
-    [MaxLength(400)]
+    // لوغو مربع فقط
     public string? LogoUrl { get; set; }
+
+    // بانر اختياري لصفحة البراند
+    public string? BannerUrl { get; set; }
 
     public bool IsActive { get; set; } = true;
 

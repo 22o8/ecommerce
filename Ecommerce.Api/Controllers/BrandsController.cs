@@ -15,46 +15,52 @@ public class BrandsController : ControllerBase
         _db = db;
     }
 
-    // Public brands list (for storefront)
+    // GET: /api/Brands?active=true
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> List([FromQuery] bool active = true)
     {
-        var items = await _db.Brands
-            .AsNoTracking()
-            .Where(b => b.IsActive)
+        var q = _db.Brands.AsNoTracking();
+        if (active) q = q.Where(b => b.IsActive);
+
+        var items = await q
             .OrderBy(b => b.Name)
             .Select(b => new
             {
-                id = b.Id,
-                slug = b.Slug,
-                name = b.Name,
-                description = b.Description,
-                logoUrl = b.LogoUrl
+                b.Id,
+                b.Name,
+                b.Slug,
+                b.LogoUrl,
+                b.BannerUrl,
+                b.Description,
+                b.IsActive
             })
             .ToListAsync();
 
-        return Ok(new { items });
+        return Ok(items);
     }
 
-    [HttpGet("slug/{slug}")]
+    // GET: /api/Brands/{slug}
+    [HttpGet("{slug}")]
     public async Task<IActionResult> GetBySlug([FromRoute] string slug)
     {
-        slug = (slug ?? "").Trim().ToLowerInvariant();
+        slug = (slug ?? string.Empty).Trim().ToLower();
+        if (string.IsNullOrWhiteSpace(slug)) return BadRequest(new { message = "Invalid slug" });
 
-        var b = await _db.Brands
-            .AsNoTracking()
-            .Where(x => x.IsActive && x.Slug.ToLower() == slug)
-            .Select(x => new
+        var brand = await _db.Brands.AsNoTracking()
+            .Where(b => b.Slug.ToLower() == slug && b.IsActive)
+            .Select(b => new
             {
-                id = x.Id,
-                slug = x.Slug,
-                name = x.Name,
-                description = x.Description,
-                logoUrl = x.LogoUrl
+                b.Id,
+                b.Name,
+                b.Slug,
+                b.LogoUrl,
+                b.BannerUrl,
+                b.Description,
+                b.IsActive
             })
             .FirstOrDefaultAsync();
 
-        if (b == null) return NotFound(new { message = "Brand not found" });
-        return Ok(b);
+        if (brand == null) return NotFound(new { message = "Brand not found" });
+        return Ok(brand);
     }
 }

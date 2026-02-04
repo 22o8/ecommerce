@@ -38,7 +38,6 @@ public class AdminProductsController : ControllerBase
                 p.Slug,
                 p.PriceUsd,
                 p.IsPublished,
-                p.Brand,
                 p.CreatedAt,
                 imagesCount = _db.ProductImages.Count(i => i.ProductId == p.Id),
             })
@@ -61,7 +60,6 @@ public class AdminProductsController : ControllerBase
                 x.Description,
                 x.PriceUsd,
                 x.IsPublished,
-                x.Brand,
                 x.CreatedAt,
                 x.RatingAvg,
                 x.RatingCount,
@@ -82,14 +80,8 @@ public class AdminProductsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] UpsertProductRequest req)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
-        var brandSlug = NormalizeSlug(req.Brand);
-        if (string.IsNullOrWhiteSpace(brandSlug))
-            return BadRequest(new { message = "Brand is required" });
 
-        var brandOk = await _db.Brands.AsNoTracking().AnyAsync(b => b.IsActive && b.Slug.ToLower() == brandSlug);
-        if (!brandOk)
-            return BadRequest(new { message = "Invalid brand" });
-var slug = NormalizeSlug(req.Slug);
+        var slug = NormalizeSlug(req.Slug);
         if (string.IsNullOrWhiteSpace(slug))
             slug = Slugify(req.Title);
 
@@ -103,8 +95,8 @@ var slug = NormalizeSlug(req.Slug);
             Slug = slug,
             Description = (req.Description ?? "").Trim(),
             PriceUsd = req.PriceUsd,
+            BrandId = req.BrandId,
             IsPublished = req.IsPublished,
-            Brand = brandSlug,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -133,17 +125,10 @@ var slug = NormalizeSlug(req.Slug);
         p.Slug = slug;
         p.Description = (req.Description ?? "").Trim();
         p.PriceUsd = req.PriceUsd;
+        p.BrandId = req.BrandId;
         p.IsPublished = req.IsPublished;
-        var brandSlug = NormalizeSlug(req.Brand);
-        if (string.IsNullOrWhiteSpace(brandSlug))
-            return BadRequest(new { message = "Brand is required" });
 
-        var brandOk = await _db.Brands.AsNoTracking().AnyAsync(b => b.IsActive && b.Slug.ToLower() == brandSlug);
-        if (!brandOk)
-            return BadRequest(new { message = "Invalid brand" });
-
-        p.Brand = brandSlug;
-await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync();
         return Ok(new { message = "Updated" });
     }
 
@@ -388,9 +373,8 @@ public class UpsertProductRequest
     [Range(0, 999999)]
     public decimal PriceUsd { get; set; }
 
-    [Required]
-    [MinLength(1)]
-    public string Brand { get; set; } = "Unspecified";
+    // Brand (اختياري)
+    public Guid? BrandId { get; set; }
 
     public bool IsPublished { get; set; }
 }
