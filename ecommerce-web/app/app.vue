@@ -7,10 +7,8 @@ const locale = localeCookie.value === 'en' ? 'en' : 'ar'
 
 useHead({
   htmlAttrs: {
-    lang: locale,
-    // ✅ نخلي اتجاه الصفحة ثابت LTR حتى ما يتغير ترتيب العناصر عند تبديل اللغة
     dir: 'ltr',
-    class: `theme-light ${locale === 'ar' ? 'lang-ar' : 'lang-en'}`,
+    lang: 'ar', // أو 'en' حسب الافتراضي
   },
 })
 </script>

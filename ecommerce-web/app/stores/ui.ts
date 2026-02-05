@@ -25,9 +25,8 @@ export const useUiStore = defineStore('ui', () => {
     if (import.meta.server) return
     const root = document.documentElement
     root.setAttribute('lang', l)
-    // ✅ نخلي اتجاه الصفحة LTR دائمًا حتى لا يتغير ترتيب العناصر يمين/يسار عند تغيير اللغة.
-    // للغة العربية نعالج اتجاه/محاذاة النصوص عبر CSS فقط.
-    root.setAttribute('dir', 'ltr')
+    // ✅ العربية RTL، الإنجليزية LTR
+    root.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr')
     root.classList.toggle('lang-ar', l === 'ar')
     root.classList.toggle('lang-en', l === 'en')
   }
