@@ -25,8 +25,8 @@ export const useUiStore = defineStore('ui', () => {
     if (import.meta.server) return
     const root = document.documentElement
     root.setAttribute('lang', l)
-    // ✅ العربية RTL، الإنجليزية LTR
-    root.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr')
+    // ✅ Force LTR for all languages (do not change layout direction)
+    root.setAttribute('dir', 'ltr')
     root.classList.toggle('lang-ar', l === 'ar')
     root.classList.toggle('lang-en', l === 'en')
   }

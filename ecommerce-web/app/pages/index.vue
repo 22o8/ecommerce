@@ -21,12 +21,7 @@
                 {{ t('home.browseBrands') }}
               </NuxtLink>
 
-              <NuxtLink
-                to="/admin"
-                class="rounded-xl border border-white/15 bg-[rgba(var(--surface),0.85)] px-4 py-2 font-semibold text-[rgb(var(--text))] hover:bg-white/10"
-              >
-                {{ t('home.dashboard') }}
-              </NuxtLink>
+              <!-- Removed Dashboard button from hero per request -->
             </div>
           </div>
 

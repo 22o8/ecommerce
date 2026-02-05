@@ -37,7 +37,13 @@ html.theme-dark{
   --shadow: 0 22px 70px rgba(0,0,0,.45);
 }
 
-/* Language: stable layout (LTR always), text becomes RTL for Arabic blocks */
+/* Language: LTR only (do not flip on locale change) */
+html,
+body {
+  direction: ltr;
+}
+
+/* Keep Arabic text readable but without RTL direction flip */
 html.lang-ar .rtl-text,
 html.lang-ar h1,
 html.lang-ar h2,
@@ -47,8 +53,8 @@ html.lang-ar label,
 html.lang-ar input,
 html.lang-ar textarea,
 html.lang-ar .prose{
-  direction: rtl;
-  text-align: right;
+  direction: ltr;
+  text-align: left;
 }
 html.lang-ar .keep-ltr{ direction:ltr; text-align:left; }
 

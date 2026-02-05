@@ -106,12 +106,7 @@
                 <span class="rtl-text">{{ t('nav.home') }}</span>
               </div>
             </NuxtLink>
-            <NuxtLink to="/products" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
-              <div class="flex items-center gap-2">
-                <Icon name="mdi:shopping-search-outline" class="text-lg" />
-                <span class="rtl-text">{{ t('nav.products') }}</span>
-              </div>
-            </NuxtLink>
+
 	          <NuxtLink to="/brands" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
 	            <div class="flex items-center gap-2">
 	              <Icon name="mdi:storefront-outline" class="text-lg" />
