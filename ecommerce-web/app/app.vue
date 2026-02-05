@@ -7,8 +7,9 @@ const locale = localeCookie.value === 'en' ? 'en' : 'ar'
 
 useHead({
   htmlAttrs: {
-    dir: 'ltr',
-    lang: 'ar', // أو 'en' حسب الافتراضي
+    lang: locale,
+    dir: locale === 'ar' ? 'rtl' : 'ltr',
+    class: `theme-light ${locale === 'ar' ? 'lang-ar rtl' : 'lang-en ltr'}`,
   },
 })
 </script>
