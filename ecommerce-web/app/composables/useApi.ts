@@ -112,38 +112,27 @@ export function useApi() {
   const buildAssetUrl = (p?: string | null) => {
     if (!p) return ''
 
-    // In production on Vercel, `/api/uploads/...` is NOT handled by Nuxt (unless you add a server route).
-    // So we build uploads URLs directly against the backend origin.
     const apiBase = (config.public.apiBase || '').toString()
-    const apiOrigin = apiBase ? apiBase.replace(/\/api\/?$/, '') : ''
 
-    // full url
-    if (p.startsWith('http://') || p.startsWith('https://')) {
-      try {
-        const u = new URL(p)
-        if (u.pathname.startsWith('/uploads/')) {
-          const rest = u.pathname.replace(/^\/uploads\//, '')
-          return apiOrigin ? `${apiOrigin}/uploads/${rest}` : p
-        }
-        return p
-      } catch {
-        return p
-      }
-    }
+    // إذا كان apiBase نسبي (مثل /api/bff)، نرجّع الملفات عبر الـ BFF نفسه
+    // حتى يكون الرابط شغال على Vercel بدون الاعتماد على الدومين الخارجي.
+    const isRelativeApiBase = apiBase.startsWith('/')
+
+    // full url -> رجّعه مثل ما هو
+    if (p.startsWith('http://') || p.startsWith('https://')) return p
 
     const path = p.startsWith('/') ? p : `/${p}`
 
+    // أي ملف تحت /uploads نخليه يمر عبر /api/bff/uploads...
     if (path.startsWith('/uploads/')) {
-      const rest = path.replace(/^\/uploads\//, '')
-      return apiOrigin ? `${apiOrigin}/uploads/${rest}` : `/uploads/${rest}`
+      if (isRelativeApiBase && apiBase) return `${apiBase}${path}`
+
+      // apiBase كامل (مثلاً https://host/api) -> حوّلها لـ origin + /uploads
+      const apiOrigin = apiBase.replace(/\/api\/?$/, '')
+      return apiOrigin ? `${apiOrigin}${path}` : path
     }
 
-    const idx = path.indexOf('/uploads/')
-    if (idx !== -1) {
-      const rest = path.slice(idx).replace(/^\/uploads\//, '')
-      return apiOrigin ? `${apiOrigin}/uploads/${rest}` : `/uploads/${rest}`
-    }
-
+    // fallback
     return path
   }
 

@@ -39,7 +39,7 @@
 
             <div>
               <label class="mb-1 block text-sm text-white/80">{{ t('admin.name') }}</label>
-              <UiInput v-model="form.name" :placeholder="t('admin.namePlaceholder')" required />
+              <UiInput v-model="form.title" :placeholder="t('admin.namePlaceholder')" required />
             </div>
 
             <div>
@@ -148,13 +148,15 @@ type BrandItem = { id: string; slug: string; name: string }
 const brands = ref<BrandItem[]>([])
 const loading = ref(false)
 
+// ✅ مفاتيح الفورم لازم تكون مطابقة لطلب الـ API (.NET)
+// UpsertProductRequest: title, slug, description, priceUsd, isPublished, brand
 const form = reactive({
-  name: '',
+  title: '',
   slug: '',
   description: '',
-  price: 0,
+  priceUsd: 0,
   brandSlug: '',
-  isActive: true,
+  isPublished: true,
 })
 
 type PickedFile = { file: File; preview: string }
@@ -197,12 +199,13 @@ async function onCreate() {
   loading.value = true
   try {
     const created: any = await createProduct({
-      name: form.name,
+      title: form.title,
       slug: form.slug,
       description: form.description,
-      price: form.price,
-      brandSlug: form.brandSlug,
-      isActive: form.isActive,
+      // تأكد أنه رقم (مو نص) حتى ما يرجع 400 من .NET
+      priceUsd: Number(form.priceUsd ?? 0),
+      brand: form.brandSlug,
+      isPublished: !!form.isPublished,
     })
 
     const productId = created?.id || created?.productId
