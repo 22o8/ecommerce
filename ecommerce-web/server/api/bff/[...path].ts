@@ -22,8 +22,13 @@ export default defineEventHandler(async (event) => {
     const routePath = getRouterParam(event, 'path') || ''
 
     const targetBase = String(apiOrigin).replace(/\/$/, '')
+
+    // ✅ المسار الافتراضي للـ API يكون تحت /api
+    // لكن مسارات الملفات المرفوعة تكون عادةً تحت /uploads (بدون /api)
+    // إذا عملنا لها proxy إلى /api/uploads راح نحصل 404.
+    const isUploads = routePath.startsWith('uploads/') || routePath === 'uploads'
     const apiBase = targetBase.endsWith('/api') ? targetBase : `${targetBase}/api`
-    const targetUrl = new URL(`${apiBase}/${routePath}`)
+    const targetUrl = new URL(isUploads ? `${targetBase}/${routePath}` : `${apiBase}/${routePath}`)
 
     // Query params
     const incomingQuery = getQuery(event) as Record<string, any>
@@ -160,8 +165,22 @@ export default defineEventHandler(async (event) => {
     setResponseStatus(event, res.status)
 
     const ct = res.headers.get('content-type') || ''
-    if (ct.includes('application/json')) return await res.json()
-    return await res.text()
+
+    // ✅ دعم ملفات الرفع (صور/ملفات) عبر الـ BFF
+    // بعض المتصفحات تحتاج Content-Type صحيح + باينري (ArrayBuffer)
+    if (!ct.includes('application/json')) {
+      // مرّر الهيدرز الأساسية
+      if (ct) setResponseHeader(event, 'content-type', ct)
+      const cl = res.headers.get('content-length')
+      if (cl) setResponseHeader(event, 'content-length', cl)
+      const cc = res.headers.get('cache-control')
+      if (cc) setResponseHeader(event, 'cache-control', cc)
+
+      const buf = Buffer.from(await res.arrayBuffer())
+      return buf
+    }
+
+    return await res.json()
   } catch (err: any) {
     console.error('BFF error:', err)
     setResponseStatus(event, 500)

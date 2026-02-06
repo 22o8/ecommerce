@@ -81,5 +81,18 @@ export function useAdminApi() {
     createService: <T>(payload: any) => api.post<T>('/admin/services', payload),
     updateService: <T>(id: string, payload: any) => api.put<T>(`/admin/services/${id}`, payload),
     deleteService: <T>(id: string) => api.del<T>(`/admin/services/${id}`),
+
+    // Admin Brands
+    listBrands: <T>(query?: any) => api.get<T>('/admin/brands', query),
+    getBrand: <T>(id: string) => api.get<T>(`/admin/brands/${id}`),
+    createBrand: <T>(payload: any) => api.post<T>('/admin/brands', payload),
+    updateBrand: <T>(id: string, payload: any) => api.put<T>(`/admin/brands/${id}`, payload),
+    deleteBrand: <T>(id: string) => api.del<T>(`/admin/brands/${id}`),
+    uploadBrandLogo: async <T>(id: string, file: File) => {
+      const fd = new FormData()
+      // Swagger: field name "logo"
+      fd.append('logo', file)
+      return await api.postForm<T>(`/admin/brands/${id}/logo`, fd)
+    },
   }
 }
