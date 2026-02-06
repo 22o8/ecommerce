@@ -118,8 +118,21 @@ export function useApi() {
     // حتى يكون الرابط شغال على Vercel بدون الاعتماد على الدومين الخارجي.
     const isRelativeApiBase = apiBase.startsWith('/')
 
-    // full url -> رجّعه مثل ما هو
-    if (p.startsWith('http://') || p.startsWith('https://')) return p
+    // full url -> إذا كان رابط رفع (uploads) حوّله إلى رابط الـ BFF حتى ما ينكسر بين الدومينات
+    if (p.startsWith('http://') || p.startsWith('https://')) {
+      try {
+        const u = new URL(p)
+        if (u.pathname.startsWith('/uploads/')) {
+          // إذا apiBase نسبي (مثل /api/bff) استخدمه مباشرة
+          if (isRelativeApiBase && apiBase) return `${apiBase}${u.pathname}`
+          // غير ذلك ارجع المسار النسبي على نفس الأصل
+          return u.pathname
+        }
+      } catch {
+        // ignore
+      }
+      return p
+    }
 
     const path = p.startsWith('/') ? p : `/${p}`
 

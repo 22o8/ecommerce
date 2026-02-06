@@ -218,6 +218,16 @@ html.theme-dark .skeleton {
 .btn-secondary:active{ transform: translateY(1px); }
 .btn-secondary:disabled{ opacity: .5; cursor: not-allowed; }
 
+/* على الثيم الفاتح: خلي الأزرار أوضح وبارزة */
+html.theme-light .btn-secondary{
+  background: #fff;
+  border: 1px solid rgba(var(--border), 1);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+html.theme-light .btn-secondary:hover{
+  background: rgba(var(--surface), 0.9);
+}
+
 .btn-danger{
   border-radius: 1rem;
   padding: .55rem 1rem;
