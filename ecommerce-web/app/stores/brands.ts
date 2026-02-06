@@ -36,8 +36,9 @@ export const useBrandsStore = defineStore('brands', () => {
   const fetchAdmin = async () => {
     loading.value = true
     try {
-      const res = await get<{ items: BrandDto[] }>('/admin/brands')
-      items.value = res?.items || []
+      // AdminBrandsController يرجّع Array مباشرة
+      const res = await get<any>('/admin/brands')
+      items.value = Array.isArray(res) ? res : (res?.items || [])
     } finally {
       loading.value = false
     }

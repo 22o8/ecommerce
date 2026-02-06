@@ -23,7 +23,7 @@
             <div class="md:col-span-2">
               <label class="mb-1 block text-sm text-white/80">{{ t('admin.brand') }}</label>
               <select
-                v-model="form.brandSlug"
+                v-model="form.brand"
                 class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20"
                 required
               >
@@ -60,12 +60,12 @@
 
             <div>
               <label class="mb-1 block text-sm text-white/80">{{ t('admin.price') }}</label>
-              <UiInput v-model.number="form.price" type="number" min="0" step="0.01" />
+              <UiInput v-model.number="form.priceUsd" type="number" min="0" step="0.01" />
             </div>
 
             <div class="flex items-end gap-3">
               <label class="flex cursor-pointer items-center gap-2 text-sm text-white/80">
-                <input v-model="form.isActive" type="checkbox" class="h-4 w-4" />
+                <input v-model="form.isPublished" type="checkbox" class="h-4 w-4" />
                 {{ t('common.active') }}
               </label>
             </div>
@@ -155,7 +155,8 @@ const form = reactive({
   slug: '',
   description: '',
   priceUsd: 0,
-  brandSlug: '',
+  // slug الخاص بالبراند (نرسله للباك ضمن الحقل brand)
+  brand: '',
   isPublished: true,
 })
 
@@ -204,7 +205,7 @@ async function onCreate() {
       description: form.description,
       // تأكد أنه رقم (مو نص) حتى ما يرجع 400 من .NET
       priceUsd: Number(form.priceUsd ?? 0),
-      brand: form.brandSlug,
+      brand: form.brand,
       isPublished: !!form.isPublished,
     })
 
