@@ -3,7 +3,7 @@
     <div class="admin-box">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <div class="text-xl font-extrabold rtl-text">{{ t('admin.brands') }}</div>
+          <div class="text-xl font-extrabold">{{ t('admin.brands.title') }}</div>
           <div class="text-sm admin-muted rtl-text">{{ t('admin.brandsHint') }}</div>
         </div>
 

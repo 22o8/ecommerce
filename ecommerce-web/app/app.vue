@@ -7,10 +7,10 @@ const locale = localeCookie.value === 'en' ? 'en' : 'ar'
 
 useHead({
   htmlAttrs: {
-    lang: locale,
-    // Force LTR for all languages (do not switch direction when changing locale)
+    // Keep layout stable: always LTR and do not change structural classes when locale changes.
+    lang: 'en',
     dir: 'ltr',
-    class: `theme-light ${locale === 'ar' ? 'lang-ar' : 'lang-en'} ltr`,
+    class: 'theme-light ltr',
   },
 })
 </script>

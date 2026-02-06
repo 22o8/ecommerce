@@ -278,7 +278,10 @@
     "orderNotFound": "order Not Found",
     "brandsHint": "البراندات ملاحظة",
     "addProductHint": "add Product ملاحظة",
-    "editBrand": "edit البراند"
+    "editBrand": "edit البراند",
+    "productsLabel": "المنتجات",
+    "brandsLabel": "البراندات",
+    "imagesSelected": "الصور المختارة"
   },
   "auth": {
     "email": "البريد الإلكتروني",

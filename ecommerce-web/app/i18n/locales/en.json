@@ -261,7 +261,10 @@
     "orderNotFound": "Order not found",
     "brandsHint": "Brands hint",
     "addProductHint": "Add product hint",
-    "editBrand": "Edit brand"
+    "editBrand": "Edit brand",
+    "productsLabel": "Products",
+    "brandsLabel": "Brands",
+    "imagesSelected": "Images selected"
   },
   "errors": {
     "required": "This field is required",

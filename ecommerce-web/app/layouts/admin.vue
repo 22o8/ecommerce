@@ -18,7 +18,7 @@
 
         <!-- Title + email -->
         <div class="min-w-0">
-          <div class="font-extrabold rtl-text truncate">
+          <div class="font-extrabold truncate">
             {{ t('admin.title') }}
           </div>
           <div class="text-xs text-muted keep-ltr truncate">
@@ -43,7 +43,7 @@
           <NuxtLink to="/" class="hidden sm:block">
             <UiButton variant="secondary">
               <Icon name="mdi:web" class="text-lg" />
-              <span class="rtl-text">{{ t('admin.viewSite') }}</span>
+              <span>{{ t('admin.viewSite') }}</span>
             </UiButton>
           </NuxtLink>
 
@@ -82,7 +82,7 @@
         >
           <!-- Mobile sidebar header -->
           <div class="md:hidden px-4 pt-4 pb-3 border-b border-app flex items-center justify-between">
-            <div class="text-sm font-extrabold rtl-text">{{ t('admin.menu') || 'القائمة' }}</div>
+            <div class="text-sm font-extrabold">{{ t('admin.menu') || 'القائمة' }}</div>
             <button
               class="h-9 w-9 rounded-2xl border border-app bg-surface grid place-items-center"
               @click="close()"
@@ -102,7 +102,7 @@
                 @click="close()"
               >
                 <Icon :name="item.icon" class="text-xl" />
-                <span class="rtl-text truncate">{{ item.label }}</span>
+                <span class="truncate">{{ item.label }}</span>
               </NuxtLink>
             </nav>
 
@@ -110,7 +110,7 @@
               <NuxtLink to="/" class="block" @click="close()">
                 <UiButton variant="ghost" class="w-full justify-center">
                   <Icon name="mdi:arrow-right" class="keep-ltr" />
-                  <span class="rtl-text">{{ t('admin.backToSite') }}</span>
+                  <span>{{ t('admin.backToSite') }}</span>
                 </UiButton>
               </NuxtLink>
             </div>
@@ -138,8 +138,10 @@ const open = ref(false)
 
 const links = computed(() => [
   { to: '/admin', label: t('admin.overview'), icon: 'mdi:view-dashboard-outline' },
-  { to: '/admin/products', label: t('admin.products'), icon: 'mdi:cube-outline' },
-  { to: '/admin/brands', label: t('admin.brands'), icon: 'mdi:storefront-outline' },
+  // `admin.products` and `admin.brands` are objects (they contain title/hint/etc),
+  // so we must use a string key for the sidebar label.
+  { to: '/admin/products', label: t('admin.productsLabel'), icon: 'mdi:cube-outline' },
+  { to: '/admin/brands', label: t('admin.brandsLabel'), icon: 'mdi:storefront-outline' },
   { to: '/admin/orders', label: t('admin.orders'), icon: 'mdi:receipt-text-outline' },
   { to: '/admin/users', label: t('admin.users.title'), icon: 'mdi:account-multiple-outline' },
 ])

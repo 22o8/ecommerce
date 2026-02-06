@@ -112,13 +112,18 @@ export function useApi() {
   const buildAssetUrl = (p?: string | null) => {
     if (!p) return ''
 
+    // In production on Vercel, `/api/uploads/...` is NOT handled by Nuxt (unless you add a server route).
+    // So we build uploads URLs directly against the backend origin.
+    const apiBase = (config.public.apiBase || '').toString()
+    const apiOrigin = apiBase ? apiBase.replace(/\/api\/?$/, '') : ''
+
     // full url
     if (p.startsWith('http://') || p.startsWith('https://')) {
       try {
         const u = new URL(p)
         if (u.pathname.startsWith('/uploads/')) {
           const rest = u.pathname.replace(/^\/uploads\//, '')
-          return `/api/uploads/${rest}`
+          return apiOrigin ? `${apiOrigin}/uploads/${rest}` : p
         }
         return p
       } catch {
@@ -130,13 +135,13 @@ export function useApi() {
 
     if (path.startsWith('/uploads/')) {
       const rest = path.replace(/^\/uploads\//, '')
-      return `/api/uploads/${rest}`
+      return apiOrigin ? `${apiOrigin}/uploads/${rest}` : `/uploads/${rest}`
     }
 
     const idx = path.indexOf('/uploads/')
     if (idx !== -1) {
       const rest = path.slice(idx).replace(/^\/uploads\//, '')
-      return `/api/uploads/${rest}`
+      return apiOrigin ? `${apiOrigin}/uploads/${rest}` : `/uploads/${rest}`
     }
 
     return path

@@ -46,7 +46,8 @@ export default defineNuxtConfig({
   app: {
     head: {
       // ✅ Arabic first (RTL)
-      htmlAttrs: { lang: 'ar', dir: 'rtl', class: 'theme-light lang-ar' },
+      // Force LTR for all locales.
+      htmlAttrs: { lang: 'en', dir: 'ltr', class: 'theme-light' },
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
