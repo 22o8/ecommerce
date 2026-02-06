@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue'
-import { useBrandsStore } from '~/app/stores/brands'
-import { useProductsStore } from '~/app/stores/products'
+// Nuxt is configured with srcDir = "app".
+// "~" already points to the srcDir, so "~/app/..." becomes "/app/app/..." on Vercel.
+import { useBrandsStore } from '~/stores/brands'
+import { useProductsStore } from '~/stores/products'
 
 const brandsStore = useBrandsStore()
 const productsStore = useProductsStore()
