@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useApi } from '~/app/composables/useApi'
+import { useApi } from '~/composables/useApi'
 
 type Brand = {
   id: string
