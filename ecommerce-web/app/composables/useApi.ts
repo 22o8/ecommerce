@@ -10,6 +10,46 @@ export type FetchOpts = {
   body?: any
 }
 
+// ✅ بناء رابط آمن للصور/الملفات
+// بعض الصفحات تستورده كـ named export:
+// import { buildAssetUrl } from '~/composables/useApi'
+export function buildAssetUrl(p?: string | null) {
+  if (!p) return ''
+
+  const config = useRuntimeConfig()
+  const apiBase = (config.public as any)?.apiBase?.toString?.() || ''
+
+  // إذا كان apiBase نسبي (مثل /api/bff)، نرجّع الملفات عبر الـ BFF نفسه
+  // حتى يكون الرابط شغال على Vercel بدون الاعتماد على الدومين الخارجي.
+  const isRelativeApiBase = apiBase.startsWith('/')
+
+  // full url -> إذا كان رابط رفع (uploads) حوّله إلى رابط الـ BFF حتى ما ينكسر بين الدومينات
+  if (p.startsWith('http://') || p.startsWith('https://')) {
+    try {
+      const u = new URL(p)
+      if (u.pathname.startsWith('/uploads/')) {
+        // ✅ الأفضل دائماً: نخدم الصور عبر الـ BFF على نفس دومين الموقع
+        const bff = (isRelativeApiBase && apiBase) ? apiBase : '/api/bff'
+        return `${bff}${u.pathname}`
+      }
+    } catch {
+      // ignore
+    }
+    return p
+  }
+
+  const path = p.startsWith('/') ? p : `/${p}`
+
+  // أي ملف تحت /uploads نخليه يمر عبر /api/bff/uploads...
+  if (path.startsWith('/uploads/')) {
+    const bff = (isRelativeApiBase && apiBase) ? apiBase : '/api/bff'
+    return `${bff}${path}`
+  }
+
+  // fallback
+  return path
+}
+
 export function useApi() {
   // كل الطلبات تمر عبر الـ BFF
   const base = '/api/bff'
@@ -108,47 +148,11 @@ export function useApi() {
     })) as unknown as T
   }
 
-  // ✅ بناء رابط آمن للصور/الملفات
-  const buildAssetUrl = (p?: string | null) => {
-    if (!p) return ''
-
-    const apiBase = (config.public.apiBase || '').toString()
-
-    // إذا كان apiBase نسبي (مثل /api/bff)، نرجّع الملفات عبر الـ BFF نفسه
-    // حتى يكون الرابط شغال على Vercel بدون الاعتماد على الدومين الخارجي.
-    const isRelativeApiBase = apiBase.startsWith('/')
-
-    // full url -> إذا كان رابط رفع (uploads) حوّله إلى رابط الـ BFF حتى ما ينكسر بين الدومينات
-    if (p.startsWith('http://') || p.startsWith('https://')) {
-      try {
-        const u = new URL(p)
-        if (u.pathname.startsWith('/uploads/')) {
-          // ✅ الأفضل دائماً: نخدم الصور عبر الـ BFF على نفس دومين الموقع
-          // حتى لو apiBase كان URL خارجي (مثلاً https://api.com/api)
-          const bff = (isRelativeApiBase && apiBase) ? apiBase : '/api/bff'
-          return `${bff}${u.pathname}`
-        }
-      } catch {
-        // ignore
-      }
-      return p
-    }
-
-    const path = p.startsWith('/') ? p : `/${p}`
-
-    // أي ملف تحت /uploads نخليه يمر عبر /api/bff/uploads...
-    if (path.startsWith('/uploads/')) {
-      // الأفضل دائماً نخدمه عبر الـ BFF على نفس الدومين
-      // (حتى لو apiBase كان URL خارجي)
-      const bff = (isRelativeApiBase && apiBase) ? apiBase : '/api/bff'
-      return `${bff}${path}`
-    }
-
-    // fallback
-    return path
-  }
+  // ✅ نفس الدالة لكن متاحة أيضاً كـ named export بالأعلى
+  // حتى لا ينكسر build عند الاستيراد المباشر.
+  const buildAssetUrlLocal = buildAssetUrl
 
   const upload = postForm
 
-  return { request, get, post, put, del, postForm, upload, buildAssetUrl }
+  return { request, get, post, put, del, postForm, upload, buildAssetUrl: buildAssetUrlLocal }
 }
