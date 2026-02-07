@@ -123,10 +123,10 @@ export function useApi() {
       try {
         const u = new URL(p)
         if (u.pathname.startsWith('/uploads/')) {
-          // إذا apiBase نسبي (مثل /api/bff) استخدمه مباشرة
-          if (isRelativeApiBase && apiBase) return `${apiBase}${u.pathname}`
-          // غير ذلك ارجع المسار النسبي على نفس الأصل
-          return u.pathname
+          // ✅ الأفضل دائماً: نخدم الصور عبر الـ BFF على نفس دومين الموقع
+          // حتى لو apiBase كان URL خارجي (مثلاً https://api.com/api)
+          const bff = (isRelativeApiBase && apiBase) ? apiBase : '/api/bff'
+          return `${bff}${u.pathname}`
         }
       } catch {
         // ignore
@@ -138,11 +138,10 @@ export function useApi() {
 
     // أي ملف تحت /uploads نخليه يمر عبر /api/bff/uploads...
     if (path.startsWith('/uploads/')) {
-      if (isRelativeApiBase && apiBase) return `${apiBase}${path}`
-
-      // apiBase كامل (مثلاً https://host/api) -> حوّلها لـ origin + /uploads
-      const apiOrigin = apiBase.replace(/\/api\/?$/, '')
-      return apiOrigin ? `${apiOrigin}${path}` : path
+      // الأفضل دائماً نخدمه عبر الـ BFF على نفس الدومين
+      // (حتى لو apiBase كان URL خارجي)
+      const bff = (isRelativeApiBase && apiBase) ? apiBase : '/api/bff'
+      return `${bff}${path}`
     }
 
     // fallback

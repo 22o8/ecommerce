@@ -27,7 +27,7 @@
         <div v-for="it in cart.items" :key="it.id" class="rounded-3xl border border-app bg-surface p-4">
           <div class="flex gap-4">
             <div class="h-16 w-16 rounded-2xl overflow-hidden bg-black/20 shrink-0">
-              <img v-if="it.imageUrl" :src="it.imageUrl" :alt="it.title" class="h-full w-full object-cover" />
+              <img v-if="it.imageUrl" :src="buildAssetUrl(it.imageUrl)" :alt="it.title" class="h-full w-full object-cover" />
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-start justify-between gap-3">
@@ -97,6 +97,7 @@
 
 <script setup lang="ts">
 import UiButton from '~/components/ui/UiButton.vue'
+import { buildAssetUrl } from '~/composables/useApi'
 
 const { t } = useI18n()
 const cart = useCartStore()
