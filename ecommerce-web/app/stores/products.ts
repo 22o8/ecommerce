@@ -45,6 +45,9 @@ export const useProductsStore = defineStore('products', () => {
 
 
   const items = ref<any[]>([])
+  // ✅ قائمة المنتجات المميّزة (تُعرض بالصفحة الرئيسية)
+  // مفصوله عن items حتى ما تتداخل مع صفحات المنتجات/الفلاتر.
+  const featuredItems = ref<any[]>([])
   const totalCount = ref(0)
   const loading = ref(false)
 
@@ -77,10 +80,18 @@ export const useProductsStore = defineStore('products', () => {
       const arr = Array.isArray(raw)
         ? raw
         : (Array.isArray(res as any) ? (res as any) : [])
-      items.value = arr.map(normalizeProduct)
-      totalCount.value = Number(
-        (res as any)?.totalCount ?? (res as any)?.data?.totalCount ?? (res as any)?.total ?? items.value.length ?? 0
-      )
+      const normalized = arr.map(normalizeProduct)
+
+      // إذا كانت جلبة المميّزات، خزّنها بقائمة منفصلة.
+      if (params.isFeatured) {
+        featuredItems.value = normalized
+      } else {
+        items.value = normalized
+        totalCount.value = Number(
+          (res as any)?.totalCount ?? (res as any)?.data?.totalCount ?? (res as any)?.total ?? items.value.length ?? 0
+        )
+      }
+
       return res
     } finally {
       loading.value = false
