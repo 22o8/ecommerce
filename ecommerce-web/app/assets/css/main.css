@@ -332,3 +332,56 @@ select.input option{
   gap: .5rem;
   justify-content: flex-end;
 }
+
+/* ============================
+   Extra visibility for controls
+   ============================ */
+
+/* A compact icon button used for clear/close buttons */
+.icon-btn{
+  height: 2.25rem;
+  width: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: .75rem;
+  border: 1px solid rgba(var(--border), 1);
+  background: var(--surface);
+  color: rgb(var(--text));
+  box-shadow: var(--shadow-card);
+  transition: background .15s ease, opacity .15s ease, transform .15s ease;
+}
+.icon-btn:hover{ background: var(--surface-2); }
+.icon-btn:active{ transform: translateY(1px); }
+
+/* Boxed wrapper for search + filters so they're obvious in both themes */
+.control-box{
+  background: rgba(var(--surface-rgb), .92);
+  border: 1px solid rgba(var(--border), 1);
+  border-radius: 1rem;
+  padding: .75rem;
+  box-shadow: var(--shadow-card);
+}
+
+/* Stronger default borders for secondary/outline buttons */
+.btn-secondary,
+.btn-outline{
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgba(var(--border), 1);
+  box-shadow: var(--shadow-card);
+}
+.btn-outline{
+  background: transparent;
+}
+.btn-outline:hover{ background: rgba(var(--surface-2-rgb), .7); }
+
+/* Inputs/selects should feel "boxed" */
+.input,
+.select{
+  background: rgba(var(--surface-2-rgb), .85);
+  border: 1px solid rgba(var(--border), 1);
+  box-shadow: var(--shadow-card);
+}
+.input::placeholder{ opacity: .75; }
+

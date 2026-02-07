@@ -26,7 +26,7 @@
             />
             <button
               v-if="q"
-              class="absolute right-2 top-1/2 -translate-y-1/2 text-[rgba(var(--muted),0.85)] hover:text-[rgb(var(--text))]"
+              class="absolute right-2 top-1/2 -translate-y-1/2 icon-btn"
               @click="q = ''"
               aria-label="clear"
             >
@@ -34,7 +34,7 @@
             </button>
           </div>
 
-          <select v-model="sort" class="input py-3">
+          <select v-model="sort" class="select">
             <option value="new">{{ t('products.sortNew') }}</option>
             <option value="priceAsc">{{ t('products.sortPriceAsc') }}</option>
             <option value="priceDesc">{{ t('products.sortPriceDesc') }}</option>

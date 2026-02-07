@@ -6,7 +6,7 @@
         <p class="mt-2 text-muted rtl-text">{{ t('home.brandsSubtitle') }}</p>
       </div>
 
-      <div class="w-full sm:w-[360px]">
+      <div class="control-box w-full sm:w-[360px]">
         <div class="relative">
           <input
             v-model="q"
@@ -15,7 +15,7 @@
           />
           <button
             v-if="q"
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-muted hover:opacity-80"
+            class="absolute left-3 top-1/2 -translate-y-1/2 icon-btn"
             @click="q = ''"
             aria-label="clear"
           >

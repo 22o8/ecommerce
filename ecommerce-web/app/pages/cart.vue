@@ -35,7 +35,11 @@
                   <div class="font-bold rtl-text truncate">{{ it.title }}</div>
                   <div class="text-sm text-muted rtl-text">{{ fmtMoney(it.price) }} × {{ it.quantity }}</div>
                 </div>
-                <button class="text-muted hover:text-[rgb(var(--danger))]" @click="cart.remove(it.id)">
+                <button
+                  class="icon-btn bg-surface-2 border border-app text-muted hover:text-[rgb(var(--danger))] hover:border-[rgba(var(--danger),0.35)] hover:bg-[rgba(var(--danger),0.12)]"
+                  @click="cart.remove(it.id)"
+                  aria-label="remove"
+                >
                   <Icon name="mdi:close" class="text-xl" />
                 </button>
               </div>

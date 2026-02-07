@@ -6,7 +6,7 @@
         <p class="mt-2 text-muted rtl-text">{{ t('productsPage.subtitle') }}</p>
       </div>
 
-      <div class="w-full lg:w-[560px] grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="control-box w-full lg:w-[560px] grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div class="relative">
           <input
             v-model="q"
@@ -16,7 +16,8 @@
           />
           <button
             v-if="q"
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-muted hover:opacity-80"
+            type="button"
+            class="absolute left-3 top-1/2 -translate-y-1/2 icon-btn"
             @click="q = ''"
             aria-label="clear"
           >
