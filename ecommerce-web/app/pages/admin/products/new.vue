@@ -68,10 +68,15 @@
               <UiInput v-model.number="form.priceUsd" type="number" min="0" step="0.01" />
             </div>
 
-            <div class="flex items-end gap-3">
-              <label class="flex cursor-pointer items-center gap-2 text-sm text-white/80">
+            <div class="flex flex-wrap items-end gap-6">
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-[rgb(var(--muted-2))]">
                 <input v-model="form.isPublished" type="checkbox" class="h-4 w-4" />
                 {{ t('common.active') }}
+              </label>
+
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-[rgb(var(--muted-2))]">
+                <input v-model="form.isFeatured" type="checkbox" class="h-4 w-4" />
+                {{ t('admin.featuredOnHome') }}
               </label>
             </div>
 
@@ -163,6 +168,7 @@ const form = reactive({
   // slug الخاص بالبراند (نرسله للباك ضمن الحقل brand)
   brand: '',
   isPublished: true,
+  isFeatured: false,
 })
 
 const slugTouched = ref(false)
@@ -242,6 +248,7 @@ async function onCreate() {
       priceUsd: Number(form.priceUsd ?? 0),
       brand: form.brand,
       isPublished: !!form.isPublished,
+      isFeatured: !!form.isFeatured,
     })
 
     const productId = created?.id || created?.productId

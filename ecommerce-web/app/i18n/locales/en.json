@@ -187,6 +187,8 @@
     "prev": "Prev",
     "noBrandsHint": "No brands hint",
     "isActive": "Is active",
+    "isFeatured": "Featured",
+    "featuredOnHome": "Show on home (Featured Products)",
     "sortTitle": "Sort title",
     "validationSlug": "Validation slug",
     "active": "Active",

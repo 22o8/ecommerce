@@ -204,6 +204,8 @@
     "prev": "prev",
     "noBrandsHint": "no البراندات ملاحظة",
     "isActive": "is مفعّل",
+    "isFeatured": "مميز",
+    "featuredOnHome": "إظهار في الرئيسية (المنتجات المميزة)",
     "sortTitle": "sort العنوان",
     "validationSlug": "validation Slug",
     "active": "مفعّل",

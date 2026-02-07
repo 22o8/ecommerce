@@ -75,6 +75,11 @@
               {{ t('admin.isActive') }}
             </label>
 
+            <label class="flex items-center gap-2 text-sm">
+              <input type="checkbox" v-model="form.isFeatured" class="h-4 w-4" />
+              {{ t('admin.isFeatured') }}
+            </label>
+
             <div class="flex flex-wrap gap-2">
               <UiButton type="submit" :disabled="saving">{{ saving ? t('common.saving') : t('common.save') }}</UiButton>
               <UiButton variant="ghost" type="button" :disabled="saving" @click="resetForm">
@@ -188,6 +193,7 @@ const form = reactive({
   price: 0,
   brandSlug: '',
   isActive: true,
+  isFeatured: false,
 })
 
 const slugTouched = ref(false)
@@ -218,6 +224,7 @@ function resetForm() {
   form.price = Number(product.value.price ?? 0)
   form.brandSlug = product.value.brandSlug || ''
   form.isActive = Boolean(product.value.isActive ?? true)
+  form.isFeatured = Boolean((product.value as any).isFeatured ?? false)
 
   // للـ slug التلقائي: لا نعتبره "معدل" إلا إذا المستخدم لمس حقل slug
   slugTouched.value = false
@@ -314,6 +321,7 @@ async function onSave() {
       price: Number(form.price),
       brandSlug: form.brandSlug,
       isActive: Boolean(form.isActive),
+      isFeatured: Boolean(form.isFeatured),
     })
     toast.success(t('common.saved'))
     await loadProduct()

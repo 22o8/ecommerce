@@ -74,7 +74,8 @@ const brands = computed(() => brandsStore.items)
 
     <!-- Brands (marquee at the end) -->
     <section class="mx-auto max-w-6xl px-4 pb-20">
-      <div class="rounded-3xl border border-[rgb(var(--border))] bg-white/80 p-6 sm:p-10">
+      <!-- Balanced card color for both light/dark themes -->
+      <div class="rounded-3xl border border-[rgb(var(--border))] bg-surface-2 shadow-card p-6 sm:p-10">
         <div class="text-center">
           <h2 class="text-2xl font-extrabold text-[rgb(var(--text))] sm:text-4xl">Our Brands</h2>
           <p class="mt-3 text-[rgb(var(--muted))]">

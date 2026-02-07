@@ -49,7 +49,13 @@ export const useProductsStore = defineStore('products', () => {
   const loading = ref(false)
 
   // Featured is simply first few items from latest fetch
-  const featured = computed(() => items.value.slice(0, 8))
+  // Featured products shown on home page.
+  // Prefer server-filtered featured list when available.
+  const featured = computed(() => {
+    const list = featuredItems.value
+    if (Array.isArray(list) && list.length) return list
+    return items.value.slice(0, 8)
+  })
   const hasFeatured = computed(() => featured.value.length > 0)
 
   async function fetch(params: FetchParams = {}) {
