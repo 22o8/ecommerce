@@ -74,6 +74,8 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ layout: 'admin', middleware: ['auth'] })
+
 import SmartImage from '~/components/SmartImage.vue'
 
 const { t } = useI18n()

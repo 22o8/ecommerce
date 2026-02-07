@@ -35,7 +35,12 @@
 
               <div class="grid gap-2">
                 <label class="text-sm font-medium">{{ t('admin.slug') }}</label>
-                <UiInput v-model="form.slug" :placeholder="t('admin.slugPlaceholder')" dir="ltr" />
+                <UiInput
+                  v-model="form.slug"
+                  :placeholder="t('admin.slugPlaceholder')"
+                  dir="ltr"
+                  @update:modelValue="() => (slugTouched = true)"
+                />
                 <div class="text-xs text-white/60">{{ t('admin.slugHint') }}</div>
               </div>
             </div>
@@ -185,6 +190,20 @@ const form = reactive({
   isActive: true,
 })
 
+const slugTouched = ref(false)
+const autoSlugBase = ref('')
+
+const slugify = (input: string) => {
+  return (input || '')
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/['"`]/g, '')
+    .replace(/[^a-z0-9\u0600-\u06FF]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
 const selectedFiles = ref<File[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
 
@@ -199,7 +218,30 @@ function resetForm() {
   form.price = Number(product.value.price ?? 0)
   form.brandSlug = product.value.brandSlug || ''
   form.isActive = Boolean(product.value.isActive ?? true)
+
+  // للـ slug التلقائي: لا نعتبره "معدل" إلا إذا المستخدم لمس حقل slug
+  slugTouched.value = false
+  autoSlugBase.value = slugify(form.name)
 }
+
+watch(
+  () => form.name,
+  (val) => {
+    if (slugTouched.value) return
+    const next = slugify(val)
+    if (!form.slug || form.slug === autoSlugBase.value) {
+      form.slug = next
+      autoSlugBase.value = next
+    }
+  }
+)
+
+watch(
+  () => form.slug,
+  (val) => {
+    if (!val) slugTouched.value = false
+  }
+)
 
 function resolveUploadUrl(path?: string) {
   if (!path) return ''

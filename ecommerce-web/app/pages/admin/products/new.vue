@@ -44,7 +44,12 @@
 
             <div>
               <label class="mb-1 block text-sm text-white/80">{{ t('admin.slug') }}</label>
-              <UiInput v-model="form.slug" :placeholder="t('admin.slugPlaceholder')" required />
+              <UiInput
+                v-model="form.slug"
+                :placeholder="t('admin.slugPlaceholder')"
+                required
+                @update:modelValue="() => (slugTouched = true)"
+              />
               <p class="mt-1 text-xs text-white/60">{{ t('admin.slugHint') }}</p>
             </div>
 
@@ -159,6 +164,36 @@ const form = reactive({
   brand: '',
   isPublished: true,
 })
+
+const slugTouched = ref(false)
+
+const slugify = (input: string) => {
+  return (input || '')
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/['"`]/g, '')
+    .replace(/[^a-z0-9\u0600-\u06FF]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+watch(
+  () => form.title,
+  (v) => {
+    if (!slugTouched.value || !form.slug) {
+      form.slug = slugify(v)
+    }
+  }
+)
+
+watch(
+  () => form.slug,
+  (v) => {
+    // إذا المستخدم مسح السلق، نرجع نفعّل التوليد التلقائي
+    if (!v) slugTouched.value = false
+  }
+)
 
 type PickedFile = { file: File; preview: string }
 const files = ref<PickedFile[]>([])

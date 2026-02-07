@@ -11,7 +11,7 @@
 
       <div class="grid gap-2">
         <label class="admin-label rtl-text">{{ t('admin.slug') }}</label>
-        <input v-model="slug" class="admin-input" :placeholder="t('admin.slugHint')" />
+        <input v-model="slug" class="admin-input" :placeholder="t('admin.slugHint')" @input="slugTouched = true" />
       </div>
 
       <div class="grid gap-2">
@@ -37,6 +37,8 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ layout: 'admin', middleware: ['auth'] })
+
 const { t } = useI18n()
 const router = useRouter()
 const brands = useBrandsStore()
@@ -45,6 +47,24 @@ const name = ref('')
 const slug = ref('')
 const description = ref('')
 const isActive = ref(true)
+
+// ✅ توليد slug تلقائياً من الاسم (ويظل قابل للتعديل اليدوي)
+const slugTouched = ref(false)
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/['"`]/g, '')
+    .replace(/[^a-z0-9\u0600-\u06FF]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+
+watch(name, (v) => {
+  if (!slugTouched.value || !slug.value) slug.value = slugify(v || '')
+})
+watch(slug, (v) => {
+  if (!v) slugTouched.value = false
+})
 
 const pending = ref(false)
 const error = ref('')

@@ -86,9 +86,10 @@ export function useApi() {
       ...(opts.headers || {}),
     }
 
-    // ✅ Client: إذا عندنا access token غير httpOnly، ارسله كـ Authorization
+    // ✅ إذا عندنا access token (غير HttpOnly) ارسله كـ Authorization
+    // مهم خصوصاً على SSR لأن الـ cookie لوحده قد لا يكون كافي للمصادقة.
     // (لا تكتب Authorization إذا موجود أصلًا)
-    if (process.client && !mergedHeaders.Authorization && !mergedHeaders.authorization) {
+    if (!mergedHeaders.Authorization && !mergedHeaders.authorization) {
       const t = (access.value || '').trim()
       if (t) mergedHeaders.Authorization = `Bearer ${t}`
     }
@@ -133,8 +134,8 @@ export function useApi() {
       ...(headers || {}),
     }
 
-    // ✅ Client: Authorization من access
-    if (process.client && !mergedHeaders.Authorization && !mergedHeaders.authorization) {
+    // ✅ Authorization من access (SSR + Client)
+    if (!mergedHeaders.Authorization && !mergedHeaders.authorization) {
       const t = (access.value || '').trim()
       if (t) mergedHeaders.Authorization = `Bearer ${t}`
     }

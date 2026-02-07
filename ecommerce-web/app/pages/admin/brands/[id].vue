@@ -41,7 +41,7 @@
 
             <div class="grid gap-2">
               <label class="admin-label rtl-text">{{ t('admin.slug') }}</label>
-              <input v-model="slug" class="admin-input" />
+              <input v-model="slug" class="admin-input" @input="slugTouched = true" />
             </div>
 
             <div class="grid gap-2">
@@ -73,6 +73,8 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ layout: 'admin', middleware: ['auth'] })
+
 import SmartImage from '~/components/SmartImage.vue'
 
 const { t } = useI18n()
@@ -87,6 +89,31 @@ const slug = ref('')
 const description = ref('')
 const isActive = ref(true)
 const logoUrl = ref('')
+
+const slugTouched = ref(false)
+
+const slugify = (input: string) => {
+  return (input || '')
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/['"`]/g, '')
+    .replace(/[^a-z0-9\u0600-\u06FF]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+watch(name, (v) => {
+  if (slugTouched.value) return
+  const next = slugify(v)
+  if (!slug.value || slug.value === slugify(slug.value)) {
+    slug.value = next
+  }
+})
+
+watch(slug, (v) => {
+  if (!v) slugTouched.value = false
+})
 
 const picked = ref<File | null>(null)
 const pending = ref(false)
