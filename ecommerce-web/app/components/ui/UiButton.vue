@@ -19,13 +19,13 @@ const props = withDefaults(defineProps<{
 }>(), { variant: 'primary', type: 'button', disabled: false, loading: false })
 
 const classes = computed(() => {
-  // نخلي الأزرار واضحة دائماً على الخلفية الفاتحة
-  const base = 'border border-app text-black'
-  if (props.variant === 'primary') return `${base} bg-[rgb(var(--primary))] text-black dark:text-[rgb(var(--bg))] hover:opacity-95`
-  // ثانوي: أبيض + حد واضح
-  if (props.variant === 'secondary') return `${base} bg-white dark:bg-surface-2 hover:bg-[rgba(var(--text),.06)] border-app/70`
-  // Ghost: حد خفيف لكن قابل للرؤية
-  if (props.variant === 'ghost') return `border border-app/60 bg-white/0 text-black hover:bg-[rgba(var(--text),.06)]`
+  const base = 'border border-app text-app'
+  // Primary: يظل واضح في كلا الثيمين
+  if (props.variant === 'primary') return `${base} bg-[rgb(var(--primary))] text-[rgb(var(--on-primary))] border-transparent hover:opacity-95`
+  // Secondary: سطح + حد واضح
+  if (props.variant === 'secondary') return `${base} bg-surface-2 hover:bg-[rgba(var(--text),.06)]`
+  // Ghost: شفاف لكن بحد واضح
+  if (props.variant === 'ghost') return `border border-app bg-transparent text-app hover:bg-[rgba(var(--text),.06)]`
   if (props.variant === 'danger') return `${base} bg-[rgb(var(--danger))] text-white hover:opacity-95`
   return base
 })

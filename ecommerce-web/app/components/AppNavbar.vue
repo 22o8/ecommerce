@@ -34,14 +34,14 @@
 	        <div class="flex items-center gap-0.5 sm:gap-2 flex-shrink-0">
 	          <!-- Brands -->
 	          <NuxtLink to="/brands" class="hidden sm:block">
-	            <UiButton variant="ghost" class="px-2 sm:px-3">
+	            <UiButton variant="secondary" class="px-2 sm:px-3">
               <Icon name="mdi:storefront-outline" class="text-lg" />
               <span class="hidden md:inline rtl-text">{{ t('home.brands') }}</span>
             </UiButton>
           </NuxtLink>
 	          <!-- Cart: يظهر على الهاتف أيضاً (أيقونة فقط) -->
 	          <NuxtLink to="/cart" class="block">
-	            <UiButton variant="ghost" class="relative px-2 sm:px-3 shrink-0">
+	            <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0">
               <Icon name="mdi:cart-outline" class="text-lg" />
 	              <span class="hidden sm:inline rtl-text">{{ t('nav.cart') }}</span>
               <span

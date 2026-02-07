@@ -245,6 +245,8 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ layout: 'admin', middleware: ['admin'] })
+
 import UiButton from '~/components/ui/UiButton.vue'
 
 type UserRow = {

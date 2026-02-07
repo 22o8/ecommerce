@@ -13,14 +13,14 @@
         </div>
       </div>
 
-      <div class="mt-4 grid gap-2 md:grid-cols-3">
+      <div class="mt-4 filter-bar md:grid-cols-3">
         <input v-model="q" class="admin-input" :placeholder="t('admin.searchBrands')" />
         <select v-model="status" class="admin-input">
           <option value="">{{ t('admin.all') }}</option>
           <option value="active">{{ t('admin.active') }}</option>
           <option value="disabled">{{ t('admin.disabled') }}</option>
         </select>
-        <button class="admin-ghost" type="button" @click="applyFilters">{{ t('admin.search') }}</button>
+        <button class="admin-primary" type="button" @click="applyFilters">{{ t('admin.search') }}</button>
       </div>
     </div>
 
