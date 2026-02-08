@@ -84,6 +84,44 @@ public class ProductsController : ControllerBase
         });
     }
 
+    // GET /api/Products/featured
+    // ✅ Home page "Featured Products" (controlled via Admin Panel with IsFeatured flag)
+    [HttpGet("featured")]
+    public async Task<IActionResult> GetFeatured([FromQuery] int take = 12)
+    {
+        var safeTake = take is < 1 or > 60 ? 12 : take;
+
+        var items = await _db.Products
+            .AsNoTracking()
+            .Where(p => p.IsPublished && p.IsFeatured)
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(safeTake)
+            .Select(p => new
+            {
+                p.Id,
+                p.Title,
+                p.Slug,
+                p.Description,
+                p.PriceUsd,
+                p.RatingAvg,
+                p.Brand,
+                p.RatingCount,
+                p.CreatedAt,
+                coverImage = _db.ProductImages
+                    .Where(i => i.ProductId == p.Id)
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => i.Url)
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
+
+        return Ok(new
+        {
+            totalCount = items.Count,
+            items
+        });
+    }
+
     // GET /api/Products/{id}
     // Public product details by id (compatibility for some frontend pages)
     [HttpGet("{id:guid}")]

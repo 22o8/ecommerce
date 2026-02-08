@@ -186,6 +186,9 @@ namespace Ecommerce.Api.Migrations
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
 
+					b.Property<bool>("IsFeatured")
+						.HasColumnType("boolean");
+
                     b.Property<decimal>("PriceUsd")
                         .HasColumnType("numeric");
 
