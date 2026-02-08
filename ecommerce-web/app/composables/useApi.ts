@@ -17,44 +17,32 @@ export function buildAssetUrl(p?: string | null) {
   if (!p) return ''
 
   const config = useRuntimeConfig()
-  const apiBase = (config.public as any)?.apiBase?.toString?.() || ''
+  const apiBase = String((config.public as any)?.apiBase || '').replace(/\/$/, '')
+  const apiOrigin = String((config.public as any)?.apiOrigin || '').replace(/\/$/, '')
 
-  // إذا كان apiBase نسبي (مثل /api/bff)، نرجّع الملفات عبر الـ BFF نفسه
-  // حتى يكون الرابط شغال على Vercel بدون الاعتماد على الدومين الخارجي.
-  const isRelativeApiBase = apiBase.startsWith('/')
-
-  // full url -> إذا كان رابط رفع (uploads) حوّله إلى رابط الـ BFF حتى ما ينكسر بين الدومينات
-  if (p.startsWith('http://') || p.startsWith('https://')) {
-    try {
-      const u = new URL(p)
-      if (u.pathname.startsWith('/uploads/')) {
-        // ✅ الأفضل دائماً: نخدم الصور عبر الـ BFF على نفس دومين الموقع
-        const bff = (isRelativeApiBase && apiBase) ? apiBase : '/api/bff'
-        return `${bff}${u.pathname}`
-      }
-    } catch {
-      // ignore
-    }
-    return p
-  }
+  // 1) absolute URL: keep it as-is
+  if (p.startsWith('http://') || p.startsWith('https://')) return p
 
   const path = p.startsWith('/') ? p : `/${p}`
 
-  // أي ملف تحت /uploads نخليه يمر عبر /api/bff/uploads...
+  // 2) uploads relative path: serve from backend origin directly
   if (path.startsWith('/uploads/')) {
-    const bff = (isRelativeApiBase && apiBase) ? apiBase : '/api/bff'
-    return `${bff}${path}`
+    // if apiOrigin exists -> https://host + /uploads/...
+    if (apiOrigin) return `${apiOrigin}${path}`
+    // fallback to relative
+    return path
   }
 
-  // fallback
+  // 3) any other relative: return as-is
   return path
 }
 
+
 export function useApi() {
   // كل الطلبات تمر عبر الـ BFF
-  const base = '/api/bff'
-
   const config = useRuntimeConfig()
+  const publicApiBase = String((config.public as any)?.apiBase || '').replace(/\/$/, '')
+  const base = publicApiBase.startsWith('http') ? publicApiBase : '/api/bff' 
   // رابط الباك (للتطوير) مثل: https://localhost:7043
   const apiOrigin = String(
     (config.public as any)?.apiOrigin ||

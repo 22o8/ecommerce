@@ -104,6 +104,7 @@ import UiButton from '~/components/ui/UiButton.vue'
 import { buildAssetUrl } from '~/composables/useApi'
 
 const { t } = useI18n()
+const api = useApi()
 const cart = useCartStore()
 const auth = useAuthStore()
 const profile = useProfileStore()
@@ -154,7 +155,7 @@ async function createOrder() {
       items: cart.items.map(i => ({ productId: i.id, quantity: i.quantity })),
       notes: whatsappText(),
     }
-    const res = await $fetch<{ id: string }>(`/api/bff/Checkout/cart`, { method: 'POST', body })
+    const res = await api.post<{ id: string }>(`/Checkout/cart`, body)
     success.value = `${t('orderCreated')} #${res.id}`
     cart.clear()
   } catch (e: any) {
