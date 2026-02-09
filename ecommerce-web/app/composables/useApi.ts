@@ -56,15 +56,31 @@ export function buildAssetUrl(p?: string | null) {
 export function useApi() {
   // كل الطلبات تمر عبر الـ BFF
   const config = useRuntimeConfig()
-  const publicApiBase = String((config.public as any)?.apiBase || '').replace(/\/$/, '')
-  const base = publicApiBase.startsWith('http') ? publicApiBase : '/api/bff' 
-  // رابط الباك (للتطوير) مثل: https://localhost:7043
-  const apiOrigin = String(
+  const publicApiBaseRaw = String((config.public as any)?.apiBase || '').trim()
+
+  // ✅ حل جذري لمشكلة 404:
+  // إذا المستخدم حط الدومين فقط (بدون /api)، نضيف /api تلقائياً.
+  // وإذا حط /api مسبقاً ما نضاعفها.
+  const normalizeApiBase = (v: string) => {
+    const cleaned = v.replace(/\/$/, '')
+    if (!cleaned.startsWith('http')) return cleaned
+    return /\/api$/i.test(cleaned) ? cleaned : `${cleaned}/api`
+  }
+
+  const publicApiBase = normalizeApiBase(publicApiBaseRaw)
+  const base = publicApiBase.startsWith('http') ? publicApiBase : '/api/bff'
+  // رابط الباك (بدون /api) — يستخدم لبناء روابط الصور والملفات
+  // إذا apiBase يحتوي /api، نرجّع الأصل تلقائياً حتى ما يصير /api/uploads...
+  const apiOriginRaw = String(
     (config.public as any)?.apiOrigin ||
     (config.public as any)?.apiBase ||
     (config as any)?.apiOrigin ||
     ''
-  ).replace(/\/$/, '')
+  ).trim()
+
+  const apiOrigin = apiOriginRaw
+    .replace(/\/$/, '')
+    .replace(/\/api$/i, '')
 
   // ✅ توكن عميل (غير HttpOnly) — مهم للموبايل/Telegram
   // إذا HttpOnly token ما ينحفظ/ينرسل على iOS، هذا ينقذك.
