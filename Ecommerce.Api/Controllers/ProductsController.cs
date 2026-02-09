@@ -85,15 +85,16 @@ public class ProductsController : ControllerBase
     }
 
     // GET /api/Products/featured
-    // ✅ Home page "Featured Products" (controlled via Admin Panel with IsFeatured flag)
+	// ✅ Home page "Featured Products"
+	// المطلوب: تكون تلقائياً أحدث منتجات منشورة (بدون الاعتماد على عمود IsFeatured)
     [HttpGet("featured")]
-    public async Task<IActionResult> GetFeatured([FromQuery] int take = 12)
+	public async Task<IActionResult> GetFeatured([FromQuery] int take = 12)
     {
         var safeTake = take is < 1 or > 60 ? 12 : take;
 
         var items = await _db.Products
             .AsNoTracking()
-            .Where(p => p.IsPublished && p.IsFeatured)
+			.Where(p => p.IsPublished)
             .OrderByDescending(p => p.CreatedAt)
             .Take(safeTake)
             .Select(p => new
