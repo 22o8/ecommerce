@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useApi } from '~/composables/useApi'
 
 type Brand = {
@@ -13,19 +13,46 @@ const props = defineProps<{ brands: Brand[] }>()
 
 const api = useApi()
 
+function buildLogoCandidates(url?: string | null) {
+  if (!url) return [] as string[]
+  // جرّب نفس الرابط، وبعدها بدائل الامتداد الشائعة (حل عملي لمشكلة logo.jpg 404)
+  const u = url.trim()
+  const list = [u]
+  if (u.endsWith('.jpg') || u.endsWith('.jpeg')) {
+    list.push(u.replace(/\.jpe?g$/i, '.png'))
+    list.push(u.replace(/\.jpe?g$/i, '.webp'))
+  } else if (u.endsWith('.png')) {
+    list.push(u.replace(/\.png$/i, '.webp'))
+    list.push(u.replace(/\.png$/i, '.jpg'))
+  } else if (u.endsWith('.webp')) {
+    list.push(u.replace(/\.webp$/i, '.png'))
+    list.push(u.replace(/\.webp$/i, '.jpg'))
+  }
+  return Array.from(new Set(list))
+}
+
+const logoTryIndex = ref<Record<string, number>>({})
+const keyOf = (b: Brand, idx: number) => `${b.id}-${idx}`
+const logoSrc = (b: Brand, idx: number) => {
+  const key = keyOf(b, idx)
+  const list = buildLogoCandidates(b.logoUrl)
+  const i = logoTryIndex.value[key] ?? 0
+  const picked = list[i]
+  return picked ? api.buildAssetUrl(picked) : ''
+}
+const onLogoError = (b: Brand, idx: number) => {
+  const key = keyOf(b, idx)
+  const list = buildLogoCandidates(b.logoUrl)
+  const i = logoTryIndex.value[key] ?? 0
+  if (i + 1 < list.length) logoTryIndex.value[key] = i + 1
+}
+
 // نكرر القائمة حتى يصير تمرير مستمر
 const loop = computed(() => [...props.brands, ...props.brands])
 </script>
 
 <template>
   <section v-if="brands?.length" class="mt-16">
-    <div class="mx-auto max-w-6xl px-4">
-      <div class="text-center">
-        <h2 class="text-2xl md:text-3xl font-extrabold">Our Brands</h2>
-        <p class="mt-2 text-muted">Explore premium beauty brands</p>
-      </div>
-    </div>
-
     <div class="mt-8 overflow-hidden">
       <div class="marquee">
         <div class="marquee__track">
@@ -39,10 +66,11 @@ const loop = computed(() => [...props.brands, ...props.brands])
               <div class="marquee__logo">
                 <img
                   v-if="b.logoUrl"
-                  :src="api.buildAssetUrl(b.logoUrl)"
+                  :src="logoSrc(b, idx)"
                   :alt="b.name"
                   class="h-10 w-10 rounded-xl object-cover"
                   loading="lazy"
+                  @error="onLogoError(b, idx)"
                 />
                 <div v-else class="h-10 w-10 rounded-xl bg-black/5" />
               </div>

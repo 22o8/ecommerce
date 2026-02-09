@@ -104,8 +104,23 @@ export const useProductsStore = defineStore('products', () => {
     }
   }
 
-  async function fetchFeatured() {
-    return await fetch({ page: 1, pageSize: 8, sort: 'new', isFeatured: true })
+  async function fetchFeatured(take = 8) {
+    // ✅ نعتمد على Endpoint المخصص بالباك: /api/Products/featured?take=
+    // ونسوي fallback ذكي إلى آخر المنتجات إذا رجع فاضي.
+    try {
+      const res = await api.get<{ totalCount?: number; items?: ApiProduct[] }>('/Products/featured', { take })
+      const list = (res?.items ?? []).map(normalizeProduct)
+      if (list.length) {
+        featuredItems.value = list
+        return
+      }
+    } catch (e) {
+      // تجاهل ونكمل fallback
+    }
+
+    // fallback: آخر منتجات (حتى الصفحة الرئيسية ما تبقى فاضية)
+    await fetch({ page: 1, pageSize: take, sort: 'new' })
+    featuredItems.value = items.value.slice(0, take)
   }
 
   return {
