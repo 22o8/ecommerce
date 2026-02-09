@@ -64,22 +64,16 @@ export const useProductsStore = defineStore('products', () => {
   async function fetch(params: FetchParams = {}) {
     loading.value = true
     try {
-			// NOTE: useApi.get expects query object directly.
-			// ✅ Featured endpoint in backend is: GET /api/Products/featured?take=8
-			const isFeat = Boolean(params.isFeatured)
-			const path = isFeat ? '/Products/featured' : '/Products'
-			const res = await api.get<Paged<any>>(path, isFeat
-				? {
-					take: params.pageSize || 8,
-				}
-				: {
-					page: params.page || 1,
-					pageSize: params.pageSize || 12,
-					q: params.q || undefined,
-					sort: params.sort || 'new',
-					brand: params.brand || undefined,
-				}
-			)
+			// NOTE: useApi.get expects query object directly (not { query: {...} }).
+			// Featured is served from a dedicated endpoint.
+			const path = params.isFeatured ? '/Products/featured' : '/Products'
+			const res = await api.get<Paged<any>>(path, {
+				page: params.page || 1,
+				pageSize: params.pageSize || (params.isFeatured ? 8 : 12),
+				q: params.q || undefined,
+				sort: params.sort || 'new',
+				brand: params.brand || undefined,
+			})
 
       // Support different API shapes
       const raw = (res as any)?.items ?? (res as any)?.data?.items ?? (res as any)?.data
@@ -89,7 +83,7 @@ export const useProductsStore = defineStore('products', () => {
       const normalized = arr.map(normalizeProduct)
 
       // إذا كانت جلبة المميّزات، خزّنها بقائمة منفصلة.
-      if (isFeat) {
+      if (params.isFeatured) {
         featuredItems.value = normalized
       } else {
         items.value = normalized

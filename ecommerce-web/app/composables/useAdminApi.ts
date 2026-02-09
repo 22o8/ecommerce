@@ -16,8 +16,6 @@ export function useAdminApi() {
 
     // Admin Products
     listAdminProducts: <T>(query?: any) => api.get<T>('/admin/products', query),
-    // ✅ used by admin product edit page
-    getAdminProduct: <T>(id: string) => api.get<T>(`/admin/products/${id}`),
     createAdminProduct: <T>(payload: any) => api.post<T>('/admin/products', payload),
     updateAdminProduct: <T>(id: string, payload: any) => api.put<T>(`/admin/products/${id}`, payload),
     deleteAdminProduct: <T>(id: string) => api.del<T>(`/admin/products/${id}`),
