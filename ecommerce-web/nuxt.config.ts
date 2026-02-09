@@ -13,13 +13,17 @@ export default defineNuxtConfig({
         ? process.env.NUXT_PUBLIC_API_BASE.replace(/\/api\/?$/, '')
         : undefined) ||
       // ✅ الافتراضي: Render (حسب بنية مشروعك)
-      'https://ecommerce-api-endk.onrender.com',
+      'https://ecommerce-api-22o8.fly.dev',
 
     public: {
       whatsappPhone: process.env.NUXT_PUBLIC_WHATSAPP_PHONE || '',
 
-      // ✅ client -> /api/bff (Nuxt server) -> API origin
-      apiBase: '/api/bff',
+      // ✅ الافتراضي (الأفضل على Vercel):
+      // المتصفح يتكلم مع نفس الدومين /api/bff (Nuxt server) ثم Nuxt يمرر للباك
+      // لتفادي CORS و مشاكل 404 لما ينحط أصل الباك بدون /api
+      apiBase: process.env.NUXT_PUBLIC_API_BASE
+        ? (process.env.NUXT_PUBLIC_API_BASE.startsWith('http') ? '/api/bff' : process.env.NUXT_PUBLIC_API_BASE)
+        : '/api/bff',
 
       // Public backend origin (WITHOUT /api)
       apiOrigin:
@@ -27,7 +31,7 @@ export default defineNuxtConfig({
         (process.env.NUXT_PUBLIC_API_BASE
           ? process.env.NUXT_PUBLIC_API_BASE.replace(/\/api\/?$/, '')
           : undefined) ||
-        'https://ecommerce-api-endk.onrender.com',
+        'https://ecommerce-api-22o8.fly.dev',
 
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
       siteName: process.env.NUXT_PUBLIC_SITE_NAME || 'Ecommerce',

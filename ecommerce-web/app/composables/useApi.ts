@@ -17,20 +17,20 @@ export function buildAssetUrl(p?: string | null) {
   if (!p) return ''
 
   const config = useRuntimeConfig()
-  const apiBase = (config.public as any)?.apiBase?.toString?.() || ''
+  const apiBase = String((config.public as any)?.apiBase || '').replace(/\/$/, '')
+  const apiOrigin = String((config.public as any)?.apiOrigin || '').replace(/\/$/, '')
 
-  // إذا كان apiBase نسبي (مثل /api/bff)، نرجّع الملفات عبر الـ BFF نفسه
-  // حتى يكون الرابط شغال على Vercel بدون الاعتماد على الدومين الخارجي.
-  const isRelativeApiBase = apiBase.startsWith('/')
-
-  // full url -> إذا كان رابط رفع (uploads) حوّله إلى رابط الـ BFF حتى ما ينكسر بين الدومينات
+  // 1) absolute URL: لو كان http نحوله إلى https (خصوصاً Fly) لتجنب mixed content
   if (p.startsWith('http://') || p.startsWith('https://')) {
     try {
       const u = new URL(p)
-      if (u.pathname.startsWith('/uploads/')) {
-        // ✅ الأفضل دائماً: نخدم الصور عبر الـ BFF على نفس دومين الموقع
-        const bff = (isRelativeApiBase && apiBase) ? apiBase : '/api/bff'
-        return `${bff}${u.pathname}`
+      if (u.protocol === 'http:') {
+        const looksLikeFly = u.hostname.endsWith('fly.dev') || u.hostname.endsWith('fly.io')
+        const looksLikeSameHost = u.hostname === new URL(apiBase).hostname
+        if (looksLikeFly || looksLikeSameHost) {
+          u.protocol = 'https:'
+          return u.toString()
+        }
       }
     } catch {
       // ignore
@@ -40,28 +40,47 @@ export function buildAssetUrl(p?: string | null) {
 
   const path = p.startsWith('/') ? p : `/${p}`
 
-  // أي ملف تحت /uploads نخليه يمر عبر /api/bff/uploads...
+  // 2) uploads relative path: serve from backend origin directly
   if (path.startsWith('/uploads/')) {
-    const bff = (isRelativeApiBase && apiBase) ? apiBase : '/api/bff'
-    return `${bff}${path}`
+    // if apiOrigin exists -> https://host + /uploads/...
+    if (apiOrigin) return `${apiOrigin}${path}`
+    // fallback to relative
+    return path
   }
 
-  // fallback
+  // 3) any other relative: return as-is
   return path
 }
 
+
 export function useApi() {
   // كل الطلبات تمر عبر الـ BFF
-  const base = '/api/bff'
-
   const config = useRuntimeConfig()
-  // رابط الباك (للتطوير) مثل: https://localhost:7043
-  const apiOrigin = String(
+  const publicApiBaseRaw = String((config.public as any)?.apiBase || '').trim()
+
+  // ✅ حل جذري لمشكلة 404:
+  // إذا المستخدم حط الدومين فقط (بدون /api)، نضيف /api تلقائياً.
+  // وإذا حط /api مسبقاً ما نضاعفها.
+  const normalizeApiBase = (v: string) => {
+    const cleaned = v.replace(/\/$/, '')
+    if (!cleaned.startsWith('http')) return cleaned
+    return /\/api$/i.test(cleaned) ? cleaned : `${cleaned}/api`
+  }
+
+  const publicApiBase = normalizeApiBase(publicApiBaseRaw)
+  const base = publicApiBase.startsWith('http') ? publicApiBase : '/api/bff'
+  // رابط الباك (بدون /api) — يستخدم لبناء روابط الصور والملفات
+  // إذا apiBase يحتوي /api، نرجّع الأصل تلقائياً حتى ما يصير /api/uploads...
+  const apiOriginRaw = String(
     (config.public as any)?.apiOrigin ||
     (config.public as any)?.apiBase ||
     (config as any)?.apiOrigin ||
     ''
-  ).replace(/\/$/, '')
+  ).trim()
+
+  const apiOrigin = apiOriginRaw
+    .replace(/\/$/, '')
+    .replace(/\/api$/i, '')
 
   // ✅ توكن عميل (غير HttpOnly) — مهم للموبايل/Telegram
   // إذا HttpOnly token ما ينحفظ/ينرسل على iOS، هذا ينقذك.

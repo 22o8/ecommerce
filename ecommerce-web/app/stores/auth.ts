@@ -14,6 +14,10 @@ export type User = {
 }
 
 export const useAuthStore = defineStore('auth', () => {
+  // ✅ API client (يشتغل على السيرفر والكلينت)
+  // كان يسبب خطأ: api is not defined
+  const api = useApi()
+
   const cookieOptions = {
     default: () => null,
     path: '/',
@@ -80,31 +84,20 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function login(payload: LoginRequest) {
-    const res: any = await $fetch('/api/bff/Auth/login', {
-      method: 'POST',
-      body: payload,
-      credentials: 'include',
-    })
+    const res: any = await api.post('/Auth/login', payload)
     applyAuthFromResponse(res)
     return res
   }
 
   async function register(payload: RegisterRequest) {
-    const res: any = await $fetch('/api/bff/Auth/register', {
-      method: 'POST',
-      body: payload,
-      credentials: 'include',
-    })
+    const res: any = await api.post('/Auth/register', payload)
     applyAuthFromResponse(res)
     return res
   }
 
   async function logout() {
     try {
-      await $fetch('/api/bff/Auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      })
+      await api.post('/Auth/logout', {})
     } catch {
       // ignore
     }
