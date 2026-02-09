@@ -46,7 +46,7 @@ async function removeBrand(id: string) {
   loading.value = true
   error.value = null
   try {
-    await brandsStore.remove(id)
+    await brandsStore.deleteBrand(id)
     await brandsStore.fetchAdmin()
   } catch (e: any) {
     error.value = e?.data?.message || e?.message || 'Delete failed'

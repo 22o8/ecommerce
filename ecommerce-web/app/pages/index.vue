@@ -1,22 +1,23 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
-// Nuxt is configured with srcDir = "app".
-// "~" already points to the srcDir, so "~/app/..." becomes "/app/app/..." on Vercel.
+import { computed } from 'vue'
+import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
 
 const brandsStore = useBrandsStore()
 const productsStore = useProductsStore()
 
-onMounted(async () => {
-  await Promise.all([
+// SSR-safe prefetch so Featured/Brands render immediately on Vercel
+await useAsyncData('home-prefetch', async () => {
+  await Promise.allSettled([
     brandsStore.fetchPublic(),
-    productsStore.fetchFeatured(12),
+    productsStore.fetchFeatured(8),
   ])
+  return true
 })
 
 const featured = computed(() => productsStore.featured)
-const brands = computed(() => brandsStore.items)
+const brands = computed(() => brandsStore.publicBrands)
 </script>
 
 <template>
