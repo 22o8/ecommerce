@@ -1,4 +1,9 @@
 <script setup lang="ts">
+definePageMeta({
+  layout: 'admin',
+  middleware: ['auth'],
+})
+
 const { t } = useI18n()
 const brandsStore = useBrandsStore()
 
@@ -28,7 +33,7 @@ async function refresh() {
   loading.value = true
   error.value = null
   try {
-    await brandsStore.fetchAll()
+    await brandsStore.fetchAdmin()
   } catch (e: any) {
     error.value = e?.data?.message || e?.message || 'Failed to load brands'
   } finally {
@@ -42,7 +47,7 @@ async function removeBrand(id: string) {
   error.value = null
   try {
     await brandsStore.remove(id)
-    await brandsStore.fetchAll()
+    await brandsStore.fetchAdmin()
   } catch (e: any) {
     error.value = e?.data?.message || e?.message || 'Delete failed'
   } finally {
