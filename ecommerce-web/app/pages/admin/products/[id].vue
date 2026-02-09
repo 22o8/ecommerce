@@ -218,12 +218,14 @@ const images = ref<any[]>([])
 
 function resetForm() {
   if (!product.value) return
-  form.name = product.value.name || ''
+  // backend (ASP.NET) returns camelCase: title, priceUsd, brand, isPublished, isFeatured
+  form.name = product.value.title || product.value.name || ''
   form.slug = product.value.slug || ''
   form.description = product.value.description || ''
-  form.price = Number(product.value.price ?? 0)
-  form.brandSlug = product.value.brandSlug || ''
-  form.isActive = Boolean(product.value.isActive ?? true)
+  form.price = Number(product.value.priceUsd ?? product.value.price ?? 0)
+  // we store brand slug/name in the same field; API expects "brand"
+  form.brandSlug = product.value.brand || product.value.brandSlug || ''
+  form.isActive = Boolean(product.value.isPublished ?? product.value.isActive ?? true)
   form.isFeatured = Boolean((product.value as any).isFeatured ?? false)
 
   // للـ slug التلقائي: لا نعتبره "معدل" إلا إذا المستخدم لمس حقل slug
@@ -315,12 +317,13 @@ async function onSave() {
   saving.value = true
   try {
     await updateAdminProduct<any>(id.value, {
-      name: form.name.trim(),
+      // ✅ match backend DTO (UpsertProductRequest)
+      title: form.name.trim(),
       slug: form.slug.trim(),
       description: form.description?.trim() || '',
-      price: Number(form.price),
-      brandSlug: form.brandSlug,
-      isActive: Boolean(form.isActive),
+      priceUsd: Number(form.price),
+      brand: form.brandSlug,
+      isPublished: Boolean(form.isActive),
       isFeatured: Boolean(form.isFeatured),
     })
     toast.success(t('common.saved'))
