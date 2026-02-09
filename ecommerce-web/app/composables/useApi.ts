@@ -20,8 +20,23 @@ export function buildAssetUrl(p?: string | null) {
   const apiBase = String((config.public as any)?.apiBase || '').replace(/\/$/, '')
   const apiOrigin = String((config.public as any)?.apiOrigin || '').replace(/\/$/, '')
 
-  // 1) absolute URL: keep it as-is
-  if (p.startsWith('http://') || p.startsWith('https://')) return p
+  // 1) absolute URL: لو كان http نحوله إلى https (خصوصاً Fly) لتجنب mixed content
+  if (p.startsWith('http://') || p.startsWith('https://')) {
+    try {
+      const u = new URL(p)
+      if (u.protocol === 'http:') {
+        const looksLikeFly = u.hostname.endsWith('fly.dev') || u.hostname.endsWith('fly.io')
+        const looksLikeSameHost = u.hostname === new URL(apiBase).hostname
+        if (looksLikeFly || looksLikeSameHost) {
+          u.protocol = 'https:'
+          return u.toString()
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return p
+  }
 
   const path = p.startsWith('/') ? p : `/${p}`
 
