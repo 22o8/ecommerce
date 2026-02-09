@@ -69,7 +69,6 @@ import ProductGallery from '~/components/ProductGallery.vue'
 import { useCartStore } from '~/stores/cart'
 import { useWishlist } from '~/composables/useWishlist'
 import { useQuickPreview } from '~/composables/useQuickPreview'
-import { useApi } from '~/composables/useApi'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -78,7 +77,6 @@ const cart = useCartStore()
 const wl = useWishlist()
 const qp = useQuickPreview()
 const products = useProductsStore()
-const api = useApi()
 
 const open = computed(() => qp.open.value)
 const p = computed<any>(() => qp.product.value)
@@ -140,29 +138,7 @@ watch(
 
     // حاول نلقاها من المنتجات المحمّلة حالياً
     const found = products.items.find((x: any) => String(x?.id ?? x?.Id ?? '') === val)
-    if (found) {
-      qp.show(found)
-      return
-    }
-
-    // ✅ إذا المستخدم فتح رابط مباشر /products?p=ID (بدون ما تكون القائمة محمّلة)
-    // جب تفاصيل المنتج من السيرفر حتى لا تظهر "تفاصيل المنتج لا تظهر".
-    ;(async () => {
-      try {
-        const res: any = await api.get(`/Products/${val}`)
-        if (!res) return
-
-        const cover = res.coverImage || res.imageUrl || null
-        const imageUrl = cover ? api.buildAssetUrl(String(cover)) : ''
-        const images = Array.isArray(res.images)
-          ? res.images.map((im: any) => api.buildAssetUrl(String(im?.url || im?.path || im)))
-          : []
-
-        qp.show({ ...res, imageUrl, images })
-      } catch {
-        // تجاهل
-      }
-    })()
+    if (found) qp.show(found)
   },
   { immediate: true }
 )

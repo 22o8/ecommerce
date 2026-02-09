@@ -38,6 +38,7 @@ public class AdminProductsController : ControllerBase
                 p.Slug,
                 p.PriceUsd,
                 p.IsPublished,
+	                p.IsFeatured,
                 p.Brand,
                 p.CreatedAt,
                 imagesCount = _db.ProductImages.Count(i => i.ProductId == p.Id),
@@ -60,7 +61,8 @@ public class AdminProductsController : ControllerBase
                 x.Slug,
                 x.Description,
                 x.PriceUsd,
-		                x.IsPublished,
+	                x.IsPublished,
+	                x.IsFeatured,
                 x.Brand,
                 x.CreatedAt,
                 x.RatingAvg,
@@ -104,6 +106,7 @@ var slug = NormalizeSlug(req.Slug);
             Description = (req.Description ?? "").Trim(),
             PriceUsd = req.PriceUsd,
 	            IsPublished = req.IsPublished,
+	            IsFeatured = req.IsFeatured,
             Brand = brandSlug,
             CreatedAt = DateTime.UtcNow
         };
@@ -134,6 +137,7 @@ var slug = NormalizeSlug(req.Slug);
         p.Description = (req.Description ?? "").Trim();
         p.PriceUsd = req.PriceUsd;
         p.IsPublished = req.IsPublished;
+	    p.IsFeatured = req.IsFeatured;
         var brandSlug = NormalizeSlug(req.Brand);
         if (string.IsNullOrWhiteSpace(brandSlug))
             return BadRequest(new { message = "Brand is required" });
@@ -393,6 +397,9 @@ public class UpsertProductRequest
     public string Brand { get; set; } = "Unspecified";
 
     public bool IsPublished { get; set; }
+
+	// ✅ Controlled from Admin Panel: show on Home page "Featured Products"
+	public bool IsFeatured { get; set; }
 }
 
 public class ReorderImagesRequest
