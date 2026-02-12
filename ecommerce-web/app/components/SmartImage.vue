@@ -16,6 +16,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useApi } from '~/app/composables/useApi'
 
 type SmartImageProps = {
   src: string
@@ -38,15 +39,31 @@ const props = withDefaults(defineProps<SmartImageProps>(), {
   background: 'bg-transparent',
 })
 
-// We always keep a safe fallback. This avoids broken UI when an asset fails to load.
-// (Also helps when an old product points to a missing file.)
+// Fallback (keeps UI stable if an image url is missing / broken)
 const FALLBACK = '/hero-placeholder.svg'
 
-const srcRef = ref(props.src)
+const api = useApi()
+
+function resolveUrl(v: string | undefined | null) {
+  const raw = (v || '').trim()
+  if (!raw) return FALLBACK
+
+  // Leave absolute URLs, data URIs, and local public assets as-is
+  if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('data:') || raw.startsWith('/_nuxt/') || raw.startsWith('/favicon') || raw.startsWith('/hero-placeholder')) {
+    return raw
+  }
+
+  // If backend returns "/uploads/..." or "uploads/...", route via BFF proxy:
+  // -> "/api/bff/uploads/..."
+  return api.buildAssetUrl(raw)
+}
+
+const srcRef = ref(resolveUrl(props.src))
+
 watch(
   () => props.src,
   (v) => {
-    srcRef.value = v || FALLBACK
+    srcRef.value = resolveUrl(v)
   },
   { immediate: true },
 )

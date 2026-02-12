@@ -104,15 +104,18 @@ const loop = computed(() => [...clean.value, ...clean.value])
 .marquee__item{ text-decoration:none; }
 
 .marquee__card{
-  display:flex;
-  align-items:center;
-  gap: 10px;
-  padding: 12px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(var(--border), .9);
-  background: rgb(var(--surface));
-  box-shadow: 0 12px 40px rgba(0,0,0,.06);
-  transition: transform .18s ease, box-shadow .18s ease;
+  min-width: 72px;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface-1));
+  box-shadow: var(--shadow-card);
 }
 
 .marquee__card:hover{
