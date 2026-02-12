@@ -9,7 +9,9 @@ type Brand = {
   logoUrl?: string | null
 }
 
-const props = defineProps<{ brands: (Brand | null | undefined)[] }>()
+const props = defineProps<{ brands: (Brand | null | undefined)[]; showName?: boolean }>()
+
+const showName = computed(() => props.showName === true)
 
 const api = useApi()
 
@@ -75,7 +77,7 @@ const loop = computed(() => [...clean.value, ...clean.value])
                 />
                 <div v-else class="h-10 w-10 rounded-xl bg-black/5" />
               </div>
-              <span class="marquee__name">{{ b.name }}</span>
+              <span v-if="showName" class="marquee__name">{{ b.name }}</span>
             </div>
           </NuxtLink>
         </div>

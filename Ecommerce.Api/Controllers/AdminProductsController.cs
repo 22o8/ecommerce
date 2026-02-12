@@ -286,9 +286,9 @@ public async Task<IActionResult> Delete([FromRoute] Guid id)
                 await f.CopyToAsync(fs);
             }
 
-            // ✅ رابط كامل حتى يشتغل بكل مكان
-            var publicPath = $"/uploads/products/{id}/{safeName}";
-            var publicUrl = $"{Request.Scheme}://{Request.Host}{publicPath}";
+            // ✅ نخزن الرابط كـ RELATIVE PATH لتجنب مشاكل البروكسي (http/https) والهوست.
+            // الواجهة (أو BFF) تحولّه إلى رابط كامل عند العرض.
+            var publicUrl = $"/uploads/products/{id}/{safeName}";
 
             var img = new ProductImage
             {

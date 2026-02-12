@@ -145,6 +145,18 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// IMPORTANT: When running behind a reverse proxy (Fly/Cloudflare/Vercel/etc.) the app
+// receives X-Forwarded-* headers. Without this middleware, Request.Scheme might be "http"
+// which causes generated asset URLs to be invalid on an https site.
+var fwd = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
+};
+// Accept forwarded headers from any proxy in this environment.
+fwd.KnownNetworks.Clear();
+fwd.KnownProxies.Clear();
+app.UseForwardedHeaders(fwd);
+
 // ============================
 // Global exception -> JSON (حتى ما يصير body فارغ مع 500)
 // ============================
@@ -163,15 +175,6 @@ app.UseExceptionHandler(errorApp =>
             traceId
         });
     });
-});
-
-// ✅ Forwarded Headers (Fly/Proxy)
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
-    // أحياناً لازم حتى يقبل الهيدرز من البروكسي
-    KnownNetworks = { },
-    KnownProxies = { }
 });
 
 // Swagger

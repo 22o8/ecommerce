@@ -173,6 +173,8 @@ const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const toast = useToast()
+const api = useApi()
+const imgVer = ref(0)
 
 const { listBrands, getAdminProduct, updateAdminProduct, deleteAdminProduct, getProductImages, uploadProductImages, deleteProductImage } =
   useAdminApi()
@@ -254,12 +256,11 @@ watch(
 
 function resolveUploadUrl(path?: string) {
   if (!path) return ''
-  if (path.startsWith('http')) return path
-
-  // If API returns "/uploads/..." keep it relative to apiBase
-  const config = useRuntimeConfig()
-  const base = (config.public as any).apiBase || ''
-  return `${base}${path}`
+  // Normalize both relative (/uploads/...) and absolute URLs to a safe URL that works on https + SSR.
+  const normalized = api.buildAssetUrl(path)
+  // Cache buster after upload/delete (prevents browser showing stale/blank thumbnails)
+  const sep = normalized.includes('?') ? '&' : '?'
+  return `${normalized}${sep}v=${imgVer.value}`
 }
 
 async function loadBrands() {
@@ -369,6 +370,7 @@ async function uploadSelected() {
     selectedFiles.value = []
     if (fileInput.value) fileInput.value.value = ''
     await loadImages()
+    imgVer.value++
   } catch (e: any) {
     toast.error(t('admin.uploadImagesFailed'))
   } finally {
@@ -383,6 +385,7 @@ async function deleteImage(imageId: string) {
     await deleteProductImage<any>(id.value, imageId)
     toast.success(t('common.deleted'))
     await loadImages()
+    imgVer.value++
   } catch (e: any) {
     toast.error(t('common.errorGeneric'))
   }

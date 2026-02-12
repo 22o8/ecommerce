@@ -104,28 +104,11 @@ const topBrands = computed(() => {
 
     <!-- Brands -->
     <section class="mx-auto max-w-6xl px-4 pb-20">
-      <!-- Balanced card color for both light/dark themes -->
       <div class="rounded-3xl border border-[rgb(var(--border))] bg-surface-2 shadow-card p-6 sm:p-10">
-	      <div class="mt-2">
-	        <div
-	          class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
-	        >
-	          <BrandCard
-	            v-for="b in topBrands"
-	            :key="(b as any).id ?? (b as any).name"
-	            :b="b"
-	          />
-	        </div>
-
-	        <div class="mt-6 flex justify-center">
-	          <NuxtLink
-	            to="/brands"
-	            class="inline-flex items-center rounded-full border border-[rgb(var(--border))] bg-surface-1 px-5 py-2 text-sm font-semibold text-[rgb(var(--text))] hover:bg-surface-2"
-	          >
-	            View All Brands
-	          </NuxtLink>
-	        </div>
-	      </div>
+        <div class="mt-2">
+          <!-- Moving brands (logos only) -->
+          <BrandMarquee :brands="topBrands" :showName="false" />
+        </div>
       </div>
     </section>
   </div>
