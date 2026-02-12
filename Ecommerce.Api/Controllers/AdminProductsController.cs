@@ -38,6 +38,7 @@ public class AdminProductsController : ControllerBase
                 p.Slug,
                 p.PriceUsd,
                 p.IsPublished,
+                p.IsFeatured,
                 p.Brand,
                 p.CreatedAt,
                 imagesCount = _db.ProductImages.Count(i => i.ProductId == p.Id),
@@ -60,7 +61,8 @@ public class AdminProductsController : ControllerBase
                 x.Slug,
                 x.Description,
                 x.PriceUsd,
-		                x.IsPublished,
+                x.IsPublished,
+                x.IsFeatured,
                 x.Brand,
                 x.CreatedAt,
                 x.RatingAvg,
@@ -103,7 +105,8 @@ var slug = NormalizeSlug(req.Slug);
             Slug = slug,
             Description = (req.Description ?? "").Trim(),
             PriceUsd = req.PriceUsd,
-	            IsPublished = req.IsPublished,
+            IsPublished = req.IsPublished,
+            IsFeatured = req.IsFeatured,
             Brand = brandSlug,
             CreatedAt = DateTime.UtcNow
         };
@@ -134,6 +137,7 @@ var slug = NormalizeSlug(req.Slug);
         p.Description = (req.Description ?? "").Trim();
         p.PriceUsd = req.PriceUsd;
         p.IsPublished = req.IsPublished;
+        p.IsFeatured = req.IsFeatured;
         var brandSlug = NormalizeSlug(req.Brand);
         if (string.IsNullOrWhiteSpace(brandSlug))
             return BadRequest(new { message = "Brand is required" });
@@ -143,8 +147,21 @@ var slug = NormalizeSlug(req.Slug);
             return BadRequest(new { message = "Invalid brand" });
 
         p.Brand = brandSlug;
-await _db.SaveChangesAsync();
+
+        await _db.SaveChangesAsync();
         return Ok(new { message = "Updated" });
+    }
+
+    // ✅ Quick toggle featured without resending the full product payload
+    [HttpPatch("{id:guid}/featured")]
+    public async Task<IActionResult> SetFeatured([FromRoute] Guid id, [FromBody] SetFeaturedRequest req)
+    {
+        var p = await _db.Products.FirstOrDefaultAsync(x => x.Id == id);
+        if (p == null) return NotFound(new { message = "Product not found" });
+
+        p.IsFeatured = req.IsFeatured;
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Updated", id = p.Id, p.IsFeatured });
     }
 
     [HttpDelete("{id:guid}")]
@@ -393,6 +410,14 @@ public class UpsertProductRequest
     public string Brand { get; set; } = "Unspecified";
 
     public bool IsPublished { get; set; }
+
+    // Show on home page (Featured Products)
+    public bool IsFeatured { get; set; }
+}
+
+public class SetFeaturedRequest
+{
+    public bool IsFeatured { get; set; }
 }
 
 public class ReorderImagesRequest

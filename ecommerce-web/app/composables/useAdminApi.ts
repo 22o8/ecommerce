@@ -20,6 +20,8 @@ export function useAdminApi() {
     getAdminProduct: <T>(id: string) => api.get<T>(`/admin/products/${id}`),
     createAdminProduct: <T>(payload: any) => api.post<T>('/admin/products', payload),
     updateAdminProduct: <T>(id: string, payload: any) => api.put<T>(`/admin/products/${id}`, payload),
+    setAdminProductFeatured: <T>(id: string, isFeatured: boolean) =>
+      api.patch<T>(`/admin/products/${id}/featured`, { isFeatured }),
     deleteAdminProduct: <T>(id: string) => api.del<T>(`/admin/products/${id}`),
 
     // ✅ Aliases used by some pages/components (back-compat)

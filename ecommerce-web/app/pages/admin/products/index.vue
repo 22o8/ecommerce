@@ -97,6 +97,8 @@
             <span :class="p.isPublished ? 'badge-on' : 'badge-off'">
               {{ p.isPublished ? t('admin.published') : t('admin.draft') }}
             </span>
+
+            <span v-if="p.isFeatured" class="badge-featured ml-2">★ Featured</span>
           </div>
 
           <div class="flex justify-end gap-2">
@@ -104,6 +106,11 @@
             <button class="admin-pill" type="button" @click="quickToggle(p)" :disabled="pending">
               {{ p.isPublished ? t('admin.unpublish') : t('admin.publish') }}
             </button>
+
+            <button class="admin-pill" type="button" @click="toggleFeatured(p)" :disabled="pending">
+              {{ p.isFeatured ? 'Unfeature' : 'Feature' }}
+            </button>
+
             <button class="admin-btn-danger" type="button" @click="removeOne(p)" :disabled="pending">{{ t('admin.delete') }}</button>
           </div>
         </div>
@@ -137,6 +144,7 @@ type Product = {
   slug: string
   priceUsd: number
   isPublished: boolean
+  isFeatured: boolean
 }
 
 const { t } = useI18n()
@@ -213,6 +221,7 @@ async function fetchList(p = 1) {
       slug: String(x.slug || ''),
       priceUsd: Number(x.priceUsd || 0),
       isPublished: !!x.isPublished,
+      isFeatured: !!x.isFeatured,
     })))
 
     page.value = p
@@ -236,6 +245,17 @@ async function quickToggle(p: Product) {
     error.value = extractErr(e)
   } finally {
     pending.value = false
+  }
+}
+
+async function toggleFeatured(p: Product) {
+  if (busyId.value) return
+  busyId.value = p.id
+  try {
+    await api.setAdminProductFeatured(p.id, !p.isFeatured)
+    p.isFeatured = !p.isFeatured
+  } finally {
+    busyId.value = null
   }
 }
 
@@ -313,6 +333,7 @@ onMounted(() => fetchList(1))
 
 .badge-on{ padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(16,185,129,.40); background: rgba(16,185,129,.12); font-weight: 800; display: inline-flex; }
 .badge-off{ padding: 6px 10px; border-radius: 999px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); color: rgb(var(--muted)); font-weight: 800; display: inline-flex; }
+.badge-featured{ padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(99,102,241,.45); background: rgba(99,102,241,.12); font-weight: 800; display: inline-flex; }
 
 .admin-error{ border-radius: 16px; border: 1px solid rgba(239,68,68,.45); background: rgba(239,68,68,.10); padding: 12px 14px; }
 .admin-success{ border-radius: 16px; border: 1px solid rgba(16,185,129,.40); background: rgba(16,185,129,.10); padding: 12px 14px; }
