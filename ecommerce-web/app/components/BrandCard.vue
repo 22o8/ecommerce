@@ -1,6 +1,8 @@
 <template>
-  <NuxtLink
-    :to="`/brands/${b.slug}`"
+  <!-- حماية SSR: إذا رجع الـ API عنصر ناقص/undefined لا نكسر الصفحة -->
+  <component
+    :is="safeTo ? 'NuxtLink' : 'div'"
+    :to="safeTo ? `/brands/${b?.slug}` : undefined"
     class="group block rounded-2xl border border-[rgba(var(--border),1)] bg-white/[0.03] hover:bg-white/[0.06] transition overflow-hidden"
   >
     <div class="p-4 flex gap-4 items-center">
@@ -10,16 +12,16 @@
         <SmartImage
           v-if="logo"
           :src="logo"
-          :alt="b.name"
+          :alt="b?.name || 'Brand'"
           class="w-full h-full object-cover"
         />
         <div v-else class="text-xs text-[rgb(var(--text))]/50">Logo</div>
       </div>
 
       <div class="min-w-0">
-        <div class="font-semibold text-[rgb(var(--text))] truncate">{{ b.name }}</div>
+        <div class="font-semibold text-[rgb(var(--text))] truncate">{{ b?.name || '' }}</div>
         <div class="text-sm text-[rgba(var(--muted),0.9)] line-clamp-2">
-          {{ b.description || '' }}
+          {{ b?.description || '' }}
         </div>
       </div>
 
@@ -27,7 +29,7 @@
         <span class="i-lucide-chevron-right" />
       </div>
     </div>
-  </NuxtLink>
+  </component>
 </template>
 
 <script setup lang="ts">
@@ -37,4 +39,5 @@ const props = defineProps<{ b: any }>()
 const { buildAssetUrl } = useApi()
 
 const logo = computed(() => buildAssetUrl(props.b?.logoUrl || ''))
+const safeTo = computed(() => !!props.b && !!props.b.slug)
 </script>

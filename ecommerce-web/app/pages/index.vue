@@ -19,14 +19,26 @@ await useAsyncData('home-prefetch', async () => {
 })
 
 const featured = computed(() => productsStore.featured)
+// حماية SSR: فلترة أي عناصر ناقصة (undefined/null)
+const safeFeatured = computed(() => (featured.value ?? []).filter((p) => !!p && !!p.id))
+
+// fallback: آخر المنتجات المنشورة (حتى لا تبقى الصفحة فاضية)
 const fallbackLatest = computed(() => productsStore.items?.slice(0, 8) ?? [])
-const featuredList = computed(() => (featured.value?.length ? featured.value : fallbackLatest.value))
+
+// إذا ماكو منتجات مميزة، نعرض آخر المنتجات المنشورة حتى لا تبقى الصفحة فارغة
+const homeFeatured = computed(() => {
+  if (safeFeatured.value.length) return safeFeatured.value
+  return (fallbackLatest.value ?? []).filter((p) => !!p && !!p.id && !!p.isPublished).slice(0, 8)
+})
+// للتوافق مع الكود القديم بالـ template
+const featuredList = homeFeatured
 
 const brands = computed(() => brandsStore.publicItems)
 const topBrands = computed(() => {
   const seen = new Set<string>()
   const uniq = [] as typeof brands.value
   for (const b of (brands.value ?? [])) {
+    if (!b) continue
     const key = (b.name ?? '').trim().toLowerCase()
     if (!key || seen.has(key)) continue
     seen.add(key)
@@ -70,11 +82,11 @@ const topBrands = computed(() => {
       </div>
 
       <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <ProductCard
-          v-for="p in featuredList"
-          :key="p.id"
-          :product="p"
-        />
+          <ProductCard
+            v-for="p in homeFeatured"
+            :key="p.id"
+            :product="p"
+          />
       </div>
 
     </section>

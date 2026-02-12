@@ -9,7 +9,7 @@ type Brand = {
   logoUrl?: string | null
 }
 
-const props = defineProps<{ brands: Brand[] }>()
+const props = defineProps<{ brands: (Brand | null | undefined)[] }>()
 
 const api = useApi()
 
@@ -47,12 +47,13 @@ const onLogoError = (b: Brand, idx: number) => {
   if (i + 1 < list.length) logoTryIndex.value[key] = i + 1
 }
 
-// نكرر القائمة حتى يصير تمرير مستمر
-const loop = computed(() => [...props.brands, ...props.brands])
+// نكرر القائمة حتى يصير تمرير مستمر + فلترة العناصر الناقصة (حماية SSR)
+const clean = computed(() => (props.brands ?? []).filter((b): b is Brand => !!b && !!b.slug && !!b.id))
+const loop = computed(() => [...clean.value, ...clean.value])
 </script>
 
 <template>
-  <section v-if="brands?.length" class="mt-16">
+  <section v-if="clean.length" class="mt-16">
     <div class="mt-8 overflow-hidden">
       <div class="marquee">
         <div class="marquee__track">
