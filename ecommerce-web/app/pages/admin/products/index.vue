@@ -164,10 +164,6 @@ const pagedItems = computed(() => items.value.slice((page.value - 1) * pageSize.
 const selectedIds = ref<string[]>([])
 const allChecked = computed(() => items.value.length > 0 && selectedIds.value.length === items.value.length)
 
-// bulk create products from images
-  }
-}
-
 function extractErr(e: any) {
   return e?.data?.message || e?.message || t('common.requestFailed')
 }
