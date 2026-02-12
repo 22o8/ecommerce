@@ -51,7 +51,6 @@ const brands = computed(() => brandsStore.publicItems)
     <section class="mx-auto max-w-6xl px-4 pb-16">
       <div class="text-center">
         <h2 class="text-2xl font-extrabold text-[rgb(var(--text))] sm:text-4xl">Featured Products</h2>
-        <p class="mt-3 text-[rgb(var(--muted))]">Discover our handpicked selection of bestsellers</p>
       </div>
 
       <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -62,15 +61,6 @@ const brands = computed(() => brandsStore.publicItems)
         />
       </div>
 
-      <div class="mt-10 text-center">
-        <NuxtLink
-          to="/products"
-          class="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--border))] bg-white px-6 py-3 text-sm font-semibold text-[rgb(var(--primary))] shadow-sm hover:bg-[rgb(var(--surface-2))]"
-        >
-          View All Products
-          <span aria-hidden="true">→</span>
-        </NuxtLink>
-      </div>
     </section>
 
     <!-- Brands (marquee at the end) -->

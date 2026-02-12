@@ -67,8 +67,8 @@ public class ProductsController : ControllerBase
                 p.Brand,
                 p.RatingCount,
                 p.CreatedAt,
-                coverImage = _db.ProductImages
-                    .Where(i => i.ProductId == p.Id)
+                // Use navigation property to keep translation stable across providers.
+                coverImage = p.Images
                     .OrderBy(i => i.SortOrder)
                     .Select(i => i.Url)
                     .FirstOrDefault()
@@ -109,8 +109,7 @@ public class ProductsController : ControllerBase
                 p.Brand,
                 p.RatingCount,
                 p.CreatedAt,
-                coverImage = _db.ProductImages
-                    .Where(i => i.ProductId == p.Id)
+                coverImage = p.Images
                     .OrderBy(i => i.SortOrder)
                     .Select(i => i.Url)
                     .FirstOrDefault()
@@ -137,8 +136,7 @@ public class ProductsController : ControllerBase
                     p.Brand,
                     p.RatingCount,
                     p.CreatedAt,
-                    coverImage = _db.ProductImages
-                        .Where(i => i.ProductId == p.Id)
+                    coverImage = p.Images
                         .OrderBy(i => i.SortOrder)
                         .Select(i => i.Url)
                         .FirstOrDefault()

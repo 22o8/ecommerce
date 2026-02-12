@@ -41,7 +41,8 @@ public class AdminProductsController : ControllerBase
                 p.IsFeatured,
                 p.Brand,
                 p.CreatedAt,
-                imagesCount = _db.ProductImages.Count(i => i.ProductId == p.Id),
+                // Use navigation property to avoid provider translation edge cases.
+                imagesCount = p.Images.Count,
             })
             .ToListAsync();
 
