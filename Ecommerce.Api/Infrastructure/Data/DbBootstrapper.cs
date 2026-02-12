@@ -25,6 +25,9 @@ public static class DbBootstrapper
               ADD COLUMN IF NOT EXISTS ""IsPublished"" boolean NOT NULL DEFAULT TRUE;",
 
             @"ALTER TABLE IF EXISTS ""Products""
+              ADD COLUMN IF NOT EXISTS ""IsFeatured"" boolean NOT NULL DEFAULT FALSE;",
+
+            @"ALTER TABLE IF EXISTS ""Products""
               ADD COLUMN IF NOT EXISTS ""RatingAvg"" numeric(3,2) NOT NULL DEFAULT 0;",
 
             @"ALTER TABLE IF EXISTS ""Products""
