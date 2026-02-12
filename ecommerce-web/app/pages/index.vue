@@ -82,11 +82,11 @@ const topBrands = computed(() => {
       </div>
 
       <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <ProductCard
-            v-for="p in homeFeatured"
-            :key="p.id"
-            :product="p"
-          />
+        <ProductCard
+          v-for="p in homeFeatured"
+          :key="p.id"
+          :p="p"
+        />
       </div>
 
     </section>
@@ -102,7 +102,7 @@ const topBrands = computed(() => {
 	          <BrandCard
 	            v-for="b in topBrands"
 	            :key="(b as any).id ?? (b as any).name"
-	            :brand="b"
+	            :b="b"
 	          />
 	        </div>
 
