@@ -7,16 +7,27 @@ import { useProductsStore } from '~/stores/products'
 const brandsStore = useBrandsStore()
 const productsStore = useProductsStore()
 
-// SSR-safe prefetch so Featured/Brands render immediately on Vercel
-await useAsyncData('home-prefetch', async () => {
-  await Promise.allSettled([
-    brandsStore.fetchPublic(),
-    productsStore.fetchFeatured(8),
-	    // fallback list حتى ما تبقى الصفحة فاضية إذا endpoint المميز ما اشتغل
-	    productsStore.fetch({ page: 1, pageSize: 8, sort: 'newest' }),
-  ])
-  return true
-})
+// IMPORTANT:
+// - على Vercel (SSR) ما نضمن وجود access token/cookies بنفس لحظة الـ render.
+// - وحتى لو رجع SSR فاضي، بعد الـ hydration لازم يجيب البيانات من جديد.
+// لذلك نخلي الـ fetch يصير Client-only حتى ما تختفي الداتا بعد الـ refresh.
+await useAsyncData(
+  'home-prefetch',
+  async () => {
+    await Promise.allSettled([
+      brandsStore.fetchPublic(),
+      productsStore.fetchFeatured(8),
+      // fallback list حتى ما تبقى الصفحة فاضية إذا endpoint المميز ما اشتغل
+      productsStore.fetch({ page: 1, pageSize: 8, sort: 'newest' }),
+    ])
+    return true
+  },
+  {
+    server: false,
+    // always run on client after refresh/hydration
+    default: () => true,
+  }
+)
 
 const featured = computed(() => productsStore.featured)
 // حماية SSR: فلترة أي عناصر ناقصة (undefined/null)

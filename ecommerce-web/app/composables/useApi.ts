@@ -20,10 +20,27 @@ export function buildAssetUrl(p?: string | null) {
   const apiBase = String((config.public as any)?.apiBase || '').replace(/\/$/, '')
   const apiOrigin = String((config.public as any)?.apiOrigin || '').replace(/\/$/, '')
 
-  // 1) absolute URL: لو كان http نحوله إلى https (خصوصاً Fly) لتجنب mixed content
+  // 1) absolute URL
+  // - لو كان http نحوله إلى https (خصوصاً Fly) لتجنب mixed content
+  // - ولو كان يشير إلى /uploads على نفس apiOrigin نحوله إلى مسار يمر عبر الـ BFF
+  //   حتى نتفادى مشاكل CORS/SSR/Refresh وتكون الروابط ثابتة على دومين الواجهة.
   if (p.startsWith('http://') || p.startsWith('https://')) {
     try {
       const u = new URL(p)
+
+      // proxy uploads عبر الـ BFF إذا كان نفس apiOrigin
+      if (u.pathname.startsWith('/uploads/') && apiBase && apiOrigin) {
+        try {
+          const o = new URL(apiOrigin)
+          if (u.hostname === o.hostname) {
+            const b = apiBase.replace(/\/$/, '')
+            return `${b}${u.pathname}`
+          }
+        } catch {
+          // ignore
+        }
+      }
+
       if (u.protocol === 'http:') {
         const looksLikeFly = u.hostname.endsWith('fly.dev') || u.hostname.endsWith('fly.io')
         // apiBase قد يكون مسار نسبي مثل /api/bff على Vercel
