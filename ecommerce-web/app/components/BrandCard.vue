@@ -38,6 +38,14 @@ import SmartImage from '~/components/SmartImage.vue'
 const props = defineProps<{ b: any }>()
 const { buildAssetUrl } = useApi()
 
-const logo = computed(() => buildAssetUrl(props.b?.logoUrl || ''))
+const logo = computed(() => {
+  const raw =
+    props.b?.logoUrl ||
+    props.b?.logo ||
+    props.b?.imageUrl ||
+    props.b?.image ||
+    ''
+  return buildAssetUrl(raw)
+})
 const safeTo = computed(() => !!props.b && !!props.b.slug)
 </script>

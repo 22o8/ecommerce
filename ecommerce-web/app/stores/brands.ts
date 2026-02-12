@@ -21,13 +21,38 @@ export const useBrandsStore = defineStore('brands', () => {
     (items.value || []).filter((b: any) => b && b.slug && (b.isActive ?? true))
   )
 
-  const { get, post, put, del, postForm } = useApi()
+  const { get, post, put, del, postForm, buildAssetUrl } = useApi()
+
+  const normalizeBrand = (b: any): BrandDto => {
+    const name = (b?.name ?? b?.title ?? b?.brandName ?? '').toString()
+    const slug = (b?.slug ?? (name ? name.toLowerCase().replace(/\s+/g, '-') : '')).toString()
+
+    let logoUrl: string | null | undefined =
+      b?.logoUrl ?? b?.logo ?? b?.imageUrl ?? b?.image ?? b?.coverImage ?? null
+
+    // إذا كان رابط نسبي، حوله لرابط كامل لتجنب 404
+    if (logoUrl && typeof logoUrl === 'string' && logoUrl.startsWith('/')) {
+      logoUrl = buildAssetUrl(logoUrl)
+    }
+
+    return {
+      id: (b?.id ?? '').toString(),
+      slug,
+      name,
+      description: b?.description ?? null,
+      logoUrl: logoUrl ?? null,
+      isActive: b?.isActive ?? true,
+      createdAt: b?.createdAt,
+    }
+  }
 
   const fetchPublic = async () => {
     loading.value = true
     try {
-      const res = await get<{ items: BrandDto[] }>('/Brands')
-      items.value = (res?.items || []).filter(b => b && b.slug)
+      const res: any = await get<any>('/Brands')
+      // بعض الـ endpoints ترجع {items} وبعضها {page,totalCount,items}
+      const list = Array.isArray(res) ? res : (res?.items || [])
+      items.value = (list || []).map(normalizeBrand).filter(b => b && b.slug)
     } finally {
       loading.value = false
     }
