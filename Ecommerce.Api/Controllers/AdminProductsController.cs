@@ -28,25 +28,40 @@ public class AdminProductsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var items = await _db.Products
-            .AsNoTracking()
-            .OrderByDescending(p => p.CreatedAt)
-            .Select(p => new
-            {
-                p.Id,
-                p.Title,
-                p.Slug,
-                p.PriceUsd,
-                p.IsPublished,
-                p.IsFeatured,
-                p.Brand,
-                p.CreatedAt,
-                // Use navigation property to avoid provider translation edge cases.
-                imagesCount = p.Images.Count,
-            })
-            .ToListAsync();
+        try
+        {
+            // NOTE:
+            // We intentionally avoid projecting navigation property counts directly (p.Images.Count)
+            // because some provider/schema states can surface translation/runtime issues in production.
+            // A correlated subquery is more robust.
+            var items = await _db.Products
+                .AsNoTracking()
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Title,
+                    p.Slug,
+                    p.PriceUsd,
+                    p.IsPublished,
+                    p.IsFeatured,
+                    p.Brand,
+                    p.CreatedAt,
+                    imagesCount = _db.ProductImages.Count(i => i.ProductId == p.Id)
+                })
+                .ToListAsync();
 
-        return Ok(items);
+            return Ok(items);
+        }
+        catch (Exception ex)
+        {
+            // Keep payload small but helpful; the traceId in the hosting platform logs is still the main reference.
+            return StatusCode(500, new
+            {
+                error = "Internal Server Error",
+                message = ex.Message
+            });
+        }
     }
 
     [HttpGet("{id:guid}")]
