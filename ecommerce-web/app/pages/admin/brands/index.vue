@@ -5,6 +5,7 @@ definePageMeta({
 })
 
 const { t } = useI18n()
+const { buildAssetUrl } = useApi()
 const brandsStore = useBrandsStore()
 
 const q = ref('')
@@ -129,9 +130,9 @@ function initials(name?: string) {
       >
         <div class="flex items-start gap-3">
           <div class="h-12 w-12 overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10">
-            <img
+            <SmartImage
               v-if="b.logoUrl"
-              :src="b.logoUrl"
+              :src="buildAssetUrl(b.logoUrl)"
               :alt="b.name"
               class="h-full w-full object-cover"
             />

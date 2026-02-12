@@ -2,6 +2,7 @@ using System.Text;
 using Ecommerce.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -180,7 +181,18 @@ app.UseSwaggerUI();
 // HTTPS Redirect (اختياري - Fly عادة يضبطه)
 app.UseHttpsRedirection();
 
+// Serve /wwwroot if present
 app.UseStaticFiles();
+
+// Serve uploaded files from ContentRootPath/uploads at /uploads
+// (e.g. /uploads/brands/{brandId}/logo.png)
+var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "uploads");
+Directory.CreateDirectory(uploadsPath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads"
+});
 
 app.UseRouting();
 
