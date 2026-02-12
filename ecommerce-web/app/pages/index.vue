@@ -17,7 +17,7 @@ await useAsyncData('home-prefetch', async () => {
 })
 
 const featured = computed(() => productsStore.featured)
-const brands = computed(() => brandsStore.publicBrands)
+const brands = computed(() => brandsStore.publicItems)
 </script>
 
 <template>

@@ -26,7 +26,13 @@ export function buildAssetUrl(p?: string | null) {
       const u = new URL(p)
       if (u.protocol === 'http:') {
         const looksLikeFly = u.hostname.endsWith('fly.dev') || u.hostname.endsWith('fly.io')
-        const looksLikeSameHost = u.hostname === new URL(apiBase).hostname
+        // apiBase قد يكون مسار نسبي مثل /api/bff على Vercel
+        let looksLikeSameHost = false
+        try {
+          if (apiBase.startsWith('http')) looksLikeSameHost = u.hostname === new URL(apiBase).hostname
+        } catch {
+          // ignore
+        }
         if (looksLikeFly || looksLikeSameHost) {
           u.protocol = 'https:'
           return u.toString()
@@ -40,11 +46,16 @@ export function buildAssetUrl(p?: string | null) {
 
   const path = p.startsWith('/') ? p : `/${p}`
 
-  // 2) uploads relative path: serve from backend origin directly
+  // 2) uploads relative path:
+  // الأفضل نخليها تمر عبر الـ BFF (/api/bff/uploads/...) حتى تبقى ثابتة على نفس الدومين
+  // وتتفادى مشاكل SSR/Refresh/CORS أو غياب apiOrigin على Vercel.
   if (path.startsWith('/uploads/')) {
-    // if apiOrigin exists -> https://host + /uploads/...
+    if (apiBase) {
+      const b = apiBase.replace(/\/$/, '')
+      return `${b}${path}`
+    }
+    // fallback: لو apiBase غير متوفر
     if (apiOrigin) return `${apiOrigin}${path}`
-    // fallback to relative
     return path
   }
 
