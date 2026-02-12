@@ -12,12 +12,28 @@ await useAsyncData('home-prefetch', async () => {
   await Promise.allSettled([
     brandsStore.fetchPublic(),
     productsStore.fetchFeatured(8),
+	    // fallback list حتى ما تبقى الصفحة فاضية إذا endpoint المميز ما اشتغل
+	    productsStore.fetch({ page: 1, pageSize: 8, sort: 'newest' }),
   ])
   return true
 })
 
 const featured = computed(() => productsStore.featured)
+const fallbackLatest = computed(() => productsStore.items?.slice(0, 8) ?? [])
+const featuredList = computed(() => (featured.value?.length ? featured.value : fallbackLatest.value))
+
 const brands = computed(() => brandsStore.publicItems)
+const topBrands = computed(() => {
+  const seen = new Set<string>()
+  const uniq = [] as typeof brands.value
+  for (const b of (brands.value ?? [])) {
+    const key = (b.name ?? '').trim().toLowerCase()
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    uniq.push(b)
+  }
+  return uniq.slice(0, 10)
+})
 </script>
 
 <template>
@@ -55,7 +71,7 @@ const brands = computed(() => brandsStore.publicItems)
 
       <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <ProductCard
-          v-for="p in featured"
+          v-for="p in featuredList"
           :key="p.id"
           :product="p"
         />
@@ -74,9 +90,26 @@ const brands = computed(() => brandsStore.publicItems)
           </p>
         </div>
 
-        <div class="mt-8">
-          <BrandMarquee :brands="brands" />
-        </div>
+	      <div class="mt-8">
+	        <div
+	          class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
+	        >
+	          <BrandCard
+	            v-for="b in brandsList"
+	            :key="(b as any).id ?? (b as any).name"
+	            :brand="b"
+	          />
+	        </div>
+
+	        <div class="mt-6 flex justify-center">
+	          <NuxtLink
+	            to="/brands"
+	            class="inline-flex items-center rounded-full border border-[rgb(var(--border))] bg-surface-1 px-5 py-2 text-sm font-semibold text-[rgb(var(--text))] hover:bg-surface-2"
+	          >
+	            View All Brands
+	          </NuxtLink>
+	        </div>
+	      </div>
       </div>
     </section>
   </div>
