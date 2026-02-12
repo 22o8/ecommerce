@@ -46,13 +46,18 @@ export const useBrandsStore = defineStore('brands', () => {
     }
   }
 
-  const fetchPublic = async () => {
+  const fetchPublic = async (take: number = 10) => {
     loading.value = true
     try {
-      const res: any = await get<any>('/Brands')
+      // بعض السيرفرات تدعم take/pageSize وبعضها لا؛ جرّب take أولاً.
+      const res: any = await get<any>(`/Brands?take=${encodeURIComponent(String(take))}`)
       // بعض الـ endpoints ترجع {items} وبعضها {page,totalCount,items}
       const list = Array.isArray(res) ? res : (res?.items || [])
       items.value = (list || []).map(normalizeBrand).filter(b => b && b.slug)
+    } catch (e) {
+      // لا تكسر SSR/الهوم إذا صار خطأ بالـ API
+      console.warn('[brands] fetchPublic failed', e)
+      items.value = []
     } finally {
       loading.value = false
     }
