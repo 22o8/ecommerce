@@ -79,23 +79,16 @@ const topBrands = computed(() => {
 
     </section>
 
-    <!-- Brands (marquee at the end) -->
+    <!-- Brands -->
     <section class="mx-auto max-w-6xl px-4 pb-20">
       <!-- Balanced card color for both light/dark themes -->
       <div class="rounded-3xl border border-[rgb(var(--border))] bg-surface-2 shadow-card p-6 sm:p-10">
-        <div class="text-center">
-          <h2 class="text-2xl font-extrabold text-[rgb(var(--text))] sm:text-4xl">Our Brands</h2>
-          <p class="mt-3 text-[rgb(var(--muted))]">
-            Explore our carefully curated selection of premium beauty brands.
-          </p>
-        </div>
-
-	      <div class="mt-8">
+	      <div class="mt-2">
 	        <div
 	          class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
 	        >
 	          <BrandCard
-	            v-for="b in brandsList"
+	            v-for="b in topBrands"
 	            :key="(b as any).id ?? (b as any).name"
 	            :brand="b"
 	          />

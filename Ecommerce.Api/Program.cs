@@ -188,6 +188,42 @@ app.UseStaticFiles();
 // (e.g. /uploads/brands/{brandId}/logo.png)
 var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "uploads");
 Directory.CreateDirectory(uploadsPath);
+
+// ✅ Return a placeholder image instead of 404 for missing uploads
+// This prevents broken thumbnails on the UI when the physical file is missing
+// (e.g. Fly volume reset, seed data without files, etc.).
+// We still keep the real file serving via StaticFiles below.
+var placeholderPng = Convert.FromBase64String(
+    // 1x1 transparent PNG
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/6X2qzUAAAAASUVORK5CYII="
+);
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/uploads", out var remaining))
+    {
+        var rel = (remaining.Value ?? string.Empty).TrimStart('/');
+        if (!string.IsNullOrWhiteSpace(rel))
+        {
+            // Normalize path separators to avoid path traversal
+            rel = rel.Replace("..", string.Empty)
+                     .Replace('\\', '/')
+                     .TrimStart('/');
+
+            var fullPath = Path.Combine(uploadsPath, rel.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(fullPath))
+            {
+                context.Response.StatusCode = StatusCodes.Status200OK;
+                context.Response.ContentType = "image/png";
+                await context.Response.Body.WriteAsync(placeholderPng);
+                return;
+            }
+        }
+    }
+
+    await next();
+});
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
