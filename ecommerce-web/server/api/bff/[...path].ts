@@ -61,6 +61,10 @@ export default defineEventHandler(async (event) => {
     delete headers.host
     delete headers.connection
     delete headers['content-length']
+    // ✅ منع ضغط الاستجابة من المصدر لتفادي JSON مضغوط/غير قابل للقراءة على بعض الشبكات/VPN
+    delete headers['accept-encoding']
+    delete headers['Accept-Encoding']
+    headers['accept-encoding'] = 'identity'
 
     // ✅ 1) إذا الفرونت مرسل Authorization خليّه مثل ما هو
     const authHeader = headers.authorization || headers.Authorization
@@ -164,23 +168,55 @@ export default defineEventHandler(async (event) => {
 
     setResponseStatus(event, res.status)
 
-    const ct = res.headers.get('content-type') || ''
+const ct = res.headers.get('content-type') || ''
+const ce = (res.headers.get('content-encoding') || '').toLowerCase()
 
-    // ✅ دعم ملفات الرفع (صور/ملفات) عبر الـ BFF
-    // بعض المتصفحات تحتاج Content-Type صحيح + باينري (ArrayBuffer)
-    if (!ct.includes('application/json')) {
-      // مرّر الهيدرز الأساسية
-      if (ct) setResponseHeader(event, 'content-type', ct)
-      const cl = res.headers.get('content-length')
-      if (cl) setResponseHeader(event, 'content-length', cl)
-      const cc = res.headers.get('cache-control')
-      if (cc) setResponseHeader(event, 'cache-control', cc)
+// اقرأ البودي كباينري دائماً حتى نقدر نعالج حالات (JSON مضغوط/رد HTML/حماية) بدون ما ينكسر
+let buf = Buffer.from(await res.arrayBuffer())
 
-      const buf = Buffer.from(await res.arrayBuffer())
-      return buf
-    }
+// ✅ إذا أكو ضغط مُعلن نفكّه
+try {
+  if (ce.includes('gzip')) {
+    const { gunzipSync } = await import('node:zlib')
+    buf = gunzipSync(buf)
+  } else if (ce.includes('br')) {
+    const { brotliDecompressSync } = await import('node:zlib')
+    buf = brotliDecompressSync(buf)
+  } else if (ce.includes('deflate')) {
+    const { inflateSync } = await import('node:zlib')
+    buf = inflateSync(buf)
+  } else {
+    // ✅ أحياناً يرجع باينري مضغوط بدون هيدر صحيح (يصير مع بعض الـ proxies/VPN)
+    // نحاول نفك gzip كـ محاولة أخيرة (وإذا فشل نتجاهل)
+    const { gunzipSync } = await import('node:zlib')
+    try { buf = gunzipSync(buf) } catch {}
+  }
+} catch {}
 
-    return await res.json()
+// ✅ إذا مو JSON رجّعه كباينري (صور/ملفات)
+if (!ct.includes('application/json')) {
+  if (ct) setResponseHeader(event, 'content-type', ct)
+  const cl = res.headers.get('content-length')
+  if (cl) setResponseHeader(event, 'content-length', cl)
+  const cc = res.headers.get('cache-control')
+  if (cc) setResponseHeader(event, 'cache-control', cc)
+  return buf
+}
+
+// ✅ حاول parse JSON بأمان
+const text = buf.toString('utf-8')
+try {
+  return JSON.parse(text)
+} catch (e: any) {
+  // رجّع خطأ مفهوم بدل "Unexpected token" + جزء من الرد حتى نعرف شنو صار (Block/HTML)
+  return {
+    error: 'Upstream returned invalid JSON (maybe blocked/challenge/compressed response).',
+    status: res.status,
+    contentType: ct,
+    contentEncoding: ce,
+    preview: text.slice(0, 400),
+  }
+}
   } catch (err: any) {
     console.error('BFF error:', err)
     setResponseStatus(event, 500)
