@@ -130,8 +130,8 @@ const loop = computed(() => [...clean.value, ...clean.value])
 }
 
 @keyframes marquee{
-  from{ transform: translateX(0); }
-  to{ transform: translateX(-50%); }
+  from{ transform: translateX(-50%); }
+  to{ transform: translateX(0); }
 }
 
 /* احترام تفضيل تقليل الحركة */
