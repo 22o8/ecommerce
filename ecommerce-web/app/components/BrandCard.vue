@@ -10,12 +10,12 @@
         class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-black/20 border border-[rgba(var(--border),1)] overflow-hidden flex items-center justify-center"
       >
         <SmartImage
-          :src="logo || ''"
+          v-if="logo"
+          :src="logo"
           :alt="b?.name || 'Brand'"
-          fit="cover"
-          wrapper-class="w-full h-full"
-          img-class="w-full h-full object-cover"
+          class="w-full h-full object-cover"
         />
+        <div v-else class="text-xs text-[rgb(var(--text))]/50">Logo</div>
       </div>
 
       <div class="min-w-0">
