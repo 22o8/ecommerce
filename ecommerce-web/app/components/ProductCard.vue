@@ -9,14 +9,16 @@
     @keydown.space.prevent="openPreview"
   >
     <div class="relative">
-      <div class="relative aspect-square bg-black/20">
+      <div class="relative aspect-[4/3] bg-black/20">
         <SmartImage
           :src="mainImage || ''"
           :alt="p.name"
           fit="cover"
           wrapper-class="w-full h-full"
+          img-class="w-full h-full object-cover"
         />
-<div class="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition">
+
+        <div class="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition">
           <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-black/0 to-black/0" />
         </div>
       </div>

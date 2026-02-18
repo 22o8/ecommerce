@@ -15,7 +15,10 @@
           :class="{ zooming: zoomed }"
           :src="current"
           :alt="title || 'Product'"
-          :style="imgStyle"
+          fit="contain"
+          :img-style="imgStyle"
+          wrapper-class="w-full h-full"
+          img-class="w-full h-full"
           @click="openFullscreen"
         />
         <button v-if="images.length>1" class="nav left" type="button" @click.stop="prev" aria-label="Prev">
@@ -42,7 +45,7 @@
         :class="{ active: i===index }"
         @click="setIndex(i)"
       >
-        <SmartImage class="thumbImg" :src="src" :alt="title || 'thumb'" />
+        <SmartImage class="thumbImg" :src="src" :alt="title || 'thumb'" fit="cover" wrapper-class="w-full h-full" img-class="w-full h-full" />
       </button>
     </div>
 
@@ -182,7 +185,7 @@ function onFsTouchEnd(ev: TouchEvent){
   overflow:hidden;
   border: 1px solid rgba(255,255,255,.12);
   background: rgba(255,255,255,.04);
-  aspect-ratio: 1/1;
+  aspect-ratio: 16/11;
   cursor: zoom-in;
 }
 .img{ width:100%; height:100%; object-fit: contain; display:block; transition: transform .15s ease; }

@@ -292,8 +292,7 @@
     "signOut": "تسجيل الخروج",
     "fullName": "full الاسم",
     "phone": "الهاتف",
-    "noAccount": "no الحساب",
-    "loginRequiredPurchase": "يرجى تسجيل الدخول لإكمال عملية الشراء"
+    "noAccount": "no الحساب"
   },
   "createAccount": "إنشاء الحساب",
   "browseProducts": "browse المنتجات",

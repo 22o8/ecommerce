@@ -67,7 +67,6 @@ import UiBadge from '~/components/ui/UiBadge.vue'
 import ProductReviews from '~/components/ProductReviews.vue'
 import ProductGallery from '~/components/ProductGallery.vue'
 import { useCartStore } from '~/stores/cart'
-import { useAuthStore } from '~/stores/auth'
 import { useWishlist } from '~/composables/useWishlist'
 import { useQuickPreview } from '~/composables/useQuickPreview'
 import { useApi } from '~/composables/useApi'
@@ -76,7 +75,6 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const cart = useCartStore()
-const authStore = useAuthStore()
 const wl = useWishlist()
 const qp = useQuickPreview()
 const products = useProductsStore()
@@ -200,11 +198,6 @@ function close() {
 
 function addToCart() {
   if (!p.value) return
-  authStore.initFromCookies()
-  if (!authStore.isAuthed) {
-    const redirect = encodeURIComponent(route.fullPath || '/')
-    return router.push(`/login?redirect=${redirect}&reason=purchase`)
-  }
   cart.add(p.value)
 }
 
