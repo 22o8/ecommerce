@@ -76,15 +76,10 @@ export const useProductsStore = defineStore('products', () => {
 					page: params.page || 1,
 					pageSize: params.pageSize || 12,
 					q: params.q || undefined,
-					sort: (params.sort && params.sort !== 'new') ? params.sort : undefined,
+					sort: params.sort || 'new',
 					brand: params.brand || undefined,
 				}
 			)
-      // ✅ إذا الـ BFF رجّع خطأ (مثلاً Missing API origin) لا نخليها تمر بصمت
-      if ((res as any)?.error) {
-        throw new Error(String((res as any).error))
-      }
-
 
       // Support different API shapes
       const raw = (res as any)?.items ?? (res as any)?.data?.items ?? (res as any)?.data

@@ -1,4 +1,5 @@
 // ecommerce-web/app/composables/useApi.ts
+import { useUiStore } from '~/stores/ui'
 type HttpMethod =
   | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   | 'get' | 'post' | 'put' | 'patch' | 'delete'
@@ -146,14 +147,34 @@ export function useApi() {
       if (t) mergedHeaders.Authorization = `Bearer ${t}`
     }
 
-    return (await $fetch(url, {
-      method: opts.method as any,
-      query: opts.query,
-      headers: mergedHeaders,
-      // على المتصفح: خليه يرسل الكوكيز دائماً
-      credentials: 'include',
-      body: opts.body,
-    })) as unknown as T
+    try {
+      return (await $fetch(url, {
+        method: opts.method as any,
+        query: opts.query,
+        headers: mergedHeaders,
+        // على المتصفح: خليه يرسل الكوكيز دائماً
+        credentials: 'include',
+        body: opts.body,
+      })) as unknown as T
+    } catch (e: any) {
+      // سجل آخر خطأ API (للتشخيص على الأجهزة التي تفشل بصمت)
+      try {
+        const ui = useUiStore()
+        const status = e?.statusCode ?? e?.response?.status ?? e?.status
+        const msg = String(e?.message || 'API Error')
+        ui.setLastApiError({
+          at: new Date().toISOString(),
+          url,
+          method: String(opts.method || 'GET'),
+          status: typeof status === 'number' ? status : undefined,
+          message: msg,
+          data: e?.data ?? e?.response?._data ?? undefined,
+        } as any)
+      } catch {
+        // ignore
+      }
+      throw e
+    }
   }
 
   const get = <T>(path: string, query?: any, headers?: Record<string, string>) =>

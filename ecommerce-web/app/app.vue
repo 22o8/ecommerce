@@ -17,6 +17,7 @@ useHead({
 
 <template>
   <div class="min-h-screen bg-app">
+    <ApiDebugBanner />
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
