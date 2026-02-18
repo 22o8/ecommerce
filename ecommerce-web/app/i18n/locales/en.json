@@ -403,6 +403,18 @@
     "dark": "Dark",
     "light": "Light"
   },
+  "homeHero": {
+    "title1": "Discover your perfect",
+    "title2": "Beauty Routine",
+    "subtitle": "Explore our curated collection of premium skincare and beauty products from the world's best brands.",
+    "shopNow": "Shop Now",
+    "featuredProducts": "Featured Products"
+  },
+  "home": {
+    "brands": "Brands",
+    "brandsSubtitle": "Explore our carefully curated selection of premium beauty brands.",
+    "noBrandsFound": "No brands found"
+  },
   "error": "Error",
   "cartTitle": "Cart title",
   "failedLoad": "Failed load"

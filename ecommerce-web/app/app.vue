@@ -8,7 +8,7 @@ const locale = localeCookie.value === 'en' ? 'en' : 'ar'
 useHead({
   htmlAttrs: {
     // Keep layout stable: always LTR and do not change structural classes when locale changes.
-    lang: 'en',
+    lang: locale,
     dir: 'ltr',
     class: 'theme-light ltr',
   },

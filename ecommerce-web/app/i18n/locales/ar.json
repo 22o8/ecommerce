@@ -67,28 +67,28 @@
   },
   "productsPage": {
     "title": "المنتجات",
+    "subtitle": "اختر ما يناسبك وقم بالشراء مباشرة.",
     "searchPlaceholder": "ابحث عن منتج...",
     "chooseBrand": "اختر براند",
     "chooseCategory": "اختر تصنيف",
     "priceFrom": "السعر من",
     "priceTo": "السعر إلى",
     "sort": {
-      "priceDesc": "السعر Desc",
-      "priceAsc": "السعر Asc",
-      "new": "new"
+      "priceDesc": "السعر: من الأعلى إلى الأقل",
+      "priceAsc": "السعر: من الأقل إلى الأعلى",
+      "new": "الأحدث"
     },
     "sortNewest": "الأحدث",
     "sortPriceAsc": "الأقل سعرًا",
     "sortPriceDesc": "الأعلى سعرًا",
     "emptyTitle": "لا توجد منتجات",
-    "emptyHint": "جرّب تغيير الفلاتر أو أضف منتجات من لوحة التحكم.",
-    "next": "next",
-    "allBrands": "all البراندات",
-    "prev": "prev",
-    "addToCart": "add To السلة",
-    "page": "page",
-    "subtitle": "وصف",
-    "emptyDesc": "empty Desc"
+    "emptyHint": "جرّب تغيير الفلاتر أو البحث بكلمات مختلفة.",
+    "emptyDesc": "جرّب تغيير الفلاتر أو البحث بكلمات مختلفة.",
+    "next": "التالي",
+    "prev": "السابق",
+    "allBrands": "كل البراندات",
+    "addToCart": "أضف إلى السلة",
+    "page": "صفحة"
   },
   "brandsPage": {
     "title": "البراندات",
@@ -347,22 +347,22 @@
     "name": "الاسم"
   },
   "edit": "edit",
-  "prev": "prev",
+  "prev": "السابق",
   "itemsCount": "items Count",
   "order": "order",
-  "tagline": "tagline",
+  "tagline": "متجر رقمي احترافي",
   "account": "الحساب",
-  "next": "next",
+  "next": "التالي",
   "brands": {
     "empty": "empty",
-    "noDescription": "no الوصف"
+    "noDescription": "لا يوجد وصف"
   },
   "login": {
-    "title": "العنوان",
-    "subtitle": "وصف"
+    "title": "تسجيل الدخول",
+    "subtitle": "سجّل دخولك للمتابعة"
   },
-  "registerFailed": "إنشاء حساب Failed",
-  "loginFailed": "تسجيل الدخول Failed",
+  "registerFailed": "تعذر إنشاء الحساب",
+  "loginFailed": "تعذر تسجيل الدخول",
   "brandPage": {
     "defaultDesc": "default Desc",
     "empty": "empty",
@@ -417,7 +417,19 @@
     "dark": "dark",
     "light": "light"
   },
-  "error": "error",
+  "homeHero": {
+    "title1": "اكتشف روتينك المثالي",
+    "title2": "للجمال",
+    "subtitle": "استكشف مجموعتنا المختارة من أفضل منتجات العناية بالبشرة والجمال من أشهر البراندات.",
+    "shopNow": "تسوّق الآن",
+    "featuredProducts": "المنتجات المميزة"
+  },
+  "home": {
+    "brands": "البراندات",
+    "brandsSubtitle": "استكشف مجموعتنا المختارة بعناية من أفضل البراندات.",
+    "noBrandsFound": "لا توجد براندات"
+  },
+  "error": "خطأ",
   "cartTitle": "السلة العنوان",
   "failedLoad": "failed Load"
 }

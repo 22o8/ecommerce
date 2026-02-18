@@ -46,26 +46,26 @@ html.theme-dark{
   --shadow: 0 22px 70px rgba(0,0,0,.45);
 }
 
-/* Language direction */
-html[lang="ar"],
-html[lang="ar"] body { direction: rtl; }
-html[lang="en"],
-html[lang="en"] body { direction: ltr; }
+/* Language: LTR only (do not flip on locale change) */
+html,
+body {
+  direction: ltr;
+}
 
 /* Keep Arabic text readable but without RTL direction flip */
-html[lang="ar"] .rtl-text,
-html[lang="ar"] h1,
-html[lang="ar"] h2,
-html[lang="ar"] h3,
-html[lang="ar"] p,
-html[lang="ar"] label,
-html[lang="ar"] input,
-html[lang="ar"] textarea,
-html[lang="ar"] .prose{
+html.lang-ar .rtl-text,
+html.lang-ar h1,
+html.lang-ar h2,
+html.lang-ar h3,
+html.lang-ar p,
+html.lang-ar label,
+html.lang-ar input,
+html.lang-ar textarea,
+html.lang-ar .prose{
   direction: ltr;
   text-align: left;
 }
-html[lang="ar"] .keep-ltr{ direction:ltr; text-align:left; }
+html.lang-ar .keep-ltr{ direction:ltr; text-align:left; }
 
 /* Base */
 html, body { height: 100%; overflow-x: hidden; }

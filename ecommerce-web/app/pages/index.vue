@@ -4,6 +4,8 @@ import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
 
+const { t } = useI18n()
+
 const brandsStore = useBrandsStore()
 const productsStore = useProductsStore()
 
@@ -66,11 +68,11 @@ const topBrands = computed(() => {
       <div class="mx-auto max-w-6xl px-4 py-20 sm:py-24">
         <div class="text-center">
           <h1 class="text-4xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-6xl">
-            Discover Your Perfect
-            <span class="text-[rgb(var(--primary))]">Beauty Routine</span>
+            {{ t('homeHero.title1') }}
+            <span class="text-[rgb(var(--primary))]">{{ t('homeHero.title2') }}</span>
           </h1>
           <p class="mx-auto mt-6 max-w-2xl text-base text-[rgb(var(--muted))] sm:text-lg">
-            Explore our curated collection of premium skincare and beauty products from the world's best brands.
+            {{ t('homeHero.subtitle') }}
           </p>
 
           <div class="mt-8 flex items-center justify-center gap-3">
@@ -78,7 +80,7 @@ const topBrands = computed(() => {
               to="/products"
               class="inline-flex items-center gap-2 rounded-full bg-[rgb(var(--primary))] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(236,72,153,0.25)] hover:opacity-90"
             >
-              Shop Now
+              {{ t('homeHero.shopNow') }}
               <span aria-hidden="true">→</span>
             </NuxtLink>
           </div>
@@ -89,7 +91,7 @@ const topBrands = computed(() => {
     <!-- Featured Products -->
     <section class="mx-auto max-w-6xl px-4 pb-16">
       <div class="text-center">
-        <h2 class="text-2xl font-extrabold text-[rgb(var(--text))] sm:text-4xl">Featured Products</h2>
+        <h2 class="text-2xl font-extrabold text-[rgb(var(--text))] sm:text-4xl">{{ t('homeHero.featuredProducts') }}</h2>
       </div>
 
       <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
