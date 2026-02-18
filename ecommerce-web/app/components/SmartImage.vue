@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useApi } from '~/app/composables/useApi'
+import { useApi } from '~/composables/useApi'
 
 type SmartImageProps = {
   src: string
