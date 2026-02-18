@@ -96,7 +96,12 @@ export function useApi() {
   }
 
   const publicApiBase = normalizeApiBase(publicApiBaseRaw)
-  const base = publicApiBase.startsWith('http') ? publicApiBase : '/api/bff'
+
+  // ✅ كل الطلبات لازم تمر عبر الـ BFF حتى تشتغل بنفس الطريقة على كل الأجهزة والمتصفحات
+  // حتى لو أحد حط الدومين الكامل بالـ env (https://...)
+  const base = publicApiBaseRaw && !publicApiBaseRaw.startsWith('http')
+    ? publicApiBaseRaw
+    : '/api/bff'
   // رابط الباك (بدون /api) — يستخدم لبناء روابط الصور والملفات
   // إذا apiBase يحتوي /api، نرجّع الأصل تلقائياً حتى ما يصير /api/uploads...
   const apiOriginRaw = String(
