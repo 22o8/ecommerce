@@ -1,9 +1,11 @@
 <template>
-  <div :class="['relative overflow-hidden', props.rounded, props.background, props.wrapperClass]">
+  <div :style="props.imgStyle"
+      :class="['relative overflow-hidden', props.rounded, props.background, props.wrapperClass]">
     <img
       :src="currentSrc"
       :alt="props.alt"
       :loading="props.loading"
+      :style="props.imgStyle"
       :class="[
         'block w-full h-full select-none',
         props.fit === 'contain' ? 'object-contain' : 'object-cover',
@@ -25,6 +27,7 @@ type SmartImageProps = {
   loading?: 'lazy' | 'eager'
   wrapperClass?: string
   imgClass?: string
+  imgStyle?: any
   rounded?: string
   background?: string
 }
@@ -35,6 +38,7 @@ const props = withDefaults(defineProps<SmartImageProps>(), {
   loading: 'lazy',
   wrapperClass: '',
   imgClass: '',
+  imgStyle: undefined,
   rounded: 'rounded-xl',
   background: 'bg-transparent',
 })
