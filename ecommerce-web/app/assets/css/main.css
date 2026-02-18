@@ -385,8 +385,3 @@ select.input option{
 }
 .input::placeholder{ opacity: .75; }
 
-
-
-/* Image safety (mobile) */
-img{max-width:100%; height:auto;}
-

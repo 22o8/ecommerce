@@ -100,6 +100,8 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: 'auth' })
+
 import UiButton from '~/components/ui/UiButton.vue'
 import { buildAssetUrl } from '~/composables/useApi'
 

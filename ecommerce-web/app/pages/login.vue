@@ -8,6 +8,9 @@
         <div>
           <h1 class="text-2xl font-black rtl-text">{{ t('login.title') }}</h1>
           <p class="text-sm text-muted rtl-text">{{ t('login.subtitle') }}</p>
+          <div v-if="showPurchaseNotice" class="mt-3 rounded-2xl border border-app bg-surface px-4 py-3 text-sm rtl-text">
+            {{ t('auth.loginRequiredPurchase') }}
+          </div>
         </div>
       </div>
 

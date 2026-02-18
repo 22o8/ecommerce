@@ -321,7 +321,8 @@
     "email": "Email",
     "phone": "Phone",
     "password": "Password",
-    "noAccount": "No account"
+    "noAccount": "No account",
+    "loginRequiredPurchase": "Please sign in to complete your purchase"
   },
   "reviews": {
     "addTitle": "Add title",
