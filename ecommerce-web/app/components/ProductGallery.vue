@@ -15,7 +15,10 @@
           :class="{ zooming: zoomed }"
           :src="current"
           :alt="title || 'Product'"
-          :style="imgStyle"
+          fit="contain"
+          :img-style="imgStyle"
+          wrapper-class="w-full h-full"
+          img-class="w-full h-full"
           @click="openFullscreen"
         />
         <button v-if="images.length>1" class="nav left" type="button" @click.stop="prev" aria-label="Prev">
@@ -42,7 +45,7 @@
         :class="{ active: i===index }"
         @click="setIndex(i)"
       >
-        <SmartImage class="thumbImg" :src="src" :alt="title || 'thumb'" />
+        <SmartImage class="thumbImg" :src="src" :alt="title || 'thumb'" fit="cover" wrapper-class="w-full h-full" img-class="w-full h-full" />
       </button>
     </div>
 

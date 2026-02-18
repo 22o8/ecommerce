@@ -40,7 +40,9 @@ export const useUiStore = defineStore('ui', () => {
     const root = document.documentElement
     // Keep layout stable: always LTR and do not toggle structural CSS classes when changing locale.
     root.setAttribute('lang', l)
-    root.setAttribute('dir', 'ltr')
+    root.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr')
+    root.classList.toggle('lang-ar', l === 'ar')
+    root.classList.toggle('lang-en', l === 'en')
   }
 
   function initClient() {

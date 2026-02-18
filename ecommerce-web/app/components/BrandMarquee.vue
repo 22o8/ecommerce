@@ -37,10 +37,11 @@ const logoTryIndex = ref<Record<string, number>>({})
 const keyOf = (b: Brand, idx: number) => `${b.id}-${idx}`
 const logoSrc = (b: Brand, idx: number) => {
   const key = keyOf(b, idx)
-  const list = buildLogoCandidates(b.logoUrl)
   const i = logoTryIndex.value[key] ?? 0
-  const picked = list[i]
-  return picked ? api.buildAssetUrl(picked) : ''
+  const candidates = buildLogoCandidates(b.logoUrl)
+  const chosen = candidates[i] || b.logoUrl || ''
+  // مرّر روابط /uploads عبر الـ BFF حتى تشتغل على كل الأجهزة والـ VPN
+  return api.buildAssetUrl(chosen)
 }
 const onLogoError = (b: Brand, idx: number) => {
   const key = keyOf(b, idx)
@@ -67,11 +68,13 @@ const loop = computed(() => [...clean.value, ...clean.value])
           >
             <div class="marquee__card">
               <div class="marquee__logo">
-                <img
+                <SmartImage
                   v-if="b.logoUrl"
                   :src="logoSrc(b, idx)"
                   :alt="b.name"
-                  class="h-12 w-12 rounded-2xl object-cover"
+                  fit="cover"
+                  wrapper-class="h-12 w-12 rounded-2xl"
+                  img-class="h-full w-full object-cover"
                   loading="lazy"
                   @error="onLogoError(b, idx)"
                 />
