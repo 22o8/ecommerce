@@ -8,7 +8,7 @@
     "details": "Details",
     "back": "Back",
     "confirm": "Confirm",
-    "search": "Search",
+    "search": "Search...",
     "filter": "Filter",
     "all": "All",
     "active": "Active",
@@ -30,12 +30,15 @@
     "requestFailed": "Request failed",
     "chooseFiles": "Choose files",
     "buy": "Buy",
-    "uploading": "Uploading",
-    "saving": "Saving",
+    "uploading": "Uploading...",
+    "saving": "Saving...",
     "addToCart": "Add to cart",
     "actions": "Actions",
     "price": "Price",
-    "errorGeneric": "Error generic"
+    "errorGeneric": "Something went wrong",
+    "prev": "Prev",
+    "next": "Next",
+    "edit": "Edit"
   },
   "nav": {
     "logout": "Logout",
@@ -52,19 +55,18 @@
     "home": "Home"
   },
   "home": {
-    "heroTitle1": "Build your beauty store",
-    "heroTitle2": "Fast & professional",
-    "heroSubtitle": "Browse brands, discover products, and shop smoothly.",
-    "browseBrands": "Browse brands",
-    "dashboard": "Dashboard",
-    "quick": "Quick",
-    "quickBrands": "Manage brands",
-    "quickProducts": "Manage products",
     "brands": "Brands",
-    "brandsSubtitle": "Pick your favorite brands and start shopping.",
-    "viewAllBrands": "View all brands",
-    "subtitle": "Subtitle",
-    "noBrandsFound": "No brands found"
+    "brandsSubtitle": "Explore our carefully curated selection of premium beauty brands.",
+    "noBrandsFound": "No brands found",
+    "dashboard": "Dashboard",
+    "hero": {
+      "title": "Discover Your Perfect Beauty Routine",
+      "subtitle": "Explore our curated collection of premium skincare and beauty products from the world's best brands.",
+      "cta": "Shop Now"
+    },
+    "featured": {
+      "title": "Featured Products"
+    }
   },
   "productsPage": {
     "title": "Products",
@@ -277,9 +279,13 @@
   "browseProducts": "Browse products",
   "products": {
     "sortNew": "Sort new",
-    "sortPriceAsc": "Sort price asc",
+    "sortPriceAsc": "Price: Low to High",
     "quickPreview": "Quick preview",
-    "sortPriceDesc": "Sort price desc"
+    "sortPriceDesc": "Price: High to Low",
+    "addToCart": "Add to cart",
+    "buy": "Buy",
+    "searchPlaceholder": "Search for a product...",
+    "sortNewest": "Newest"
   },
   "termsPlaceholder": "Terms placeholder",
   "benefit": {
@@ -336,7 +342,7 @@
   "prev": "Prev",
   "itemsCount": "Items count",
   "order": "Order",
-  "tagline": "Tagline",
+  "tagline": "Professional digital store",
   "account": "Account",
   "next": "Next",
   "brands": {
@@ -404,18 +410,19 @@
     "light": "Light"
   },
   "homeHero": {
-    "title1": "Discover your perfect",
+    "title1": "Discover Your Perfect",
     "title2": "Beauty Routine",
     "subtitle": "Explore our curated collection of premium skincare and beauty products from the world's best brands.",
     "shopNow": "Shop Now",
     "featuredProducts": "Featured Products"
   },
-  "home": {
-    "brands": "Brands",
-    "brandsSubtitle": "Explore our carefully curated selection of premium beauty brands.",
-    "noBrandsFound": "No brands found"
-  },
   "error": "Error",
   "cartTitle": "Cart title",
-  "failedLoad": "Failed load"
+  "failedLoad": "Failed load",
+  "cart": {
+    "title": "Cart",
+    "checkout": "Checkout",
+    "emptyTitle": "Your cart is empty",
+    "emptyDesc": "Add products to see them here."
+  }
 }
