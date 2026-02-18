@@ -40,7 +40,7 @@ const props = withDefaults(defineProps<SmartImageProps>(), {
 })
 
 // Fallback (keeps UI stable if an image url is missing / broken)
-const FALLBACK = '/hero-placeholder.svg'
+const FALLBACK = '/img-placeholder.svg'
 
 const api = useApi()
 

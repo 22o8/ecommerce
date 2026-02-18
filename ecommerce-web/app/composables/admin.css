@@ -105,6 +105,11 @@ html[data-theme="light"] .side-link {
   grid-template-columns: 2fr 1fr 1fr 2fr;
 }
 
+/* Products grid matches 4 columns: Product | Price | Status | Actions */
+.admin-tr.products-tr {
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+}
+
 @media (max-width: 900px) {
   .admin-tr,
   .admin-tr.brands-tr,

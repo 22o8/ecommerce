@@ -90,7 +90,7 @@ const files = ref<{ file: File; preview: string }[]>([]);
 const UPLOAD_ENDPOINT = computed(() => {
   // مثال افتراضي:
   // POST https://localhost:7043/api/Uploads/images
-  return '/Upload/images'
+  return props.productId ? `/admin/products/${String(props.productId)}/images` : '/Upload/images'
 });
 
 // هذا هو prefix لمجلد الصور على السيرفر (بدون /api)

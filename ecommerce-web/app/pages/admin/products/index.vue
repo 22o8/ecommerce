@@ -65,7 +65,7 @@
       </div>
 
       <div v-else class="admin-table">
-        <div class="admin-tr admin-th">
+        <div class="admin-tr products-tr admin-th">
           <div class="flex items-center gap-2">
             <input type="checkbox" :checked="allChecked" @change="toggleAll(($event.target as HTMLInputElement).checked)" />
             <span class="rtl-text">{{ t('admin.product') }}</span>
@@ -75,7 +75,7 @@
           <div class="text-right rtl-text">{{ t('common.actions') }}</div>
         </div>
 
-        <div v-for="p in pagedItems" :key="p.id" class="admin-tr">
+        <div v-for="p in pagedItems" :key="p.id" class="admin-tr products-tr">
           <div class="flex items-center gap-3 min-w-0">
             <input type="checkbox" :checked="selectedIds.includes(p.id)" @change="toggleOne(p.id)" />
 

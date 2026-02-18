@@ -71,7 +71,7 @@ const loop = computed(() => [...clean.value, ...clean.value])
                   v-if="b.logoUrl"
                   :src="logoSrc(b, idx)"
                   :alt="b.name"
-                  class="h-10 w-10 rounded-xl object-cover"
+                  class="h-12 w-12 rounded-2xl object-cover"
                   loading="lazy"
                   @error="onLogoError(b, idx)"
                 />
@@ -104,9 +104,9 @@ const loop = computed(() => [...clean.value, ...clean.value])
 .marquee__item{ text-decoration:none; }
 
 .marquee__card{
-  min-width: 72px;
-  width: 72px;
-  height: 72px;
+  min-width: 68px;
+  width: 68px;
+  height: 68px;
   padding: 0;
   border-radius: 9999px;
   display: flex;
