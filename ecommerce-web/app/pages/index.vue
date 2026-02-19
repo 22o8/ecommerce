@@ -78,7 +78,7 @@ const topBrands = computed(() => {
           <div class="mt-8 flex items-center justify-center gap-3">
             <NuxtLink
               to="/products"
-              class="btn-cta-animated cta-glow-wrap inline-flex items-center gap-2 rounded-full bg-[rgb(var(--primary))] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(236,72,153,0.25)] hover:opacity-95"
+              class="btn-cta-animated cta-glow-wrap inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white hover:opacity-95"
             >
               <span class="cta-glow" aria-hidden="true"></span>
               <span class="relative z-10">{{ t('homeHero.shopNow') }}</span>
@@ -96,11 +96,13 @@ const topBrands = computed(() => {
       </div>
 
       <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <ProductCard
-          v-for="p in homeFeatured"
+        <RevealOnScroll
+          v-for="(p, idx) in homeFeatured"
           :key="p.id"
-          :p="p"
-        />
+          :parity="idx % 2"
+        >
+          <ProductCard :p="p" />
+        </RevealOnScroll>
       </div>
 
     </section>
