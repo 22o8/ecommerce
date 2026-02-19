@@ -302,9 +302,34 @@ async function loadImages() {
 }
 
 async function reloadAll() {
-  await Promise.all([loadBrands(), loadProduct()])
-  await loadImages()
+  loading.value = true
+  error.value = null
+
+  // لا نخلي فشل brands يمنع تحميل المنتج أو الصور (خصوصاً على الموبايل/شبكات ضعيفة)
+  const tasks: Array<Promise<any>> = []
+
+  tasks.push(
+    loadBrands().catch((e) => {
+      console.warn('[admin] loadBrands failed', e)
+    })
+  )
+
+  tasks.push(
+    loadProduct().catch((e) => {
+      console.warn('[admin] loadProduct failed', e)
+    })
+  )
+
+  // ننتظر أولاً المنتج حتى يصير عندنا id صحيح للصور
+  await Promise.all(tasks)
+
+  await loadImages().catch((e) => {
+    console.warn('[admin] loadImages failed', e)
+  })
+
+  loading.value = false
 }
+
 
 function validate() {
   if (!form.name.trim()) return t('admin.validationName')

@@ -78,10 +78,11 @@ const topBrands = computed(() => {
           <div class="mt-8 flex items-center justify-center gap-3">
             <NuxtLink
               to="/products"
-              class="btn-cta-animated inline-flex items-center gap-2 rounded-full bg-[rgb(var(--primary))] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(236,72,153,0.25)] hover:opacity-95"
+              class="btn-cta-animated cta-glow-wrap inline-flex items-center gap-2 rounded-full bg-[rgb(var(--primary))] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(236,72,153,0.25)] hover:opacity-95"
             >
-              {{ t('homeHero.shopNow') }}
-              <span aria-hidden="true">→</span>
+              <span class="cta-glow" aria-hidden="true"></span>
+              <span class="relative z-10">{{ t('homeHero.shopNow') }}</span>
+              <span class="relative z-10" aria-hidden="true">→</span>
             </NuxtLink>
           </div>
         </div>
