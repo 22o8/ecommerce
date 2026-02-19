@@ -227,6 +227,9 @@ function resetForm() {
   form.price = Number(product.value.priceUsd ?? product.value.price ?? 0)
   // we store brand slug/name in the same field; API expects "brand"
   form.brandSlug = product.value.brand || product.value.brandSlug || ''
+  // If API returns brand NAME, map it to slug so the dropdown selects correctly.
+  const match = brands.value.find((b: any) => b.slug === form.brandSlug || b.name === form.brandSlug)
+  if (match) form.brandSlug = match.slug
   form.isActive = Boolean(product.value.isPublished ?? product.value.isActive ?? true)
   form.isFeatured = Boolean((product.value as any).isFeatured ?? false)
 
@@ -317,13 +320,15 @@ async function onSave() {
 
   saving.value = true
   try {
+    const match = brands.value.find((b: any) => b.slug === form.brandSlug || b.name === form.brandSlug)
     await updateAdminProduct<any>(id.value, {
       // ✅ match backend DTO (UpsertProductRequest)
       title: form.name.trim(),
       slug: form.slug.trim(),
       description: form.description?.trim() || '',
       priceUsd: Number(form.price),
-      brand: form.brandSlug,
+      // Backend validates brand by NAME; UI selects by slug.
+      brand: match?.name || form.brandSlug,
       isPublished: Boolean(form.isActive),
       isFeatured: Boolean(form.isFeatured),
     })

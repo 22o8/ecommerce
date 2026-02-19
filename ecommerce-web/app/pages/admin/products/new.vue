@@ -240,13 +240,15 @@ async function onCreate() {
   if (loading.value) return
   loading.value = true
   try {
+    const match = brands.value.find((b: any) => b.slug === form.brand || b.name === form.brand)
     const created: any = await createProduct({
       title: form.title,
       slug: form.slug,
       description: form.description,
       // تأكد أنه رقم (مو نص) حتى ما يرجع 400 من .NET
       priceUsd: Number(form.priceUsd ?? 0),
-      brand: form.brand,
+      // Backend validates brand by NAME; UI selects by slug.
+      brand: match?.name || form.brand,
       isPublished: !!form.isPublished,
       isFeatured: !!form.isFeatured,
     })

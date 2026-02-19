@@ -268,12 +268,28 @@ async function fetchList(p = 1) {
   }
 }
 
+// Admin update endpoint expects the full UpsertProductRequest payload.
+// Our list items are intentionally minimal, so for any toggle/update we fetch the full product first.
+async function buildUpsertPayload(id: string, overrides: Partial<{ isPublished: boolean; isFeatured: boolean }> = {}) {
+  const full: any = await api.getAdminProduct<any>(id)
+  return {
+    title: String(full.title || ''),
+    slug: String(full.slug || ''),
+    description: String(full.description || ''),
+    priceUsd: Number(full.priceUsd ?? 0),
+    brand: String(full.brand || ''),
+    isPublished: overrides.isPublished ?? !!full.isPublished,
+    isFeatured: overrides.isFeatured ?? !!full.isFeatured,
+  }
+}
+
 async function quickToggle(p: Product) {
   pending.value = true
   error.value = ''
   success.value = ''
   try {
-    await api.updateAdminProduct(p.id, { ...p, isPublished: !p.isPublished })
+    const body = await buildUpsertPayload(p.id, { isPublished: !p.isPublished })
+    await api.updateAdminProduct(p.id, body)
     success.value = t('admin.updated')
     await fetchList(page.value)
   } catch (e:any) {
@@ -316,9 +332,8 @@ async function bulkPublish(v: boolean) {
   success.value = ''
   try {
     for (const id of selectedIds.value) {
-      const p = items.value.find(x => x.id === id)
-      if (!p) continue
-      await api.updateAdminProduct(id, { ...p, isPublished: v })
+      const body = await buildUpsertPayload(id, { isPublished: v })
+      await api.updateAdminProduct(id, body)
     }
     success.value = t('admin.bulkUpdated')
     await fetchList(page.value)
