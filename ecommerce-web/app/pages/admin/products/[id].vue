@@ -303,7 +303,8 @@ async function loadImages() {
 
 async function reloadAll() {
   loading.value = true
-  error.value = null
+  // ملاحظة: سابقاً كان يوجد متغير error، لكن الآن نعتمد على toast/errorMsg فقط.
+  // لذلك لا نستخدم error.value هنا حتى لا يحصل خطأ (error is not defined).
 
   // لا نخلي فشل brands يمنع تحميل المنتج أو الصور (خصوصاً على الموبايل/شبكات ضعيفة)
   const tasks: Array<Promise<any>> = []
