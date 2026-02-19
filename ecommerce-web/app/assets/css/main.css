@@ -88,18 +88,20 @@ body{
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  /* moving gradient background (works in both themes) */
+  /* واضح في الثيمين: نخلي التدرّج يعتمد على primary/primary-2 بدل secondary الفاتح */
+  color: rgb(var(--on-primary));
   background-image:
     linear-gradient(110deg,
       rgba(var(--primary), 1) 0%,
-      rgba(var(--secondary), 1) 35%,
+      rgba(var(--primary-2), 1) 35%,
       rgba(var(--primary), 1) 70%,
-      rgba(var(--secondary), 1) 100%
+      rgba(var(--primary-2), 1) 100%
     );
   background-size: 240% 240%;
   background-position: 0% 50%;
-  animation: ctaGradientMove 6.5s ease-in-out infinite;
-  box-shadow: 0 14px 34px rgba(var(--primary), 0.28);
+  /* حركة مستمرة بدون توقف */
+  animation: ctaGradientMove 7.5s linear infinite;
+  box-shadow: 0 14px 34px rgba(var(--primary), 0.26);
   transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
 }
 .btn-cta-animated::before{

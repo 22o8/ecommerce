@@ -78,7 +78,7 @@ const topBrands = computed(() => {
           <div class="mt-8 flex items-center justify-center gap-3">
             <NuxtLink
               to="/products"
-              class="btn-cta-animated cta-glow-wrap inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white hover:opacity-95"
+              class="btn-cta-animated cta-glow-wrap inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
             >
               <span class="cta-glow" aria-hidden="true"></span>
               <span class="relative z-10">{{ t('homeHero.shopNow') }}</span>
