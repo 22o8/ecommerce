@@ -634,14 +634,14 @@ html:not(.theme-dark){
   --cta-text: 17 24 39;
 
   /* توهج وردي خفيف جدًا */
-  --cta-glow-1: 236 72 153;  /* pink */
-  --cta-glow-2: 244 114 182; /* softer pink */
+  --cta-glow-1: 236 80 200;  /* pink */
+  --cta-glow-2: 244 200 200; /* softer pink */
 }
 
 /* ----------- Dark theme tuning ----------- */
 html.theme-dark{
-  --cta-bg: 17 24 39;
-  --cta-text: 255 255 255;
+  --cta-bg: 17 50 39;
+  --cta-text: 255 255 220;
 
   --cta-glow-1: 167 139 250;
   --cta-glow-2: 56 189 248;
