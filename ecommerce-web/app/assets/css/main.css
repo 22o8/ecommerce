@@ -640,7 +640,7 @@ html:not(.theme-dark){
 
 /* ----------- Dark theme tuning ----------- */
 html.theme-dark{
-  --cta-bg: 17 50 39;
+  --cta-bg: 17 24 39;
   --cta-text: 255 255 220;
 
   --cta-glow-1: 167 139 250;
