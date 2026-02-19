@@ -244,6 +244,8 @@
     "newBrandHint": "جديد البراند ملاحظة",
     "product": "المنتج",
     "publish": "نشر",
+    "feature": "تمييز",
+    "unfeature": "إلغاء التمييز",
     "updated": "تم التحديث",
     "disabled": "معطّل",
     "delete": "حذف",

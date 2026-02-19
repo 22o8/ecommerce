@@ -67,18 +67,18 @@
           {{ formatPrice(p.priceUsd) }}
         </div>
 
-        <!-- أزرار مريحة على الهاتف: تتحول إلى عمود وتاخذ عرض كامل -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <!-- أزرار مدمجة (لا تاخذ مساحة كبيرة على الهاتف) -->
+        <div class="flex flex-row items-center gap-2">
           <button
-            class="px-3 py-2 rounded-xl border border-app bg-surface hover:bg-white/5 transition text-sm w-full sm:w-auto"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-app bg-surface hover:bg-white/5 transition text-xs"
             @click.stop.prevent="addToCart"
           >
-            <Icon name="mdi:cart-plus" class="text-lg" />
-            <span class="rtl-text ml-1">{{ t('common.addToCart') }}</span>
+            <Icon name="mdi:cart-plus" class="text-base" />
+            <span class="rtl-text">{{ t('common.addToCart') }}</span>
           </button>
 
           <button
-            class="px-3 py-2 rounded-xl border border-app bg-surface hover:bg-white/5 transition text-sm w-full sm:w-auto"
+            class="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-app bg-surface hover:bg-white/5 transition text-xs"
             @click.stop.prevent="buyNow"
           >
             <span class="rtl-text">{{ t('common.buy') }}</span>

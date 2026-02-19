@@ -228,6 +228,8 @@
     "newBrandHint": "New brand hint",
     "product": "Product",
     "publish": "Publish",
+    "feature": "Feature",
+    "unfeature": "Unfeature",
     "updated": "Updated",
     "disabled": "Disabled",
     "delete": "Delete",

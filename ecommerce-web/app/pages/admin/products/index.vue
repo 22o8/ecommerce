@@ -101,17 +101,52 @@
             <span v-if="p.isFeatured" class="badge-featured ml-2">★ Featured</span>
           </div>
 
-          <div class="flex justify-end gap-2">
-            <NuxtLink class="admin-pill" :to="`/admin/products/${p.id}`">{{ t('common.details') }}</NuxtLink>
-            <button class="admin-pill" type="button" @click="quickToggle(p)" :disabled="pending">
-              {{ p.isPublished ? t('admin.unpublish') : t('admin.publish') }}
+          <div class="actions-wrap">
+            <NuxtLink
+              class="admin-icon-btn"
+              :to="`/admin/products/${p.id}`"
+              :title="t('common.details')"
+              :aria-label="t('common.details')"
+            >
+              <Icon name="mdi:information-outline" class="text-lg" />
+              <span class="btn-label">{{ t('common.details') }}</span>
+            </NuxtLink>
+
+            <button
+              class="admin-icon-btn"
+              type="button"
+              @click="quickToggle(p)"
+              :disabled="pending"
+              :title="p.isPublished ? t('admin.unpublish') : t('admin.publish')"
+              :aria-label="p.isPublished ? t('admin.unpublish') : t('admin.publish')"
+            >
+              <Icon :name="p.isPublished ? 'mdi:eye-off-outline' : 'mdi:eye-outline'" class="text-lg" />
+              <span class="btn-label">{{ p.isPublished ? t('admin.unpublish') : t('admin.publish') }}</span>
             </button>
 
-            <button class="admin-pill" type="button" @click="toggleFeatured(p)" :disabled="pending">
-              {{ p.isFeatured ? 'Unfeature' : 'Feature' }}
+            <button
+              class="admin-icon-btn"
+              type="button"
+              @click="toggleFeatured(p)"
+              :disabled="pending"
+              :title="p.isFeatured ? t('admin.unfeature') : t('admin.feature')"
+              :aria-label="p.isFeatured ? t('admin.unfeature') : t('admin.feature')"
+            >
+              <Icon :name="p.isFeatured ? 'mdi:star-off-outline' : 'mdi:star-outline'" class="text-lg" />
+              <span class="btn-label">{{ p.isFeatured ? t('admin.unfeature') : t('admin.feature') }}</span>
             </button>
 
-            <button class="admin-btn-danger" type="button" @click="removeOne(p)" :disabled="pending">{{ t('admin.delete') }}</button>
+            <button
+              class="admin-icon-btn danger"
+              type="button"
+              @click="removeOne(p)"
+              :disabled="pending"
+              :title="t('admin.delete')"
+              :aria-label="t('admin.delete')"
+            >
+              <Icon name="mdi:trash-can-outline" class="text-lg" />
+              <span class="btn-label">{{ t('admin.delete') }}</span>
+            </button>
           </div>
         </div>
 
