@@ -39,27 +39,28 @@
       <div class="min-w-0">
         <div class="flex items-start justify-between gap-3">
           <div class="font-extrabold line-clamp-1 rtl-text min-w-0">{{ p.name }}</div>
-
-          <div class="flex items-center gap-2 shrink-0">
-            <button
-              class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
-              @click.stop.prevent="toggleFav"
-              :aria-label="t('wishlist.toggle')"
-            >
-              <Icon :name="fav ? 'mdi:heart' : 'mdi:heart-outline'" class="text-lg" />
-            </button>
-
-            <button
-              class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
-              @click.stop.prevent="openPreview"
-              :aria-label="t('products.quickPreview')"
-            >
-              <Icon name="mdi:eye-outline" class="text-lg" />
-            </button>
-          </div>
         </div>
         <div v-if="p.description" class="text-sm text-muted line-clamp-2 rtl-text">
           {{ p.description }}
+        </div>
+
+        <!-- أيقونات (مفضلة/معاينة) تحت الوصف حتى تكون أقرب للمحتوى وما تغطي الصورة -->
+        <div class="flex items-center justify-end gap-2">
+          <button
+            class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
+            @click.stop.prevent="toggleFav"
+            :aria-label="t('wishlist.toggle')"
+          >
+            <Icon :name="fav ? 'mdi:heart' : 'mdi:heart-outline'" class="text-lg" />
+          </button>
+
+          <button
+            class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
+            @click.stop.prevent="openPreview"
+            :aria-label="t('products.quickPreview')"
+          >
+            <Icon name="mdi:eye-outline" class="text-lg" />
+          </button>
         </div>
       </div>
 
