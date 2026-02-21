@@ -6,7 +6,7 @@
         <p class="mt-2 text-muted rtl-text">{{ t('home.brandsSubtitle') }}</p>
       </div>
 
-      <div class="control-box w-full sm:w-[360px]">
+      <div class="control-box control-box-strong w-full sm:w-[360px]">
         <div class="relative">
           <input
             v-model="q"

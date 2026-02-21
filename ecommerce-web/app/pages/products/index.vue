@@ -7,40 +7,7 @@
       </div>
 
       <div class="control-box w-full lg:w-[560px] grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div class="relative">
-          <input
-            v-model="q"
-            :placeholder="t('productsPage.searchPlaceholder')"
-            class="input"
-            @keydown.enter="applyFilters"
-          />
-          <button
-            v-if="q"
-            type="button"
-            class="absolute left-3 top-1/2 -translate-y-1/2 icon-btn"
-            @click="q = ''"
-            aria-label="clear"
-          >
-            ✕
-          </button>
-        </div>
-
-        <select v-model="sort" class="input py-3">
-          <option value="new">{{ t('productsPage.sort.new') }}</option>
-          <option value="priceAsc">{{ t('productsPage.sort.priceAsc') }}</option>
-          <option value="priceDesc">{{ t('productsPage.sort.priceDesc') }}</option>
-        </select>
-
-        <select v-model="brand" class="input py-3 sm:col-span-2">
-          <option value="">{{ t('productsPage.allBrands') }}</option>
-          <option v-for="b in brandOptions" :key="b.slug" :value="b.slug">
-            {{ b.name }}
-          </option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Loading state (API delay) -->
+<!-- Loading state (API delay) -->
     <div v-if="products.loading && products.items.length === 0" class="mt-6">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div v-for="n in 8" :key="n" class="skeleton-card" />

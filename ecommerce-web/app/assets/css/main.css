@@ -174,6 +174,19 @@ body{
   transform: translateY(0px);
 }
 
+
+/* Outline variant (same animation as CTA) */
+.btn-cta-outline{
+  /* keep animation but make it look like a secondary/outline button */
+  --cta-bg: var(--surface);
+  --cta-text: var(--text);
+  border: 1px solid rgba(var(--border), 1);
+  box-shadow: 0 10px 28px rgba(0,0,0,.14);
+}
+html.theme-dark .btn-cta-outline{
+  box-shadow: 0 12px 32px rgba(0,0,0,.22);
+}
+
 /* ---------------------- */
 /* Reveal on scroll (Home) */
 /* ---------------------- */
@@ -616,3 +629,14 @@ img{max-width:100%; height:auto;}
   to{ transform: rotate(360deg); }
 }
 
+
+
+/* Stronger control box (used on Brands search) */
+.control-box-strong{
+  border: 1.5px solid rgba(var(--border), 1);
+  background: rgba(var(--surface), 0.92);
+  box-shadow: 0 18px 50px rgba(0,0,0,.12);
+}
+html.theme-dark .control-box-strong{
+  box-shadow: 0 22px 64px rgba(0,0,0,.22);
+}
