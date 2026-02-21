@@ -549,3 +549,70 @@ html.theme-dark .control-box{
 /* Image safety (mobile) */
 img{max-width:100%; height:auto;}
 
+/* ============================
+   Page transitions + loaders
+   ============================ */
+
+/* Nuxt page transition */
+.page-enter-active,
+.page-leave-active{
+  transition: opacity .22s ease, transform .22s ease;
+}
+.page-enter-from,
+.page-leave-to{
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* Stagger small entrance for grids */
+.page-stagger > *{
+  animation: itemIn .28s ease both;
+}
+.page-stagger > *:nth-child(1){ animation-delay: .02s; }
+.page-stagger > *:nth-child(2){ animation-delay: .04s; }
+.page-stagger > *:nth-child(3){ animation-delay: .06s; }
+.page-stagger > *:nth-child(4){ animation-delay: .08s; }
+.page-stagger > *:nth-child(5){ animation-delay: .10s; }
+.page-stagger > *:nth-child(6){ animation-delay: .12s; }
+.page-stagger > *:nth-child(7){ animation-delay: .14s; }
+.page-stagger > *:nth-child(8){ animation-delay: .16s; }
+
+@keyframes itemIn{
+  from{ opacity: 0; transform: translateY(8px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+
+/* Skeleton cards (API loading) */
+.skeleton-card{
+  height: 380px;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(var(--border), 1);
+  background:
+    linear-gradient(110deg,
+      rgba(var(--surface-2-rgb), .75) 8%,
+      rgba(var(--surface-2-rgb), .95) 18%,
+      rgba(var(--surface-2-rgb), .75) 33%
+    );
+  background-size: 200% 100%;
+  animation: shimmer 1.05s linear infinite;
+  box-shadow: var(--shadow-card);
+}
+
+@keyframes shimmer{
+  to{ background-position-x: -200%; }
+}
+
+/* Tiny spinner */
+.spinner{
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(var(--border), 1);
+  border-top-color: rgba(var(--primary), 1);
+  animation: spin .75s linear infinite;
+}
+
+@keyframes spin{
+  to{ transform: rotate(360deg); }
+}
+

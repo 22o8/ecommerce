@@ -40,7 +40,18 @@
       </div>
     </div>
 
-    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Loading state (API delay) -->
+    <div v-if="products.loading && products.items.length === 0" class="mt-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div v-for="n in 8" :key="n" class="skeleton-card" />
+      </div>
+      <div class="mt-6 flex items-center justify-center text-sm text-muted rtl-text">
+        <span class="spinner" aria-hidden="true" />
+        <span class="ms-2">{{ t('common.loading') }}</span>
+      </div>
+    </div>
+
+    <div v-else class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 page-stagger">
       <ProductCard v-for="p in products.items" :key="p.id" :p="p" />
     </div>
 
