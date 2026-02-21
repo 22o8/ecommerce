@@ -11,6 +11,10 @@
   --bg: 255 245 250;         /* soft pink */
   --surface: 255 255 255;
   --surface-2: 255 250 253;  /* lighter pink surface */
+  --surface-rgb: 255 255 255;
+  --surface-2-rgb: 255 250 253;
+  --shadow-card: 0 12px 30px rgba(0,0,0,.08);
+
   --text: 18 18 24;
   --muted: 104 104 120;
   /* slightly stronger border for clearer controls */
@@ -27,18 +31,15 @@
   --cta-glow-1: 236 72 153;    /* توهج وردي */
   --cta-glow-2: 244 114 182;
 
-  --success: 22 163 74;
-  --danger: 220 38 38;
-
-  --ring: 236 72 153;
-  --shadow: 0 18px 60px rgba(0,0,0,.10);
-}
-
-html.theme-dark{
+  --success: 22 163 7
   color-scheme: dark;
   --bg: 10 11 16;
   --surface: 16 17 24;
   --surface-2: 20 21 30;
+  --surface-rgb: 16 17 24;
+  --surface-2-rgb: 20 21 30;
+  --shadow-card: 0 16px 44px rgba(0,0,0,.35);
+
   --text: 240 240 246;
   --muted: 160 160 180;
   /* slightly brighter border for dark theme contrast */
@@ -52,6 +53,11 @@ html.theme-dark{
   --cta-bg: 17 24 39;
   --cta-text: 255 255 255;
   --cta-glow-1: 167 139 250;
+  --cta-glow-2: 56 189 248;
+
+  --ring: 196 181 253;
+  --shadow: 0 22px 70px rgba(0,0,0,.45);
+1: 167 139 250;
   --cta-glow-2: 56 189 248;
 
   --ring: 196 181 253;
@@ -100,72 +106,65 @@ body{
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  /* واضح في الثيمين */
+
   color: rgb(var(--cta-text));
-  background-image:
-    linear-gradient(110deg,
-      rgba(var(--cta-bg), 1) 0%,
-      rgba(var(--cta-glow-1), .88) 35%,
-      rgba(var(--cta-bg), 1) 70%,
-      rgba(var(--cta-glow-2), .86) 100%
-    );
-  background-size: 240% 240%;
-  background-position: 0% 50%;
-  /* حركة مستمرة بدون توقف */
-  animation: ctaGradientMove 7.5s linear infinite;
-  box-shadow: 0 14px 34px rgba(var(--cta-glow-1), 0.22);
+  background: rgb(var(--cta-bg));
+  border: 1px solid rgba(var(--border), .9);
+
+  /* ظل واضح بكل الثيمات */
+  box-shadow: 0 14px 34px rgba(var(--cta-glow-1), 0.18);
   transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
 }
+
+/* حلقة متحركة مستمرة (بدون نقطة بداية/نهاية واضحة) */
 .btn-cta-animated::before{
   content: "";
   position: absolute;
-  inset: -2px;
+  inset: -160%;
   z-index: -1;
-  opacity: .55;
-  filter: blur(10px);
-  background: radial-gradient(120px 60px at 20% 30%, rgba(var(--cta-glow-1), .55), transparent 60%),
-              radial-gradient(160px 70px at 80% 70%, rgba(var(--cta-glow-2), .45), transparent 60%);
-  animation: ctaGlowMove 4.8s ease-in-out infinite;
-}
-.btn-cta-animated::after{
-  /* soft moving highlight */
-  content: "";
-  position: absolute;
-  top: -40%;
-  left: -60%;
-  width: 220%;
-  height: 180%;
-  z-index: 0;
-  opacity: .18;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.9) 45%, transparent 70%);
-  transform: rotate(12deg);
-  animation: ctaShine 3.6s linear infinite;
-  pointer-events: none;
-}
-@keyframes ctaGlowMove{
-  0%,100%{ transform: translate3d(-4px, -2px, 0) scale(1); }
-  50%{ transform: translate3d(6px, 4px, 0) scale(1.03); }
-}
-@keyframes ctaShine{
-  0%{ transform: translateX(-25%) rotate(12deg); }
-  100%{ transform: translateX(25%) rotate(12deg); }
+  opacity: .95;
+  background:
+    conic-gradient(
+      from 0deg,
+      rgba(var(--cta-glow-1), .12),
+      rgba(var(--cta-glow-2), .10),
+      rgba(var(--cta-glow-1), .12)
+    );
+  filter: blur(16px);
+  animation: ctaSpin 6.5s linear infinite;
 }
 
-@keyframes ctaGradientMove{
-  0%{ background-position: 0% 50%; }
-  50%{ background-position: 100% 50%; }
-  100%{ background-position: 0% 50%; }
+/* لمعة خفيفة تمر بشكل ناعم */
+.btn-cta-animated::after{
+  content: "";
+  position: absolute;
+  inset: -40%;
+  z-index: 0;
+  opacity: .14;
+  background: radial-gradient(120px 80px at 30% 35%, rgba(255,255,255,.9), transparent 60%);
+  transform: translateX(-10%);
+  animation: ctaFloat 4.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ctaSpin{
+  0%{ transform: rotate(0deg); }
+  100%{ transform: rotate(360deg); }
+}
+
+@keyframes ctaFloat{
+  0%,100%{ transform: translate3d(-10%, -6%, 0); }
+  50%{ transform: translate3d(10%, 6%, 0); }
 }
 
 .btn-cta-animated:hover{
   transform: translateY(-1px);
-  box-shadow: 0 18px 44px rgba(var(--cta-glow-1), 0.30);
+  box-shadow: 0 18px 44px rgba(var(--cta-glow-1), 0.26);
   filter: saturate(1.05);
 }
 .btn-cta-animated:active{
   transform: translateY(0px);
 }
-
 /* ---------------------- */
 /* Reveal on scroll (Home) */
 /* ---------------------- */
