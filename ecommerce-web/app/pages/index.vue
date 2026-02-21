@@ -110,7 +110,8 @@ const topBrands = computed(() => {
     <!-- Brands -->
     <section class="mx-auto max-w-6xl px-4 pb-20">
       <!-- 3D circular orbit (logos only) -->
-      <BrandOrbit3D :brands="topBrands" :radius="250" :tilt-deg="18" :speed-sec="18" />
+      <!-- ✅ أبطأنا الحركة + خليناها دائرية (بدون بيضوية) + نزّلنا الخلف شوي -->
+      <BrandOrbit3D :brands="topBrands" :radius="300" :tilt-deg="14" :speed-sec="26" />
     </section>
   </div>
 </template>
