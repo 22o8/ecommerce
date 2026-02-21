@@ -144,7 +144,12 @@ body{
   height: 180%;
   z-index: 0;
   opacity: .16;
+  /*
+    ✅ حركة بدون "قفزة" عند نهاية اللوب:
+    نحرك background-position بدل translateX حتى تكون النهاية = البداية بشكل سلس.
+  */
   background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.9) 45%, transparent 70%);
+  background-size: 200% 100%;
   transform: rotate(12deg);
   animation: ctaShine 3.6s linear infinite;
   pointer-events: none;
@@ -154,8 +159,8 @@ body{
   100%{ transform: rotate(360deg) scale(1.02); }
 }
 @keyframes ctaShine{
-  0%{ transform: translateX(-25%) rotate(12deg); }
-  100%{ transform: translateX(25%) rotate(12deg); }
+  0%{ background-position: 0% 0; }
+  100%{ background-position: 200% 0; }
 }
 
 
@@ -413,11 +418,13 @@ html.theme-light .btn-secondary:hover{
   width: 100%;
   border-radius: 1rem;
   border: 1px solid rgba(var(--border), 1);
-  background: rgba(var(--surface), 0.92);
+  /* ✅ وضوح أعلى للكنترولز داخل الخلفيات الداكنة/المعتمة */
+  background: rgba(var(--surface), 0.98);
   padding: .8rem 1rem;
   font-size: .9rem;
   color: rgb(var(--text));
   outline: none;
+  box-shadow: 0 10px 28px rgba(0,0,0,.14);
   transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
 }
 .input::placeholder{ color: rgba(var(--muted), 0.9); }
@@ -500,11 +507,19 @@ select.input option{
 
 /* Boxed wrapper for search + filters so they're obvious in both themes */
 .control-box{
-  background: rgba(var(--surface-rgb), .92);
+  background: rgba(var(--surface-rgb), .96);
   border: 1px solid rgba(var(--border), 1);
   border-radius: 1rem;
   padding: .75rem;
   box-shadow: var(--shadow-card);
+  backdrop-filter: blur(10px);
+}
+
+/* ✅ تعزيز إضافي على الدارك لأن الخلفية غالباً قريبة من لون السطح */
+html.theme-dark .input,
+html.theme-dark .control-box{
+  border-color: rgba(140, 145, 190, .55);
+  box-shadow: 0 16px 46px rgba(0,0,0,.35);
 }
 
 /* Stronger default borders for secondary/outline buttons */

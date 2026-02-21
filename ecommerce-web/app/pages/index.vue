@@ -109,8 +109,8 @@ const topBrands = computed(() => {
 
     <!-- Brands -->
     <section class="mx-auto max-w-6xl px-4 pb-20">
-      <!-- Moving brands (logos only) -->
-      <BrandMarquee :brands="topBrands" :showName="false" />
+      <!-- 3D circular orbit (logos only) -->
+      <BrandOrbit3D :brands="topBrands" :radius="250" :tilt-deg="18" :speed-sec="18" />
     </section>
   </div>
 </template>
