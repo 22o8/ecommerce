@@ -109,9 +109,22 @@ const topBrands = computed(() => {
 
     <!-- Brands -->
     <section class="mx-auto max-w-6xl px-4 pb-20">
-      <!-- 3D circular orbit (logos only) -->
-      <!-- ✅ أبطأنا الحركة + خليناها دائرية (بدون بيضوية) + نزّلنا الخلف شوي -->
-      <BrandOrbit3D :brands="topBrands" :radius="300" :tilt-deg="14" :speed-sec="26" />
+      <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">{{ t('home.brands') }}</h2>
+          <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">{{ t('home.brandsSubtitle') }}</p>
+        </div>
+        <NuxtLink
+          to="/brands"
+          class="btn inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
+        >
+          {{ t('nav.brands') }}
+          <span aria-hidden="true">→</span>
+        </NuxtLink>
+      </div>
+
+      <!-- Natural brands showcase -->
+      <BrandMarquee :brands="topBrands" />
     </section>
   </div>
 </template>
