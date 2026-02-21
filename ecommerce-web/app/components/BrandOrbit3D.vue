@@ -20,8 +20,8 @@ const api = useApi()
 
 const clean = computed(() => (props.brands ?? []).filter((b): b is Brand => !!b && !!b.slug && !!b.id))
 
-const radius = computed(() => Number(props.radius ?? 240))
-const tilt = computed(() => Number(props.tiltDeg ?? 18))
+const radius = computed(() => Number(props.radius ?? 280))
+const tilt = computed(() => Number(props.tiltDeg ?? 26))
 const speed = computed(() => Number(props.speedSec ?? 18))
 
 const stepDeg = computed(() => (clean.value.length ? 360 / clean.value.length : 0))
@@ -48,7 +48,7 @@ function logoUrl(b: Brand) {
     -->
     <div
       class="orbit-scene"
-      :style="{ '--orbit-tilt': `${tilt}deg`, '--orbit-speed': `${speed}s` } as any"
+      :style="{ '--orbit-tilt': `${tilt}deg`, '--orbit-speed': `${speed}s`, '--orbit-wide': '1.55' } as any"
     >
       <div class="orbit-ring">
         <NuxtLink
@@ -86,10 +86,10 @@ function logoUrl(b: Brand) {
 .orbit-scene{
   position: relative;
   width: 100%;
-  height: 220px;
+  height: 260px;
   display: grid;
   place-items: center;
-  perspective: 1100px;
+  perspective: 820px;
 }
 
 .orbit-ring{
@@ -98,7 +98,7 @@ function logoUrl(b: Brand) {
   height: 0;
   transform-style: preserve-3d;
   /* tilt يخلي الخلفية ترتفع */
-  transform: rotateX(var(--orbit-tilt));
+  transform: translateY(-10px) rotateX(var(--orbit-tilt)) scaleX(var(--orbit-wide));
   animation: orbitSpin var(--orbit-speed) linear infinite;
 }
 
@@ -142,8 +142,8 @@ function logoUrl(b: Brand) {
 }
 
 @keyframes orbitSpin{
-  from{ transform: rotateX(var(--orbit-tilt)) rotateY(0deg); }
-  to{ transform: rotateX(var(--orbit-tilt)) rotateY(360deg); }
+  from{ transform: translateY(-10px) rotateX(var(--orbit-tilt)) scaleX(var(--orbit-wide)) rotateY(0deg); }
+  to{ transform: translateY(-10px) rotateX(var(--orbit-tilt)) scaleX(var(--orbit-wide)) rotateY(360deg); }
 }
 
 @media (prefers-reduced-motion: reduce){
