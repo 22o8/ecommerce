@@ -31,7 +31,10 @@ function itemStyle(idx: number) {
   // rotateY: توزيع العناصر على دائرة
   // translateZ: نصف القطر
   return {
-    transform: `rotateY(${deg}deg) translateZ(${radius.value}px)`,
+    // rotateY(deg) يوزع العناصر حول الحلقة
+    // translateZ(radius) يبعدها عن المركز
+    // rotateY(-deg) يخلي اللوغو دائماً مواجه للكاميرا (يمنع الاختفاء/الوميض خصوصاً على iOS)
+    transform: `rotateY(${deg}deg) translateZ(${radius.value}px) rotateY(${-deg}deg)`,
   } as Record<string, string>
 }
 
@@ -94,6 +97,8 @@ function logoUrl(b: Brand) {
 
 .orbit-ring{
   position: relative;
+  will-change: transform;
+  -webkit-transform-style: preserve-3d;
   width: 0;
   height: 0;
   transform-style: preserve-3d;
@@ -123,11 +128,14 @@ function logoUrl(b: Brand) {
   place-items: center;
   overflow: hidden;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+  transform: translateZ(0.1px);
   transition: transform 220ms ease, box-shadow 220ms ease;
 }
 
 .orbit-item:hover .orbit-card{
-  transform: translateY(-3px) scale(1.03);
+  transform: translateZ(0.1px) translateY(-3px) scale(1.03);
   box-shadow: 0 22px 70px rgba(0,0,0,.18);
 }
 
@@ -135,6 +143,9 @@ function logoUrl(b: Brand) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0.2px);
 }
 
 .orbit-fallback{
