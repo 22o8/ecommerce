@@ -1,5 +1,6 @@
 <template>
   <div class="container mx-auto px-4 py-8">
+    <!-- Header + Filters (no page search; only Navbar search remains) -->
     <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
       <div>
         <h1 class="text-3xl sm:text-4xl font-extrabold rtl-text">{{ t('productsPage.title') }}</h1>
@@ -7,7 +8,22 @@
       </div>
 
       <div class="control-box w-full lg:w-[560px] grid grid-cols-1 sm:grid-cols-2 gap-3">
-<!-- Loading state (API delay) -->
+        <select v-model="sort" class="input" @change="applyFilters" aria-label="Sort">
+          <option value="priceAsc">{{ t('productsPage.sortPriceAsc') }}</option>
+          <option value="priceDesc">{{ t('productsPage.sortPriceDesc') }}</option>
+          <option value="new">{{ t('productsPage.sortNewest') }}</option>
+        </select>
+
+        <select v-model="brand" class="input" @change="applyFilters" aria-label="Brand">
+          <option value="">{{ t('productsPage.allBrands') }}</option>
+          <option v-for="b in brandOptions" :key="b.slug" :value="b.slug">
+            {{ b.name }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading state (API delay) -->
     <div v-if="products.loading && products.items.length === 0" class="mt-6">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div v-for="n in 8" :key="n" class="skeleton-card" />
