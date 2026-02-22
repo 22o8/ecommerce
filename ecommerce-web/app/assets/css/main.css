@@ -660,44 +660,53 @@ html[dir="rtl"] .brands-search-clear{
 }
 
 /* ============================
-   Golden thread / ribbon background (Home)
+   Scroll-reactive ribbon background (Home)
    ============================ */
 .golden-thread{
   position: absolute;
   inset: -40vh -20vw;
   pointer-events: none;
   z-index: 0;
+  /* dynamic variables updated on scroll (see index.vue) */
+  --thread-h: 330;
+  --thread-shift: 0px;
+  --thread-boost: 1;
 }
 .golden-thread::before,
 .golden-thread::after{
   content: "";
   position: absolute;
   inset: 0;
+  /*
+    Smooth "silk ribbon" look (no sharp diagonal edges):
+    - multiple big blurred radial gradients along a soft curve
+    - masked/faded edges to avoid any hard boundary
+  */
   background:
-    radial-gradient(60% 18% at 50% 30%, rgba(230, 201, 120, .55), transparent 62%),
-    radial-gradient(55% 16% at 48% 55%, rgba(255, 214, 120, .35), transparent 65%),
-    linear-gradient(90deg,
-      transparent 0%,
-      rgba(255, 215, 130, .10) 18%,
-      rgba(255, 215, 130, .22) 35%,
-      rgba(255, 215, 130, .10) 52%,
-      transparent 70%);
-  transform: rotate(-14deg) translateY(18vh);
-  filter: blur(6px);
-  opacity: .9;
+    radial-gradient(1200px 220px at 8% calc(18% + var(--thread-shift)), hsla(var(--thread-h), 85%, 65%, calc(.22 * var(--thread-boost))), transparent 70%),
+    radial-gradient(1100px 240px at 35% calc(34% + var(--thread-shift)), hsla(calc(var(--thread-h) + 8), 85%, 68%, calc(.26 * var(--thread-boost))), transparent 72%),
+    radial-gradient(1200px 260px at 62% calc(52% + var(--thread-shift)), hsla(calc(var(--thread-h) - 10), 90%, 62%, calc(.24 * var(--thread-boost))), transparent 74%),
+    radial-gradient(1150px 240px at 88% calc(70% + var(--thread-shift)), hsla(calc(var(--thread-h) + 4), 85%, 70%, calc(.18 * var(--thread-boost))), transparent 75%),
+    radial-gradient(900px 120px at 52% calc(46% + var(--thread-shift)), hsla(calc(var(--thread-h) + 18), 95%, 78%, calc(.16 * var(--thread-boost))), transparent 78%);
+
+  /* soften edges everywhere */
+  -webkit-mask-image: radial-gradient(closest-side at 50% 45%, rgba(0,0,0,.95) 0%, rgba(0,0,0,.75) 55%, rgba(0,0,0,0) 100%);
+          mask-image: radial-gradient(closest-side at 50% 45%, rgba(0,0,0,.95) 0%, rgba(0,0,0,.75) 55%, rgba(0,0,0,0) 100%);
+
+  filter: blur(26px);
+  opacity: .95;
   mix-blend-mode: screen;
 }
 .golden-thread::after{
+  /* subtle specular highlight band that also follows the curve */
   background:
-    linear-gradient(90deg,
-      transparent 0%,
-      rgba(255, 236, 180, .06) 20%,
-      rgba(255, 236, 180, .14) 40%,
-      rgba(255, 236, 180, .06) 60%,
-      transparent 80%);
-  transform: rotate(-14deg) translateY(28vh) scaleY(.65);
-  filter: blur(10px);
-  opacity: .8;
+    radial-gradient(900px 140px at 22% calc(26% + var(--thread-shift)), hsla(calc(var(--thread-h) + 25), 95%, 86%, calc(.12 * var(--thread-boost))), transparent 72%),
+    radial-gradient(900px 140px at 52% calc(44% + var(--thread-shift)), hsla(calc(var(--thread-h) + 30), 95%, 88%, calc(.14 * var(--thread-boost))), transparent 74%),
+    radial-gradient(900px 140px at 80% calc(62% + var(--thread-shift)), hsla(calc(var(--thread-h) + 22), 95%, 84%, calc(.10 * var(--thread-boost))), transparent 76%);
+  -webkit-mask-image: radial-gradient(closest-side at 50% 45%, rgba(0,0,0,.75) 0%, rgba(0,0,0,.55) 55%, rgba(0,0,0,0) 100%);
+          mask-image: radial-gradient(closest-side at 50% 45%, rgba(0,0,0,.75) 0%, rgba(0,0,0,.55) 55%, rgba(0,0,0,0) 100%);
+  filter: blur(30px);
+  opacity: .85;
 }
 
 /* keep content above the ribbon */
