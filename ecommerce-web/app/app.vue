@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useHead, useCookie } from '#app'
+import WaveRibbon from '~/components/WaveRibbon.vue'
 
 type Locale = 'ar' | 'en'
 const localeCookie = useCookie<Locale>('locale', { default: () => 'ar' })
@@ -16,10 +17,15 @@ useHead({
 </script>
 
 <template>
-  <div class="min-h-screen bg-app">
-    <ApiDebugBanner />
-    <NuxtLayout>
-      <NuxtPage :transition="{ name: 'page', mode: 'out-in' }" />
-    </NuxtLayout>
+  <div class="min-h-screen bg-app relative overflow-hidden">
+    <!-- Global animated background ribbon (covers full page/scroll) -->
+    <WaveRibbon />
+
+    <div class="relative z-10">
+      <ApiDebugBanner />
+      <NuxtLayout>
+        <NuxtPage :transition="{ name: 'page', mode: 'out-in' }" />
+      </NuxtLayout>
+    </div>
   </div>
 </template>

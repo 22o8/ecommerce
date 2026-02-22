@@ -60,8 +60,10 @@ function updatePath(progress: number, t: number) {
   const w = window.innerWidth
   const h = window.innerHeight
 
-  // Make it long so it runs across the whole page height visually
-  const H = Math.max(document.documentElement.scrollHeight, h)
+  // Fixed, full-viewport ribbon layer: keep SVG size stable and animate colors
+  // based on scroll. This prevents section-limited backgrounds and avoids
+  // visible hard edges.
+  const H = h * 1.6
 
   // a gentle wave that shifts with time + scroll (no sharp edges)
   const amp = lerp(90, 140, progress)
@@ -87,8 +89,8 @@ function updatePath(progress: number, t: number) {
   if (pathMain.value) pathMain.value.setAttribute('d', d)
   if (pathSpec.value) pathSpec.value.setAttribute('d', d2)
 
-  // keep wrapper tall
-  if (wrapper.value) wrapper.value.style.height = `${H}px`
+  // keep wrapper matching viewport so it covers the screen at all times
+  if (wrapper.value) wrapper.value.style.height = `${h}px`
 }
 
 function loop(ts: number) {
@@ -187,7 +189,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .wave-ribbon{
-  position: absolute;
+  position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
@@ -196,15 +198,16 @@ onBeforeUnmount(() => {
 }
 .wave-ribbon__svg{
   position: absolute;
-  inset: -25vh -15vw;
-  width: 130vw;
-  height: calc(100% + 50vh);
+  inset: -18vh -14vw;
+  width: 128vw;
+  height: calc(100% + 36vh);
   overflow: visible;
 }
 
 :global(html.theme-light) .wave-ribbon{
-  mix-blend-mode: multiply;
-  opacity: .65;
+  /* light theme: don't wash the UI, just a subtle silky tint */
+  mix-blend-mode: normal;
+  opacity: .18;
 }
 :global(html.theme-dark) .wave-ribbon{
   mix-blend-mode: screen;

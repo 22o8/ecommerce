@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import WaveRibbon from '~/components/WaveRibbon.vue'
 import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
@@ -64,8 +63,7 @@ const topBrands = computed(() => {
 </script>
 
 <template>
-  <div class="min-h-screen relative overflow-hidden">
-    <WaveRibbon />
+  <div class="min-h-screen">
     <!-- Hero -->
     <section class="relative">
       <div class="mx-auto max-w-6xl px-4 py-20 sm:py-24">

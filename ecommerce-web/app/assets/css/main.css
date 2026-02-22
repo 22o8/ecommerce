@@ -95,7 +95,7 @@ body{
 }
 
 /* Utility tokens */
-.bg-app{ background: rgb(var(--bg)); }
+.bg-app{ background: rgb(var(--bg)); isolation: isolate; }
 .bg-surface{ background: rgb(var(--surface)); }
 .bg-surface-2{ background: rgb(var(--surface-2)); }
 .text-muted{ color: rgb(var(--muted)); }
