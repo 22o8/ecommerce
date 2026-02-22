@@ -81,7 +81,10 @@ function extractErr(e: any) {
 
 function formatMoney(v: number) {
   const n = Number(v || 0)
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(n)
+  const config = useRuntimeConfig()
+  const rate = Number((config.public as any).usdToIqdRate ?? 1300)
+  const valueIQD = Number.isFinite(rate) ? n * rate : n
+  return new Intl.NumberFormat('ar-IQ', { style: 'currency', currency: 'IQD', maximumFractionDigits: 0 }).format(valueIQD)
 }
 
 async function fetchStats() {

@@ -123,9 +123,12 @@ const fav = computed(() => isInWishlist(String(p.value?.id ?? '')))
 function formatPrice(v: any) {
   const n = Number(v ?? 0)
   try {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
+    const config = useRuntimeConfig()
+    const rate = Number((config.public as any).usdToIqdRate ?? 1300)
+    const valueIQD = Number.isFinite(rate) ? n * rate : n
+    return new Intl.NumberFormat('ar-IQ', { style: 'currency', currency: 'IQD', maximumFractionDigits: 0 }).format(valueIQD)
   } catch {
-    return `$${n.toFixed(2)}`
+    return `${Math.round(n)} د.ع`
   }
 }
 

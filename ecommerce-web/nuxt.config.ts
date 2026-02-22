@@ -16,6 +16,9 @@ export default defineNuxtConfig({
       'https://ecommerce-api-22o8.fly.dev',
 
     public: {
+      // سعر التحويل الافتراضي (قابل للتعديل من ENV)
+      // ملاحظة: الأسعار المخزنة عندك حالياً تبدو بالدولار، وهنا نعرضها بالدينار.
+      usdToIqdRate: Number(process.env.NUXT_PUBLIC_USD_TO_IQD_RATE || 1300),
       whatsappPhone: process.env.NUXT_PUBLIC_WHATSAPP_PHONE || '',
 
       // ✅ الافتراضي (الأفضل على Vercel):
