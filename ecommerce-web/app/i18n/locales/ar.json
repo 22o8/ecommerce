@@ -63,7 +63,20 @@
     },
     "featured": {
       "title": "المنتجات المميزة"
-    }
+    },
+    "statsFastShipping": "توصيل سريع",
+    "statsOriginal": "منتجات أصلية",
+    "statsSupport": "دعم العملاء",
+    "spotlightTitle": "تسوّق حسب التصنيف",
+    "spotlightSubtitle": "اختصارات سريعة توصلك للي تريده بثواني.",
+    "viewAll": "عرض الكل",
+    "catSkincare": "العناية بالبشرة",
+    "catSerum": "السيروم",
+    "catSunscreen": "واقي الشمس",
+    "catMakeup": "المكياج",
+    "catPerfume": "العطور",
+    "brandShowcaseTitle": "عرض البراندات",
+    "brandShowcaseSubtitle": "استكشف أفضل البراندات بطريقة تفاعلية ثلاثية الأبعاد."
   },
   "productsPage": {
     "title": "المنتجات",
@@ -417,6 +430,8 @@
   "notFound": "غير موجود",
   "orderCreated": "تم إنشاء الطلب",
   "createOrder": "إنشاء طلب",
+  "buyNow": "شراء الآن",
+  "freeShippingHint": "الشحن المجاني يبدأ من 50$. المتبقي",
   "save": "حفظ",
   "clearCart": "تفريغ السلة",
   "create": "إنشاء",

@@ -66,7 +66,20 @@
     },
     "featured": {
       "title": "Featured Products"
-    }
+    },
+    "statsFastShipping": "Fast delivery",
+    "statsOriginal": "Authentic products",
+    "statsSupport": "Customer support",
+    "spotlightTitle": "Shop by category",
+    "spotlightSubtitle": "Quick picks to reach what you want in seconds.",
+    "viewAll": "View all",
+    "catSkincare": "Skincare",
+    "catSerum": "Serums",
+    "catSunscreen": "Sunscreen",
+    "catMakeup": "Makeup",
+    "catPerfume": "Perfumes",
+    "brandShowcaseTitle": "Brand showcase",
+    "brandShowcaseSubtitle": "Explore top brands in an interactive 3D view."
   },
   "productsPage": {
     "title": "Products",
@@ -393,6 +406,8 @@
   "notFound": "Not found",
   "orderCreated": "Order created",
   "createOrder": "Create order",
+  "buyNow": "Buy now",
+  "freeShippingHint": "Free shipping starts at $50. Remaining",
   "save": "Save",
   "clearCart": "Clear cart",
   "create": "Create",

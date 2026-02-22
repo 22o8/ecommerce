@@ -48,6 +48,8 @@ export default defineNuxtConfig({
   },
 
   app: {
+    pageTransition: { name: 'page', mode: 'out-in' },
+    layoutTransition: { name: 'layout', mode: 'out-in' },
     head: {
       // ✅ Arabic first (RTL)
       // Force LTR for all locales.

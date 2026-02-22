@@ -74,9 +74,20 @@
       </div>
 
       <div class="mt-6 grid gap-3">
+        <!-- small "free shipping" progress (UX wow) -->
+        <div class="rounded-2xl border border-app bg-surface p-3 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="rtl-text text-muted">{{ t('freeShippingHint') }}</span>
+            <span class="font-bold">{{ fmtMoney(Math.max(0, freeShippingMin - cart.total)) }}</span>
+          </div>
+          <div class="mt-2 h-2 rounded-full bg-surface-2 overflow-hidden">
+            <div class="h-full rounded-full bg-[rgb(var(--primary))] transition-all" :style="{ width: freeShippingPct + '%' }" />
+          </div>
+        </div>
+
         <UiButton :disabled="!cart.items.length" :loading="loading" @click="createOrder">
-          <Icon name="mdi:receipt-text-plus-outline" class="text-lg" />
-          <span class="rtl-text">{{ t('createOrder') }}</span>
+          <Icon name="mdi:cart-check" class="text-lg" />
+          <span class="rtl-text">{{ t('buyNow') }}</span>
         </UiButton>
 
         <UiButton :disabled="!cart.items.length" variant="ghost" @click="openWhatsApp">
@@ -113,6 +124,12 @@ const config = useRuntimeConfig()
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
+
+const freeShippingMin = 50
+const freeShippingPct = computed(() => {
+  if (freeShippingMin <= 0) return 100
+  return Math.min(100, Math.round((cart.total / freeShippingMin) * 100))
+})
 
 function fmtMoney(v: number) {
   return new Intl.NumberFormat('ar-IQ', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(v)

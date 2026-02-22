@@ -64,7 +64,7 @@ const topBrands = computed(() => {
 <template>
   <div class="min-h-screen">
     <!-- Hero -->
-    <section class="relative">
+    <section class="relative hero-shimmer rounded-3xl mx-auto max-w-6xl px-4">
       <div class="mx-auto max-w-6xl px-4 py-20 sm:py-24">
         <div class="text-center">
           <h1 class="text-4xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-6xl">
@@ -90,6 +90,22 @@ const topBrands = computed(() => {
             >
               {{ t('homeHero.categories') }}
             </NuxtLink>
+          </div>
+
+          <!-- quick stats -->
+          <div class="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div class="glass-panel glow-border rounded-2xl p-4">
+              <div class="text-xs opacity-70">{{ t('home.statsFastShipping') }}</div>
+              <div class="mt-1 text-2xl font-extrabold">24-48h</div>
+            </div>
+            <div class="glass-panel glow-border rounded-2xl p-4">
+              <div class="text-xs opacity-70">{{ t('home.statsOriginal') }}</div>
+              <div class="mt-1 text-2xl font-extrabold">100%</div>
+            </div>
+            <div class="glass-panel glow-border rounded-2xl p-4">
+              <div class="text-xs opacity-70">{{ t('home.statsSupport') }}</div>
+              <div class="mt-1 text-2xl font-extrabold">24/7</div>
+            </div>
           </div>
         </div>
       </div>
@@ -131,6 +147,47 @@ const topBrands = computed(() => {
 
       <!-- Natural brands showcase -->
       <BrandMarquee :brands="topBrands" />
+    </section>
+
+    <!-- 3D brand showcase (WOW) -->
+    <section class="mx-auto max-w-6xl px-4 pb-24">
+      <div class="glass-panel glow-border rounded-3xl p-6 sm:p-10">
+        <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
+          <div>
+            <h2 class="text-2xl font-extrabold tracking-tight sm:text-4xl">{{ t('home.brandShowcaseTitle') }}</h2>
+            <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">{{ t('home.brandShowcaseSubtitle') }}</p>
+          </div>
+          <NuxtLink to="/brands" class="btn inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold">
+            {{ t('home.viewAll') }}
+          </NuxtLink>
+        </div>
+
+        <div class="mt-6">
+          <BrandOrbit3D :brands="topBrands" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Spotlight categories -->
+    <section class="mx-auto max-w-6xl px-4 pb-24">
+      <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">{{ t('home.spotlightTitle') }}</h2>
+          <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">{{ t('home.spotlightSubtitle') }}</p>
+        </div>
+        <NuxtLink to="/products" class="btn inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold">
+          {{ t('home.viewAll') }}
+          <span aria-hidden="true">→</span>
+        </NuxtLink>
+      </div>
+
+      <div class="mt-6 flex flex-wrap gap-2">
+        <NuxtLink to="/products?category=skincare" class="chip">🧴 {{ t('home.catSkincare') }}</NuxtLink>
+        <NuxtLink to="/products?category=serum" class="chip">💧 {{ t('home.catSerum') }}</NuxtLink>
+        <NuxtLink to="/products?category=sunscreen" class="chip">☀️ {{ t('home.catSunscreen') }}</NuxtLink>
+        <NuxtLink to="/products?category=makeup" class="chip">💄 {{ t('home.catMakeup') }}</NuxtLink>
+        <NuxtLink to="/products?category=perfume" class="chip">🌸 {{ t('home.catPerfume') }}</NuxtLink>
+      </div>
     </section>
   </div>
 </template>
