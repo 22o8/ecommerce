@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed } from 'vue'
+import WaveRibbon from '~/components/WaveRibbon.vue'
 import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
@@ -60,70 +61,11 @@ const topBrands = computed(() => {
   return uniq.slice(0, 10)
 })
 
-// ============================
-// Scroll-reactive background ribbon (smooth color morph)
-// ============================
-const threadEl = ref<HTMLElement | null>(null)
-
-function lerp(a: number, b: number, t: number) {
-  return a + (b - a) * t
-}
-
-function clamp01(v: number) {
-  return Math.min(1, Math.max(0, v))
-}
-
-function interpHue(progress: number) {
-  // Pink -> Purple -> Gold
-  const stops = [
-    { p: 0.0, h: 330 },
-    { p: 0.40, h: 285 },
-    { p: 0.78, h: 45 },
-    { p: 1.0, h: 45 },
-  ]
-  const p = clamp01(progress)
-  for (let i = 0; i < stops.length - 1; i++) {
-    const a = stops[i]
-    const b = stops[i + 1]
-    if (p >= a.p && p <= b.p) {
-      const t = (p - a.p) / Math.max(0.0001, b.p - a.p)
-      // smoothstep for nicer transitions
-      const s = t * t * (3 - 2 * t)
-      return lerp(a.h, b.h, s)
-    }
-  }
-  return stops[stops.length - 1].h
-}
-
-const onScroll = () => {
-  const el = threadEl.value
-  if (!el) return
-  const doc = document.documentElement
-  const max = Math.max(1, doc.scrollHeight - doc.clientHeight)
-  const p = clamp01(doc.scrollTop / max)
-  const hue = interpHue(p)
-
-  el.style.setProperty('--thread-h', hue.toFixed(1))
-  // subtle motion: move the highlights along the page as you scroll
-  el.style.setProperty('--thread-shift', `${(p * 220).toFixed(1)}px`)
-  el.style.setProperty('--thread-boost', `${(0.85 + p * 0.35).toFixed(2)}`)
-}
-
-onMounted(() => {
-  onScroll()
-  window.addEventListener('scroll', onScroll, { passive: true })
-  window.addEventListener('resize', onScroll)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('scroll', onScroll)
-  window.removeEventListener('resize', onScroll)
-})
 </script>
 
 <template>
   <div class="min-h-screen relative overflow-hidden">
-    <div ref="threadEl" class="golden-thread" aria-hidden="true"></div>
+    <WaveRibbon />
     <!-- Hero -->
     <section class="relative">
       <div class="mx-auto max-w-6xl px-4 py-20 sm:py-24">
@@ -147,7 +89,7 @@ onBeforeUnmount(() => {
 
             <NuxtLink
               to="/brands"
-              class="btn-cta-animated btn-cta-outline inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
+              class="btn-cta-animated inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
             >
               {{ t('homeHero.categories') }}
             </NuxtLink>
