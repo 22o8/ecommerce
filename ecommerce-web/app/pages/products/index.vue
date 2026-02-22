@@ -7,7 +7,7 @@
         <p class="mt-2 text-muted rtl-text">{{ t('productsPage.subtitle') }}</p>
       </div>
 
-      <div class="control-box control-box-strong w-full lg:w-[560px] grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="control-box w-full lg:w-[560px] grid grid-cols-1 sm:grid-cols-2 gap-3">
         <select v-model="sort" class="input" @change="applyFilters" aria-label="Sort">
           <option value="priceAsc">{{ t('productsPage.sortPriceAsc') }}</option>
           <option value="priceDesc">{{ t('productsPage.sortPriceDesc') }}</option>

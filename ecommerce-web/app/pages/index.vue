@@ -59,7 +59,6 @@ const topBrands = computed(() => {
   }
   return uniq.slice(0, 10)
 })
-
 </script>
 
 <template>
@@ -87,7 +86,7 @@ const topBrands = computed(() => {
 
             <NuxtLink
               to="/brands"
-              class="btn-cta-animated inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
+              class="btn-cta-animated btn-cta-outline inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
             >
               {{ t('homeHero.categories') }}
             </NuxtLink>

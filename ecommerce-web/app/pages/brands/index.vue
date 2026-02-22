@@ -15,7 +15,7 @@
           />
           <button
             v-if="q"
-            class="absolute left-3 top-1/2 -translate-y-1/2 icon-btn brands-search-clear"
+            class="absolute left-3 top-1/2 -translate-y-1/2 icon-btn"
             @click="q = ''"
             aria-label="clear"
           >

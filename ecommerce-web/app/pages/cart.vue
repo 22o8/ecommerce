@@ -74,9 +74,9 @@
       </div>
 
       <div class="mt-6 grid gap-3">
-        <UiButton :disabled="!cart.items.length" :loading="loading" @click="buyNow">
-          <Icon name="mdi:credit-card-check-outline" class="text-lg" />
-          <span class="rtl-text">{{ t('buyNow') }}</span>
+        <UiButton :disabled="!cart.items.length" :loading="loading" @click="createOrder">
+          <Icon name="mdi:receipt-text-plus-outline" class="text-lg" />
+          <span class="rtl-text">{{ t('createOrder') }}</span>
         </UiButton>
 
         <UiButton :disabled="!cart.items.length" variant="ghost" @click="openWhatsApp">
@@ -104,6 +104,7 @@ import UiButton from '~/components/ui/UiButton.vue'
 import { buildAssetUrl } from '~/composables/useApi'
 
 const { t } = useI18n()
+const api = useApi()
 const cart = useCartStore()
 const auth = useAuthStore()
 const profile = useProfileStore()
@@ -141,9 +142,27 @@ function openWhatsApp() {
   window.open(url, '_blank')
 }
 
-function buyNow() {
-  // الشراء الآن: تحويل مباشر إلى واتساب مع تفاصيل الطلب
-  openWhatsApp()
+async function createOrder() {
+  success.value = ''
+  error.value = ''
+  if (!auth.isAuthed) {
+    error.value = t('loginToCheckout')
+    return
+  }
+  loading.value = true
+  try {
+    const body = {
+      items: cart.items.map(i => ({ productId: i.id, quantity: i.quantity })),
+      notes: whatsappText(),
+    }
+    const res = await api.post<{ id: string }>(`/Checkout/cart`, body)
+    success.value = `${t('orderCreated')} #${res.id}`
+    cart.clear()
+  } catch (e: any) {
+    error.value = e?.data?.message || e?.message || t('orderFailed')
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => profile.hydrateFromAuth(auth.token || ''))
