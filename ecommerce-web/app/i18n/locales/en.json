@@ -79,7 +79,10 @@
     "catMakeup": "Makeup",
     "catPerfume": "Perfumes",
     "brandShowcaseTitle": "Brand showcase",
-    "brandShowcaseSubtitle": "Explore top brands in an interactive 3D view."
+    "brandShowcaseSubtitle": "Explore top brands in an interactive 3D view.",
+    "tapToExplore": "Tap to explore",
+    "catMoisturizer": "Moisturizer",
+    "catCleanser": "Cleanser"
   },
   "productsPage": {
     "title": "Products",

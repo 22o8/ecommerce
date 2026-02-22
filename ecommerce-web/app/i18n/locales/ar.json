@@ -76,7 +76,10 @@
     "catMakeup": "المكياج",
     "catPerfume": "العطور",
     "brandShowcaseTitle": "عرض البراندات",
-    "brandShowcaseSubtitle": "استكشف أفضل البراندات بطريقة تفاعلية ثلاثية الأبعاد."
+    "brandShowcaseSubtitle": "استكشف أفضل البراندات بطريقة تفاعلية ثلاثية الأبعاد.",
+    "tapToExplore": "اضغط للاستكشاف",
+    "catMoisturizer": "مرطّب",
+    "catCleanser": "غسول"
   },
   "productsPage": {
     "title": "المنتجات",
