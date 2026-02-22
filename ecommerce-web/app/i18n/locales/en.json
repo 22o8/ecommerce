@@ -428,5 +428,6 @@
     "checkout": "Checkout",
     "emptyTitle": "Your cart is empty",
     "emptyDesc": "Add products to see them here."
-  }
+  },
+  "buyNow": "Buy now"
 }

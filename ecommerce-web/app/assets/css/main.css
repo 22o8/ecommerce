@@ -640,3 +640,69 @@ img{max-width:100%; height:auto;}
 html.theme-dark .control-box-strong{
   box-shadow: 0 22px 64px rgba(0,0,0,.22);
 }
+
+
+/* ============================
+   RTL fixes for select arrows + clear buttons
+   ============================ */
+html[dir="rtl"] select.input{
+  background-position:
+    20px calc(1em + 2px),
+    15px calc(1em + 2px),
+    2.5em 0.5em;
+  padding-left: 2.5rem;
+  padding-right: 1rem;
+}
+
+html[dir="rtl"] .brands-search-clear{
+  left: auto !important;
+  right: .75rem !important;
+}
+
+/* ============================
+   Golden thread / ribbon background (Home)
+   ============================ */
+.golden-thread{
+  position: absolute;
+  inset: -40vh -20vw;
+  pointer-events: none;
+  z-index: 0;
+}
+.golden-thread::before,
+.golden-thread::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 18% at 50% 30%, rgba(230, 201, 120, .55), transparent 62%),
+    radial-gradient(55% 16% at 48% 55%, rgba(255, 214, 120, .35), transparent 65%),
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 215, 130, .10) 18%,
+      rgba(255, 215, 130, .22) 35%,
+      rgba(255, 215, 130, .10) 52%,
+      transparent 70%);
+  transform: rotate(-14deg) translateY(18vh);
+  filter: blur(6px);
+  opacity: .9;
+  mix-blend-mode: screen;
+}
+.golden-thread::after{
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 236, 180, .06) 20%,
+      rgba(255, 236, 180, .14) 40%,
+      rgba(255, 236, 180, .06) 60%,
+      transparent 80%);
+  transform: rotate(-14deg) translateY(28vh) scaleY(.65);
+  filter: blur(10px);
+  opacity: .8;
+}
+
+/* keep content above the ribbon */
+.golden-thread ~ *{
+  position: relative;
+  z-index: 1;
+}
+

@@ -62,7 +62,8 @@ const topBrands = computed(() => {
 </script>
 
 <template>
-  <div class="min-h-screen">
+  <div class="min-h-screen relative overflow-hidden">
+    <div class="golden-thread" aria-hidden="true"></div>
     <!-- Hero -->
     <section class="relative">
       <div class="mx-auto max-w-6xl px-4 py-20 sm:py-24">
