@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useHead, useCookie } from '#app'
-import PaperSilkBackground from '~/components/PaperSilkBackground.vue'
+import BackgroundSparkles from '~/components/BackgroundSparkles.vue'
 
 type Locale = 'ar' | 'en'
 const localeCookie = useCookie<Locale>('locale', { default: () => 'ar' })
@@ -11,16 +11,15 @@ useHead({
     // Keep layout stable: always LTR and do not change structural classes when locale changes.
     lang: locale,
     dir: 'ltr',
-    // Theme classes are managed by the UI store (theme-light/theme-dark).
-    class: 'ltr',
+    class: 'theme-light ltr',
   },
 })
 </script>
 
 <template>
   <div class="min-h-screen bg-app relative overflow-hidden">
-    <!-- Global paper/silk texture + scroll-tinted overlay (covers full page/scroll) -->
-    <PaperSilkBackground />
+    <!-- Solid theme background + subtle sparkles overlay (full viewport) -->
+    <BackgroundSparkles />
 
     <div class="relative z-10">
       <ApiDebugBanner />

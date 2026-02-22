@@ -95,9 +95,7 @@ body{
 }
 
 /* Utility tokens */
-/* Use the scroll-tinted silk background (if present) as the base surface.
-   Falls back to solid theme background when the silk layer isn't mounted. */
-.bg-app{ background: var(--silk-tint-bg, rgb(var(--bg))); isolation: isolate; }
+.bg-app{ background: rgb(var(--bg)); isolation: isolate; }
 .bg-surface{ background: rgb(var(--surface)); }
 .bg-surface-2{ background: rgb(var(--surface-2)); }
 .text-muted{ color: rgb(var(--muted)); }
