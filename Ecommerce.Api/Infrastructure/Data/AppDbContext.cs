@@ -63,6 +63,16 @@ public class AppDbContext : DbContext
             .HasPrecision(3, 2); // مثل 4.50
 
         // =========================
+        // ✅ Favorites & Views
+        // =========================
+        modelBuilder.Entity<Favorite>()
+            .HasIndex(f => new { f.UserId, f.ProductId })
+            .IsUnique();
+
+        modelBuilder.Entity<ProductView>()
+            .HasIndex(v => new { v.ProductId, v.CreatedAt });
+
+        // =========================
         // ✅ Brand config
         // =========================
         modelBuilder.Entity<Brand>()

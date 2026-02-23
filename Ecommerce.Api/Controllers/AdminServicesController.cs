@@ -26,7 +26,8 @@ public class AdminServicesController : ControllerBase
             .Select(s => new
             {
                 s.Id, s.Title, s.Slug, s.Description, s.IsPublished, s.CreatedAt,
-                Packages = s.Packages.Select(p => new { p.Id, p.Name, p.PriceUsd, p.DeliveryDays, p.Features }).ToList(),
+                Packages = s.Packages.Select(p => new { p.Id, p.Name, p.PriceIqd,
+                        p.PriceUsd, p.DeliveryDays, p.Features }).ToList(),
                 Requirements = s.Requirements.OrderBy(r => r.Order).Select(r => new { r.Id, r.Question, r.IsRequired, r.Order }).ToList()
             })
             .ToListAsync();
@@ -66,6 +67,7 @@ public class AdminServicesController : ControllerBase
             service.Packages.Add(new ServicePackage
             {
                 Name = (p.Name ?? "Basic").Trim(),
+                PriceIqd = (p.PriceIqd > 0 ? p.PriceIqd : p.PriceUsd),
                 PriceUsd = p.PriceUsd,
                 DeliveryDays = p.DeliveryDays <= 0 ? 3 : p.DeliveryDays,
                 Features = p.Features?.Trim() ?? ""
@@ -128,6 +130,7 @@ public class AdminServicesController : ControllerBase
                 service.Packages.Add(new ServicePackage
                 {
                     Name = (p.Name ?? "Basic").Trim(),
+                    PriceIqd = (p.PriceIqd > 0 ? p.PriceIqd : p.PriceUsd),
                     PriceUsd = p.PriceUsd,
                     DeliveryDays = p.DeliveryDays <= 0 ? 3 : p.DeliveryDays,
                     Features = p.Features?.Trim() ?? ""
@@ -190,7 +193,9 @@ public class UpdateServiceRequest
 public class ServicePackageDto
 {
     public string Name { get; set; } = "Basic";
-    public decimal PriceUsd { get; set; }
+    public decimal PriceIqd { get; set; }
+
+        public decimal PriceUsd { get; set; }
     public int DeliveryDays { get; set; } = 3;
     public string? Features { get; set; }
 }

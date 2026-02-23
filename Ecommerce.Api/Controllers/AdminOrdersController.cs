@@ -30,6 +30,7 @@ public class AdminOrdersController : ControllerBase
                 {
                     o.Id,
                     o.Status,
+                    o.TotalIqd,
                     o.TotalUsd,
                     o.CreatedAt,
 
@@ -44,7 +45,9 @@ public class AdminOrdersController : ControllerBase
                     {
                         i.ItemType,
                         i.Quantity,
+                        i.UnitPriceIqd,
                         i.UnitPriceUsd,
+                        i.LineTotalIqd,
                         i.LineTotalUsd,
                         i.ProductId,
                         i.ServiceId,
@@ -57,6 +60,7 @@ public class AdminOrdersController : ControllerBase
                         p.Id,
                         p.Provider,
                         p.Status,
+                        p.AmountIqd,
                         p.AmountUsd
                     }).ToList()
                 })

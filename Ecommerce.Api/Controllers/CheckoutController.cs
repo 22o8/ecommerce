@@ -42,7 +42,8 @@ public class CheckoutController : ControllerBase
         {
             UserId = userId,
             Status = "PendingPayment",
-            TotalUsd = product.PriceUsd * qty
+            TotalUsd = product.PriceUsd * qty,
+            TotalIqd = product.PriceIqd * qty
         };
 
         order.Items.Add(new OrderItem
@@ -51,7 +52,9 @@ public class CheckoutController : ControllerBase
             ProductId = product.Id,
             UnitPriceUsd = product.PriceUsd,
             Quantity = qty,
-            LineTotalUsd = product.PriceUsd * qty
+            LineTotalUsd = product.PriceUsd * qty,
+            UnitPriceIqd = product.PriceIqd,
+            LineTotalIqd = product.PriceIqd * qty
         });
 
         // إنشاء Payment (Mock)
@@ -61,7 +64,8 @@ public class CheckoutController : ControllerBase
             Provider = "Mock",
             Status = "Pending",
             ProviderRef = $"MOCK-{Guid.NewGuid():N}",
-            AmountUsd = order.TotalUsd
+            AmountUsd = order.TotalUsd,
+            AmountIqd = order.TotalIqd
         };
 
         order.Payments.Add(payment);
@@ -74,6 +78,8 @@ public class CheckoutController : ControllerBase
             orderId = order.Id,
             status = order.Status,
             amountUsd = order.TotalUsd,
+            amountIqd = order.TotalIqd,
+            amountIqd = order.TotalIqd,
             payment = new { payment.Id, payment.Provider, payment.Status, payment.ProviderRef }
         });
     }
@@ -115,14 +121,17 @@ public class CheckoutController : ControllerBase
         {
             UserId = userId,
             Status = "PendingPayment",
-            TotalUsd = 0
+            TotalUsd = 0,
+            TotalIqd = 0
         };
 
         foreach (var i in items)
         {
             var p = products.First(x => x.Id == i.ProductId);
-            var lineTotal = p.PriceUsd * i.Quantity;
-            order.TotalUsd += lineTotal;
+            var lineTotalUsd = p.PriceUsd * i.Quantity;
+            var lineTotalIqd = p.PriceIqd * i.Quantity;
+            order.TotalUsd += lineTotalUsd;
+            order.TotalIqd += lineTotalIqd;
 
             order.Items.Add(new OrderItem
             {
@@ -130,7 +139,9 @@ public class CheckoutController : ControllerBase
                 ProductId = p.Id,
                 UnitPriceUsd = p.PriceUsd,
                 Quantity = i.Quantity,
-                LineTotalUsd = lineTotal
+                LineTotalUsd = lineTotalUsd,
+                UnitPriceIqd = p.PriceIqd,
+                LineTotalIqd = lineTotalIqd
             });
         }
 
@@ -140,7 +151,8 @@ public class CheckoutController : ControllerBase
             Provider = "Mock",
             Status = "Pending",
             ProviderRef = $"MOCK-{Guid.NewGuid():N}",
-            AmountUsd = order.TotalUsd
+            AmountUsd = order.TotalUsd,
+            AmountIqd = order.TotalIqd
         };
 
         order.Payments.Add(payment);
@@ -153,7 +165,8 @@ public class CheckoutController : ControllerBase
             orderId = order.Id,
             status = order.Status,
             amountUsd = order.TotalUsd,
-            items = order.Items.Select(x => new { x.ProductId, x.Quantity, x.UnitPriceUsd, x.LineTotalUsd }).ToList(),
+            amountIqd = order.TotalIqd,
+            items = order.Items.Select(x => new { x.ProductId, x.Quantity, x.UnitPriceIqd, x.LineTotalIqd, x.UnitPriceUsd, x.LineTotalUsd }).ToList(),
             payment = new { payment.Id, payment.Provider, payment.Status, payment.ProviderRef }
         });
     }
@@ -181,7 +194,9 @@ public class CheckoutController : ControllerBase
         {
             UserId = userId,
             Status = "PendingPayment",
-            TotalUsd = price
+            TotalUsd = price,
+            TotalIqd = price,
+            TotalIqd = price
         };
 
         order.Items.Add(new OrderItem
@@ -192,7 +207,8 @@ public class CheckoutController : ControllerBase
             ServiceRequestId = sr.Id,
             UnitPriceUsd = price,
             Quantity = 1,
-            LineTotalUsd = price
+            LineTotalUsd = price,
+            TotalIqd = price
         });
 
         var payment = new Payment
@@ -201,7 +217,8 @@ public class CheckoutController : ControllerBase
             Provider = "Mock",
             Status = "Pending",
             ProviderRef = $"MOCK-{Guid.NewGuid():N}",
-            AmountUsd = order.TotalUsd
+            AmountUsd = order.TotalUsd,
+            AmountIqd = order.TotalIqd
         };
 
         order.Payments.Add(payment);
@@ -214,6 +231,7 @@ public class CheckoutController : ControllerBase
             orderId = order.Id,
             status = order.Status,
             amountUsd = order.TotalUsd,
+            amountIqd = order.TotalIqd,
             service = new { sr.Id, sr.Service.Title, package = sr.Package.Name },
             payment = new { payment.Id, payment.Provider, payment.Status, payment.ProviderRef }
         });

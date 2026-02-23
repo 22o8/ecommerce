@@ -7,6 +7,15 @@ public class Product
     public string Title { get; set; } = "";
     public string Slug { get; set; } = "";
     public string Description { get; set; } = "";
+
+    /// <summary>
+    /// السعر بالدينار العراقي (المعتمد في الواجهة).
+    /// </summary>
+    public decimal PriceIqd { get; set; }
+
+    /// <summary>
+    /// (قديم) كان يستخدم بالدولار. أبقيناه للتوافق الخلفي فقط.
+    /// </summary>
     public decimal PriceUsd { get; set; }
 
     // Brand / فهرسة

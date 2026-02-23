@@ -46,8 +46,8 @@ public class ProductsController : ControllerBase
 
         baseQuery = (query.Sort ?? "new") switch
         {
-            "price:asc" or "priceAsc" => baseQuery.OrderBy(p => p.PriceUsd),
-            "price:desc" or "priceDesc" => baseQuery.OrderByDescending(p => p.PriceUsd),
+            "price:asc" or "priceAsc" => baseQuery.OrderBy(p => p.PriceIqd),
+            "price:desc" or "priceDesc" => baseQuery.OrderByDescending(p => p.PriceIqd),
             _ => baseQuery.OrderByDescending(p => p.CreatedAt),
         };
 
@@ -62,6 +62,7 @@ public class ProductsController : ControllerBase
                 p.Title,
                 p.Slug,
                 p.Description,
+                p.PriceIqd,
                 p.PriceUsd,
                 p.RatingAvg,
                 p.Brand,
@@ -104,6 +105,7 @@ public class ProductsController : ControllerBase
                 p.Title,
                 p.Slug,
                 p.Description,
+                p.PriceIqd,
                 p.PriceUsd,
                 p.RatingAvg,
                 p.Brand,
@@ -131,7 +133,8 @@ public class ProductsController : ControllerBase
                     p.Title,
                     p.Slug,
                     p.Description,
-                    p.PriceUsd,
+                    p.PriceIqd,
+                p.PriceUsd,
                     p.RatingAvg,
                     p.Brand,
                     p.RatingCount,
@@ -165,6 +168,7 @@ public class ProductsController : ControllerBase
                 x.Title,
                 x.Slug,
                 x.Description,
+                x.PriceIqd,
                 x.PriceUsd,
                 x.RatingAvg,
                 x.Brand,
@@ -215,6 +219,7 @@ public class ProductsController : ControllerBase
                 x.Title,
                 x.Slug,
                 x.Description,
+                x.PriceIqd,
                 x.PriceUsd,
                 x.RatingAvg,
                 x.Brand,
@@ -230,5 +235,33 @@ public class ProductsController : ControllerBase
 
         if (p == null) return NotFound(new { message = "Product not found" });
         return Ok(p);
+    }
+
+    // POST /api/products/{id}/view
+    // يناديه الفرونت كل مرة تفتح تفاصيل منتج (S2).
+    [HttpPost("{id:guid}/view")]
+    [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+    public async Task<IActionResult> TrackView(Guid id)
+    {
+        // ensure product exists
+        var exists = await _db.Products.AnyAsync(p => p.Id == id);
+        if (!exists) return NotFound();
+
+        Guid? userId = null;
+        var claim = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    ?? User?.FindFirst("sub")?.Value
+                    ?? User?.FindFirst("userId")?.Value;
+
+        if (!string.IsNullOrWhiteSpace(claim) && Guid.TryParse(claim, out var parsed))
+            userId = parsed;
+
+        _db.ProductViews.Add(new Domain.Entities.ProductView
+        {
+            ProductId = id,
+            UserId = userId
+        });
+
+        await _db.SaveChangesAsync();
+        return Ok(new { ok = true });
     }
 }

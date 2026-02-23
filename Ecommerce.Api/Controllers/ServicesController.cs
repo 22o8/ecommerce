@@ -29,7 +29,7 @@ public class ServicesController : ControllerBase
                 s.Slug,
                 s.Description,
                 s.CreatedAt,
-                Packages = s.Packages.Select(p => new { p.Id, p.Name, p.PriceUsd, p.DeliveryDays, p.Features }).ToList()
+                Packages = s.Packages.Select(p => new { p.Id, p.Name, p.PriceIqd, p.PriceUsd, p.DeliveryDays, p.Features }).ToList()
             })
             .ToListAsync();
 
@@ -52,7 +52,7 @@ public class ServicesController : ControllerBase
                 x.Slug,
                 x.Description,
                 x.CreatedAt,
-                Packages = x.Packages.Select(p => new { p.Id, p.Name, p.PriceUsd, p.DeliveryDays, p.Features }).ToList(),
+                Packages = x.Packages.Select(p => new { p.Id, p.Name, p.PriceIqd, p.PriceUsd, p.DeliveryDays, p.Features }).ToList(),
                 Requirements = x.Requirements.OrderBy(r => r.Order).Select(r => new { r.Id, r.Question, r.IsRequired, r.Order }).ToList()
             })
             .FirstOrDefaultAsync();

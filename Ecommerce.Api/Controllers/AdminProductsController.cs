@@ -42,6 +42,7 @@ public class AdminProductsController : ControllerBase
                     p.Id,
                     p.Title,
                     p.Slug,
+                    p.PriceIqd,
                     p.PriceUsd,
                     p.IsPublished,
                     p.IsFeatured,
@@ -76,6 +77,7 @@ public class AdminProductsController : ControllerBase
                 x.Title,
                 x.Slug,
                 x.Description,
+                x.PriceIqd,
                 x.PriceUsd,
                 x.IsPublished,
                 x.IsFeatured,
@@ -120,6 +122,7 @@ var slug = NormalizeSlug(req.Slug);
             Title = req.Title.Trim(),
             Slug = slug,
             Description = (req.Description ?? "").Trim(),
+            PriceIqd = (req.PriceIqd > 0 ? req.PriceIqd : req.PriceUsd),
             PriceUsd = req.PriceUsd,
             IsPublished = req.IsPublished,
             IsFeatured = req.IsFeatured,
@@ -151,6 +154,7 @@ var slug = NormalizeSlug(req.Slug);
         p.Title = req.Title.Trim();
         p.Slug = slug;
         p.Description = (req.Description ?? "").Trim();
+        p.PriceIqd = (req.PriceIqd > 0 ? req.PriceIqd : req.PriceUsd);
         p.PriceUsd = req.PriceUsd;
         p.IsPublished = req.IsPublished;
         p.IsFeatured = req.IsFeatured;

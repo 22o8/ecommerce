@@ -38,13 +38,16 @@ public class OrdersController : ControllerBase
             {
                 o.Id,
                 o.Status,
+                o.TotalIqd,
                 o.TotalUsd,
                 o.CreatedAt,
                 Items = o.Items.Select(i => new
                 {
                     i.ItemType,
                     i.Quantity,
+                    i.UnitPriceIqd,
                     i.UnitPriceUsd,
+                    i.LineTotalIqd,
                     i.LineTotalUsd,
                     Product = i.ProductId != null ? new { i.ProductId, i.Product!.Title, i.Product!.Slug } : null,
                     Service = i.ServiceId != null ? new { i.ServiceId, i.Service!.Title, i.Service!.Slug } : null,
@@ -69,20 +72,24 @@ public class OrdersController : ControllerBase
             {
                 o.Id,
                 o.Status,
+                o.TotalIqd,
                 o.TotalUsd,
                 o.CreatedAt,
                 Items = o.Items.Select(i => new
                 {
                     i.ItemType,
                     i.Quantity,
+                    i.UnitPriceIqd,
                     i.UnitPriceUsd,
+                    i.LineTotalIqd,
                     i.LineTotalUsd,
                     Product = i.ProductId != null ? new { i.ProductId, i.Product!.Title, i.Product!.Slug } : null,
                     Service = i.ServiceId != null ? new { i.ServiceId, i.Service!.Title, i.Service!.Slug } : null,
                     Package = i.PackageId != null ? new { i.PackageId, i.Package!.Name, i.Package!.PriceUsd } : null,
                     i.ServiceRequestId
                 }).ToList(),
-                Payments = o.Payments.Select(p => new { p.Id, p.Provider, p.Status, p.ProviderRef, p.AmountUsd, p.CreatedAt }).ToList()
+                Payments = o.Payments.Select(p => new { p.Id, p.Provider, p.Status, p.ProviderRef, p.AmountIqd,
+                    p.AmountUsd, p.CreatedAt }).ToList()
             })
             .FirstOrDefaultAsync();
 

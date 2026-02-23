@@ -10,7 +10,12 @@ public class ServicePackage
     // مثال: Basic / Standard / Premium
     public string Name { get; set; } = "Basic";
 
+    // المعتمد
+    public decimal PriceIqd { get; set; }
+
+    // (قديم)
     public decimal PriceUsd { get; set; }
+
     public int DeliveryDays { get; set; } = 3;
 
     public string Features { get; set; } = ""; // نص بسيط: "ميزة1\nميزة2"
