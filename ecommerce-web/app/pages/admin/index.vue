@@ -28,7 +28,7 @@
 
       <div class="admin-card">
         <div class="admin-muted text-sm rtl-text">{{ t('admin.totalRevenue') }}</div>
-        <div class="text-3xl font-extrabold mt-1">{{ formatMoney(stats.totalRevenueUsd) }}</div>
+        <div class="text-3xl font-extrabold mt-1">{{ formatMoney(stats.totalRevenueIqd) }}</div>
         <div class="admin-muted text-xs mt-1 rtl-text">{{ t('admin.revenueHint') }}</div>
       </div>
     </div>
@@ -62,6 +62,7 @@ definePageMeta({ layout: 'admin', middleware: ['admin'] })
 import { ref } from 'vue'
 import { useI18n } from '~/composables/useI18n'
 import { useAdminApi } from '~/composables/useAdminApi'
+import { formatIqd } from '~/composables/useMoney'
 
 const { t } = useI18n()
 const adminApi = useAdminApi()
@@ -72,20 +73,14 @@ const error = ref('')
 const stats = ref({
   totalOrders: 0,
   totalUsers: 0,
-  totalRevenueUsd: 0,
+  totalRevenueIqd: 0,
 })
 
 function extractErr(e: any) {
   return e?.data?.message || e?.message || t('common.requestFailed')
 }
 
-function formatMoney(v: number) {
-  const n = Number(v || 0)
-  const config = useRuntimeConfig()
-  const rate = Number((config.public as any).usdToIqdRate ?? 1300)
-  const valueIQD = Number.isFinite(rate) ? n * rate : n
-  return new Intl.NumberFormat('ar-IQ', { style: 'currency', currency: 'IQD', maximumFractionDigits: 0 }).format(valueIQD)
-}
+function formatMoney(v: any){ return formatIqd(v) }
 
 async function fetchStats() {
   loading.value = true
@@ -94,7 +89,7 @@ async function fetchStats() {
     const res = await adminApi.getDashboardStats<any>()
     stats.value.totalOrders = Number(res?.totalOrders ?? 0)
     stats.value.totalUsers = Number(res?.totalUsers ?? 0)
-    stats.value.totalRevenueUsd = Number(res?.totalRevenueUsd ?? 0)
+    stats.value.totalRevenueIqd = Number(res?.totalRevenueIqd ?? 0)
   } catch (e: any) {
     error.value = extractErr(e)
   } finally {

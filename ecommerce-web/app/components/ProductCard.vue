@@ -66,7 +66,7 @@
 
       <div class="flex items-center justify-between gap-3">
         <div class="text-lg font-black keep-ltr">
-          {{ formatPrice(p.priceUsd) }}
+          {{ formatPrice(p.priceIqd ?? p.price ?? p.priceUsd) }}
         </div>
 
         <!-- أزرار مدمجة (لا تاخذ مساحة كبيرة على الهاتف) -->
@@ -93,6 +93,7 @@
 
 <script setup lang="ts">
 import SmartImage from '~/components/SmartImage.vue'
+import { formatIqd } from '~/composables/useMoney'
 
 const props = defineProps<{ p: any }>()
 const { t } = useI18n()
@@ -121,15 +122,7 @@ const isNew = computed(() => {
 const fav = computed(() => isInWishlist(String(p.value?.id ?? '')))
 
 function formatPrice(v: any) {
-  const n = Number(v ?? 0)
-  try {
-    const config = useRuntimeConfig()
-    const rate = Number((config.public as any).usdToIqdRate ?? 1300)
-    const valueIQD = Number.isFinite(rate) ? n * rate : n
-    return new Intl.NumberFormat('ar-IQ', { style: 'currency', currency: 'IQD', maximumFractionDigits: 0 }).format(valueIQD)
-  } catch {
-    return `${Math.round(n)} د.ع`
-  }
+  return formatIqd(v)
 }
 
 function addToCart() {

@@ -102,6 +102,7 @@
 <script setup lang="ts">
 import UiButton from '~/components/ui/UiButton.vue'
 import { buildAssetUrl } from '~/composables/useApi'
+import { formatIqd } from '~/composables/useMoney'
 
 const { t } = useI18n()
 const api = useApi()
@@ -114,11 +115,7 @@ const loading = ref(false)
 const error = ref('')
 const success = ref('')
 
-function fmtMoney(v: number) {
-  const rate = Number((config.public as any).usdToIqdRate ?? 1300)
-  const valueIQD = Number.isFinite(rate) ? v * rate : v
-  return new Intl.NumberFormat('ar-IQ', { style: 'currency', currency: 'IQD', maximumFractionDigits: 0 }).format(valueIQD)
-}
+function fmtMoney(v: any){ return formatIqd(v) }
 
 function whatsappText() {
   const lines = [

@@ -33,6 +33,58 @@ public static class DbBootstrapper
             @"ALTER TABLE IF EXISTS ""Products""
               ADD COLUMN IF NOT EXISTS ""RatingCount"" integer NOT NULL DEFAULT 0;",
 
+            // Prices (IQD is primary)
+            @"ALTER TABLE IF EXISTS ""Products""
+              ADD COLUMN IF NOT EXISTS ""PriceIqd"" numeric NOT NULL DEFAULT 0;",
+
+            @"ALTER TABLE IF EXISTS ""Products""
+              ADD COLUMN IF NOT EXISTS ""PriceUsd"" numeric NOT NULL DEFAULT 0;",
+
+            // Optional cached counters (not required for analytics queries but useful in UI)
+            @"ALTER TABLE IF EXISTS ""Products""
+              ADD COLUMN IF NOT EXISTS ""ViewsCount"" integer NOT NULL DEFAULT 0;",
+
+            @"ALTER TABLE IF EXISTS ""Products""
+              ADD COLUMN IF NOT EXISTS ""FavoritesCount"" integer NOT NULL DEFAULT 0;",
+
+            // Favorites table (server-side wishlist)
+            @"CREATE TABLE IF NOT EXISTS ""Favorites"" (
+                ""Id"" uuid NOT NULL,
+                ""UserId"" uuid NOT NULL,
+                ""ProductId"" uuid NOT NULL,
+                ""CreatedAt"" timestamp with time zone NOT NULL,
+                CONSTRAINT ""PK_Favorites"" PRIMARY KEY (""Id""),
+                CONSTRAINT ""FK_Favorites_Users_UserId"" FOREIGN KEY (""UserId"")
+                    REFERENCES ""Users""(""Id"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_Favorites_Products_ProductId"" FOREIGN KEY (""ProductId"")
+                    REFERENCES ""Products""(""Id"") ON DELETE CASCADE
+              );",
+
+            @"CREATE UNIQUE INDEX IF NOT EXISTS ""UX_Favorites_User_Product""
+              ON ""Favorites"" (""UserId"", ""ProductId"");",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_Favorites_ProductId""
+              ON ""Favorites"" (""ProductId"");",
+
+            // Product views table (track every modal open)
+            @"CREATE TABLE IF NOT EXISTS ""ProductViews"" (
+                ""Id"" uuid NOT NULL,
+                ""ProductId"" uuid NOT NULL,
+                ""UserId"" uuid NULL,
+                ""CreatedAt"" timestamp with time zone NOT NULL,
+                CONSTRAINT ""PK_ProductViews"" PRIMARY KEY (""Id""),
+                CONSTRAINT ""FK_ProductViews_Products_ProductId"" FOREIGN KEY (""ProductId"")
+                    REFERENCES ""Products""(""Id"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_ProductViews_Users_UserId"" FOREIGN KEY (""UserId"")
+                    REFERENCES ""Users""(""Id"") ON DELETE SET NULL
+              );",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_ProductViews_ProductId""
+              ON ""ProductViews"" (""ProductId"");",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_ProductViews_CreatedAt""
+              ON ""ProductViews"" (""CreatedAt"");",
+
             // ProductImages table (admin/product details rely on it)
             @"CREATE TABLE IF NOT EXISTS ""ProductImages"" (
                 ""Id"" uuid NOT NULL,

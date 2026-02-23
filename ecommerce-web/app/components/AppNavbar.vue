@@ -39,7 +39,21 @@
               <span class="hidden md:inline rtl-text">{{ t('home.brands') }}</span>
             </UiButton>
           </NuxtLink>
-	          <!-- Cart: يظهر على الهاتف أيضاً (أيقونة فقط) -->
+	          <!-- Favorites -->
+          <NuxtLink v-if="auth.isAuthed" to="/favorites" class="hidden sm:block">
+            <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0">
+              <Icon name="mdi:heart-outline" class="text-lg" />
+              <span class="hidden md:inline rtl-text">مفضلاتي</span>
+              <span
+                v-if="fav.count"
+                class="absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full bg-[rgb(var(--primary))] text-black text-xs font-black grid place-items-center"
+              >
+                {{ fav.count }}
+              </span>
+            </UiButton>
+          </NuxtLink>
+
+          <!-- Cart: يظهر على الهاتف أيضاً (أيقونة فقط) -->
 	          <NuxtLink to="/cart" class="block">
 	            <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0">
               <Icon name="mdi:cart-outline" class="text-lg" />
@@ -113,6 +127,14 @@
 	              <span class="rtl-text">{{ t('home.brands') }}</span>
 	            </div>
 	          </NuxtLink>
+            <NuxtLink v-if="auth.isAuthed" to="/favorites" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
+              <div class="flex items-center gap-2">
+                <Icon name="mdi:heart-outline" class="text-lg" />
+                <span class="rtl-text">مفضلاتي</span>
+                <span v-if="fav.count" class="keep-ltr text-xs text-muted">({{ fav.count }})</span>
+              </div>
+            </NuxtLink>
+
             <NuxtLink to="/cart" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
               <div class="flex items-center gap-2">
                 <Icon name="mdi:cart-outline" class="text-lg" />
@@ -147,9 +169,11 @@
 
 <script setup lang="ts">
 import UiButton from '~/components/ui/UiButton.vue'
+import { useFavoritesStore } from '~/stores/favorites'
 const ui = useUiStore()
 const auth = useAuthStore()
 const cart = useCartStore()
+const fav = useFavoritesStore()
 const { t } = useI18n()
 
 const route = useRoute()

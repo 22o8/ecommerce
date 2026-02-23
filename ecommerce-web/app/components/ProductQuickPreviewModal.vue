@@ -70,6 +70,7 @@ import { useCartStore } from '~/stores/cart'
 import { useWishlist } from '~/composables/useWishlist'
 import { useQuickPreview } from '~/composables/useQuickPreview'
 import { useApi } from '~/composables/useApi'
+import { formatIqd } from '~/composables/useMoney'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -83,10 +84,29 @@ const api = useApi()
 const open = computed(() => qp.open.value)
 const p = computed<any>(() => qp.product.value)
 
+// ✅ تسجيل مشاهدة المنتج عند فتح المودال (مرة واحدة لكل فتح)
+const lastViewedKey = ref<string>('')
+async function recordView() {
+  const id = String(p.value?.id ?? '')
+  if (!id || !open.value) return
+  const key = `${id}:${Date.now()}`
+  // نمنع التكرار السريع إذا صار re-render
+  if (lastViewedKey.value && lastViewedKey.value.startsWith(id + ':')) return
+  lastViewedKey.value = key
+  try {
+    await api.post(`/Products/${id}/view`, {})
+  } catch {
+    // ignore
+  }
+}
+watch([open, p], ([isOpen]) => { if (isOpen) recordView() })
+
 // منع سكرول الخلفية فقط أثناء فتح المودال (وخاصة على iOS)
 let prevHtmlOverflow = ''
 let prevBodyOverflow = ''
 watch(open, (v) => {
+  if (!v) lastViewedKey.value = ''
+
   if (!import.meta.client) return
   const html = document.documentElement
   const body = document.body
@@ -113,9 +133,8 @@ const images = computed(() => {
 })
 
 const priceText = computed(() => {
-  const v = p.value?.priceUsd ?? p.value?.PriceUsd ?? p.value?.price ?? p.value?.Price ?? 0
-  const n = Number(v)
-  return isFinite(n) ? `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : String(v)
+  const v = p.value?.priceIqd ?? p.value?.PriceIqd ?? p.value?.price ?? p.value?.priceUsd ?? 0
+  return formatIqd(v)
 })
 
 const isFav = computed(() => (p.value?.id ? wl.has(String(p.value.id)) : false))
