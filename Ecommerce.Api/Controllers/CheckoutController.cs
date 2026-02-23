@@ -79,7 +79,6 @@ public class CheckoutController : ControllerBase
             status = order.Status,
             amountUsd = order.TotalUsd,
             amountIqd = order.TotalIqd,
-            amountIqd = order.TotalIqd,
             payment = new { payment.Id, payment.Provider, payment.Status, payment.ProviderRef }
         });
     }
@@ -188,15 +187,16 @@ public class CheckoutController : ControllerBase
         if (sr.Status != "PendingPayment")
             return BadRequest("ServiceRequest is not pending payment");
 
-        var price = sr.Package.PriceUsd;
+        // ✅ نعتمد IQD بالدرجة الأولى
+        var priceUsd = sr.Package.PriceUsd;
+        var priceIqd = sr.Package.PriceIqd > 0 ? sr.Package.PriceIqd : sr.Package.PriceUsd;
 
         var order = new Order
         {
             UserId = userId,
             Status = "PendingPayment",
-            TotalUsd = price,
-            TotalIqd = price,
-            TotalIqd = price
+            TotalUsd = priceUsd,
+            TotalIqd = priceIqd
         };
 
         order.Items.Add(new OrderItem
@@ -205,10 +205,11 @@ public class CheckoutController : ControllerBase
             ServiceId = sr.ServiceId,
             PackageId = sr.PackageId,
             ServiceRequestId = sr.Id,
-            UnitPriceUsd = price,
+            UnitPriceUsd = priceUsd,
             Quantity = 1,
-            LineTotalUsd = price,
-            TotalIqd = price
+            LineTotalUsd = priceUsd,
+            UnitPriceIqd = priceIqd,
+            LineTotalIqd = priceIqd
         });
 
         var payment = new Payment

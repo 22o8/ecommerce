@@ -422,6 +422,10 @@ public class UpsertProductRequest
     public string? Slug { get; set; }
     public string? Description { get; set; }
 
+    // ✅ المعتمد الآن: السعر بالدينار العراقي
+    [Range(0, 999999999)]
+    public decimal PriceIqd { get; set; }
+
     [Range(0, 999999)]
     public decimal PriceUsd { get; set; }
 

@@ -26,10 +26,6 @@ public class AppDbContext : DbContext
     public DbSet<DownloadToken> DownloadTokens => Set<DownloadToken>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
 
-    // Analytics
-    public DbSet<Favorite> Favorites => Set<Favorite>();
-    public DbSet<ProductView> ProductViews => Set<ProductView>();
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

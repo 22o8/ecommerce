@@ -74,59 +74,60 @@ public class AdminOrdersController : ControllerBase
         }
     }
 
-    
+    // ✅ تفاصيل طلب واحد (لا نعرض JSON خام بالفرونت)
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
         try
         {
-            var order = await _db.Orders
+            var o = await _db.Orders
                 .AsNoTracking()
-                .Where(o => o.Id == id)
-                .Select(o => new
+                .Where(x => x.Id == id)
+                .Select(x => new
                 {
-                    o.Id,
-                    o.Status,
-                    o.TotalIqd,
-                    o.TotalUsd,
-                    o.CreatedAt,
-                    customer = new
+                    x.Id,
+                    x.Status,
+                    x.TotalIqd,
+                    x.TotalUsd,
+                    x.CreatedAt,
+                    user = new
                     {
-                        o.UserId,
-                        fullName = o.User.FullName,
-                        email = o.User.Email
+                        x.UserId,
+                        fullName = x.User.FullName,
+                        email = x.User.Email
                     },
-                    items = o.Items.Select(i => new
+                    items = x.Items.Select(i => new
                     {
+                        i.Id,
                         i.ItemType,
                         i.Quantity,
                         i.UnitPriceIqd,
-                        i.UnitPriceUsd,
                         i.LineTotalIqd,
+                        i.UnitPriceUsd,
                         i.LineTotalUsd,
                         i.ProductId,
                         productTitle = i.Product != null ? i.Product.Title : null,
                         i.ServiceId,
                         serviceTitle = i.Service != null ? i.Service.Title : null,
                         i.PackageId,
-                        packageTitle = i.Package != null ? i.Package.Title : null,
+                        packageName = i.Package != null ? i.Package.Name : null,
                         i.ServiceRequestId
                     }).ToList(),
-                    payments = o.Payments.Select(p => new
+                    payments = x.Payments.Select(p => new
                     {
                         p.Id,
                         p.Provider,
                         p.Status,
                         p.AmountIqd,
                         p.AmountUsd,
+                        p.ProviderRef,
                         p.CreatedAt
                     }).ToList()
                 })
                 .FirstOrDefaultAsync();
 
-            if (order == null) return NotFound(new { message = "Order not found." });
-
-            return Ok(order);
+            if (o == null) return NotFound(new { message = "Order not found." });
+            return Ok(o);
         }
         catch (Exception ex)
         {
@@ -134,7 +135,7 @@ public class AdminOrdersController : ControllerBase
         }
     }
 
-[HttpDelete("{id:guid}")]
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var order = await _db.Orders
