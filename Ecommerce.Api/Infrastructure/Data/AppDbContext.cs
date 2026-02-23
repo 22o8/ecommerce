@@ -26,9 +26,22 @@ public class AppDbContext : DbContext
     public DbSet<DownloadToken> DownloadTokens => Set<DownloadToken>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
 
+    // Favorites / Views
+    public DbSet<Favorite> Favorites => Set<Favorite>();
+    public DbSet<ProductView> ProductViews => Set<ProductView>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Favorites: user can favorite a product only once
+        modelBuilder.Entity<Favorite>()
+            .HasIndex(f => new { f.UserId, f.ProductId })
+            .IsUnique();
+
+        // Product views analytics
+        modelBuilder.Entity<ProductView>()
+            .HasIndex(v => v.ProductId);
 
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
