@@ -47,3 +47,10 @@ export const useProfileStore = defineStore('profile', () => {
 
   return { profile, setManual }
 })
+
+function hydrateFromAuth() {
+  // لا نحتاج شي خاص: الـ watcher على التوكن ينفذ refresh تلقائياً
+  // لكن نتركها حتى ما يصير كراش بالصفحات القديمة
+  return refresh()
+}
+
