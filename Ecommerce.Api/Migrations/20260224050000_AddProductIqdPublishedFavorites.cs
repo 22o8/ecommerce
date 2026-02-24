@@ -5,66 +5,95 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Ecommerce.Api.Migrations
 {
+    /// <inheritdoc />
     public partial class AddProductIqdPublishedFavorites : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // PriceIQD (some older DBs only had PriceUsd)
-            migrationBuilder.AddColumn<double>(
-                name: "PriceIqd",
-                table: "Products",
-                type: "double precision",
+            // Products
+            migrationBuilder.AddColumn<decimal>(
+                name: "priceIqd",
+                table: "products",
+                type: "numeric",
                 nullable: false,
-                defaultValue: 0d);
+                defaultValue: 0m);
 
-            // Favorites table
+            migrationBuilder.AddColumn<bool>(
+                name: "isPublished",
+                table: "products",
+                type: "boolean",
+                nullable: false,
+                defaultValue: false);
+
+            migrationBuilder.AddColumn<bool>(
+                name: "isFeatured",
+                table: "products",
+                type: "boolean",
+                nullable: false,
+                defaultValue: false);
+
+            // Favorites (per user)
             migrationBuilder.CreateTable(
-                name: "Favorites",
+                name: "favorites",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    userId = table.Column<Guid>(type: "uuid", nullable: false),
+                    productId = table.Column<Guid>(type: "uuid", nullable: false),
+                    createdAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Favorites", x => x.Id);
+                    table.PrimaryKey("pk_favorites", x => x.id);
                     table.ForeignKey(
-                        name: "FK_Favorites_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
+                        name: "fk_favorites_products_productId",
+                        column: x => x.productId,
+                        principalTable: "products",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Favorites_Products_ProductId",
-                        column: x => x.ProductId,
-                        principalTable: "Products",
-                        principalColumn: "Id",
+                        name: "fk_favorites_users_userId",
+                        column: x => x.userId,
+                        principalTable: "users",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Favorites_UserId_ProductId",
-                table: "Favorites",
-                columns: new[] { "UserId", "ProductId" },
+                name: "ix_favorites_productId",
+                table: "favorites",
+                column: "productId");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_favorites_userId",
+                table: "favorites",
+                column: "userId");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_favorites_userId_productId",
+                table: "favorites",
+                columns: new[] { "userId", "productId" },
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Favorites_ProductId",
-                table: "Favorites",
-                column: "ProductId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Favorites_UserId",
-                table: "Favorites",
-                column: "UserId");
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(name: "Favorites");
-            migrationBuilder.DropColumn(name: "PriceIqd", table: "Products");
+            migrationBuilder.DropTable(
+                name: "favorites");
+
+            migrationBuilder.DropColumn(
+                name: "priceIqd",
+                table: "products");
+
+            migrationBuilder.DropColumn(
+                name: "isPublished",
+                table: "products");
+
+            migrationBuilder.DropColumn(
+                name: "isFeatured",
+                table: "products");
         }
     }
 }
