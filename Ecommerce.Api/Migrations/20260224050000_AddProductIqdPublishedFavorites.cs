@@ -1,70 +1,70 @@
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace Ecommerce.Api.Migrations
 {
-    /// <summary>
-    /// Adds missing Product columns (PriceIqd, IsPublished) and creates Favorites table.
-    /// Written with PostgreSQL guards to be safe on existing DBs.
-    /// </summary>
     public partial class AddProductIqdPublishedFavorites : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Products: add missing columns (safe if they already exist)
-            migrationBuilder.Sql(@"
-                -- PriceIqd
-                ALTER TABLE \"Products\"
-                ADD COLUMN IF NOT EXISTS \"PriceIqd\" numeric NOT NULL DEFAULT 0;
+            // PriceIQD (some older DBs only had PriceUsd)
+            migrationBuilder.AddColumn<double>(
+                name: "PriceIqd",
+                table: "Products",
+                type: "double precision",
+                nullable: false,
+                defaultValue: 0d);
 
-                -- If the column existed but was nullable, normalize nulls then enforce NOT NULL.
-                UPDATE \"Products\" SET \"PriceIqd\" = 0 WHERE \"PriceIqd\" IS NULL;
-                ALTER TABLE \"Products\" ALTER COLUMN \"PriceIqd\" SET NOT NULL;
+            // Favorites table
+            migrationBuilder.CreateTable(
+                name: "Favorites",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProductId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Favorites", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Favorites_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Favorites_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
 
-                -- IsPublished
-                ALTER TABLE \"Products\"
-                ADD COLUMN IF NOT EXISTS \"IsPublished\" boolean NOT NULL DEFAULT TRUE;
+            migrationBuilder.CreateIndex(
+                name: "IX_Favorites_UserId_ProductId",
+                table: "Favorites",
+                columns: new[] { "UserId", "ProductId" },
+                unique: true);
 
-                UPDATE \"Products\" SET \"IsPublished\" = TRUE WHERE \"IsPublished\" IS NULL;
-                ALTER TABLE \"Products\" ALTER COLUMN \"IsPublished\" SET NOT NULL;
-            ");
+            migrationBuilder.CreateIndex(
+                name: "IX_Favorites_ProductId",
+                table: "Favorites",
+                column: "ProductId");
 
-            // Favorites table (matches Domain.Entities.Favorite)
-            migrationBuilder.Sql(@"
-                CREATE TABLE IF NOT EXISTS \"Favorites\" (
-                    \"Id\" uuid NOT NULL,
-                    \"UserId\" uuid NOT NULL,
-                    \"ProductId\" uuid NOT NULL,
-                    \"CreatedAt\" timestamptz NOT NULL DEFAULT now(),
-                    CONSTRAINT \"PK_Favorites\" PRIMARY KEY (\"Id\")
-                );
-
-                -- prevent duplicates per user/product
-                CREATE UNIQUE INDEX IF NOT EXISTS \"UX_Favorites_User_Product\" ON \"Favorites\" (\"UserId\", \"ProductId\");
-                CREATE INDEX IF NOT EXISTS \"IX_Favorites_ProductId\" ON \"Favorites\" (\"ProductId\");
-
-                DO $$
-                BEGIN
-                    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_Favorites_Users_UserId') THEN
-                        ALTER TABLE \"Favorites\" ADD CONSTRAINT \"FK_Favorites_Users_UserId\" FOREIGN KEY (\"UserId\") REFERENCES \"Users\"(\"Id\") ON DELETE CASCADE;
-                    END IF;
-
-                    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_Favorites_Products_ProductId') THEN
-                        ALTER TABLE \"Favorites\" ADD CONSTRAINT \"FK_Favorites_Products_ProductId\" FOREIGN KEY (\"ProductId\") REFERENCES \"Products\"(\"Id\") ON DELETE CASCADE;
-                    END IF;
-                END$$;
-            ");
+            migrationBuilder.CreateIndex(
+                name: "IX_Favorites_UserId",
+                table: "Favorites",
+                column: "UserId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql(@"DROP TABLE IF EXISTS \"Favorites\";");
-
-            migrationBuilder.Sql(@"
-                ALTER TABLE \"Products\" DROP COLUMN IF EXISTS \"PriceIqd\";
-                ALTER TABLE \"Products\" DROP COLUMN IF EXISTS \"IsPublished\";
-            ");
+            migrationBuilder.DropTable(name: "Favorites");
+            migrationBuilder.DropColumn(name: "PriceIqd", table: "Products");
         }
     }
 }

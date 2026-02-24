@@ -47,37 +47,6 @@ public static class DbBootstrapper
 
             @"CREATE INDEX IF NOT EXISTS ""IX_ProductImages_ProductId""
               ON ""ProductImages"" (""ProductId"");",
-// Favorites (user-product)
-"""
-CREATE TABLE IF NOT EXISTS "Favorites" (
-    "Id" uuid PRIMARY KEY,
-    "UserId" uuid NOT NULL,
-    "ProductId" uuid NOT NULL,
-    "CreatedAt" timestamptz NOT NULL DEFAULT now()
-);
-""",
-"""
-CREATE UNIQUE INDEX IF NOT EXISTS "IX_Favorites_User_Product" ON "Favorites" ("UserId", "ProductId");
-""",
-"""
-CREATE INDEX IF NOT EXISTS "IX_Favorites_ProductId" ON "Favorites" ("ProductId");
-""",
-
-// Product views (analytics)
-"""
-CREATE TABLE IF NOT EXISTS "ProductViews" (
-    "Id" uuid PRIMARY KEY,
-    "ProductId" uuid NOT NULL,
-    "UserId" uuid NULL,
-    "ViewedAt" timestamptz NOT NULL DEFAULT now()
-);
-""",
-"""
-CREATE INDEX IF NOT EXISTS "IX_ProductViews_ProductId_ViewedAt" ON "ProductViews" ("ProductId", "ViewedAt");
-""",
-"""
-CREATE INDEX IF NOT EXISTS "IX_ProductViews_UserId_ViewedAt" ON "ProductViews" ("UserId", "ViewedAt");
-""",
         };
 
         foreach (var sql in statements)
