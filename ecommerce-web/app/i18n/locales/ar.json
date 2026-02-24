@@ -79,7 +79,8 @@
     "brandShowcaseSubtitle": "استكشف أفضل البراندات بطريقة تفاعلية ثلاثية الأبعاد.",
     "tapToExplore": "اضغط للاستكشاف",
     "catMoisturizer": "مرطّب",
-    "catCleanser": "غسول"
+    "catCleanser": "غسول",
+    "subtitle": "متجر رقمي احترافي"
   },
   "productsPage": {
     "title": "المنتجات",
@@ -470,5 +471,13 @@
     "checkout": "إكمال الشراء",
     "emptyTitle": "سلتك فارغة",
     "emptyDesc": "أضف منتجات لتظهر هنا."
+  },
+  "favorites": {
+    "title": "مفضلاتي",
+    "subtitle": "المنتجات التي أضفتها إلى المفضلة (محفوظة على حسابك)",
+    "emptyTitle": "ما عندك مفضلات بعد",
+    "emptyHint": "افتح أي منتج واضغط ♥ للإضافة.",
+    "browseProducts": "تصفح المنتجات",
+    "itemsCount": "{count} عنصر"
   }
 }

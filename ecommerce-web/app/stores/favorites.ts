@@ -1,70 +1,60 @@
 import { defineStore } from 'pinia'
-import { computed, ref, watch } from 'vue'
-import { useApi } from '~/composables/useApi'
-import { useAuthStore } from '~/stores/auth'
+import { computed, ref } from 'vue'
+import { useApi } from '~/app/composables/useApi'
+import { useAuthStore } from './auth'
 
 export const useFavoritesStore = defineStore('favorites', () => {
-  const api = useApi()
   const auth = useAuthStore()
+  const api = useApi()
 
-  const ids = ref<Set<string>>(new Set())
   const items = ref<any[]>([])
   const loading = ref(false)
-  const ready = ref(false)
 
-  const count = computed(() => ids.value.size)
+  const ids = computed(() => new Set(items.value.map((p: any) => p.id)))
 
-  function has(productId: string) {
-    return ids.value.has(String(productId))
-  }
-
-  async function refresh() {
-    if (!auth.isAuthed) {
-      // للمستخدم غير المسجل: نخليها فاضية (حتى ما يصير تضارب مع شرط "تنحفظ بالسيرفر")
-      ids.value = new Set()
+  async function load() {
+    if (!auth.token) {
       items.value = []
-      ready.value = true
       return
     }
 
     loading.value = true
     try {
-      const list: any[] = await api.get('/favorites')
-      items.value = Array.isArray(list) ? list : []
-      ids.value = new Set(items.value.map(x => String(x.id)))
-      ready.value = true
+      // Backend: GET /api/Favorites/my
+      const list: any = await api.get('/Favorites/my')
+      items.value = Array.isArray(list) ? list : (list?.items ?? [])
     } finally {
       loading.value = false
     }
   }
 
   async function toggle(productId: string) {
-    const id = String(productId || '')
-    if (!id) return
+    if (!auth.token) throw new Error('Unauthorized')
 
-    if (!auth.isAuthed) {
-      // شرط المشروع: المفضلة مرتبطة بالحساب
-      // نخلي UX واضح: ودّه لتسجيل الدخول
-      navigateTo({ path: '/login', query: { r: '/favorites' } })
-      return
+    // Backend: POST /api/Favorites/toggle/{productId}
+    const res: any = await api.post(`/Favorites/toggle/${productId}`)
+
+    // We accept either { isFavorite: true/false } OR the full product list OR nothing.
+    if (typeof res?.isFavorited === 'boolean') {
+      if (res.isFavorited) {
+        // Optionally push lightweight record
+        if (!ids.value.has(productId)) items.value = [{ id: productId }, ...items.value]
+      } else {
+        items.value = items.value.filter((p: any) => p.id !== productId)
+      }
+    } else if (Array.isArray(res)) {
+      items.value = res
+    } else {
+      // safest: reload
+      await load()
     }
 
-    const res: any = await api.post(`/favorites/toggle/${id}`)
-    const isFav = Boolean(res?.isFavorite)
-
-    if (isFav) ids.value.add(id)
-    else ids.value.delete(id)
-
-    // حتى تبقى الصفحة والعداد متزامنة
-    await refresh()
+    return res
   }
 
-  // إذا المستخدم سوّى login/logout
-  watch(
-    () => auth.isAuthed,
-    () => refresh(),
-    { immediate: true }
-  )
+  function isFavorite(productId: string) {
+    return ids.value.has(productId)
+  }
 
-  return { ids, items, count, loading, ready, has, refresh, toggle }
+  return { items, loading, load, toggle, isFavorite }
 })

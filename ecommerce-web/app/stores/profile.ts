@@ -1,56 +1,45 @@
 import { defineStore } from 'pinia'
-
-function decodeJwt(token: string): any {
-  try {
-    const payload = token.split('.')[1]
-    const json = decodeURIComponent(
-      atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join(''),
-    )
-    return JSON.parse(json)
-  } catch {
-    return null
-  }
-}
+import { computed, ref, watch } from 'vue'
+import { useAuthStore } from './auth'
 
 export const useProfileStore = defineStore('profile', () => {
-  const authToken = useCookie<string | null>('token')
-  const profile = useState<{ name: string; email: string; phone: string }>('profile', () => ({
-    name: '',
-    email: '',
-    phone: '',
-  }))
+  const auth = useAuthStore()
 
+  const profile = ref<{ name?: string; email?: string; phone?: string }>({})
+
+  const isLoggedIn = computed(() => !!auth.token)
+
+  // Hydrate from token payload (best-effort) to keep UI stable even without a /me endpoint.
+  function refreshFromToken() {
+    const payload = auth.payload
+    if (!payload) {
+      profile.value = {}
+      return
+    }
+
+    profile.value = {
+      name: (payload as any)?.name ?? (payload as any)?.fullName,
+      email: (payload as any)?.email,
+      phone: (payload as any)?.phone,
+    }
+  }
+
+  // Auto refresh whenever token changes
   watch(
-    () => authToken.value,
-    (tok) => {
-      if (!tok) {
-        profile.value = { name: '', email: '', phone: '' }
-        return
-      }
-      const p = decodeJwt(tok)
-      if (!p) return
-      profile.value = {
-        name: (p.name || p.unique_name || '').toString(),
-        email: (p.email || '').toString(),
-        phone: (p.phone || '').toString(),
-      }
-    },
-    { immediate: true },
+    () => auth.token,
+    () => refreshFromToken(),
+    { immediate: true }
   )
 
   function setManual(data: Partial<{ name: string; email: string; phone: string }>) {
     profile.value = { ...profile.value, ...data }
   }
 
-  return { profile, setManual }
+  // Backward-compatible: بعض الصفحات كانت تستدعيها.
+  // الـ watcher أعلاه كافي، فهاي مجرد دالة فارغة حتى ما يصير كراش.
+  function hydrateFromAuth() {
+    return
+  }
+
+  return { profile, isLoggedIn, setManual, hydrateFromAuth }
 })
-
-function hydrateFromAuth() {
-  // لا نحتاج شي خاص: الـ watcher على التوكن ينفذ refresh تلقائياً
-  // لكن نتركها حتى ما يصير كراش بالصفحات القديمة
-  return refresh()
-}
-

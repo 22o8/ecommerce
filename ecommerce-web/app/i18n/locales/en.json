@@ -82,7 +82,8 @@
     "brandShowcaseSubtitle": "Explore top brands in an interactive 3D view.",
     "tapToExplore": "Tap to explore",
     "catMoisturizer": "Moisturizer",
-    "catCleanser": "Cleanser"
+    "catCleanser": "Cleanser",
+    "subtitle": "Professional digital store"
   },
   "productsPage": {
     "title": "Products",
@@ -446,5 +447,13 @@
     "checkout": "Checkout",
     "emptyTitle": "Your cart is empty",
     "emptyDesc": "Add products to see them here."
+  },
+  "favorites": {
+    "title": "Favorites",
+    "subtitle": "Products you added to your favorites (saved to your account)",
+    "emptyTitle": "You don't have favorites yet",
+    "emptyHint": "Open any product and tap the heart to add it.",
+    "browseProducts": "Browse products",
+    "itemsCount": "{count} items"
   }
 }
