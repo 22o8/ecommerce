@@ -34,6 +34,10 @@ public class AdminOrdersController : ControllerBase
                     o.TotalUsd,
                     o.CreatedAt,
 
+                    // ✅ حقول مسطّحة لتسهيل الفرونت
+                    userEmail = o.User.Email,
+                    userFullName = o.User.FullName,
+
                     User = new
                     {
                         o.UserId,
@@ -50,10 +54,21 @@ public class AdminOrdersController : ControllerBase
                         i.LineTotalIqd,
                         i.LineTotalUsd,
                         i.ProductId,
+                        productTitle = i.Product != null ? i.Product.Title : null,
                         i.ServiceId,
+                        serviceTitle = i.Service != null ? i.Service.Title : null,
                         i.PackageId,
+                        packageName = i.Package != null ? i.Package.Name : null,
                         i.ServiceRequestId
                     }).ToList(),
+
+                    // ✅ عنوان سريع للعرض في الجدول (أول عنصر)
+                    primaryItemTitle = o.Items
+                        .Select(i =>
+                            i.Product != null ? i.Product.Title :
+                            (i.Service != null ? i.Service.Title :
+                            (i.Package != null ? i.Package.Name : null)))
+                        .FirstOrDefault(),
 
                     Payments = o.Payments.Select(p => new
                     {

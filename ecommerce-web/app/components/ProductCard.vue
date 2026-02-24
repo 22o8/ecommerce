@@ -125,7 +125,8 @@ const isNew = computed(() => {
   return days <= 14
 })
 
-const fav = computed(() => isInWishlist(String(p.value?.id ?? '')))
+const wishlistKey = computed(() => String((p.value as any)?.id ?? (p.value as any)?.productId ?? p.value?.slug ?? ''))
+const fav = computed(() => isInWishlist(wishlistKey.value))
 
 function formatPrice(v: any) {
   return formatIqd(v)
@@ -141,7 +142,7 @@ function buyNow() {
 }
 
 function toggleFav() {
-  toggle(String(p.value?.id ?? ''))
+  toggle(wishlistKey.value)
 }
 
 function openPreview() {

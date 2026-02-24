@@ -68,6 +68,8 @@ public class ProductsController : ControllerBase
                 p.Brand,
                 p.RatingCount,
                 p.CreatedAt,
+                viewCount = _db.ProductViews.Count(v => v.ProductId == p.Id),
+                favoriteCount = _db.Favorites.Count(f => f.ProductId == p.Id),
                 // Use navigation property to keep translation stable across providers.
                 coverImage = p.Images
                     .OrderBy(i => i.SortOrder)
@@ -111,6 +113,8 @@ public class ProductsController : ControllerBase
                 p.Brand,
                 p.RatingCount,
                 p.CreatedAt,
+                viewCount = _db.ProductViews.Count(v => v.ProductId == p.Id),
+                favoriteCount = _db.Favorites.Count(f => f.ProductId == p.Id),
                 coverImage = p.Images
                     .OrderBy(i => i.SortOrder)
                     .Select(i => i.Url)
@@ -139,6 +143,8 @@ public class ProductsController : ControllerBase
                     p.Brand,
                     p.RatingCount,
                     p.CreatedAt,
+                    viewCount = _db.ProductViews.Count(v => v.ProductId == p.Id),
+                    favoriteCount = _db.Favorites.Count(f => f.ProductId == p.Id),
                     coverImage = p.Images
                         .OrderBy(i => i.SortOrder)
                         .Select(i => i.Url)
@@ -174,6 +180,8 @@ public class ProductsController : ControllerBase
                 x.Brand,
                 x.RatingCount,
                 x.CreatedAt,
+                viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
+                favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
                 images = _db.ProductImages
                     .Where(i => i.ProductId == x.Id)
                     .OrderBy(i => i.SortOrder)
@@ -225,6 +233,8 @@ public class ProductsController : ControllerBase
                 x.Brand,
                 x.RatingCount,
                 x.CreatedAt,
+                viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
+                favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
                 images = _db.ProductImages
                     .Where(i => i.ProductId == x.Id)
                     .OrderBy(i => i.SortOrder)

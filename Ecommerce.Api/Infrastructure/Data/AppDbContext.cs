@@ -25,6 +25,9 @@ public class AppDbContext : DbContext
     public DbSet<ProductAsset> ProductAssets => Set<ProductAsset>();
     public DbSet<DownloadToken> DownloadTokens => Set<DownloadToken>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
+    public DbSet<Favorite> Favorites => Set<Favorite>();
+    public DbSet<ProductView> ProductViews => Set<ProductView>();
+    public DbSet<SiteVisit> SiteVisits => Set<SiteVisit>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -71,6 +74,9 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<ProductView>()
             .HasIndex(v => new { v.ProductId, v.CreatedAt });
+
+        modelBuilder.Entity<SiteVisit>()
+            .HasIndex(v => v.CreatedAt);
 
         // =========================
         // ✅ Brand config

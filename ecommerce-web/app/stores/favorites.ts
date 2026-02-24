@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { useApi } from '~/app/composables/useApi'
+import { useApi } from '~/composables/useApi'
 import { useAuthStore } from './auth'
 
 export const useFavoritesStore = defineStore('favorites', () => {
@@ -10,7 +10,8 @@ export const useFavoritesStore = defineStore('favorites', () => {
   const items = ref<any[]>([])
   const loading = ref(false)
 
-  const ids = computed(() => new Set(items.value.map((p: any) => p.id)))
+  const ids = computed(() => new Set(items.value.map((p: any) => String(p?.id ?? p?.Id ?? ''))).filter(Boolean)))
+  const count = computed(() => items.value.length)
 
   async function load() {
     if (!auth.token) {
@@ -40,7 +41,7 @@ export const useFavoritesStore = defineStore('favorites', () => {
         // Optionally push lightweight record
         if (!ids.value.has(productId)) items.value = [{ id: productId }, ...items.value]
       } else {
-        items.value = items.value.filter((p: any) => p.id !== productId)
+        items.value = items.value.filter((p: any) => String(p?.id ?? p?.Id ?? '') !== productId)
       }
     } else if (Array.isArray(res)) {
       items.value = res
@@ -56,5 +57,5 @@ export const useFavoritesStore = defineStore('favorites', () => {
     return ids.value.has(productId)
   }
 
-  return { items, loading, load, toggle, isFavorite }
+  return { items, loading, count, load, toggle, isFavorite }
 })

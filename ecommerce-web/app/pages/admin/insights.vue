@@ -64,17 +64,19 @@
         <div class="sub-box">
           <div class="label rtl-text mb-2">يومي (آخر 30 يوم)</div>
           <div class="grid gap-2">
-            <div class="grid grid-cols-[120px_1fr_1fr_1fr] gap-2 text-xs admin-muted">
+            <div class="grid grid-cols-[120px_1fr_1fr_1fr_1fr] gap-2 text-xs admin-muted">
               <div class="keep-ltr">date</div>
               <div class="text-center rtl-text">طلبات</div>
               <div class="text-center rtl-text">مشاهدات</div>
               <div class="text-center rtl-text">مفضلة</div>
+              <div class="text-center rtl-text">زيارات</div>
             </div>
-            <div v-for="r in daily" :key="r.period" class="grid grid-cols-[120px_1fr_1fr_1fr] gap-2 items-center py-2 border-t border-app">
+            <div v-for="r in daily" :key="r.period" class="grid grid-cols-[120px_1fr_1fr_1fr_1fr] gap-2 items-center py-2 border-t border-app">
               <div class="keep-ltr text-xs">{{ r.period }}</div>
               <div class="text-center keep-ltr font-bold">{{ r.orders }}</div>
               <div class="text-center keep-ltr font-bold">{{ r.views }}</div>
               <div class="text-center keep-ltr font-bold">{{ r.favorites }}</div>
+              <div class="text-center keep-ltr font-bold">{{ r.visits }}</div>
             </div>
           </div>
         </div>
@@ -82,17 +84,19 @@
         <div class="sub-box">
           <div class="label rtl-text mb-2">شهري (آخر 12 شهر)</div>
           <div class="grid gap-2">
-            <div class="grid grid-cols-[120px_1fr_1fr_1fr] gap-2 text-xs admin-muted">
+            <div class="grid grid-cols-[120px_1fr_1fr_1fr_1fr] gap-2 text-xs admin-muted">
               <div class="keep-ltr">month</div>
               <div class="text-center rtl-text">طلبات</div>
               <div class="text-center rtl-text">مشاهدات</div>
               <div class="text-center rtl-text">مفضلة</div>
+              <div class="text-center rtl-text">زيارات</div>
             </div>
-            <div v-for="r in monthly" :key="r.period" class="grid grid-cols-[120px_1fr_1fr_1fr] gap-2 items-center py-2 border-t border-app">
+            <div v-for="r in monthly" :key="r.period" class="grid grid-cols-[120px_1fr_1fr_1fr_1fr] gap-2 items-center py-2 border-t border-app">
               <div class="keep-ltr text-xs">{{ r.period }}</div>
               <div class="text-center keep-ltr font-bold">{{ r.orders }}</div>
               <div class="text-center keep-ltr font-bold">{{ r.views }}</div>
               <div class="text-center keep-ltr font-bold">{{ r.favorites }}</div>
+              <div class="text-center keep-ltr font-bold">{{ r.visits }}</div>
             </div>
           </div>
         </div>

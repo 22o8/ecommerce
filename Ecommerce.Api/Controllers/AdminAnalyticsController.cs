@@ -81,71 +81,88 @@ public class AdminAnalyticsController : ControllerBase
             .Select(p => new { p.Id, p.Title, p.Slug, p.Brand, p.PriceIqd })
             .ToListAsync();
 
+        // ✅ Response shape matches frontend: /app/pages/admin/insights.vue
         return Ok(new
         {
             since,
-            topFavorited = topFavorited.Select(x => new { x.productId, x.count, product = products.FirstOrDefault(p => p.Id == x.productId) }),
-            topViewed = topViewed.Select(x => new { x.productId, x.count, product = products.FirstOrDefault(p => p.Id == x.productId) }),
-            topPurchased = topPurchasedAgg.Select(x => new { x.productId, x.count, product = products.FirstOrDefault(p => p.Id == x.productId) }),
-            neglected
+            topPurchased = topPurchasedAgg.Select(x => new
+            {
+                productId = x.productId,
+                title = products.FirstOrDefault(p => p.Id == x.productId)?.Title,
+                purchases = x.count
+            }),
+            topFavorites = topFavorited.Select(x => new
+            {
+                productId = x.productId,
+                title = products.FirstOrDefault(p => p.Id == x.productId)?.Title,
+                favorites = x.count
+            }),
+            topViews = topViewed.Select(x => new
+            {
+                productId = x.productId,
+                title = products.FirstOrDefault(p => p.Id == x.productId)?.Title,
+                views = x.count
+            }),
+            neglected = neglected.Select(p => new
+            {
+                productId = p.Id,
+                title = p.Title,
+                views = 0,
+                favorites = 0,
+                purchases = 0
+            })
         });
     }
 
-    // GET /api/admin/analytics/activity?mode=daily&days=30
+    // GET /api/admin/analytics/activity
+    // يرجّع day + month بنفس الوقت حتى يطابق الفرونت.
     [HttpGet("activity")]
-    public async Task<IActionResult> Activity([FromQuery] string mode = "daily", [FromQuery] int days = 30)
+    public async Task<IActionResult> Activity()
     {
-        if (days < 1) days = 30;
-        var since = DateTime.UtcNow.AddDays(-days);
+        var now = DateTime.UtcNow;
+        var sinceDaily = now.AddDays(-30);
+        var sinceMonthly = now.AddMonths(-12);
 
-        // get raw events
-        var orders = await _db.Orders.Where(o => o.CreatedAt >= since)
-            .Select(o => o.CreatedAt)
-            .ToListAsync();
-
-        var users = await _db.Users.Where(u => u.CreatedAt >= since)
-            .Select(u => u.CreatedAt)
-            .ToListAsync();
-
-        var views = await _db.ProductViews.Where(v => v.CreatedAt >= since)
-            .Select(v => v.CreatedAt)
-            .ToListAsync();
-
-        var favs = await _db.Favorites.Where(f => f.CreatedAt >= since)
-            .Select(f => f.CreatedAt)
-            .ToListAsync();
-
-        DateTime Bucket(DateTime dt)
+        async Task<List<dynamic>> Build(string mode, DateTime since)
         {
-            var d = dt.Date;
-            if (mode.Equals("monthly", StringComparison.OrdinalIgnoreCase))
-                return new DateTime(d.Year, d.Month, 1);
-            return d;
+            DateTime Bucket(DateTime dt)
+            {
+                var d = dt.Date;
+                if (mode == "monthly") return new DateTime(d.Year, d.Month, 1);
+                return d;
+            }
+
+            var orders = await _db.Orders.Where(o => o.CreatedAt >= since).Select(o => o.CreatedAt).ToListAsync();
+            var views = await _db.ProductViews.Where(v => v.CreatedAt >= since).Select(v => v.CreatedAt).ToListAsync();
+            var favs = await _db.Favorites.Where(f => f.CreatedAt >= since).Select(f => f.CreatedAt).ToListAsync();
+            var visits = await _db.SiteVisits.Where(v => v.CreatedAt >= since).Select(v => v.CreatedAt).ToListAsync();
+
+            var ordersSeries = orders.Select(Bucket).GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
+            var viewsSeries = views.Select(Bucket).GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
+            var favsSeries = favs.Select(Bucket).GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
+            var visitsSeries = visits.Select(Bucket).GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
+
+            var keys = ordersSeries.Keys
+                .Concat(viewsSeries.Keys)
+                .Concat(favsSeries.Keys)
+                .Concat(visitsSeries.Keys)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            return keys.Select(k => (dynamic)new
+            {
+                period = mode == "monthly" ? k.ToString("yyyy-MM") : k.ToString("yyyy-MM-dd"),
+                orders = ordersSeries.TryGetValue(k, out var o) ? o : 0,
+                views = viewsSeries.TryGetValue(k, out var v) ? v : 0,
+                favorites = favsSeries.TryGetValue(k, out var f) ? f : 0,
+                visits = visitsSeries.TryGetValue(k, out var s) ? s : 0
+            }).ToList();
         }
 
-        var series = orders.Select(Bucket).GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
-        var usersSeries = users.Select(Bucket).GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
-        var viewsSeries = views.Select(Bucket).GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
-        var favsSeries = favs.Select(Bucket).GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
+        var daily = await Build("daily", sinceDaily);
+        var monthly = await Build("monthly", sinceMonthly);
 
-        // union all buckets
-        var keys = series.Keys
-            .Concat(usersSeries.Keys)
-            .Concat(viewsSeries.Keys)
-            .Concat(favsSeries.Keys)
-            .Distinct()
-            .OrderBy(x => x)
-            .ToList();
-
-        var items = keys.Select(k => new
-        {
-            date = k,
-            orders = series.TryGetValue(k, out var o) ? o : 0,
-            newUsers = usersSeries.TryGetValue(k, out var u) ? u : 0,
-            views = viewsSeries.TryGetValue(k, out var v) ? v : 0,
-            favorites = favsSeries.TryGetValue(k, out var f) ? f : 0
-        }).ToList();
-
-        return Ok(new { since, mode, items });
+        return Ok(new { daily, monthly });
     }
 }
