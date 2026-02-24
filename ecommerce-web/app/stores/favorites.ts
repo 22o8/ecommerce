@@ -10,7 +10,7 @@ export const useFavoritesStore = defineStore('favorites', () => {
   const items = ref<any[]>([])
   const loading = ref(false)
 
-  const ids = computed(() => new Set(items.value.map((p: any) => String(p?.id ?? p?.Id ?? ''))).filter(Boolean)))
+  const ids = computed(() => new Set(items.value.map((p: any) => String(p?.id ?? p?.Id ?? '')).filter(Boolean)))
   const count = computed(() => items.value.length)
 
   async function load() {
