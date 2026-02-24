@@ -127,8 +127,8 @@ public class AdminAnalyticsController : ControllerBase
         {
             DateTime Bucket(DateTime dt)
             {
-                var d = dt.Date;
-                if (mode == "monthly") return new DateTime(d.Year, d.Month, 1);
+                var d = DateTime.SpecifyKind(dt.Date, DateTimeKind.Utc);
+                if (mode == "monthly") return new DateTime(d.Year, d.Month, 1, 0, 0, 0, DateTimeKind.Utc);
                 return d;
             }
 

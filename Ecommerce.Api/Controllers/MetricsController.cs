@@ -57,12 +57,15 @@ public class MetricsController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> VisitsSummary()
     {
+        // استخدم UTC دائمًا لأن قاعدة البيانات تستخدم timestamptz (timestamp with time zone)
         var now = DateTime.UtcNow;
-        var today = now.Date;
-        var monthStart = new DateTime(today.Year, today.Month, 1);
+
+        // بداية اليوم (UTC) وبداية الشهر (UTC) - مهم: Kind=Utc حتى ما يصير خطأ Npgsql
+        var todayStart = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc);
+        var monthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
         var total = await _db.SiteVisits.CountAsync();
-        var todayCount = await _db.SiteVisits.CountAsync(v => v.CreatedAt >= today);
+        var todayCount = await _db.SiteVisits.CountAsync(v => v.CreatedAt >= todayStart);
         var monthCount = await _db.SiteVisits.CountAsync(v => v.CreatedAt >= monthStart);
 
         return Ok(new
