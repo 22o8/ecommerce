@@ -77,9 +77,6 @@ namespace Ecommerce.Api.Migrations
                     b.Property<decimal>("TotalUsd")
                         .HasColumnType("numeric");
 
-					b.Property<decimal>("TotalIqd")
-						.HasColumnType("numeric");
-
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
@@ -103,9 +100,6 @@ namespace Ecommerce.Api.Migrations
                     b.Property<decimal>("LineTotalUsd")
                         .HasColumnType("numeric");
 
-					b.Property<decimal>("LineTotalIqd")
-						.HasColumnType("numeric");
-
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
 
@@ -126,9 +120,6 @@ namespace Ecommerce.Api.Migrations
 
                     b.Property<decimal>("UnitPriceUsd")
                         .HasColumnType("numeric");
-
-					b.Property<decimal>("UnitPriceIqd")
-						.HasColumnType("numeric");
 
                     b.HasKey("Id");
 

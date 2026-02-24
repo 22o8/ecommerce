@@ -6,9 +6,70 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
+
+// ----------------------------
+// Connection string resolution (Fly/Neon/Vercel friendly)
+// ----------------------------
+static string? ResolveConnectionString(IConfiguration config)
+{
+    // 1) Standard .NET connection string keys
+    var cs = config.GetConnectionString("Default")
+             ?? config["ConnectionStrings__Default"]
+             ?? config["ConnectionStrings:Default"];
+
+    if (!string.IsNullOrWhiteSpace(cs))
+        return cs;
+
+    // 2) Fly.io / common platform env vars often expose a DATABASE_URL (URL format)
+    var dbUrl = config["DATABASE_URL"] ?? config["DATABASEURL"] ?? config["POSTGRES_URL"] ?? config["POSTGRES_URL_NON_POOLING"];
+    if (string.IsNullOrWhiteSpace(dbUrl))
+        return null;
+
+    // Accept both postgres:// and postgresql://
+    if (dbUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+        dbUrl.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+    {
+        var uri = new Uri(dbUrl);
+        var userInfo = uri.UserInfo.Split(':', 2);
+        var username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "";
+        var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+
+        var builder = new NpgsqlConnectionStringBuilder
+        {
+            Host = uri.Host,
+            Port = uri.Port > 0 ? uri.Port : 5432,
+            Username = username,
+            Password = password,
+            Database = uri.AbsolutePath.TrimStart('/'),
+            // Reasonable defaults for managed Postgres
+            SslMode = SslMode.Require,
+            TrustServerCertificate = true
+        };
+
+        // Preserve any extra query params (e.g. sslmode=require)
+        var query = uri.Query.TrimStart('?');
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            foreach (var part in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var kv = part.Split('=', 2);
+                var key = Uri.UnescapeDataString(kv[0]);
+                var value = kv.Length > 1 ? Uri.UnescapeDataString(kv[1]) : "";
+                // Only set if Npgsql knows it (ignore unknown)
+                try { builder[key] = value; } catch { /* ignore */ }
+            }
+        }
+
+        return builder.ConnectionString;
+    }
+
+    // 3) Already a normal connection string (host=...;database=...;...)
+    return dbUrl;
+}
 
 // ============================
 // Services
@@ -73,27 +134,17 @@ static string NormalizeConn(string raw)
     return raw;
 }
 
-var connRaw =
-    builder.Configuration.GetConnectionString("Default")
-    ?? builder.Configuration["ConnectionStrings__Default"]
-    ?? builder.Configuration["ConnectionStrings:Default"]
-    ?? Environment.GetEnvironmentVariable("ConnectionStrings__Default")
-    ?? Environment.GetEnvironmentVariable("ConnectionStrings:Default")
-    ?? "";
-
-var conn = NormalizeConn(connRaw);
+var conn = NormalizeConn(ResolveConnectionString(config) ?? "");
 
 if (string.IsNullOrWhiteSpace(conn))
-    throw new Exception("Missing connection string: ConnectionStrings:Default");
+    throw new Exception("Missing connection string. Set ConnectionStrings__Default or DATABASE_URL.");
 
-// لو تريد تشوفها باللوغ (بدون كشفها كاملة) تقدر تطبع جزء:
 Console.WriteLine($"DB Conn set (len={conn.Length})");
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
 {
     opt.UseNpgsql(conn);
 });
-
 // ============================
 // CORS
 // ============================

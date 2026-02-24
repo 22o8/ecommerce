@@ -25,8 +25,6 @@ public class AppDbContext : DbContext
     public DbSet<ProductAsset> ProductAssets => Set<ProductAsset>();
     public DbSet<DownloadToken> DownloadTokens => Set<DownloadToken>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
-    public DbSet<Favorite> Favorites => Set<Favorite>();
-    public DbSet<ProductView> ProductViews => Set<ProductView>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { useApi } from '~/composables/useApi'
+import { useApi } from '~/app/composables/useApi'
 import { useAuthStore } from './auth'
 
 export const useFavoritesStore = defineStore('favorites', () => {
