@@ -151,72 +151,30 @@ export default defineEventHandler(async (event) => {
       }
 
       setResponseStatus(event, res.status)
-      return json
+
+    const ct = (res.headers.get("content-type") || "").toLowerCase()
+
+    // ✅ على Vercel بعض الـ routes تشتغل Edge runtime، لذلك نتجنب Buffer و node:zlib
+    // ونعتمد فقط على Web APIs (text/json/arrayBuffer).
+    if (ct.includes("application/json")) {
+      const raw = await res.text().catch(() => "")
+      try {
+        return raw ? JSON.parse(raw) : null
+      } catch {
+        return {
+          error: "Upstream returned invalid JSON.",
+          status: res.status,
+          contentType: ct,
+          preview: raw.slice(0, 400),
+        }
+      }
     }
 
-    // ✅ logout: امسح الكوكيز
-    if (isLogout) {
-      deleteCookie(event, 'token', { path: '/' })
-      deleteCookie(event, 'access', { path: '/' })
-      deleteCookie(event, 'role', { path: '/' })
-      deleteCookie(event, 'auth', { path: '/' })
-      deleteCookie(event, 'user', { path: '/' })
+    // non-JSON: رجّعه كباينري (uploads/images)
+    if (ct) setResponseHeader(event, "content-type", ct)
+    const buf = new Uint8Array(await res.arrayBuffer())
+    return buf
 
-      setResponseStatus(event, 200)
-      return { ok: true }
-    }
-
-    setResponseStatus(event, res.status)
-
-const ct = res.headers.get('content-type') || ''
-const ce = (res.headers.get('content-encoding') || '').toLowerCase()
-
-// اقرأ البودي كباينري دائماً حتى نقدر نعالج حالات (JSON مضغوط/رد HTML/حماية) بدون ما ينكسر
-let buf = Buffer.from(await res.arrayBuffer())
-
-// ✅ إذا أكو ضغط مُعلن نفكّه
-try {
-  if (ce.includes('gzip')) {
-    const { gunzipSync } = await import('node:zlib')
-    buf = gunzipSync(buf)
-  } else if (ce.includes('br')) {
-    const { brotliDecompressSync } = await import('node:zlib')
-    buf = brotliDecompressSync(buf)
-  } else if (ce.includes('deflate')) {
-    const { inflateSync } = await import('node:zlib')
-    buf = inflateSync(buf)
-  } else {
-    // ✅ أحياناً يرجع باينري مضغوط بدون هيدر صحيح (يصير مع بعض الـ proxies/VPN)
-    // نحاول نفك gzip كـ محاولة أخيرة (وإذا فشل نتجاهل)
-    const { gunzipSync } = await import('node:zlib')
-    try { buf = gunzipSync(buf) } catch {}
-  }
-} catch {}
-
-// ✅ إذا مو JSON رجّعه كباينري (صور/ملفات)
-if (!ct.includes('application/json')) {
-  if (ct) setResponseHeader(event, 'content-type', ct)
-  const cl = res.headers.get('content-length')
-  if (cl) setResponseHeader(event, 'content-length', cl)
-  const cc = res.headers.get('cache-control')
-  if (cc) setResponseHeader(event, 'cache-control', cc)
-  return buf
-}
-
-// ✅ حاول parse JSON بأمان
-const text = buf.toString('utf-8')
-try {
-  return JSON.parse(text)
-} catch (e: any) {
-  // رجّع خطأ مفهوم بدل "Unexpected token" + جزء من الرد حتى نعرف شنو صار (Block/HTML)
-  return {
-    error: 'Upstream returned invalid JSON (maybe blocked/challenge/compressed response).',
-    status: res.status,
-    contentType: ct,
-    contentEncoding: ce,
-    preview: text.slice(0, 400),
-  }
-}
   } catch (err: any) {
     console.error('BFF error:', err)
     setResponseStatus(event, 500)
