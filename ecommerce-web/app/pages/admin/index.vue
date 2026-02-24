@@ -1,54 +1,218 @@
+
 <template>
   <div class="space-y-6">
+    <!-- Header -->
     <div class="admin-box">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <div class="text-xl font-extrabold rtl-text">{{ t('admin.dashboard') }}</div>
           <div class="text-sm admin-muted rtl-text">{{ t('admin.dashboardHint') }}</div>
         </div>
 
-        <div class="flex gap-2">
-          <button class="admin-ghost" type="button" @click="fetchStats" :disabled="loading">
-            {{ t('common.refresh') }}
+        <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <div class="flex gap-2">
+            <button class="admin-chip" :class="range==='daily' ? 'is-active' : ''" type="button" @click="range='daily'">
+              يومي
+            </button>
+            <button class="admin-chip" :class="range==='monthly' ? 'is-active' : ''" type="button" @click="range='monthly'">
+              شهري
+            </button>
+          </div>
+
+          <button class="admin-ghost" type="button" @click="loadAll" :disabled="loading">
+            {{ loading ? t('common.loading') : t('common.refresh') }}
           </button>
         </div>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="admin-card">
-        <div class="admin-muted text-sm rtl-text">{{ t('admin.totalOrders') }}</div>
-        <div class="text-3xl font-extrabold mt-1">{{ stats.totalOrders }}</div>
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div class="kpi-card">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 24 24" class="kpi-ic" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 7h18M3 12h18M3 17h18" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <div class="kpi-label rtl-text">إجمالي الطلبات</div>
+          <div class="kpi-value keep-ltr">{{ stats.totalOrders }}</div>
+          <div class="kpi-sub rtl-text">آخر تحديث: {{ lastUpdatedLabel }}</div>
+        </div>
       </div>
 
-      <div class="admin-card">
-        <div class="admin-muted text-sm rtl-text">{{ t('admin.totalUsers') }}</div>
-        <div class="text-3xl font-extrabold mt-1">{{ stats.totalUsers }}</div>
+      <div class="kpi-card">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 24 24" class="kpi-ic" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 11c1.66 0 3-1.34 3-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3Z"/>
+            <path d="M8 11c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3Z"/>
+            <path d="M2 19c0-2.21 3.58-4 8-4"/>
+            <path d="M22 19c0-2.21-3.58-4-8-4"/>
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <div class="kpi-label rtl-text">إجمالي المستخدمين</div>
+          <div class="kpi-value keep-ltr">{{ stats.totalUsers }}</div>
+          <div class="kpi-sub rtl-text">المسجلين في النظام</div>
+        </div>
       </div>
 
-      <div class="admin-card">
-        <div class="admin-muted text-sm rtl-text">{{ t('admin.totalRevenue') }}</div>
-        <div class="text-3xl font-extrabold mt-1">{{ formatMoney(stats.totalRevenueIqd) }}</div>
-        <div class="admin-muted text-xs mt-1 rtl-text">{{ t('admin.revenueHint') }}</div>
+      <div class="kpi-card">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 24 24" class="kpi-ic" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1v22"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <div class="kpi-label rtl-text">إجمالي الإيرادات</div>
+          <div class="kpi-value keep-ltr">{{ formatMoney(stats.totalRevenueIqd) }}</div>
+          <div class="kpi-sub rtl-text">{{ t('admin.revenueHint') }}</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 24 24" class="kpi-ic" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/>
+            <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <div class="kpi-label rtl-text">زيارات اليوم</div>
+          <div class="kpi-value keep-ltr">{{ visits.today }}</div>
+          <div class="kpi-sub rtl-text">إجمالي الزيارات: {{ visits.total }}</div>
+        </div>
       </div>
     </div>
 
-    <div class="admin-box">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <NuxtLink class="admin-action" to="/admin/products">
-          <div class="font-extrabold rtl-text">{{ t('admin.manageProducts') }}</div>
-          <div class="admin-muted text-sm rtl-text">{{ t('admin.manageProductsHint') }}</div>
-        </NuxtLink>
+    <!-- Activity + Top lists -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      <div class="admin-box xl:col-span-2">
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div class="font-extrabold rtl-text">النشاط {{ range==='daily' ? 'اليومي' : 'الشهري' }}</div>
+          <div class="admin-muted text-sm rtl-text">
+            {{ range==='daily' ? 'آخر 30 يوم' : 'آخر 12 شهر' }}
+          </div>
+        </div>
 
-        <NuxtLink class="admin-action" to="/admin/orders">
-          <div class="font-extrabold rtl-text">{{ t('admin.manageOrders') }}</div>
-          <div class="admin-muted text-sm rtl-text">{{ t('admin.manageOrdersHint') }}</div>
-        </NuxtLink>
+        <div v-if="activityBars.length===0" class="admin-muted rtl-text">—</div>
+        <div v-else class="bars">
+          <div v-for="b in activityBars" :key="b.key" class="bar">
+            <div class="bar-fill" :style="{ height: b.h + '%' }"></div>
+            <div class="bar-label keep-ltr">{{ b.label }}</div>
+          </div>
+        </div>
 
-        <NuxtLink class="admin-action" to="/admin/services">
-          <div class="font-extrabold rtl-text">{{ t('admin.manageServices') }}</div>
-          <div class="admin-muted text-sm rtl-text">{{ t('admin.manageServicesHint') }}</div>
-        </NuxtLink>
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="mini-stat">
+            <div class="admin-muted text-xs rtl-text">طلبات</div>
+            <div class="font-black keep-ltr">{{ activityTotals.orders }}</div>
+          </div>
+          <div class="mini-stat">
+            <div class="admin-muted text-xs rtl-text">مستخدمين جدد</div>
+            <div class="font-black keep-ltr">{{ activityTotals.users }}</div>
+          </div>
+          <div class="mini-stat">
+            <div class="admin-muted text-xs rtl-text">زيارات</div>
+            <div class="font-black keep-ltr">{{ activityTotals.visits }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-box">
+        <div class="font-extrabold rtl-text mb-3">أفضل المنتجات (مختصر)</div>
+
+        <div class="space-y-3">
+          <div class="topbox">
+            <div class="topbox-title rtl-text">🔥 الأكثر شراءً</div>
+            <div v-if="overview.topPurchased.length===0" class="admin-muted rtl-text">—</div>
+            <div v-else class="grid gap-2">
+              <div v-for="x in overview.topPurchased.slice(0,5)" :key="x.productId" class="toprow">
+                <div class="rtl-text truncate font-bold">{{ x.title }}</div>
+                <div class="keep-ltr font-black">{{ x.purchases }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="topbox">
+            <div class="topbox-title rtl-text">👁️ الأكثر زيارة</div>
+            <div v-if="overview.topViews.length===0" class="admin-muted rtl-text">—</div>
+            <div v-else class="grid gap-2">
+              <div v-for="x in overview.topViews.slice(0,5)" :key="x.productId" class="toprow">
+                <div class="rtl-text truncate font-bold">{{ x.title }}</div>
+                <div class="keep-ltr font-black">{{ x.views }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="topbox">
+            <div class="topbox-title rtl-text">❤️ الأكثر مفضلة</div>
+            <div v-if="overview.topFavorites.length===0" class="admin-muted rtl-text">—</div>
+            <div v-else class="grid gap-2">
+              <div v-for="x in overview.topFavorites.slice(0,5)" :key="x.productId" class="toprow">
+                <div class="rtl-text truncate font-bold">{{ x.title }}</div>
+                <div class="keep-ltr font-black">{{ x.favorites }}</div>
+              </div>
+            </div>
+          </div>
+
+          <NuxtLink class="admin-link rtl-text" to="/admin/insights">
+            عرض التفاصيل في صفحة Insights →
+          </NuxtLink>
+        </div>
+      </div>
+    </div>
+
+    <!-- Latest Orders + Quick actions -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      <div class="admin-box xl:col-span-2">
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div class="font-extrabold rtl-text">أحدث الطلبات</div>
+          <NuxtLink class="admin-link rtl-text" to="/admin/orders">عرض الكل →</NuxtLink>
+        </div>
+
+        <div v-if="latestOrders.length===0" class="admin-muted rtl-text">—</div>
+        <div v-else class="orders">
+          <div v-for="o in latestOrders" :key="o.id" class="order-row">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <div class="order-badge" :class="badgeClass(o.status)">{{ o.status }}</div>
+                <div class="rtl-text font-extrabold truncate">{{ o.primaryItemTitle || '—' }}</div>
+              </div>
+              <div class="admin-muted text-xs rtl-text mt-1 truncate">
+                {{ o.userFullName || o.userEmail || '—' }} · {{ formatDate(o.createdAt) }}
+              </div>
+            </div>
+
+            <div class="keep-ltr font-black">{{ formatMoney(o.totalIqd) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-box">
+        <div class="font-extrabold rtl-text mb-3">اختصارات الإدارة</div>
+        <div class="grid gap-3">
+          <NuxtLink class="admin-action" to="/admin/products">
+            <div class="font-extrabold rtl-text">{{ t('admin.manageProducts') }}</div>
+            <div class="admin-muted text-sm rtl-text">{{ t('admin.manageProductsHint') }}</div>
+          </NuxtLink>
+
+          <NuxtLink class="admin-action" to="/admin/orders">
+            <div class="font-extrabold rtl-text">{{ t('admin.manageOrders') }}</div>
+            <div class="admin-muted text-sm rtl-text">{{ t('admin.manageOrdersHint') }}</div>
+          </NuxtLink>
+
+          <NuxtLink class="admin-action" to="/admin/brands">
+            <div class="font-extrabold rtl-text">إدارة البراندات</div>
+            <div class="admin-muted text-sm rtl-text">عرض / إضافة / تعديل</div>
+          </NuxtLink>
+
+          <NuxtLink class="admin-action" to="/admin/insights">
+            <div class="font-extrabold rtl-text">Insights</div>
+            <div class="admin-muted text-sm rtl-text">تحليلات المفضلة/الزيارة/الشراء</div>
+          </NuxtLink>
+        </div>
       </div>
     </div>
 
@@ -56,19 +220,25 @@
   </div>
 </template>
 
+
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from '~/composables/useI18n'
 import { useAdminApi } from '~/composables/useAdminApi'
+import { useApi } from '~/composables/useApi'
 import { formatIqd } from '~/composables/useMoney'
 
 const { t } = useI18n()
 const adminApi = useAdminApi()
+const api = useApi()
 
 const loading = ref(false)
 const error = ref('')
+
+const range = ref<'daily'|'monthly'>('daily')
+const lastUpdatedAt = ref<Date | null>(null)
 
 const stats = ref({
   totalOrders: 0,
@@ -76,20 +246,121 @@ const stats = ref({
   totalRevenueIqd: 0,
 })
 
+const visits = ref({
+  total: 0,
+  today: 0,
+  month: 0,
+})
+
+const overview = ref({
+  topPurchased: [] as any[],
+  topFavorites: [] as any[],
+  topViews: [] as any[],
+  neglected: [] as any[],
+})
+
+const activity = ref({
+  daily: [] as any[],
+  monthly: [] as any[],
+})
+
+const latestOrders = ref<any[]>([])
+
 function extractErr(e: any) {
   return e?.data?.message || e?.message || t('common.requestFailed')
 }
 
-function formatMoney(v: any){ return formatIqd(v) }
+function formatMoney(v: any) { return formatIqd(v) }
 
-async function fetchStats() {
+function formatDate(v: any) {
+  if (!v) return '—'
+  try {
+    const d = new Date(v)
+    return d.toLocaleString('en-GB', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })
+  } catch { return String(v) }
+}
+
+const lastUpdatedLabel = computed(() => {
+  if (!lastUpdatedAt.value) return '—'
+  return lastUpdatedAt.value.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })
+})
+
+const activitySeries = computed(() => range.value === 'daily' ? activity.value.daily : activity.value.monthly)
+
+const activityTotals = computed(() => {
+  const s = activitySeries.value || []
+  const sum = (k: string) => s.reduce((a: number, x: any) => a + Number(x?.[k] ?? 0), 0)
+  return {
+    orders: sum('orders'),
+    users: sum('users'),
+    visits: sum('visits'),
+  }
+})
+
+const activityBars = computed(() => {
+  const s = activitySeries.value || []
+  if (s.length === 0) return []
+  const maxV = Math.max(1, ...s.map((x: any) => Number(x?.visits ?? 0)))
+  return s.map((x: any, idx: number) => {
+    const v = Number(x?.visits ?? 0)
+    const h = Math.round((v / maxV) * 100)
+    const label = String(x?.label ?? x?.key ?? idx+1)
+    return { key: String(x?.key ?? idx), label, h }
+  })
+})
+
+function badgeClass(status: string) {
+  const s = String(status || '').toLowerCase()
+  if (s.includes('paid') || s.includes('complete') || s.includes('done')) return 'ok'
+  if (s.includes('cancel')) return 'bad'
+  if (s.includes('pending') || s.includes('new')) return 'warn'
+  return 'neutral'
+}
+
+async function loadAll() {
   loading.value = true
   error.value = ''
   try {
-    const res = await adminApi.getDashboardStats<any>()
-    stats.value.totalOrders = Number(res?.totalOrders ?? 0)
-    stats.value.totalUsers = Number(res?.totalUsers ?? 0)
-    stats.value.totalRevenueIqd = Number(res?.totalRevenueIqd ?? 0)
+    const [dash, ov, act, vis, orders] = await Promise.all([
+      adminApi.getDashboardStats<any>(),
+      adminApi.get<any>('/admin/analytics/overview'),
+      adminApi.get<any>('/admin/analytics/activity'),
+      api.get<any>('/metrics/visits/summary'),
+      adminApi.get<any>('/admin/orders'),
+    ])
+
+    stats.value.totalOrders = Number(dash?.totalOrders ?? 0)
+    stats.value.totalUsers = Number(dash?.totalUsers ?? 0)
+    stats.value.totalRevenueIqd = Number(dash?.totalRevenueIqd ?? 0)
+
+    overview.value.topPurchased = Array.isArray(ov?.topPurchased) ? ov.topPurchased : []
+    overview.value.topFavorites = Array.isArray(ov?.topFavorites) ? ov.topFavorites : []
+    overview.value.topViews = Array.isArray(ov?.topViews) ? ov.topViews : []
+    overview.value.neglected = Array.isArray(ov?.neglected) ? ov.neglected : []
+
+    activity.value.daily = Array.isArray(act?.daily) ? act.daily : []
+    activity.value.monthly = Array.isArray(act?.monthly) ? act.monthly : []
+
+    visits.value.total = Number(vis?.total ?? 0)
+    visits.value.today = Number(vis?.today ?? 0)
+    visits.value.month = Number(vis?.month ?? 0)
+
+    const list = Array.isArray(orders) ? orders : (Array.isArray(orders?.items) ? orders.items : [])
+    latestOrders.value = list
+      .slice()
+      .sort((a: any, b: any) => new Date(b?.createdAt || 0).getTime() - new Date(a?.createdAt || 0).getTime())
+      .slice(0, 6)
+      .map((o: any) => ({
+        id: o?.id || o?.Id,
+        status: o?.status || o?.Status || '—',
+        totalIqd: o?.totalIqd ?? o?.TotalIqd ?? 0,
+        createdAt: o?.createdAt || o?.CreatedAt,
+        userEmail: o?.userEmail || o?.User?.Email,
+        userFullName: o?.userFullName || o?.User?.FullName,
+        primaryItemTitle: o?.primaryItemTitle || '—',
+      }))
+
+    lastUpdatedAt.value = new Date()
   } catch (e: any) {
     error.value = extractErr(e)
   } finally {
@@ -97,8 +368,13 @@ async function fetchStats() {
   }
 }
 
-fetchStats()
+watch(range, () => {
+  // مجرد تحديث UI (البيانات نفسها محمّلة)
+})
+
+loadAll()
 </script>
+
 
 <style scoped>
 .admin-box{
@@ -108,38 +384,159 @@ fetchStats()
   padding: 16px;
 }
 .admin-muted{ color: rgb(var(--muted)); }
+.admin-error{
+  border: 1px solid rgba(255,0,0,.25);
+  background: rgba(255,0,0,.08);
+  color: #ffb4b4;
+  padding: 12px 14px;
+  border-radius: 16px;
+}
+
+.admin-chip{
+  border-radius: 999px;
+  border: 1px solid rgb(var(--border));
+  padding: 8px 12px;
+  font-weight: 900;
+  font-size: 12px;
+  background: rgba(255,255,255,.02);
+}
+.admin-chip.is-active{
+  background: rgba(124,58,237,.18);
+  border-color: rgba(124,58,237,.45);
+}
+
+.kpi-card{
+  border-radius: 20px;
+  border: 1px solid rgb(var(--border));
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+  padding: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,.10);
+}
+.kpi-icon{
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  display:flex; align-items:center; justify-content:center;
+  background: rgba(124,58,237,.18);
+  border: 1px solid rgba(124,58,237,.35);
+}
+.kpi-ic{ width: 22px; height: 22px; }
+.kpi-label{ font-size: 12px; font-weight: 800; color: rgb(var(--muted)); }
+.kpi-value{ font-size: 26px; font-weight: 1000; margin-top: 2px; }
+.kpi-sub{ font-size: 12px; color: rgb(var(--muted)); margin-top: 4px; }
+
+.bars{
+  height: 170px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 8px;
+  align-items: end;
+}
+.bar{
+  position: relative;
+  height: 100%;
+  border-radius: 16px;
+  border: 1px solid rgb(var(--border));
+  background: rgba(255,255,255,.02);
+  overflow: hidden;
+}
+.bar-fill{
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(124,58,237,.38);
+  border-top: 1px solid rgba(124,58,237,.45);
+}
+.bar-label{
+  position: absolute;
+  bottom: 6px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 10px;
+  color: rgba(255,255,255,.7);
+}
+
+.mini-stat{
+  border-radius: 16px;
+  border: 1px solid rgb(var(--border));
+  background: rgba(255,255,255,.02);
+  padding: 10px 12px;
+}
+
+.topbox{
+  border-radius: 16px;
+  border: 1px solid rgb(var(--border));
+  background: rgba(255,255,255,.02);
+  padding: 10px 12px;
+}
+.topbox-title{
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.toprow{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.orders{ display:grid; gap:10px; }
+.order-row{
+  border-radius: 16px;
+  border: 1px solid rgb(var(--border));
+  background: rgba(255,255,255,.02);
+  padding: 10px 12px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.order-badge{
+  font-size: 10px;
+  font-weight: 900;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgb(var(--border));
+  background: rgba(255,255,255,.02);
+  white-space: nowrap;
+}
+.order-badge.ok{ background: rgba(34,197,94,.14); border-color: rgba(34,197,94,.35); }
+.order-badge.warn{ background: rgba(234,179,8,.14); border-color: rgba(234,179,8,.35); }
+.order-badge.bad{ background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.35); }
+.order-badge.neutral{ background: rgba(148,163,184,.12); border-color: rgba(148,163,184,.25); }
+
+.admin-link{
+  display:inline-flex;
+  align-items:center;
+  gap: 6px;
+  font-weight: 900;
+  color: rgba(124,58,237,.95);
+}
 
 .admin-ghost{
   padding: 10px 12px;
   border-radius: 14px;
   border: 1px solid rgb(var(--border));
-  background: rgb(var(--surface));
+  background: rgb(var(--surface-2));
   color: rgb(var(--fg));
-  font-weight: 800;
-}
-
-.admin-card{
-  border-radius: 20px;
-  border: 1px solid rgb(var(--border));
-  background: rgb(var(--surface));
-  padding: 16px;
+  font-weight: 900;
 }
 
 .admin-action{
+  display:block;
   border-radius: 18px;
   border: 1px solid rgb(var(--border));
-  background: rgb(var(--surface));
+  background: rgba(255,255,255,.02);
   padding: 14px;
-  display: block;
+  transition: transform .15s ease, border-color .15s ease, background .15s ease;
 }
 .admin-action:hover{
-  background: rgb(var(--surface-2));
+  transform: translateY(-2px);
+  border-color: rgba(124,58,237,.45);
+  background: rgba(124,58,237,.10);
 }
 
-.admin-error{
-  border-radius: 16px;
-  border: 1px solid rgba(239,68,68,.35);
-  background: rgba(239,68,68,.10);
-  padding: 12px 14px;
-}
 </style>
+
