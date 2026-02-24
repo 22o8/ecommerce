@@ -152,7 +152,24 @@ export default defineEventHandler(async (event) => {
 
       setResponseStatus(event, res.status)
 
+      return json
+    }
+
     const ct = (res.headers.get("content-type") || "").toLowerCase()
+    // ✅ logout: امسح cookies
+    if (isLogout) {
+      const json = await res.json().catch(() => null)
+      const names = ['token','access','access_token','role','auth','user']
+      for (const n of names) {
+        try { deleteCookie(event, n, { path: '/' }) } catch { /* ignore */ }
+      }
+      setResponseStatus(event, res.status)
+      return json ?? { ok: res.ok }
+    }
+
+    // ✅ ضبط status دائماً قبل القراءة
+    setResponseStatus(event, res.status)
+
 
     // ✅ على Vercel بعض الـ routes تشتغل Edge runtime، لذلك نتجنب Buffer و node:zlib
     // ونعتمد فقط على Web APIs (text/json/arrayBuffer).
