@@ -78,9 +78,9 @@ public static class DbBootstrapper
                 ""Quantity"" integer NOT NULL DEFAULT 1,
                 ""UnitPriceUsd"" numeric(18,2) NOT NULL DEFAULT 0,
                 CONSTRAINT ""PK_OrderItems"" PRIMARY KEY (""Id""),
-                CONSTRAINT ""FK_OrderItems_Orders_OrderId"" FOREIGN KEY (""OrderId")
+		                CONSTRAINT ""FK_OrderItems_Orders_OrderId"" FOREIGN KEY (""OrderId"")
                     REFERENCES ""Orders""(""Id"") ON DELETE CASCADE,
-                CONSTRAINT ""FK_OrderItems_Products_ProductId"" FOREIGN KEY (""ProductId")
+		                CONSTRAINT ""FK_OrderItems_Products_ProductId"" FOREIGN KEY (""ProductId"")
                     REFERENCES ""Products""(""Id"") ON DELETE RESTRICT
               );",
 
@@ -98,7 +98,7 @@ public static class DbBootstrapper
                 ""ProviderRef"" character varying(200) NULL,
                 ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
                 CONSTRAINT ""PK_Payments"" PRIMARY KEY (""Id""),
-                CONSTRAINT ""FK_Payments_Orders_OrderId"" FOREIGN KEY (""OrderId")
+		                CONSTRAINT ""FK_Payments_Orders_OrderId"" FOREIGN KEY (""OrderId"")
                     REFERENCES ""Orders""(""Id"") ON DELETE CASCADE
               );",
 
