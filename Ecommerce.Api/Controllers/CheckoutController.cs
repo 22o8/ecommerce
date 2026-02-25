@@ -13,11 +13,21 @@ namespace Ecommerce.Api.Controllers;
 public class CheckoutController : ControllerBase
 {
     private readonly AppDbContext _db;
+	private readonly IConfiguration _config;
 
-    public CheckoutController(AppDbContext db)
+    public CheckoutController(AppDbContext db, IConfiguration config)
     {
         _db = db;
+		_config = config;
     }
+
+	private bool ValidateCheckoutSecret()
+	{
+		var expected = _config["Checkout:Secret"];
+		if (string.IsNullOrWhiteSpace(expected)) return true;
+		var provided = Request.Headers["X-Checkout-Secret"].ToString();
+		return !string.IsNullOrWhiteSpace(provided) && provided == expected;
+	}
 
     private bool TryGetUserId(out Guid userId)
     {
@@ -169,6 +179,85 @@ public class CheckoutController : ControllerBase
             payment = new { payment.Id, payment.Provider, payment.Status, payment.ProviderRef }
         });
     }
+
+	// POST /api/checkout/cart/whatsapp
+	// Checkout عبر واتساب (بدون بوابة دفع): نسجل الطلب كـ مدفوع + نسجل Payment ناجح حتى يظهر بالإحصائيات
+	// ملاحظة أمنية: فعّل Checkout:Secret وأرسل X-Checkout-Secret من الـ BFF فقط.
+	[AllowAnonymous]
+	[HttpPost("cart/whatsapp")]
+	public async Task<IActionResult> CheckoutCartWhatsApp([FromBody] CheckoutCartRequest req)
+	{
+		if (!ValidateCheckoutSecret())
+			return Unauthorized(new { message = "Invalid checkout secret" });
+
+		var productIds = req.Items.Select(i => i.ProductId).Distinct().ToList();
+		var products = await _db.Products
+			.Include(p => p.Assets)
+			.Where(p => productIds.Contains(p.Id))
+			.ToListAsync();
+
+		if (products.Count == 0)
+			return BadRequest(new { message = "Cart is empty" });
+
+		var order = new Order
+		{
+			Id = Guid.NewGuid(),
+			UserId = Guid.Empty,
+			Status = "Paid",
+			Currency = "IQD",
+			CreatedAt = DateTime.UtcNow,
+			ShippingAddress = null,
+			PhoneNumber = null,
+			Notes = "WhatsApp checkout",
+			Items = new List<OrderItem>(),
+			Payments = new List<Payment>()
+		};
+
+		decimal totalIqd = 0;
+		decimal totalUsd = 0;
+
+		foreach (var i in req.Items)
+		{
+			var p = products.FirstOrDefault(x => x.Id == i.ProductId);
+			if (p == null) continue;
+
+			var lineTotalUsd = p.PriceUsd * i.Quantity;
+			var lineTotalIqd = p.PriceIqd * i.Quantity;
+			totalUsd += lineTotalUsd;
+			totalIqd += lineTotalIqd;
+
+			order.Items.Add(new OrderItem
+			{
+				Id = Guid.NewGuid(),
+				ProductId = p.Id,
+				ProductName = p.Name,
+				Quantity = i.Quantity,
+				UnitPriceUsd = p.PriceUsd,
+				LineTotalUsd = lineTotalUsd,
+				UnitPriceIqd = p.PriceIqd,
+				LineTotalIqd = lineTotalIqd
+			});
+		}
+
+		order.TotalUsd = totalUsd;
+		order.TotalIqd = totalIqd;
+
+		var payment = new Payment
+		{
+			Order = order,
+			Provider = "WhatsApp",
+			Status = "Succeeded",
+			ProviderRef = $"WA-{Guid.NewGuid():N}",
+			AmountUsd = order.TotalUsd,
+			AmountIqd = order.TotalIqd
+		};
+
+		order.Payments.Add(payment);
+		_db.Orders.Add(order);
+		await _db.SaveChangesAsync();
+
+		return Ok(new { orderId = order.Id, status = order.Status });
+	}
 
     // POST /api/checkout/services
     // هذا ينشئ Order مرتبط بـ ServiceRequest موجود (اللي سويته سابقًا)

@@ -92,7 +92,7 @@
         <div class="flex items-center justify-between gap-3 mb-4">
           <div class="font-extrabold rtl-text">النشاط {{ range==='daily' ? 'اليومي' : 'الشهري' }}</div>
           <div class="admin-muted text-sm rtl-text">
-            {{ range==='daily' ? '{{ $t('admin.last30Days') }}' : 'آخر 12 شهر' }}
+            {{ range==='daily' ? $t('admin.last30Days') : $t('admin.last12Months') }}
           </div>
         </div>
 

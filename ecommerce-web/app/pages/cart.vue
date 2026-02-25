@@ -119,8 +119,22 @@ function whatsappText() {
   return lines.join('\n')
 }
 
-function openWhatsApp() {
+async function openWhatsApp() {
   error.value = ''
+
+  // ✅ سجّل الطلب كعملية ناجحة (مدفوع) حتى ينعكس مباشرة في لوحة التحكم/الإحصائيات
+  // (يبقى فتح واتساب دائماً حتى لو فشل الطلب)
+  try {
+    await $fetch('/api/bff/checkout/cart/whatsapp', {
+      method: 'POST',
+      body: {
+        items: cart.items.map(i => ({ productId: i.id, quantity: i.quantity }))
+      }
+    })
+  } catch (e: any) {
+    console.error(e)
+  }
+
   const number = (config.public as any).whatsappNumber || (config.public as any).whatsappPhone || ''
   const text = encodeURIComponent(whatsappText())
   const url = number

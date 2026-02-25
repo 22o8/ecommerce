@@ -78,6 +78,13 @@ export default defineEventHandler(async (event) => {
       headers.authorization = `Bearer ${tokenFromCookie}`
     }
 
+    // ✅ WhatsApp Checkout: أرسل سرّ بسيط للباك إند حتى نمنع الاستدعاء المباشر من أي شخص
+    // ضعه في Vercel Environment Variables باسم CHECKOUT_SECRET
+    if (routePath.toLowerCase() === 'checkout/cart/whatsapp') {
+      const secret = process.env.CHECKOUT_SECRET
+      if (secret) headers['X-Checkout-Secret'] = secret
+    }
+
     // Body
     const body = method === 'GET' || method === 'HEAD'
       ? undefined

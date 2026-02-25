@@ -306,6 +306,7 @@
     "totalVisits": "Total visits",
     "activityDaily": "Daily activity",
     "last30Days": "Last 30 days",
+    "last12Months": "Last 12 months",
     "summary": {
       "title": "Top products (summary)",
       "mostPurchased": "Most purchased",
