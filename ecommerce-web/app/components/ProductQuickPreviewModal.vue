@@ -143,7 +143,8 @@ const waLink = computed(() => {
   const name = displayName.value || ''
   const text = encodeURIComponent(`${t('whatsapp.messagePrefix')} ${name}`)
   // رقم واتساب يُقرأ من env: NUXT_PUBLIC_WHATSAPP_PHONE (بدون +)
-  const phone = (useRuntimeConfig().public.whatsappPhone || '').toString().replace(/\D/g, '')
+  const cfg: any = useRuntimeConfig().public
+  const phone = (cfg.whatsappNumber || cfg.whatsappPhone || '').toString().replace(/\D/g, '')
   const target = phone ? `https://wa.me/${phone}` : 'https://wa.me/'
   return `${target}?text=${text}`
 })

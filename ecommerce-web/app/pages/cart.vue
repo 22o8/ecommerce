@@ -74,25 +74,12 @@
       </div>
 
       <div class="mt-6 grid gap-3">
-        <UiButton :disabled="!cart.items.length" :loading="loading" @click="createOrder">
-          <Icon name="mdi:cart-check" class="text-lg" />
+        <!-- ✅ Buy Now = WhatsApp checkout -->
+        <UiButton :disabled="!cart.items.length" @click="openWhatsApp">
+          <Icon name="mdi:whatsapp" class="text-lg" />
           <span class="rtl-text">{{ t('buyNow') }}</span>
         </UiButton>
 
-        <UiButton :disabled="!cart.items.length" variant="ghost" @click="openWhatsApp">
-          <Icon name="mdi:whatsapp" class="text-lg" />
-          <span class="rtl-text">{{ t('sendWhatsApp') }}</span>
-        </UiButton>
-
-        <p v-if="!auth.isAuthed" class="text-xs rtl-text text-muted">
-          <Icon name="mdi:information-outline" class="inline-block align-[-2px]" />
-          {{ t('loginToCheckout') }}
-          <NuxtLink to="/login" class="underline">{{ t('loginTitle') }}</NuxtLink>
-          ·
-          <NuxtLink to="/register" class="underline">{{ t('registerTitle') }}</NuxtLink>
-        </p>
-
-        <p v-if="success" class="text-sm rtl-text text-[rgb(var(--success))]">{{ success }}</p>
         <p v-if="error" class="text-sm rtl-text text-[rgb(var(--danger))]">{{ error }}</p>
       </div>
     </div>
@@ -105,24 +92,24 @@ import { buildAssetUrl } from '~/composables/useApi'
 import { formatIqd } from '~/composables/useMoney'
 
 const { t } = useI18n()
-const api = useApi()
 const cart = useCartStore()
 const auth = useAuthStore()
 const profile = useProfileStore()
 const config = useRuntimeConfig()
 
-const loading = ref(false)
 const error = ref('')
-const success = ref('')
 
 function fmtMoney(v: any){ return formatIqd(v) }
 
 function whatsappText() {
+  const when = new Date().toLocaleString('ar-IQ')
   const lines = [
     `طلب جديد من المتجر`,
+    `الوقت: ${when}`,
     `الاسم: ${profile.fullName || auth.user?.fullName || '-'}`,
     `الهاتف: ${profile.phone || (auth.user as any)?.phone || '-'}`,
     `الإيميل: ${profile.email || auth.user?.email || '-'}`,
+    `صفحة المتجر: ${window.location.origin}`,
     '',
     'المنتجات:',
     ...cart.items.map(i => `- ${i.title} × ${i.quantity} = ${fmtMoney(i.price * i.quantity)}`),
@@ -133,35 +120,13 @@ function whatsappText() {
 }
 
 function openWhatsApp() {
-  const number = (config.public as any).whatsappNumber || ''
+  error.value = ''
+  const number = (config.public as any).whatsappNumber || (config.public as any).whatsappPhone || ''
   const text = encodeURIComponent(whatsappText())
   const url = number
     ? `https://wa.me/${String(number).replace(/\D/g, '')}?text=${text}`
     : `https://wa.me/?text=${text}`
   window.open(url, '_blank')
-}
-
-async function createOrder() {
-  success.value = ''
-  error.value = ''
-  if (!auth.isAuthed) {
-    error.value = t('loginToCheckout')
-    return
-  }
-  loading.value = true
-  try {
-    const body = {
-      items: cart.items.map(i => ({ productId: i.id, quantity: i.quantity })),
-      notes: whatsappText(),
-    }
-    const res = await api.post<{ id: string }>(`/Checkout/cart`, body)
-    success.value = `${t('orderCreated')} #${res.id}`
-    cart.clear()
-  } catch (e: any) {
-    error.value = e?.data?.message || e?.message || t('orderFailed')
-  } finally {
-    loading.value = false
-  }
 }
 
 onMounted(() => profile.hydrateFromAuth(auth.token || ''))
