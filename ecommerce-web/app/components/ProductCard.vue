@@ -26,7 +26,7 @@
       <div class="absolute top-3 left-3 flex items-center gap-2">
         <div
           v-if="isNew"
-          class="px-3 py-1 rounded-full bg-white/10 backdrop-blur border border-white/10 text-xs"
+          class="px-3 py-1 rounded-full bg-surface-2 backdrop-blur border border-app text-xs"
         >
           <span class="rtl-text">{{ t('common.new') }}</span>
         </div>
@@ -72,7 +72,7 @@
         <div class="flex flex-row items-center gap-2">
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-app bg-surface hover:bg-white/5 transition text-xs"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-app bg-surface hover:bg-surface-2 transition text-xs"
             @click.stop.prevent="addToCart"
           >
             <Icon name="mdi:cart-plus" class="text-base" />
@@ -81,7 +81,7 @@
 
           <button
             type="button"
-            class="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-app bg-surface hover:bg-white/5 transition text-xs"
+            class="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-app bg-surface hover:bg-surface-2 transition text-xs"
             @click.stop.prevent="buyNow"
           >
             <span class="rtl-text">{{ t('common.buy') }}</span>

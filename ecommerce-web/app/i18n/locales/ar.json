@@ -115,6 +115,7 @@
   },
   "admin": {
     "title": "لوحة الإدارة",
+    "featured": "مميز",
     "overview": "نظرة عامة",
     "dashboardHint": "ملخص سريع لأداء المتجر.",
     "totalOrders": "إجمالي الطلبات",

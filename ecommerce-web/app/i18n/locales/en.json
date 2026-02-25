@@ -119,6 +119,7 @@
   },
   "admin": {
     "title": "Admin Panel",
+    "featured": "Featured",
     "dashboardHint": "Quick overview and shortcuts",
     "overview": "Overview",
     "totalOrders": "Total orders",
