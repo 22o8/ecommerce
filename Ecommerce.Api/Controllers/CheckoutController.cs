@@ -45,7 +45,9 @@ public class CheckoutController : ControllerBase
         if (!ValidateCheckoutSecret()) return Unauthorized();
 
         var qty = Math.Max(1, req.Quantity);
-        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == req.ProductId && p.IsActive);
+        // ✅ لا نسمح بشراء منتج محذوف/غير منشور
+        var product = await _db.Products.FirstOrDefaultAsync(p =>
+            p.Id == req.ProductId && p.IsPublished && !p.IsDeleted);
         if (product is null) return NotFound(new { message = "Product not found" });
 
         var userId = GetUserIdOrEmpty();
@@ -57,7 +59,6 @@ public class CheckoutController : ControllerBase
         {
             UserId = userId,
             Status = "Paid", // ✅ حتى يظهر فوراً بلوحة التحكم
-            Currency = "IQD",
             TotalUsd = totalUsd,
             TotalIqd = totalIqd,
             CreatedAt = DateTime.UtcNow,
@@ -69,10 +70,10 @@ public class CheckoutController : ControllerBase
         {
             ProductId = product.Id,
             Quantity = qty,
-            // نخزن داخل OrderItem قيم IQD (الـ Order يحتفظ بـ USD/IQD)
-            UnitPrice = product.PriceIqd,
-            LineTotal = totalIqd,
-            CreatedAt = DateTime.UtcNow
+            UnitPriceUsd = product.PriceUsd,
+            UnitPriceIqd = product.PriceIqd,
+            LineTotalUsd = totalUsd,
+            LineTotalIqd = totalIqd
         });
 
         order.Payments.Add(new Payment
@@ -114,7 +115,7 @@ public class CheckoutController : ControllerBase
         // جلب المنتجات دفعة واحدة
         var ids = req.Items.Select(x => x.ProductId).Distinct().ToList();
         var products = await _db.Products
-            .Where(p => ids.Contains(p.Id) && p.IsActive)
+            .Where(p => ids.Contains(p.Id) && p.IsPublished && !p.IsDeleted)
             .ToDictionaryAsync(p => p.Id, p => p);
 
         if (products.Count == 0)
@@ -127,7 +128,6 @@ public class CheckoutController : ControllerBase
         {
             UserId = userId,
             Status = "Paid",
-            Currency = "IQD",
             TotalUsd = 0,
             TotalIqd = 0,
             CreatedAt = DateTime.UtcNow,
@@ -150,9 +150,10 @@ public class CheckoutController : ControllerBase
             {
                 ProductId = p.Id,
                 Quantity = qty,
-                UnitPrice = p.PriceIqd,
-                LineTotal = lineIqd,
-                CreatedAt = DateTime.UtcNow
+                UnitPriceUsd = p.PriceUsd,
+                UnitPriceIqd = p.PriceIqd,
+                LineTotalUsd = lineUsd,
+                LineTotalIqd = lineIqd
             });
         }
 
@@ -181,7 +182,7 @@ public class CheckoutController : ControllerBase
             status = order.Status,
             amountUsd = order.TotalUsd,
             amountIqd = order.TotalIqd,
-            items = order.Items.Select(x => new { x.ProductId, x.Quantity, x.UnitPrice, x.LineTotal }).ToList()
+            items = order.Items.Select(x => new { x.ProductId, x.Quantity, unitPriceIqd = x.UnitPriceIqd, lineTotalIqd = x.LineTotalIqd }).ToList()
         });
     }
 
@@ -201,7 +202,7 @@ public class CheckoutController : ControllerBase
 
         var ids = req.Items.Select(x => x.ProductId).Distinct().ToList();
         var products = await _db.Products
-            .Where(p => ids.Contains(p.Id) && p.IsActive)
+            .Where(p => ids.Contains(p.Id) && p.IsPublished && !p.IsDeleted)
             .ToDictionaryAsync(p => p.Id, p => p);
 
         decimal totalUsd = 0;
@@ -211,7 +212,6 @@ public class CheckoutController : ControllerBase
         {
             UserId = userId,
             Status = "Paid",
-            Currency = "IQD",
             TotalUsd = 0,
             TotalIqd = 0,
             CreatedAt = DateTime.UtcNow,
@@ -236,9 +236,10 @@ public class CheckoutController : ControllerBase
             {
                 ProductId = p.Id,
                 Quantity = qty,
-                UnitPrice = p.PriceIqd,
-                LineTotal = lineIqd,
-                CreatedAt = DateTime.UtcNow
+                UnitPriceUsd = p.PriceUsd,
+                UnitPriceIqd = p.PriceIqd,
+                LineTotalUsd = lineUsd,
+                LineTotalIqd = lineIqd
             });
 
             lines.Add($"- {p.Title} x{qty} = {lineIqd:N0} د.ع");
