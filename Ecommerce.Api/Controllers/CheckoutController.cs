@@ -45,9 +45,10 @@ public class CheckoutController : ControllerBase
         if (!ValidateCheckoutSecret()) return Unauthorized();
 
         var qty = Math.Max(1, req.Quantity);
-        // ✅ لا نسمح بشراء منتج محذوف/غير منشور
+        // ✅ لا نسمح بشراء منتج غير منشور
+        // ملاحظة: الـ Product عندك ما بيه IsDeleted / IsActive لذلك نعتمد فقط IsPublished
         var product = await _db.Products.FirstOrDefaultAsync(p =>
-            p.Id == req.ProductId && p.IsPublished && !p.IsDeleted);
+            p.Id == req.ProductId && p.IsPublished);
         if (product is null) return NotFound(new { message = "Product not found" });
 
         var userId = GetUserIdOrEmpty();
@@ -59,6 +60,8 @@ public class CheckoutController : ControllerBase
         {
             UserId = userId,
             Status = "Paid", // ✅ حتى يظهر فوراً بلوحة التحكم
+            IsPaid = true,
+            PaidAt = DateTime.UtcNow,
             TotalUsd = totalUsd,
             TotalIqd = totalIqd,
             CreatedAt = DateTime.UtcNow,
@@ -115,7 +118,7 @@ public class CheckoutController : ControllerBase
         // جلب المنتجات دفعة واحدة
         var ids = req.Items.Select(x => x.ProductId).Distinct().ToList();
         var products = await _db.Products
-            .Where(p => ids.Contains(p.Id) && p.IsPublished && !p.IsDeleted)
+            .Where(p => ids.Contains(p.Id) && p.IsPublished)
             .ToDictionaryAsync(p => p.Id, p => p);
 
         if (products.Count == 0)
@@ -128,6 +131,8 @@ public class CheckoutController : ControllerBase
         {
             UserId = userId,
             Status = "Paid",
+            IsPaid = true,
+            PaidAt = DateTime.UtcNow,
             TotalUsd = 0,
             TotalIqd = 0,
             CreatedAt = DateTime.UtcNow,
@@ -202,7 +207,7 @@ public class CheckoutController : ControllerBase
 
         var ids = req.Items.Select(x => x.ProductId).Distinct().ToList();
         var products = await _db.Products
-            .Where(p => ids.Contains(p.Id) && p.IsPublished && !p.IsDeleted)
+            .Where(p => ids.Contains(p.Id) && p.IsPublished)
             .ToDictionaryAsync(p => p.Id, p => p);
 
         decimal totalUsd = 0;
@@ -212,6 +217,8 @@ public class CheckoutController : ControllerBase
         {
             UserId = userId,
             Status = "Paid",
+            IsPaid = true,
+            PaidAt = DateTime.UtcNow,
             TotalUsd = 0,
             TotalIqd = 0,
             CreatedAt = DateTime.UtcNow,
