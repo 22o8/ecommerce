@@ -1,84 +1,89 @@
+using System.Security.Claims;
 using Ecommerce.Api.Domain.Entities;
 using Ecommerce.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace Ecommerce.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class CheckoutController : ControllerBase
 {
     private readonly AppDbContext _db;
-	private readonly IConfiguration _config;
+    private readonly IConfiguration _config;
 
     public CheckoutController(AppDbContext db, IConfiguration config)
     {
         _db = db;
-		_config = config;
+        _config = config;
     }
 
-	private bool ValidateCheckoutSecret()
-	{
-		var expected = _config["Checkout:Secret"];
-		if (string.IsNullOrWhiteSpace(expected)) return true;
-		var provided = Request.Headers["X-Checkout-Secret"].ToString();
-		return !string.IsNullOrWhiteSpace(provided) && provided == expected;
-	}
-
-    private bool TryGetUserId(out Guid userId)
+    private bool ValidateCheckoutSecret()
     {
-        var idStr = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        return Guid.TryParse(idStr, out userId);
+        var expected = _config["CHECKOUT_SECRET"] ?? _config["Checkout:Secret"];
+        if (string.IsNullOrWhiteSpace(expected)) return true; // لو ما متوفر، لا نكسر بيئة التطوير
+
+        var provided = Request.Headers["x-checkout-secret"].FirstOrDefault();
+        return string.Equals(expected, provided, StringComparison.Ordinal);
     }
 
-    // POST /api/checkout/products
-    [HttpPost("products")]
+    private Guid GetUserIdOrEmpty()
+    {
+        var sub = User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? User?.FindFirstValue("sub");
+        return Guid.TryParse(sub, out var id) ? id : Guid.Empty;
+    }
+
+    /// <summary>
+    /// إنشاء طلب لمنتج واحد (للاختبار/الدفع لاحقًا). حالياً ينشئ Payment "Succeeded" حتى ينحسب بالإحصائيات.
+    /// </summary>
+    [HttpPost("product")]
+    [AllowAnonymous]
     public async Task<IActionResult> CheckoutProduct([FromBody] CheckoutProductRequest req)
     {
-        if (!TryGetUserId(out var userId)) return Unauthorized("Invalid token");
+        if (!ValidateCheckoutSecret()) return Unauthorized();
 
-        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == req.ProductId && p.IsPublished);
-        if (product == null) return NotFound("Product not found");
+        var qty = Math.Max(1, req.Quantity);
+        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == req.ProductId && p.IsActive);
+        if (product is null) return NotFound(new { message = "Product not found" });
 
-        var qty = req.Quantity <= 0 ? 1 : req.Quantity;
-        if (qty > 50) return BadRequest("Quantity too large");
+        var userId = GetUserIdOrEmpty();
 
-        // إنشاء Order
+        var totalUsd = product.PriceUsd * qty;
+        var totalIqd = product.PriceIqd * qty;
+
         var order = new Order
         {
             UserId = userId,
-            Status = "PendingPayment",
-            TotalUsd = product.PriceUsd * qty,
-            TotalIqd = product.PriceIqd * qty
+            Status = "Paid", // ✅ حتى يظهر فوراً بلوحة التحكم
+            Currency = "IQD",
+            TotalUsd = totalUsd,
+            TotalIqd = totalIqd,
+            CreatedAt = DateTime.UtcNow,
+            Items = new List<OrderItem>(),
+            Payments = new List<Payment>()
         };
 
         order.Items.Add(new OrderItem
         {
-            ItemType = "DigitalProduct",
             ProductId = product.Id,
-            UnitPriceUsd = product.PriceUsd,
             Quantity = qty,
-            LineTotalUsd = product.PriceUsd * qty,
-            UnitPriceIqd = product.PriceIqd,
-            LineTotalIqd = product.PriceIqd * qty
+            // نخزن داخل OrderItem قيم IQD (الـ Order يحتفظ بـ USD/IQD)
+            UnitPrice = product.PriceIqd,
+            LineTotal = totalIqd,
+            CreatedAt = DateTime.UtcNow
         });
 
-        // إنشاء Payment (Mock)
-        var payment = new Payment
+        order.Payments.Add(new Payment
         {
-            Order = order,
-            Provider = "Mock",
-            Status = "Pending",
-            ProviderRef = $"MOCK-{Guid.NewGuid():N}",
-            AmountUsd = order.TotalUsd,
-            AmountIqd = order.TotalIqd
-        };
-
-        order.Payments.Add(payment);
+            Provider = "WhatsApp",
+            ProviderRef = $"WA-{Guid.NewGuid():N}",
+            Status = "Succeeded",
+            AmountUsd = totalUsd,
+            AmountIqd = totalIqd,
+            CreatedAt = DateTime.UtcNow
+        });
 
         _db.Orders.Add(order);
         await _db.SaveChangesAsync();
@@ -88,83 +93,84 @@ public class CheckoutController : ControllerBase
             orderId = order.Id,
             status = order.Status,
             amountUsd = order.TotalUsd,
-            amountIqd = order.TotalIqd,
-            payment = new { payment.Id, payment.Provider, payment.Status, payment.ProviderRef }
+            amountIqd = order.TotalIqd
         });
     }
 
-    // POST /api/checkout/cart
-    // ينشئ Order واحد لعدة منتجات من السلة
+    /// <summary>
+    /// إنشاء طلب من السلة (بدون واتساب). حالياً نعتبره Paid + Payment Succeeded حتى ينحسب بالإحصائيات.
+    /// </summary>
     [HttpPost("cart")]
+    [AllowAnonymous]
     public async Task<IActionResult> CheckoutCart([FromBody] CheckoutCartRequest req)
     {
-        if (!TryGetUserId(out var userId)) return Unauthorized("Invalid token");
+        if (!ValidateCheckoutSecret()) return Unauthorized();
 
-        if (req?.Items == null || req.Items.Count == 0)
-            return BadRequest("Cart is empty");
+        if (req.Items is null || req.Items.Count == 0)
+            return BadRequest(new { message = "Cart is empty" });
 
-        if (req.Items.Count > 50)
-            return BadRequest("Too many items");
+        var userId = GetUserIdOrEmpty();
 
-        // sanitize quantities and collect ids
-        var items = req.Items
-            .Where(i => i.ProductId != Guid.Empty)
-            .Select(i => new { i.ProductId, Quantity = i.Quantity <= 0 ? 1 : i.Quantity })
-            .ToList();
-
-        if (items.Count == 0) return BadRequest("Cart is empty");
-
-        if (items.Any(i => i.Quantity > 50))
-            return BadRequest("Quantity too large");
-
-        var productIds = items.Select(i => i.ProductId).Distinct().ToList();
-
+        // جلب المنتجات دفعة واحدة
+        var ids = req.Items.Select(x => x.ProductId).Distinct().ToList();
         var products = await _db.Products
-            .Where(p => productIds.Contains(p.Id) && p.IsPublished)
-            .ToListAsync();
+            .Where(p => ids.Contains(p.Id) && p.IsActive)
+            .ToDictionaryAsync(p => p.Id, p => p);
 
-        if (products.Count != productIds.Count)
-            return NotFound("One or more products not found");
+        if (products.Count == 0)
+            return BadRequest(new { message = "No valid products" });
+
+        decimal totalUsd = 0;
+        decimal totalIqd = 0;
 
         var order = new Order
         {
             UserId = userId,
-            Status = "PendingPayment",
+            Status = "Paid",
+            Currency = "IQD",
             TotalUsd = 0,
-            TotalIqd = 0
+            TotalIqd = 0,
+            CreatedAt = DateTime.UtcNow,
+            Items = new List<OrderItem>(),
+            Payments = new List<Payment>()
         };
 
-        foreach (var i in items)
+        foreach (var it in req.Items)
         {
-            var p = products.First(x => x.Id == i.ProductId);
-            var lineTotalUsd = p.PriceUsd * i.Quantity;
-            var lineTotalIqd = p.PriceIqd * i.Quantity;
-            order.TotalUsd += lineTotalUsd;
-            order.TotalIqd += lineTotalIqd;
+            if (!products.TryGetValue(it.ProductId, out var p)) continue;
+
+            var qty = Math.Max(1, it.Quantity);
+            var lineUsd = p.PriceUsd * qty;
+            var lineIqd = p.PriceIqd * qty;
+
+            totalUsd += lineUsd;
+            totalIqd += lineIqd;
 
             order.Items.Add(new OrderItem
             {
-                ItemType = "DigitalProduct",
                 ProductId = p.Id,
-                UnitPriceUsd = p.PriceUsd,
-                Quantity = i.Quantity,
-                LineTotalUsd = lineTotalUsd,
-                UnitPriceIqd = p.PriceIqd,
-                LineTotalIqd = lineTotalIqd
+                Quantity = qty,
+                UnitPrice = p.PriceIqd,
+                LineTotal = lineIqd,
+                CreatedAt = DateTime.UtcNow
             });
         }
 
-        var payment = new Payment
-        {
-            Order = order,
-            Provider = "Mock",
-            Status = "Pending",
-            ProviderRef = $"MOCK-{Guid.NewGuid():N}",
-            AmountUsd = order.TotalUsd,
-            AmountIqd = order.TotalIqd
-        };
+        if (order.Items.Count == 0)
+            return BadRequest(new { message = "No valid items" });
 
-        order.Payments.Add(payment);
+        order.TotalUsd = totalUsd;
+        order.TotalIqd = totalIqd;
+
+        order.Payments.Add(new Payment
+        {
+            Provider = "WhatsApp",
+            ProviderRef = $"WA-{Guid.NewGuid():N}",
+            Status = "Succeeded",
+            AmountUsd = totalUsd,
+            AmountIqd = totalIqd,
+            CreatedAt = DateTime.UtcNow
+        });
 
         _db.Orders.Add(order);
         await _db.SaveChangesAsync();
@@ -175,146 +181,107 @@ public class CheckoutController : ControllerBase
             status = order.Status,
             amountUsd = order.TotalUsd,
             amountIqd = order.TotalIqd,
-            items = order.Items.Select(x => new { x.ProductId, x.Quantity, x.UnitPriceIqd, x.LineTotalIqd, x.UnitPriceUsd, x.LineTotalUsd }).ToList(),
-            payment = new { payment.Id, payment.Provider, payment.Status, payment.ProviderRef }
+            items = order.Items.Select(x => new { x.ProductId, x.Quantity, x.UnitPrice, x.LineTotal }).ToList()
         });
     }
 
-	// POST /api/checkout/cart/whatsapp
-	// Checkout عبر واتساب (بدون بوابة دفع): نسجل الطلب كـ مدفوع + نسجل Payment ناجح حتى يظهر بالإحصائيات
-	// ملاحظة أمنية: فعّل Checkout:Secret وأرسل X-Checkout-Secret من الـ BFF فقط.
-	[AllowAnonymous]
-	[HttpPost("cart/whatsapp")]
-	public async Task<IActionResult> CheckoutCartWhatsApp([FromBody] CheckoutCartRequest req)
-	{
-		if (!ValidateCheckoutSecret())
-			return Unauthorized(new { message = "Invalid checkout secret" });
-
-		var productIds = req.Items.Select(i => i.ProductId).Distinct().ToList();
-		var products = await _db.Products
-			.Include(p => p.Assets)
-			.Where(p => productIds.Contains(p.Id))
-			.ToListAsync();
-
-		if (products.Count == 0)
-			return BadRequest(new { message = "Cart is empty" });
-
-		var order = new Order
-		{
-			Id = Guid.NewGuid(),
-			UserId = Guid.Empty,
-			Status = "Paid",
-			Currency = "IQD",
-			CreatedAt = DateTime.UtcNow,
-			ShippingAddress = null,
-			PhoneNumber = null,
-			Notes = "WhatsApp checkout",
-			Items = new List<OrderItem>(),
-			Payments = new List<Payment>()
-		};
-
-		decimal totalIqd = 0;
-		decimal totalUsd = 0;
-
-		foreach (var i in req.Items)
-		{
-			var p = products.FirstOrDefault(x => x.Id == i.ProductId);
-			if (p == null) continue;
-
-			var lineTotalUsd = p.PriceUsd * i.Quantity;
-			var lineTotalIqd = p.PriceIqd * i.Quantity;
-			totalUsd += lineTotalUsd;
-			totalIqd += lineTotalIqd;
-
-			order.Items.Add(new OrderItem
-			{
-				Id = Guid.NewGuid(),
-				ProductId = p.Id,
-				ProductName = p.Name,
-				Quantity = i.Quantity,
-				UnitPriceUsd = p.PriceUsd,
-				LineTotalUsd = lineTotalUsd,
-				UnitPriceIqd = p.PriceIqd,
-				LineTotalIqd = lineTotalIqd
-			});
-		}
-
-		order.TotalUsd = totalUsd;
-		order.TotalIqd = totalIqd;
-
-		var payment = new Payment
-		{
-			Order = order,
-			Provider = "WhatsApp",
-			Status = "Succeeded",
-			ProviderRef = $"WA-{Guid.NewGuid():N}",
-			AmountUsd = order.TotalUsd,
-			AmountIqd = order.TotalIqd
-		};
-
-		order.Payments.Add(payment);
-		_db.Orders.Add(order);
-		await _db.SaveChangesAsync();
-
-		return Ok(new { orderId = order.Id, status = order.Status });
-	}
-
-    // POST /api/checkout/services
-    // هذا ينشئ Order مرتبط بـ ServiceRequest موجود (اللي سويته سابقًا)
-    [HttpPost("services")]
-    public async Task<IActionResult> CheckoutService([FromBody] CheckoutServiceRequest req)
+    /// <summary>
+    /// شراء عبر واتساب: ينشئ Order + Payment Succeeded ثم يعيد رابط واتساب جاهز بالتفاصيل.
+    /// </summary>
+    [HttpPost("cart/whatsapp")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CheckoutCartWhatsApp([FromBody] CheckoutWhatsAppRequest req)
     {
-        if (!TryGetUserId(out var userId)) return Unauthorized("Invalid token");
+        if (!ValidateCheckoutSecret()) return Unauthorized();
 
-        var sr = await _db.ServiceRequests
-            .Include(x => x.Package)
-            .Include(x => x.Service)
-            .FirstOrDefaultAsync(x => x.Id == req.ServiceRequestId && x.UserId == userId);
+        if (req.Items is null || req.Items.Count == 0)
+            return BadRequest(new { message = "Cart is empty" });
 
-        if (sr == null) return NotFound("ServiceRequest not found");
+        var userId = GetUserIdOrEmpty();
 
-        if (sr.Status != "PendingPayment")
-            return BadRequest("ServiceRequest is not pending payment");
+        var ids = req.Items.Select(x => x.ProductId).Distinct().ToList();
+        var products = await _db.Products
+            .Where(p => ids.Contains(p.Id) && p.IsActive)
+            .ToDictionaryAsync(p => p.Id, p => p);
 
-        // ✅ نعتمد IQD بالدرجة الأولى
-        var priceUsd = sr.Package.PriceUsd;
-        var priceIqd = sr.Package.PriceIqd > 0 ? sr.Package.PriceIqd : sr.Package.PriceUsd;
+        decimal totalUsd = 0;
+        decimal totalIqd = 0;
 
         var order = new Order
         {
             UserId = userId,
-            Status = "PendingPayment",
-            TotalUsd = priceUsd,
-            TotalIqd = priceIqd
+            Status = "Paid",
+            Currency = "IQD",
+            TotalUsd = 0,
+            TotalIqd = 0,
+            CreatedAt = DateTime.UtcNow,
+            Items = new List<OrderItem>(),
+            Payments = new List<Payment>()
         };
 
-        order.Items.Add(new OrderItem
+        var lines = new List<string>();
+
+        foreach (var it in req.Items)
         {
-            ItemType = "Service",
-            ServiceId = sr.ServiceId,
-            PackageId = sr.PackageId,
-            ServiceRequestId = sr.Id,
-            UnitPriceUsd = priceUsd,
-            Quantity = 1,
-            LineTotalUsd = priceUsd,
-            UnitPriceIqd = priceIqd,
-            LineTotalIqd = priceIqd
+            if (!products.TryGetValue(it.ProductId, out var p)) continue;
+
+            var qty = Math.Max(1, it.Quantity);
+            var lineUsd = p.PriceUsd * qty;
+            var lineIqd = p.PriceIqd * qty;
+
+            totalUsd += lineUsd;
+            totalIqd += lineIqd;
+
+            order.Items.Add(new OrderItem
+            {
+                ProductId = p.Id,
+                Quantity = qty,
+                UnitPrice = p.PriceIqd,
+                LineTotal = lineIqd,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            lines.Add($"- {p.Title} x{qty} = {lineIqd:N0} د.ع");
+        }
+
+        if (order.Items.Count == 0)
+            return BadRequest(new { message = "No valid items" });
+
+        order.TotalUsd = totalUsd;
+        order.TotalIqd = totalIqd;
+
+        order.Payments.Add(new Payment
+        {
+            Provider = "WhatsApp",
+            ProviderRef = $"WA-{Guid.NewGuid():N}",
+            Status = "Succeeded",
+            AmountUsd = totalUsd,
+            AmountIqd = totalIqd,
+            CreatedAt = DateTime.UtcNow
         });
-
-        var payment = new Payment
-        {
-            Order = order,
-            Provider = "Mock",
-            Status = "Pending",
-            ProviderRef = $"MOCK-{Guid.NewGuid():N}",
-            AmountUsd = order.TotalUsd,
-            AmountIqd = order.TotalIqd
-        };
-
-        order.Payments.Add(payment);
 
         _db.Orders.Add(order);
         await _db.SaveChangesAsync();
+
+        var phone = string.IsNullOrWhiteSpace(req.WhatsAppNumber)
+            ? (_config["WHATSAPP_NUMBER"] ?? _config["WhatsApp:Number"] ?? "")
+            : req.WhatsAppNumber;
+
+        // رسالة واتساب (تُرسل معلومات العنوان/الهاتف/الملاحظات هنا فقط)
+        var msg =
+            "طلب جديد" + "\n" +
+            $"رقم الطلب: {order.Id}" + "\n" +
+            (string.IsNullOrWhiteSpace(req.PhoneNumber) ? "" : $"هاتف الزبون: {req.PhoneNumber}\n") +
+            (string.IsNullOrWhiteSpace(req.ShippingAddress) ? "" : $"العنوان: {req.ShippingAddress}\n") +
+            (string.IsNullOrWhiteSpace(req.Notes) ? "" : $"ملاحظات: {req.Notes}\n") +
+            "\n" +
+            string.Join("\n", lines) + "\n\n" +
+            $"الإجمالي: {totalIqd:N0} د.ع";
+
+        var encoded = Uri.EscapeDataString(msg);
+        var waUrl = string.IsNullOrWhiteSpace(phone)
+            ? $"https://wa.me/?text={encoded}"
+            : $"https://wa.me/{phone}?text={encoded}";
 
         return Ok(new
         {
@@ -322,8 +289,7 @@ public class CheckoutController : ControllerBase
             status = order.Status,
             amountUsd = order.TotalUsd,
             amountIqd = order.TotalIqd,
-            service = new { sr.Id, sr.Service.Title, package = sr.Package.Name },
-            payment = new { payment.Id, payment.Provider, payment.Status, payment.ProviderRef }
+            whatsappUrl = waUrl
         });
     }
 }
@@ -345,7 +311,11 @@ public class CheckoutCartItem
     public int Quantity { get; set; } = 1;
 }
 
-public class CheckoutServiceRequest
+public class CheckoutWhatsAppRequest
 {
-    public Guid ServiceRequestId { get; set; }
+    public string? WhatsAppNumber { get; set; }
+    public string? PhoneNumber { get; set; }
+    public string? ShippingAddress { get; set; }
+    public string? Notes { get; set; }
+    public List<CheckoutCartItem> Items { get; set; } = new();
 }
