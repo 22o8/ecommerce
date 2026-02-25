@@ -7,8 +7,8 @@
             <Icon name="mdi:shopping-outline" class="text-xl animate-floaty" />
           </div>
           <div class="leading-tight min-w-0">
-            <div class="hidden sm:block font-extrabold tracking-wide text-sm sm:text-base truncate">ECOMMERCE</div>
-            <div class="hidden sm:block text-xs text-muted -mt-0.5 rtl-text truncate">{{ t('tagline') }}</div>
+            <div class="font-extrabold tracking-wide text-sm sm:text-base truncate">ECOMMERCE</div>
+            <div class="hidden md:block text-xs text-muted -mt-0.5 rtl-text truncate">{{ t('tagline') }}</div>
           </div>
         </NuxtLink>
 
@@ -43,7 +43,7 @@
           <NuxtLink v-if="auth.isAuthed" to="/favorites" class="hidden sm:block">
             <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0">
               <Icon name="mdi:heart-outline" class="text-lg" />
-              <span class="hidden md:inline rtl-text">مفضلاتي</span>
+              <span class="hidden md:inline rtl-text">{{ $t('favorites') }}</span>
               <span
                 v-if="fav.count"
                 class="absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full bg-[rgb(var(--primary))] text-black text-xs font-black grid place-items-center"
@@ -130,7 +130,7 @@
             <NuxtLink v-if="auth.isAuthed" to="/favorites" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
               <div class="flex items-center gap-2">
                 <Icon name="mdi:heart-outline" class="text-lg" />
-                <span class="rtl-text">مفضلاتي</span>
+                <span class="rtl-text">{{ $t('favorites') }}</span>
                 <span v-if="fav.count" class="keep-ltr text-xs text-muted">({{ fav.count }})</span>
               </div>
             </NuxtLink>
@@ -151,7 +151,7 @@
 	            <NuxtLink v-if="isAdmin" to="/admin" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
 	              <div class="flex items-center gap-2">
 	                <Icon name="mdi:view-dashboard-outline" class="text-lg" />
-	                <span class="rtl-text">لوحة التحكم</span>
+	                <span class="rtl-text">{{ $t('adminPanel') }}</span>
 	              </div>
 	            </NuxtLink>
             <NuxtLink to="/contact" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">

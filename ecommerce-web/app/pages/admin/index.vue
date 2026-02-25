@@ -35,9 +35,9 @@
           </svg>
         </div>
         <div class="min-w-0">
-          <div class="kpi-label rtl-text">إجمالي الطلبات</div>
+          <div class="kpi-label rtl-text">{{ $t('admin.cards.orders') }}</div>
           <div class="kpi-value keep-ltr">{{ stats.totalOrders }}</div>
-          <div class="kpi-sub rtl-text">آخر تحديث: {{ lastUpdatedLabel }}</div>
+          <div class="kpi-sub rtl-text">{{ $t('admin.lastUpdated') }}: {{ lastUpdatedLabel }}</div>
         </div>
       </div>
 
@@ -51,9 +51,9 @@
           </svg>
         </div>
         <div class="min-w-0">
-          <div class="kpi-label rtl-text">إجمالي المستخدمين</div>
+          <div class="kpi-label rtl-text">{{ $t('admin.cards.users') }}</div>
           <div class="kpi-value keep-ltr">{{ stats.totalUsers }}</div>
-          <div class="kpi-sub rtl-text">المسجلين في النظام</div>
+          <div class="kpi-sub rtl-text">{{ $t('admin.registeredUsers') }}</div>
         </div>
       </div>
 
@@ -65,7 +65,7 @@
           </svg>
         </div>
         <div class="min-w-0">
-          <div class="kpi-label rtl-text">إجمالي الإيرادات</div>
+          <div class="kpi-label rtl-text">{{ $t('admin.cards.revenue') }}</div>
           <div class="kpi-value keep-ltr">{{ formatMoney(stats.totalRevenueIqd) }}</div>
           <div class="kpi-sub rtl-text">{{ t('admin.revenueHint') }}</div>
         </div>
@@ -79,9 +79,9 @@
           </svg>
         </div>
         <div class="min-w-0">
-          <div class="kpi-label rtl-text">زيارات اليوم</div>
+          <div class="kpi-label rtl-text">{{ $t('admin.cards.visitsToday') }}</div>
           <div class="kpi-value keep-ltr">{{ visits.today }}</div>
-          <div class="kpi-sub rtl-text">إجمالي الزيارات: {{ visits.total }}</div>
+          <div class="kpi-sub rtl-text">{{ $t('admin.totalVisits') }}: {{ visits.total }}</div>
         </div>
       </div>
     </div>
@@ -92,7 +92,7 @@
         <div class="flex items-center justify-between gap-3 mb-4">
           <div class="font-extrabold rtl-text">النشاط {{ range==='daily' ? 'اليومي' : 'الشهري' }}</div>
           <div class="admin-muted text-sm rtl-text">
-            {{ range==='daily' ? 'آخر 30 يوم' : 'آخر 12 شهر' }}
+            {{ range==='daily' ? '{{ $t('admin.last30Days') }}' : 'آخر 12 شهر' }}
           </div>
         </div>
 
@@ -121,11 +121,11 @@
       </div>
 
       <div class="admin-box">
-        <div class="font-extrabold rtl-text mb-3">أفضل المنتجات (مختصر)</div>
+        <div class="font-extrabold rtl-text mb-3">{{ $t('admin.summary.title') }}</div>
 
         <div class="space-y-3">
           <div class="topbox">
-            <div class="topbox-title rtl-text">🔥 الأكثر شراءً</div>
+            <div class="topbox-title rtl-text">🔥 {{ $t('admin.summary.mostPurchased') }}ً</div>
             <div v-if="overview.topPurchased.length===0" class="admin-muted rtl-text">—</div>
             <div v-else class="grid gap-2">
               <div v-for="x in overview.topPurchased.slice(0,5)" :key="x.productId" class="toprow">
@@ -136,7 +136,7 @@
           </div>
 
           <div class="topbox">
-            <div class="topbox-title rtl-text">👁️ الأكثر زيارة</div>
+            <div class="topbox-title rtl-text">👁️ {{ $t('admin.summary.mostViewed') }}</div>
             <div v-if="overview.topViews.length===0" class="admin-muted rtl-text">—</div>
             <div v-else class="grid gap-2">
               <div v-for="x in overview.topViews.slice(0,5)" :key="x.productId" class="toprow">
@@ -147,7 +147,7 @@
           </div>
 
           <div class="topbox">
-            <div class="topbox-title rtl-text">❤️ الأكثر مفضلة</div>
+            <div class="topbox-title rtl-text">❤️ {{ $t('admin.summary.mostFavorited') }}</div>
             <div v-if="overview.topFavorites.length===0" class="admin-muted rtl-text">—</div>
             <div v-else class="grid gap-2">
               <div v-for="x in overview.topFavorites.slice(0,5)" :key="x.productId" class="toprow">
@@ -168,8 +168,8 @@
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
       <div class="admin-box xl:col-span-2">
         <div class="flex items-center justify-between gap-3 mb-4">
-          <div class="font-extrabold rtl-text">أحدث الطلبات</div>
-          <NuxtLink class="admin-link rtl-text" to="/admin/orders">عرض الكل →</NuxtLink>
+          <div class="font-extrabold rtl-text">{{ $t('admin.latestOrders') }}</div>
+          <NuxtLink class="admin-link rtl-text" to="/admin/orders">{{ $t('admin.viewAll') }}</NuxtLink>
         </div>
 
         <div v-if="latestOrders.length===0" class="admin-muted rtl-text">—</div>
@@ -191,7 +191,7 @@
       </div>
 
       <div class="admin-box">
-        <div class="font-extrabold rtl-text mb-3">اختصارات الإدارة</div>
+        <div class="font-extrabold rtl-text mb-3">{{ $t('admin.adminShortcuts') }}</div>
         <div class="grid gap-3">
           <NuxtLink class="admin-action" to="/admin/products">
             <div class="font-extrabold rtl-text">{{ t('admin.manageProducts') }}</div>
@@ -204,8 +204,8 @@
           </NuxtLink>
 
           <NuxtLink class="admin-action" to="/admin/brands">
-            <div class="font-extrabold rtl-text">إدارة البراندات</div>
-            <div class="admin-muted text-sm rtl-text">عرض / إضافة / تعديل</div>
+            <div class="font-extrabold rtl-text">{{ $t('admin.manageBrands') }}</div>
+            <div class="admin-muted text-sm rtl-text">{{ $t('admin.manageBrandsHint') }}</div>
           </NuxtLink>
 
           <NuxtLink class="admin-action" to="/admin/insights">

@@ -2,8 +2,8 @@
   <div class="space-y-4">
     <div class="admin-box flex items-center justify-between gap-3">
       <div>
-        <div class="text-xl font-extrabold rtl-text">Analytics / Insights</div>
-        <div class="text-sm admin-muted rtl-text">أكثر المنتجات (شراء/مفضلة/مشاهدة) + نشاط يومي/شهري</div>
+        <div class="text-xl font-extrabold rtl-text">{{ $t('admin.insightsTitle') }}</div>
+        <div class="text-sm admin-muted rtl-text">{{ $t('admin.insightsSubtitle') }}</div>
       </div>
       <button class="admin-ghost" type="button" @click="loadAll" :disabled="loading">
         {{ t('common.refresh') }}
@@ -13,7 +13,7 @@
     <div v-if="loading" class="admin-box admin-muted rtl-text">{{ t('common.loading') }}</div>
     <div v-else class="grid gap-4 lg:grid-cols-2">
       <div class="admin-box">
-        <div class="font-extrabold rtl-text mb-3">🔥 الأكثر شراءً</div>
+        <div class="font-extrabold rtl-text mb-3">{{ $t('admin.topPurchased') }}ً</div>
         <div v-if="topPurchased.length===0" class="admin-muted rtl-text">—</div>
         <div v-else class="grid gap-2">
           <div v-for="x in topPurchased" :key="x.productId" class="flex items-center justify-between gap-3">
@@ -35,7 +35,7 @@
       </div>
 
       <div class="admin-box">
-        <div class="font-extrabold rtl-text mb-3">👀 الأكثر مشاهدة</div>
+        <div class="font-extrabold rtl-text mb-3">{{ $t('admin.topViewed') }}</div>
         <div v-if="topViews.length===0" class="admin-muted rtl-text">—</div>
         <div v-else class="grid gap-2">
           <div v-for="x in topViews" :key="x.productId" class="flex items-center justify-between gap-3">
@@ -58,18 +58,18 @@
     </div>
 
     <div class="admin-box">
-      <div class="font-extrabold rtl-text mb-3">📊 النشاط (يومي / شهري)</div>
+      <div class="font-extrabold rtl-text mb-3">{{ $t('admin.activityTitle') }}</div>
 
       <div class="grid gap-4 md:grid-cols-2">
         <div class="sub-box">
-          <div class="label rtl-text mb-2">يومي (آخر 30 يوم)</div>
+          <div class="label rtl-text mb-2">{{ $t('admin.dailyTableTitle') }}</div>
           <div class="grid gap-2">
             <div class="grid grid-cols-[120px_1fr_1fr_1fr_1fr] gap-2 text-xs admin-muted">
-              <div class="keep-ltr">date</div>
-              <div class="text-center rtl-text">طلبات</div>
-              <div class="text-center rtl-text">مشاهدات</div>
-              <div class="text-center rtl-text">مفضلة</div>
-              <div class="text-center rtl-text">زيارات</div>
+              <div class="keep-ltr">{{ $t('admin.colDate') }}</div>
+              <div class="text-center rtl-text">{{ $t('admin.colOrders') }}</div>
+              <div class="text-center rtl-text">{{ $t('admin.colViews') }}</div>
+              <div class="text-center rtl-text">{{ $t('admin.colFavorites') }}</div>
+              <div class="text-center rtl-text">{{ $t('admin.colVisits') }}</div>
             </div>
             <div v-for="r in daily" :key="r.period" class="grid grid-cols-[120px_1fr_1fr_1fr_1fr] gap-2 items-center py-2 border-t border-app">
               <div class="keep-ltr text-xs">{{ r.period }}</div>
@@ -82,14 +82,14 @@
         </div>
 
         <div class="sub-box">
-          <div class="label rtl-text mb-2">شهري (آخر 12 شهر)</div>
+          <div class="label rtl-text mb-2">{{ $t('admin.monthlyTableTitle') }}</div>
           <div class="grid gap-2">
             <div class="grid grid-cols-[120px_1fr_1fr_1fr_1fr] gap-2 text-xs admin-muted">
-              <div class="keep-ltr">month</div>
-              <div class="text-center rtl-text">طلبات</div>
-              <div class="text-center rtl-text">مشاهدات</div>
-              <div class="text-center rtl-text">مفضلة</div>
-              <div class="text-center rtl-text">زيارات</div>
+              <div class="keep-ltr">{{ $t('admin.colMonth') }}</div>
+              <div class="text-center rtl-text">{{ $t('admin.colOrders') }}</div>
+              <div class="text-center rtl-text">{{ $t('admin.colViews') }}</div>
+              <div class="text-center rtl-text">{{ $t('admin.colFavorites') }}</div>
+              <div class="text-center rtl-text">{{ $t('admin.colVisits') }}</div>
             </div>
             <div v-for="r in monthly" :key="r.period" class="grid grid-cols-[120px_1fr_1fr_1fr_1fr] gap-2 items-center py-2 border-t border-app">
               <div class="keep-ltr text-xs">{{ r.period }}</div>
