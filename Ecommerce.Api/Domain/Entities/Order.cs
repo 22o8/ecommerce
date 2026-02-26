@@ -5,8 +5,6 @@ public class Order
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid UserId { get; set; }
     public User? User { get; set; }
-    public bool IsPaid { get; set; } = false;
-public DateTime? PaidAt { get; set; }
 
     // (قديم) للتوافق
     public decimal TotalUsd { get; set; }

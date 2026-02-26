@@ -36,7 +36,9 @@ public class CheckoutController : ControllerBase
     }
 
     /// <summary>
-    /// إنشاء طلب لمنتج واحد (للاختبار/الدفع لاحقًا). حالياً ينشئ Payment "Succeeded" حتى ينحسب بالإحصائيات.
+    /// إنشاء طلب لمنتج واحد.
+    /// ملاحظة: حتى يظهر الطلب فوراً في لوحة التحكم/الإحصائيات نعتبره مدفوعاً (Status = "Paid")
+    /// وننشئ Payment بحالة "Succeeded".
     /// </summary>
     [HttpPost("product")]
     [AllowAnonymous]
@@ -60,8 +62,6 @@ public class CheckoutController : ControllerBase
         {
             UserId = userId,
             Status = "Paid", // ✅ حتى يظهر فوراً بلوحة التحكم
-            IsPaid = true,
-            PaidAt = DateTime.UtcNow,
             TotalUsd = totalUsd,
             TotalIqd = totalIqd,
             CreatedAt = DateTime.UtcNow,
@@ -131,8 +131,6 @@ public class CheckoutController : ControllerBase
         {
             UserId = userId,
             Status = "Paid",
-            IsPaid = true,
-            PaidAt = DateTime.UtcNow,
             TotalUsd = 0,
             TotalIqd = 0,
             CreatedAt = DateTime.UtcNow,
@@ -217,8 +215,6 @@ public class CheckoutController : ControllerBase
         {
             UserId = userId,
             Status = "Paid",
-            IsPaid = true,
-            PaidAt = DateTime.UtcNow,
             TotalUsd = 0,
             TotalIqd = 0,
             CreatedAt = DateTime.UtcNow,

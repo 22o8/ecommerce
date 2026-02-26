@@ -22,44 +22,6 @@ namespace Ecommerce.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Ecommerce.Api.Domain.Entities.Brand", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(400)
-                        .HasColumnType("character varying(400)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LogoUrl")
-                        .HasMaxLength(400)
-                        .HasColumnType("character varying(400)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("character varying(120)");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("character varying(80)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Slug")
-                        .IsUnique();
-
-                    b.ToTable("Brands");
-                });
-
             modelBuilder.Entity("Ecommerce.Api.Domain.Entities.DownloadToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -99,29 +61,6 @@ namespace Ecommerce.Api.Migrations
                     b.ToTable("DownloadTokens");
                 });
 
-            modelBuilder.Entity("Ecommerce.Api.Domain.Entities.Favorite", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "ProductId")
-                        .IsUnique();
-
-                    b.ToTable("Favorites");
-                });
-
             modelBuilder.Entity("Ecommerce.Api.Domain.Entities.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -131,21 +70,15 @@ namespace Ecommerce.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsPaid")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal>("TotalIqd")
-                        .HasColumnType("numeric");
-
                     b.Property<decimal>("TotalUsd")
                         .HasColumnType("numeric");
+
+					b.Property<decimal>("TotalIqd")
+						.HasColumnType("numeric");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -167,13 +100,13 @@ namespace Ecommerce.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal>("LineTotalIqd")
-                        .HasColumnType("numeric");
-
                     b.Property<decimal>("LineTotalUsd")
                         .HasColumnType("numeric");
 
-                    b.Property<Guid?>("OrderId")
+					b.Property<decimal>("LineTotalIqd")
+						.HasColumnType("numeric");
+
+                    b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("PackageId")
@@ -191,11 +124,11 @@ namespace Ecommerce.Api.Migrations
                     b.Property<Guid?>("ServiceRequestId")
                         .HasColumnType("uuid");
 
-                    b.Property<decimal>("UnitPriceIqd")
-                        .HasColumnType("numeric");
-
                     b.Property<decimal>("UnitPriceUsd")
                         .HasColumnType("numeric");
+
+					b.Property<decimal>("UnitPriceIqd")
+						.HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -217,9 +150,6 @@ namespace Ecommerce.Api.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<decimal>("AmountIqd")
-                        .HasColumnType("numeric");
 
                     b.Property<decimal>("AmountUsd")
                         .HasColumnType("numeric");
@@ -255,13 +185,6 @@ namespace Ecommerce.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Brand")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(120)
-                        .HasColumnType("character varying(120)")
-                        .HasDefaultValue("Unspecified");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -269,14 +192,11 @@ namespace Ecommerce.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsFeatured")
-                        .HasColumnType("boolean");
-
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
 
-                    b.Property<decimal>("PriceIqd")
-                        .HasColumnType("numeric");
+					b.Property<bool>("IsFeatured")
+						.HasColumnType("boolean");
 
                     b.Property<decimal>("PriceUsd")
                         .HasColumnType("numeric");
@@ -369,28 +289,6 @@ namespace Ecommerce.Api.Migrations
                     b.ToTable("ProductImages");
                 });
 
-            modelBuilder.Entity("Ecommerce.Api.Domain.Entities.ProductView", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId", "CreatedAt");
-
-                    b.ToTable("ProductViews");
-                });
-
             modelBuilder.Entity("Ecommerce.Api.Domain.Entities.Service", b =>
                 {
                     b.Property<Guid>("Id")
@@ -436,9 +334,6 @@ namespace Ecommerce.Api.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<decimal>("PriceIqd")
-                        .HasColumnType("numeric");
 
                     b.Property<decimal>("PriceUsd")
                         .HasColumnType("numeric");
@@ -541,28 +436,6 @@ namespace Ecommerce.Api.Migrations
                     b.ToTable("ServiceRequirements");
                 });
 
-            modelBuilder.Entity("Ecommerce.Api.Domain.Entities.SiteVisit", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Path")
-                        .HasColumnType("text");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.ToTable("SiteVisits");
-                });
-
             modelBuilder.Entity("Ecommerce.Api.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -582,10 +455,6 @@ namespace Ecommerce.Api.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -642,9 +511,11 @@ namespace Ecommerce.Api.Migrations
 
             modelBuilder.Entity("Ecommerce.Api.Domain.Entities.OrderItem", b =>
                 {
-                    b.HasOne("Ecommerce.Api.Domain.Entities.Order", null)
+                    b.HasOne("Ecommerce.Api.Domain.Entities.Order", "Order")
                         .WithMany("Items")
-                        .HasForeignKey("OrderId");
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Ecommerce.Api.Domain.Entities.ServicePackage", "Package")
                         .WithMany()
@@ -661,6 +532,8 @@ namespace Ecommerce.Api.Migrations
                     b.HasOne("Ecommerce.Api.Domain.Entities.ServiceRequest", "ServiceRequest")
                         .WithMany()
                         .HasForeignKey("ServiceRequestId");
+
+                    b.Navigation("Order");
 
                     b.Navigation("Package");
 
