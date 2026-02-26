@@ -3,30 +3,41 @@ export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
 
-    // لا تستخدم apiBase هنا إطلاقاً حتى لا يصير recursion
+    // IMPORTANT:
+    // لا تستخدم apiBase هنا إطلاقاً.
+    // إذا apiOrigin صار فاضي/غلط، كان الكود ياخذ "/api/bff" (apiBase)
+    // ويسوي recursion على نفسه -> 500 على Vercel.
     const apiOrigin =
       (config as any).apiOrigin ||
       (config.public as any).apiOrigin ||
       process.env.NUXT_API_ORIGIN ||
-      process.env.NUXT_PUBLIC_API_ORIGIN ||
-      "https://ecommerce-api-22o8.fly.dev" // ✅ fallback آمن للإنتاج
+      process.env.NUXT_PUBLIC_API_ORIGIN
 
-    const method = (event.node.req.method || "GET").toUpperCase()
-    const routePath = getRouterParam(event, "path") || ""
+    if (!apiOrigin) {
+      setResponseStatus(event, 500)
+      return { error: 'Missing API origin. Set NUXT_API_ORIGIN / NUXT_PUBLIC_API_ORIGIN.' }
+    }
 
-    const targetBase = String(apiOrigin).replace(/\/$/, "")
-    const isUploads = routePath.startsWith("uploads/") || routePath === "uploads"
-    const apiBase = targetBase.endsWith("/api") ? targetBase : `${targetBase}/api`
+    const method = (event.node.req.method || 'GET').toUpperCase()
+    const routePath = getRouterParam(event, 'path') || ''
+
+    const targetBase = String(apiOrigin).replace(/\/$/, '')
+
+    // ✅ المسار الافتراضي للـ API يكون تحت /api
+    // لكن مسارات الملفات المرفوعة تكون عادةً تحت /uploads (بدون /api)
+    // إذا عملنا لها proxy إلى /api/uploads راح نحصل 404.
+    const isUploads = routePath.startsWith('uploads/') || routePath === 'uploads'
+    const apiBase = targetBase.endsWith('/api') ? targetBase : `${targetBase}/api`
     const targetUrl = new URL(isUploads ? `${targetBase}/${routePath}` : `${apiBase}/${routePath}`)
 
     // Query params
     const incomingQuery = getQuery(event) as Record<string, any>
 
-    // query=JSON => params
-    if (typeof incomingQuery.query === "string" && incomingQuery.query.trim()) {
+    // ✅ query=JSON => params
+    if (typeof incomingQuery.query === 'string' && incomingQuery.query.trim()) {
       try {
         const obj = JSON.parse(incomingQuery.query)
-        if (obj && typeof obj === "object") {
+        if (obj && typeof obj === 'object') {
           for (const [k, v] of Object.entries(obj)) {
             if (v === undefined || v === null) continue
             if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
@@ -34,7 +45,7 @@ export default defineEventHandler(async (event) => {
           }
         }
       } catch {
-        targetUrl.searchParams.set("query", incomingQuery.query)
+        targetUrl.searchParams.set('query', incomingQuery.query)
       }
       delete incomingQuery.query
     }
@@ -45,166 +56,170 @@ export default defineEventHandler(async (event) => {
       else targetUrl.searchParams.set(k, String(v))
     }
 
-    // Headers (sanitize)
-    const incomingHeaders = getRequestHeaders(event) as Record<string, any>
-    const headers: Record<string, string> = {}
-    for (const [k, v] of Object.entries(incomingHeaders)) {
-      if (v === undefined || v === null) continue
-      headers[k.toLowerCase()] = Array.isArray(v) ? String(v[0]) : String(v)
-    }
+    // Headers
+    const headers = getRequestHeaders(event) as Record<string, any>
+    delete headers.host
+    delete headers.connection
+    delete headers['content-length']
+    delete headers['Content-Length']
+    // ✅ منع ضغط الاستجابة من المصدر لتفادي JSON مضغوط/غير قابل للقراءة على بعض الشبكات/VPN
+    delete headers['accept-encoding']
+    delete headers['Accept-Encoding']
+    headers['accept-encoding'] = 'identity'
 
-    delete headers["host"]
-    delete headers["connection"]
-    delete headers["content-length"]
+    // ✅ 1) إذا الفرونت مرسل Authorization خليّه مثل ما هو
+    const authHeader = headers.authorization || headers.Authorization
 
-    // منع ضغط الاستجابة من المصدر (Edge/Serverless) لتفادي مشاكل parsing
-    delete headers["accept-encoding"]
-    headers["accept-encoding"] = "identity"
-
-    // ✅ 1) Authorization إن وجد
-    const authHeader = headers["authorization"]
-
-    // ✅ 2) fallback من Cookie
+    // ✅ 2) fallback: خذ التوكن من Cookie إذا ماكو Authorization
     const tokenFromCookie =
-      getCookie(event, "token") ||
-      getCookie(event, "access_token") ||
-      getCookie(event, "access")
+      getCookie(event, 'token') ||
+      getCookie(event, 'access_token') ||
+      getCookie(event, 'access') // ✅ نسمح لـ access هم
     if (!authHeader && tokenFromCookie) {
-      headers["authorization"] = `Bearer ${tokenFromCookie}`
+      headers.authorization = `Bearer ${tokenFromCookie}`
     }
 
-    // ✅ WhatsApp Checkout secret
-    if (routePath.toLowerCase() === "checkout/cart/whatsapp") {
+    // ✅ WhatsApp Checkout: أرسل سرّ بسيط للباك إند حتى نمنع الاستدعاء المباشر من أي شخص
+    // ضعه في Vercel Environment Variables باسم CHECKOUT_SECRET
+    if (routePath.toLowerCase() === 'checkout/cart/whatsapp') {
       const secret = process.env.CHECKOUT_SECRET
-      if (secret) headers["x-checkout-secret"] = secret
+      if (secret) headers['X-Checkout-Secret'] = secret
     }
 
     // Body
-    const body =
-      method === "GET" || method === "HEAD" ? undefined : await readRawBody(event, false)
+    const body = method === 'GET' || method === 'HEAD'
+      ? undefined
+      : await readRawBody(event, false)
 
     const res = await fetch(targetUrl.toString(), {
       method,
-      headers,
+      headers: { ...headers },
       body: body || undefined,
     })
 
-    const isLogin = routePath.toLowerCase() === "auth/login" && method === "POST"
-    const isLogout = routePath.toLowerCase() === "auth/logout"
+    const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
+    const isLogout = routePath.toLowerCase() === 'auth/logout'
 
     // ✅ login: خزن cookies
     if (isLogin) {
       const json = await res.json().catch(() => null)
-      const token = (json as any)?.token
-      const role = (json as any)?.user?.role || "User"
+
+      const token = json?.token
+      const role = json?.user?.role || 'User'
 
       if (token) {
-        const secure = process.env.NODE_ENV === "production"
+        const secure = process.env.NODE_ENV === 'production'
 
-        setCookie(event, "token", token, {
+        // token httpOnly (أمني)
+        setCookie(event, 'token', token, {
           httpOnly: true,
           secure,
-          sameSite: "lax",
-          path: "/",
+          sameSite: 'lax',
+          path: '/',
           maxAge: 60 * 60 * 24 * 30,
         })
 
-        // access غير httpOnly (حل iOS/Telegram)
-        setCookie(event, "access", token, {
+        // ✅ access غير httpOnly (حل iOS/Telegram 401)
+        setCookie(event, 'access', token, {
           httpOnly: false,
           secure,
-          sameSite: "lax",
-          path: "/",
+          sameSite: 'lax',
+          path: '/',
           maxAge: 60 * 60 * 24 * 30,
         })
 
-        setCookie(event, "role", String(role), {
+        // role غير httpOnly
+        setCookie(event, 'role', String(role), {
           httpOnly: false,
           secure,
-          sameSite: "lax",
-          path: "/",
+          sameSite: 'lax',
+          path: '/',
           maxAge: 60 * 60 * 24 * 30,
         })
 
-        setCookie(event, "auth", "1", {
+        // auth flag غير httpOnly
+        setCookie(event, 'auth', '1', {
           httpOnly: false,
           secure,
-          sameSite: "lax",
-          path: "/",
+          sameSite: 'lax',
+          path: '/',
           maxAge: 60 * 60 * 24 * 30,
         })
 
-        if ((json as any)?.user) {
-          setCookie(event, "user", JSON.stringify((json as any).user), {
+        // (اختياري) خزن user كـ JSON
+        if (json?.user) {
+          setCookie(event, 'user', JSON.stringify(json.user), {
             httpOnly: false,
             secure,
-            sameSite: "lax",
-            path: "/",
+            sameSite: 'lax',
+            path: '/',
             maxAge: 60 * 60 * 24 * 30,
           })
         }
       }
 
       setResponseStatus(event, res.status)
+
       return json
     }
 
+    const ct = (res.headers.get("content-type") || "").toLowerCase()
     // ✅ logout: امسح cookies
     if (isLogout) {
       const json = await res.json().catch(() => null)
-      const names = ["token", "access", "access_token", "role", "auth", "user"]
+      const names = ['token','access','access_token','role','auth','user']
       for (const n of names) {
-        try {
-          deleteCookie(event, n, { path: "/" })
-        } catch {
-          /* ignore */
-        }
+        try { deleteCookie(event, n, { path: '/' }) } catch { /* ignore */ }
       }
       setResponseStatus(event, res.status)
       return json ?? { ok: res.ok }
     }
 
-    // ✅ مرّر status كما هو (لا ترمي 500)
+    // ✅ ضبط status دائماً قبل القراءة
     setResponseStatus(event, res.status)
 
-    const ct = (res.headers.get("content-type") || "").toLowerCase()
 
-    // إذا JSON
-    if (ct.includes("application/json") || ct.includes("application/problem+json")) {
+    // ✅ على Vercel بعض الـ routes تشتغل Edge runtime، لذلك نتجنب Buffer و node:zlib
+    // ونعتمد فقط على Web APIs (text/json/arrayBuffer).
+    if (ct.includes("application/json")) {
       const raw = await res.text().catch(() => "")
-      if (!raw) return null
       try {
-        return JSON.parse(raw)
+        return raw ? JSON.parse(raw) : null
       } catch {
         return {
           error: "Upstream returned invalid JSON.",
           status: res.status,
           contentType: ct,
           preview: raw.slice(0, 400),
-          targetUrl: targetUrl.toString(),
         }
       }
     }
 
-    // إذا صورة/ملف
-    const isBinary =
-      ct.startsWith("image/") ||
-      ct.includes("application/octet-stream") ||
-      ct.includes("application/pdf")
-
-    if (isBinary) {
-      setResponseHeader(event, "content-type", ct || "application/octet-stream")
-      const buf = new Uint8Array(await res.arrayBuffer())
-      return buf
+    // non-JSON:
+    // بعض استجابات الـ 401/403 على ASP.NET قد تكون بدون body وبدون content-type
+    // وإرجاع Uint8Array فارغ أحياناً يسبب مشاكل في Nitro/Vercel. لذلك:
+    // - إذا ماكو content-type: رجّع null أو نص
+    // - إذا content-type نصي: رجّع text
+    // - إذا content-type باينري (صور/ملفات): رجّع bytes
+    if (!ct) {
+      const raw = await res.text().catch(() => "")
+      return raw || null
     }
 
-    // غير ذلك: رجع نص (حتى لو 401/403 بدون body، ما يكسر الفرونت)
-    const text = await res.text().catch(() => "")
-    if (ct) setResponseHeader(event, "content-type", ct)
-    return text || null
+    if (ct.startsWith("text/") || ct.includes("application/problem+json")) {
+      setResponseHeader(event, "content-type", ct)
+      const raw = await res.text().catch(() => "")
+      return raw
+    }
+
+    // uploads/images/files
+    setResponseHeader(event, "content-type", ct)
+    const buf = new Uint8Array(await res.arrayBuffer())
+    return buf
+
   } catch (err: any) {
-    console.error("BFF error:", err)
-    setResponseStatus(event, 500)
-    return { error: err?.message || "BFF failed" }
+    console.error('BFF error:', err)
+    setResponseStatus(event, 502)
+    return { error: err?.message || 'BFF failed', hint: 'Check Vercel Function logs for stack trace.' }
   }
 })
