@@ -32,7 +32,7 @@ public sealed class S3ObjectStorage : IObjectStorage
         _s3 = new AmazonS3Client(_opt.AccessKeyId, _opt.SecretAccessKey, cfg);
     }
 
-    public async Task<StoredObject> UploadAsync(Stream content, string key, string contentType, CancellationToken ct = default)
+    public async Task<StoredObject> UploadAsync(Stream content, string key, string contentType, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(_opt.Bucket))
             throw new InvalidOperationException("Object storage bucket is not configured.");
@@ -49,16 +49,16 @@ public sealed class S3ObjectStorage : IObjectStorage
         // We keep it optional to avoid failures.
         try { put.CannedACL = S3CannedACL.PublicRead; } catch { /* ignore */ }
 
-        await _s3.PutObjectAsync(put, ct);
+        await _s3.PutObjectAsync(put, cancellationToken);
 
         var url = BuildPublicUrl(key);
         return new StoredObject(key, url);
     }
 
-    public async Task DeleteAsync(string key, CancellationToken ct = default)
+    public async Task DeleteAsync(string key, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(_opt.Bucket)) return;
-        await _s3.DeleteObjectAsync(_opt.Bucket, key, ct);
+        await _s3.DeleteObjectAsync(_opt.Bucket, key, cancellationToken);
     }
 
     private string BuildPublicUrl(string key)

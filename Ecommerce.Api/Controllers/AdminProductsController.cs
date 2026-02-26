@@ -193,7 +193,7 @@ public class AdminProductsController : ControllerBase
                 key: key,
                 content: stream,
                 contentType: string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType,
-                ct: HttpContext.RequestAborted
+                cancellationToken: HttpContext.RequestAborted
             );
 
             var img = new ProductImage
