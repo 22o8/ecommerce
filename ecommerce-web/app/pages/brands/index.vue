@@ -6,7 +6,7 @@
         <p class="mt-2 text-muted rtl-text">{{ t('home.brandsSubtitle') }}</p>
       </div>
 
-      <div class="control-box w-full sm:w-[360px]">
+      <div class="control-box control-box-strong glass-panel glow-border rounded-2xl p-2 w-full sm:w-[360px]">
         <div class="relative">
           <input
             v-model="q"
@@ -37,7 +37,7 @@
           v-for="b in filtered"
           :key="b.id || b.slug"
           :to="`/brands/${b.slug}`"
-          class="group card-soft p-4 hover:-translate-y-0.5 transition duration-300 hover:shadow-lg"
+          class="group card-soft glass-panel glow-border rounded-2xl p-4 hover:-translate-y-0.5 transition duration-300 hover:shadow-lg"
         >
           <div class="flex items-start gap-3">
             <div

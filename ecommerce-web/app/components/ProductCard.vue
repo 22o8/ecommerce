@@ -1,5 +1,5 @@
 <template>
-  <!-- تم إلغاء صفحة تفاصيل المنتج: الضغط على الكارد يفتح Quick Preview فقط -->
+  <!-- الضغط على الكارد يفتح Quick Preview فقط -->
   <div
     role="button"
     tabindex="0"
@@ -12,7 +12,7 @@
       <div class="relative aspect-[4/3] bg-black/20">
         <SmartImage
           :src="mainImage || ''"
-          :alt="p.name"
+          :alt="displayName"
           fit="cover"
           wrapper-class="w-full h-full"
           img-class="w-full h-full object-cover"
@@ -26,27 +26,26 @@
       <div class="absolute top-3 left-3 flex items-center gap-2">
         <div
           v-if="isNew"
-          class="px-3 py-1 rounded-full bg-white/10 backdrop-blur border border-white/10 text-xs"
+          class="px-3 py-1 rounded-full bg-surface-2 backdrop-blur border border-app text-xs"
         >
           <span class="rtl-text">{{ t('common.new') }}</span>
         </div>
       </div>
-
-      <!-- تم نقل أيقونات المفضلة/المعاينة لداخل الكارد حتى تكون مرتبة وواضحة بالـ Light/Dark -->
     </div>
 
     <div class="p-4 grid gap-3">
       <div class="min-w-0">
         <div class="flex items-start justify-between gap-3">
-          <div class="font-extrabold line-clamp-1 rtl-text min-w-0">{{ p.name }}</div>
+          <div class="font-extrabold line-clamp-1 rtl-text min-w-0">{{ displayName }}</div>
         </div>
-        <div v-if="p.description" class="text-sm text-muted line-clamp-2 rtl-text">
-          {{ p.description }}
+        <div v-if="displayDescription" class="text-sm text-muted line-clamp-2 rtl-text">
+          {{ displayDescription }}
         </div>
 
-        <!-- أيقونات (مفضلة/معاينة) تحت الوصف حتى تكون أقرب للمحتوى وما تغطي الصورة -->
-        <div class="flex items-center justify-end gap-2">
+        <!-- أزرار (مفضلة/معاينة) -->
+        <div class="flex items-center justify-end gap-2 mt-2">
           <button
+            type="button"
             class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
             @click.stop.prevent="toggleFav"
             :aria-label="t('wishlist.toggle')"
@@ -55,6 +54,7 @@
           </button>
 
           <button
+            type="button"
             class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
             @click.stop.prevent="openPreview"
             :aria-label="t('products.quickPreview')"
@@ -66,13 +66,13 @@
 
       <div class="flex items-center justify-between gap-3">
         <div class="text-lg font-black keep-ltr">
-          {{ formatPrice(p.priceUsd) }}
+          {{ formatPrice(priceValue) }}
         </div>
 
-        <!-- أزرار مدمجة (لا تاخذ مساحة كبيرة على الهاتف) -->
         <div class="flex flex-row items-center gap-2">
           <button
-            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-app bg-surface hover:bg-white/5 transition text-xs"
+            type="button"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-app bg-surface hover:bg-surface-2 transition text-xs"
             @click.stop.prevent="addToCart"
           >
             <Icon name="mdi:cart-plus" class="text-base" />
@@ -80,7 +80,8 @@
           </button>
 
           <button
-            class="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-app bg-surface hover:bg-white/5 transition text-xs"
+            type="button"
+            class="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-app bg-surface hover:bg-surface-2 transition text-xs"
             @click.stop.prevent="buyNow"
           >
             <span class="rtl-text">{{ t('common.buy') }}</span>
@@ -93,8 +94,9 @@
 
 <script setup lang="ts">
 import SmartImage from '~/components/SmartImage.vue'
+import { formatIqd } from '~/composables/useMoney'
 
-const props = defineProps<{ p: any }>()
+const props = defineProps<{ product?: any; p?: any }>()
 const { t } = useI18n()
 const cart = useCartStore()
 const { isInWishlist, toggle } = useWishlist()
@@ -103,7 +105,12 @@ const router = useRouter()
 const route = useRoute()
 const { buildAssetUrl } = useApi()
 
-const p = computed(() => props.p)
+const p = computed(() => props.product ?? props.p ?? {})
+
+const displayName = computed(() => String(p.value?.title ?? p.value?.name ?? ''))
+const displayDescription = computed(() => String(p.value?.description ?? '') || '')
+
+const priceValue = computed(() => p.value?.priceIqd ?? p.value?.price ?? p.value?.priceUsd)
 
 const mainImage = computed(() => {
   const raw = p.value?.images?.[0]?.url || p.value?.images?.[0] || p.value?.imageUrl || p.value?.image || ''
@@ -118,15 +125,11 @@ const isNew = computed(() => {
   return days <= 14
 })
 
-const fav = computed(() => isInWishlist(String(p.value?.id ?? '')))
+const wishlistKey = computed(() => String((p.value as any)?.id ?? (p.value as any)?.productId ?? p.value?.slug ?? ''))
+const fav = computed(() => isInWishlist(wishlistKey.value))
 
 function formatPrice(v: any) {
-  const n = Number(v ?? 0)
-  try {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
-  } catch {
-    return `$${n.toFixed(2)}`
-  }
+  return formatIqd(v)
 }
 
 function addToCart() {
@@ -139,7 +142,7 @@ function buyNow() {
 }
 
 function toggleFav() {
-  toggle(String(p.value?.id ?? ''))
+  toggle(wishlistKey.value)
 }
 
 function openPreview() {

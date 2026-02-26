@@ -63,7 +63,24 @@
     },
     "featured": {
       "title": "المنتجات المميزة"
-    }
+    },
+    "statsFastShipping": "توصيل سريع",
+    "statsOriginal": "منتجات أصلية",
+    "statsSupport": "دعم العملاء",
+    "spotlightTitle": "تسوّق حسب التصنيف",
+    "spotlightSubtitle": "اختصارات سريعة توصلك للي تريده بثواني.",
+    "viewAll": "عرض الكل",
+    "catSkincare": "العناية بالبشرة",
+    "catSerum": "السيروم",
+    "catSunscreen": "واقي الشمس",
+    "catMakeup": "المكياج",
+    "catPerfume": "العطور",
+    "brandShowcaseTitle": "عرض البراندات",
+    "brandShowcaseSubtitle": "استكشف أفضل البراندات بطريقة تفاعلية ثلاثية الأبعاد.",
+    "tapToExplore": "اضغط للاستكشاف",
+    "catMoisturizer": "مرطّب",
+    "catCleanser": "غسول",
+    "subtitle": "متجر رقمي احترافي"
   },
   "productsPage": {
     "title": "المنتجات",
@@ -98,6 +115,7 @@
   },
   "admin": {
     "title": "لوحة الإدارة",
+    "featured": "مميز",
     "overview": "نظرة عامة",
     "dashboardHint": "ملخص سريع لأداء المتجر.",
     "totalOrders": "إجمالي الطلبات",
@@ -294,7 +312,53 @@
       "status": "الحالة",
       "active": "فعّال",
       "inactive": "غير فعّال"
-    }
+    },
+    "panelTitle": "لوحة الإدارة",
+    "panelSubtitle": "نظرة سريعة واختصارات",
+    "refresh": "تحديث",
+    "daily": "يومي",
+    "monthly": "شهري",
+    "cards": {
+      "orders": "إجمالي الطلبات",
+      "users": "إجمالي المستخدمين",
+      "revenue": "إجمالي الإيرادات",
+      "visitsToday": "زيارات اليوم"
+    },
+    "lastUpdated": "آخر تحديث",
+    "registeredUsers": "المسجلين في النظام",
+    "revenueNote": "محسوب من الطلبات المدفوعة",
+    "totalVisits": "إجمالي الزيارات",
+    "activityDaily": "النشاط اليومي",
+    "last30Days": "آخر 30 يوم",
+    "last12Months": "آخر 12 شهر",
+    "summary": {
+      "title": "أفضل المنتجات (مختصر)",
+      "mostPurchased": "الأكثر شراءً",
+      "mostViewed": "الأكثر زيارةً",
+      "mostFavorited": "الأكثر مفضلة"
+    },
+    "insightsTitle": "التحليلات / الإحصائيات",
+    "insightsSubtitle": "أكثر المنتجات (شراء/مفضلة/مشاهدة) + نشاط يومي/شهري",
+    "topPurchased": "الأكثر شراءً",
+    "topFavorited": "الأكثر مفضلة",
+    "topViewed": "الأكثر مشاهدة",
+    "neglectedProducts": "المنتجات المهملة",
+    "activityTitle": "النشاط (يومي / شهري)",
+    "dailyTableTitle": "يومي (آخر 30 يوم)",
+    "monthlyTableTitle": "شهري (آخر 12 شهر)",
+    "colDate": "التاريخ",
+    "colMonth": "الشهر",
+    "colOrders": "طلبات",
+    "colViews": "مشاهدات",
+    "colFavorites": "مفضلة",
+    "colVisits": "زيارات",
+    "latestOrders": "أحدث الطلبات",
+    "viewAll": "عرض الكل →",
+    "adminShortcuts": "اختصارات الإدارة",
+    "manageBrands": "إدارة البراندات",
+    "manageBrandsHint": "عرض / إضافة / تعديل",
+    "insights": "الإحصائيات",
+    "insightsHint": "تحليلات المفضلة/الزيارة/الشراء"
   },
   "auth": {
     "email": "البريد الإلكتروني",
@@ -309,7 +373,7 @@
     "haveAccount": "لديك حساب؟"
   },
   "createAccount": "إنشاء الحساب",
-  "browseProducts": "تصفّح المنتجات",
+  "browseProducts": "تصفح المنتجات",
   "products": {
     "sortNew": "الأحدث",
     "sortPriceAsc": "السعر: من الأقل للأعلى",
@@ -376,8 +440,8 @@
     "noDescription": "لا يوجد وصف"
   },
   "login": {
-    "title": "تسجيل الدخول",
-    "subtitle": "سجّل دخولك للمتابعة"
+    "title": "أهلاً بعودتك",
+    "subtitle": "سجّل دخولك لإدارة السلة والطلبات."
   },
   "registerFailed": "تعذر إنشاء الحساب",
   "loginFailed": "تعذر تسجيل الدخول",
@@ -397,11 +461,11 @@
   "privacyPlaceholder": "سيتم إضافة سياسة الخصوصية قريبًا.",
   "checkout": "إكمال الشراء",
   "sentOk": "تم الإرسال بنجاح",
-  "cartSubtitle": "السلة وصف",
+  "cartSubtitle": "راجع العناصر قبل إكمال الطلب.",
   "loginToCheckout": "يرجى تسجيل الدخول لإكمال عملية الشراء",
   "register": {
-    "title": "العنوان",
-    "subtitle": "وصف"
+    "title": "إنشاء حساب",
+    "subtitle": "سجّل لتتبّع طلباتك وحفظ المفضلة."
   },
   "wishlist": {
     "toggle": "المفضلة",
@@ -411,12 +475,14 @@
   "accountPlaceholder": "سيتم إضافة صفحة الحساب قريبًا.",
   "ordersSubtitle": "الطلبات وصف",
   "open": "فتح",
-  "cartEmpty": "السلة فارغة",
+  "cartEmpty": "سلتك فارغة",
   "loginTitle": "تسجيل الدخول العنوان",
   "cartHint": "السلة ملاحظة",
   "notFound": "غير موجود",
   "orderCreated": "تم إنشاء الطلب",
   "createOrder": "إنشاء طلب",
+  "buyNow": "شراء الآن",
+  "freeShippingHint": "الشحن المجاني يبدأ من 50$. المتبقي",
   "save": "حفظ",
   "clearCart": "تفريغ السلة",
   "create": "إنشاء",
@@ -440,15 +506,32 @@
     "title2": "جمالك المثالي",
     "subtitle": "استكشف مجموعتنا المختارة من أفضل منتجات العناية بالبشرة والجمال من أشهر البراندات.",
     "shopNow": "تسوّق الآن",
+    "products": "المنتجات",
+    "categories": "الأقسام",
     "featuredProducts": "المنتجات المميزة"
   },
   "error": "خطأ",
-  "cartTitle": "السلة العنوان",
+  "cartTitle": "سلتك",
   "failedLoad": "فشل التحميل",
   "cart": {
     "title": "السلة",
     "checkout": "إكمال الشراء",
     "emptyTitle": "سلتك فارغة",
     "emptyDesc": "أضف منتجات لتظهر هنا."
-  }
+  },
+  "favorites": {
+    "title": "مفضلاتي",
+    "subtitle": "المنتجات التي أضفتها إلى المفضلة (محفوظة على حسابك)",
+    "emptyTitle": "ما عندك مفضلات بعد",
+    "emptyHint": "افتح أي منتج واضغط ♥ للإضافة.",
+    "browseProducts": "تصفح المنتجات",
+    "itemsCount": "{count} عنصر"
+  },
+  "noAccount": "ما عندك حساب؟",
+  "remove": "إزالة",
+  "email": "البريد الإلكتروني",
+  "password": "كلمة المرور",
+  "loginBtn": "تسجيل الدخول",
+  "registerBtn": "إنشاء حساب",
+  "logoutBtn": "تسجيل الخروج"
 }

@@ -66,7 +66,24 @@
     },
     "featured": {
       "title": "Featured Products"
-    }
+    },
+    "statsFastShipping": "Fast delivery",
+    "statsOriginal": "Authentic products",
+    "statsSupport": "Customer support",
+    "spotlightTitle": "Shop by category",
+    "spotlightSubtitle": "Quick picks to reach what you want in seconds.",
+    "viewAll": "View all",
+    "catSkincare": "Skincare",
+    "catSerum": "Serums",
+    "catSunscreen": "Sunscreen",
+    "catMakeup": "Makeup",
+    "catPerfume": "Perfumes",
+    "brandShowcaseTitle": "Brand showcase",
+    "brandShowcaseSubtitle": "Explore top brands in an interactive 3D view.",
+    "tapToExplore": "Tap to explore",
+    "catMoisturizer": "Moisturizer",
+    "catCleanser": "Cleanser",
+    "subtitle": "Professional digital store"
   },
   "productsPage": {
     "title": "Products",
@@ -102,6 +119,7 @@
   },
   "admin": {
     "title": "Admin Panel",
+    "featured": "Featured",
     "dashboardHint": "Quick overview and shortcuts",
     "overview": "Overview",
     "totalOrders": "Total orders",
@@ -270,7 +288,53 @@
     "editBrand": "Edit brand",
     "productsLabel": "Products",
     "brandsLabel": "Brands",
-    "imagesSelected": "Images selected"
+    "imagesSelected": "Images selected",
+    "panelTitle": "Admin Panel",
+    "panelSubtitle": "Quick overview and shortcuts",
+    "refresh": "Refresh",
+    "daily": "Daily",
+    "monthly": "Monthly",
+    "cards": {
+      "orders": "Orders",
+      "users": "Users",
+      "revenue": "Revenue",
+      "visitsToday": "Visits today"
+    },
+    "lastUpdated": "Last updated",
+    "registeredUsers": "Registered users",
+    "revenueNote": "Calculated from paid orders",
+    "totalVisits": "Total visits",
+    "activityDaily": "Daily activity",
+    "last30Days": "Last 30 days",
+    "last12Months": "Last 12 months",
+    "summary": {
+      "title": "Top products (summary)",
+      "mostPurchased": "Most purchased",
+      "mostViewed": "Most viewed",
+      "mostFavorited": "Most favorited"
+    },
+    "insightsTitle": "Analytics / Insights",
+    "insightsSubtitle": "Top products (purchase/favorite/view) + daily/monthly activity",
+    "topPurchased": "Top purchased",
+    "topFavorited": "Top favorited",
+    "topViewed": "Top viewed",
+    "neglectedProducts": "Neglected products",
+    "activityTitle": "Activity (daily / monthly)",
+    "dailyTableTitle": "Daily (last 30 days)",
+    "monthlyTableTitle": "Monthly (last 12 months)",
+    "colDate": "Date",
+    "colMonth": "Month",
+    "colOrders": "Orders",
+    "colViews": "Views",
+    "colFavorites": "Favorites",
+    "colVisits": "Visits",
+    "latestOrders": "Latest orders",
+    "viewAll": "View all →",
+    "adminShortcuts": "Admin shortcuts",
+    "manageBrands": "Manage brands",
+    "manageBrandsHint": "View / add / edit",
+    "insights": "Insights",
+    "insightsHint": "Favorites / visits / purchases analytics"
   },
   "errors": {
     "required": "This field is required",
@@ -342,7 +406,7 @@
   },
   "edit": "Edit",
   "prev": "Prev",
-  "itemsCount": "Items count",
+  "itemsCount": "Items",
   "order": "Order",
   "tagline": "Professional digital store",
   "account": "Account",
@@ -352,8 +416,8 @@
     "noDescription": "No description"
   },
   "login": {
-    "title": "Title",
-    "subtitle": "Subtitle"
+    "title": "Welcome back",
+    "subtitle": "Sign in to manage your cart and orders."
   },
   "registerFailed": "Register failed",
   "loginFailed": "Login failed",
@@ -373,11 +437,11 @@
   "privacyPlaceholder": "Privacy placeholder",
   "checkout": "Checkout",
   "sentOk": "Sent ok",
-  "cartSubtitle": "Cart subtitle",
+  "cartSubtitle": "Review your items before checkout.",
   "loginToCheckout": "Login to checkout",
   "register": {
-    "title": "Title",
-    "subtitle": "Subtitle"
+    "title": "Create an account",
+    "subtitle": "Join us to track orders and save favorites."
   },
   "wishlist": {
     "toggle": "Toggle",
@@ -387,12 +451,14 @@
   "accountPlaceholder": "Account placeholder",
   "ordersSubtitle": "Orders subtitle",
   "open": "Open",
-  "cartEmpty": "Cart empty",
+  "cartEmpty": "Your cart is empty",
   "loginTitle": "Login title",
   "cartHint": "Cart hint",
   "notFound": "Not found",
   "orderCreated": "Order created",
   "createOrder": "Create order",
+  "buyNow": "Buy now",
+  "freeShippingHint": "Free shipping starts at $50. Remaining",
   "save": "Save",
   "clearCart": "Clear cart",
   "create": "Create",
@@ -416,15 +482,32 @@
     "title2": "Beauty Routine",
     "subtitle": "Explore our curated collection of premium skincare and beauty products from the world's best brands.",
     "shopNow": "Shop Now",
+    "products": "Products",
+    "categories": "Categories",
     "featuredProducts": "Featured Products"
   },
   "error": "Error",
-  "cartTitle": "Cart title",
+  "cartTitle": "Your cart",
   "failedLoad": "Failed load",
   "cart": {
     "title": "Cart",
     "checkout": "Checkout",
     "emptyTitle": "Your cart is empty",
     "emptyDesc": "Add products to see them here."
-  }
+  },
+  "favorites": {
+    "title": "Favorites",
+    "subtitle": "Products you added to your favorites (saved to your account)",
+    "emptyTitle": "You don't have favorites yet",
+    "emptyHint": "Open any product and tap the heart to add it.",
+    "browseProducts": "Browse products",
+    "itemsCount": "{count} items"
+  },
+  "noAccount": "Don’t have an account?",
+  "remove": "Remove",
+  "email": "Email",
+  "password": "Password",
+  "loginBtn": "Login",
+  "registerBtn": "Create account",
+  "logoutBtn": "Logout"
 }

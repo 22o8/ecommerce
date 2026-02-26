@@ -1,6 +1,6 @@
 <template>
   <button
-    :type="type"
+    :type="props.type"
     class="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition active:scale-[.99]"
     :class="classes"
     :disabled="disabled || loading"

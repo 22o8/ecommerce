@@ -74,25 +74,12 @@
       </div>
 
       <div class="mt-6 grid gap-3">
-        <UiButton :disabled="!cart.items.length" :loading="loading" @click="createOrder">
-          <Icon name="mdi:receipt-text-plus-outline" class="text-lg" />
-          <span class="rtl-text">{{ t('createOrder') }}</span>
-        </UiButton>
-
-        <UiButton :disabled="!cart.items.length" variant="ghost" @click="openWhatsApp">
+        <!-- ✅ Buy Now = WhatsApp checkout -->
+        <UiButton :disabled="!cart.items.length" @click="openWhatsApp">
           <Icon name="mdi:whatsapp" class="text-lg" />
-          <span class="rtl-text">{{ t('sendWhatsApp') }}</span>
+          <span class="rtl-text">{{ t('buyNow') }}</span>
         </UiButton>
 
-        <p v-if="!auth.isAuthed" class="text-xs rtl-text text-muted">
-          <Icon name="mdi:information-outline" class="inline-block align-[-2px]" />
-          {{ t('loginToCheckout') }}
-          <NuxtLink to="/login" class="underline">{{ t('loginTitle') }}</NuxtLink>
-          ·
-          <NuxtLink to="/register" class="underline">{{ t('registerTitle') }}</NuxtLink>
-        </p>
-
-        <p v-if="success" class="text-sm rtl-text text-[rgb(var(--success))]">{{ success }}</p>
         <p v-if="error" class="text-sm rtl-text text-[rgb(var(--danger))]">{{ error }}</p>
       </div>
     </div>
@@ -102,28 +89,27 @@
 <script setup lang="ts">
 import UiButton from '~/components/ui/UiButton.vue'
 import { buildAssetUrl } from '~/composables/useApi'
+import { formatIqd } from '~/composables/useMoney'
 
 const { t } = useI18n()
-const api = useApi()
 const cart = useCartStore()
 const auth = useAuthStore()
 const profile = useProfileStore()
 const config = useRuntimeConfig()
 
-const loading = ref(false)
 const error = ref('')
-const success = ref('')
 
-function fmtMoney(v: number) {
-  return new Intl.NumberFormat('ar-IQ', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(v)
-}
+function fmtMoney(v: any){ return formatIqd(v) }
 
 function whatsappText() {
+  const when = new Date().toLocaleString('ar-IQ')
   const lines = [
     `طلب جديد من المتجر`,
+    `الوقت: ${when}`,
     `الاسم: ${profile.fullName || auth.user?.fullName || '-'}`,
     `الهاتف: ${profile.phone || (auth.user as any)?.phone || '-'}`,
     `الإيميل: ${profile.email || auth.user?.email || '-'}`,
+    `صفحة المتجر: ${window.location.origin}`,
     '',
     'المنتجات:',
     ...cart.items.map(i => `- ${i.title} × ${i.quantity} = ${fmtMoney(i.price * i.quantity)}`),
@@ -133,36 +119,28 @@ function whatsappText() {
   return lines.join('\n')
 }
 
-function openWhatsApp() {
-  const number = (config.public as any).whatsappNumber || ''
+async function openWhatsApp() {
+  error.value = ''
+
+  // ✅ سجّل الطلب كعملية ناجحة (مدفوع) حتى ينعكس مباشرة في لوحة التحكم/الإحصائيات
+  // (يبقى فتح واتساب دائماً حتى لو فشل الطلب)
+  try {
+    await $fetch('/api/bff/checkout/cart/whatsapp', {
+      method: 'POST',
+      body: {
+        items: cart.items.map(i => ({ productId: i.id, quantity: i.quantity }))
+      }
+    })
+  } catch (e: any) {
+    console.error(e)
+  }
+
+  const number = (config.public as any).whatsappNumber || (config.public as any).whatsappPhone || ''
   const text = encodeURIComponent(whatsappText())
   const url = number
     ? `https://wa.me/${String(number).replace(/\D/g, '')}?text=${text}`
     : `https://wa.me/?text=${text}`
   window.open(url, '_blank')
-}
-
-async function createOrder() {
-  success.value = ''
-  error.value = ''
-  if (!auth.isAuthed) {
-    error.value = t('loginToCheckout')
-    return
-  }
-  loading.value = true
-  try {
-    const body = {
-      items: cart.items.map(i => ({ productId: i.id, quantity: i.quantity })),
-      notes: whatsappText(),
-    }
-    const res = await api.post<{ id: string }>(`/Checkout/cart`, body)
-    success.value = `${t('orderCreated')} #${res.id}`
-    cart.clear()
-  } catch (e: any) {
-    error.value = e?.data?.message || e?.message || t('orderFailed')
-  } finally {
-    loading.value = false
-  }
 }
 
 onMounted(() => profile.hydrateFromAuth(auth.token || ''))

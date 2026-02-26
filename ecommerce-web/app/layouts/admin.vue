@@ -143,6 +143,7 @@ const links = computed(() => [
   { to: '/admin/products', label: t('admin.productsLabel'), icon: 'mdi:cube-outline' },
   { to: '/admin/brands', label: t('admin.brandsLabel'), icon: 'mdi:storefront-outline' },
   { to: '/admin/orders', label: t('admin.orders'), icon: 'mdi:receipt-text-outline' },
+  { to: '/admin/insights', label: t('admin.insights'), icon: 'mdi:chart-areaspline' },
   { to: '/admin/users', label: t('admin.users.title'), icon: 'mdi:account-multiple-outline' },
 ])
 

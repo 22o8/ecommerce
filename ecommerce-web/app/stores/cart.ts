@@ -27,12 +27,25 @@ export const useCartStore = defineStore('cart', () => {
   function setQty(id: string, qty: number) {
     const it = items.value.find(i => i.id === id)
     if (!it) return
-    it.quantity = Math.max(1, Math.floor(qty || 1))
+    const safe = Number.isFinite(qty) ? Math.trunc(qty) : 1
+    it.quantity = Math.min(99, Math.max(1, safe))
+  }
+
+  function increase(id: string) {
+    const it = items.value.find(i => i.id === id)
+    if (!it) return
+    setQty(id, (it.quantity || 1) + 1)
+  }
+
+  function decrease(id: string) {
+    const it = items.value.find(i => i.id === id)
+    if (!it) return
+    setQty(id, (it.quantity || 1) - 1)
   }
 
   function clear() {
     items.value = []
   }
 
-  return { items, count, total, add, remove, setQty, clear }
+  return { items, count, total, add, remove, setQty, increase, decrease, clear }
 })

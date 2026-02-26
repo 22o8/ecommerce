@@ -16,6 +16,11 @@ export default defineNuxtConfig({
       'https://ecommerce-api-22o8.fly.dev',
 
     public: {
+      // سعر التحويل الافتراضي (قابل للتعديل من ENV)
+      // ملاحظة: الأسعار المخزنة عندك حالياً تبدو بالدولار، وهنا نعرضها بالدينار.
+      usdToIqdRate: Number(process.env.NUXT_PUBLIC_USD_TO_IQD_RATE || 1300),
+      // WhatsApp number (بدون +). غيّره لاحقًا من ENV بدون تعديل كود.
+      // Preferred: NUXT_PUBLIC_WHATSAPP_NUMBER=9647704252132
       whatsappPhone: process.env.NUXT_PUBLIC_WHATSAPP_PHONE || '',
 
       // ✅ الافتراضي (الأفضل على Vercel):
@@ -37,7 +42,11 @@ export default defineNuxtConfig({
       siteName: process.env.NUXT_PUBLIC_SITE_NAME || 'Ecommerce',
 
       // WhatsApp number (without +)
-      whatsappNumber: process.env.NUXT_PUBLIC_WHATSAPP_NUMBER || '9640000000000',
+      // ✅ نقرأ من NUXT_PUBLIC_WHATSAPP_NUMBER (أو القديم NUXT_PUBLIC_WHATSAPP_PHONE) ونضع رقمك كافتراضي
+      whatsappNumber:
+        process.env.NUXT_PUBLIC_WHATSAPP_NUMBER ||
+        process.env.NUXT_PUBLIC_WHATSAPP_PHONE ||
+        '9647704252132',
 
       supportEmail: process.env.NUXT_PUBLIC_SUPPORT_EMAIL || 'info@example.com',
       supportPhone: process.env.NUXT_PUBLIC_SUPPORT_PHONE || '9640000000000',
@@ -48,6 +57,8 @@ export default defineNuxtConfig({
   },
 
   app: {
+    pageTransition: { name: 'page', mode: 'out-in' },
+    layoutTransition: { name: 'layout', mode: 'out-in' },
     head: {
       // ✅ Arabic first (RTL)
       // Force LTR for all locales.
