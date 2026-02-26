@@ -189,7 +189,7 @@ public class AdminProductsController : ControllerBase
             var key = $"products/{p.Id}/{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
             await using var stream = file.OpenReadStream();
 
-            var url = await _storage.PutAsync(
+            var upload = await _storage.UploadAsync(
                 key: key,
                 content: stream,
                 contentType: string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType,
@@ -199,7 +199,7 @@ public class AdminProductsController : ControllerBase
             var img = new ProductImage
             {
                 ProductId = p.Id,
-                Url = url,
+                Url = upload.Url,
                 SortOrder = nextOrder++
             };
 

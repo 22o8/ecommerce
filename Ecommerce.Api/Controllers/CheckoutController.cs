@@ -217,8 +217,7 @@ public class CheckoutController : ControllerBase
 			orderItems.Add(new OrderItem
 			{
 				ProductId = p.Id,
-				ProductTitle = p.Title,
-				Quantity = qty,
+								Quantity = qty,
 				UnitPriceIqd = unit,
 				LineTotalIqd = line
 			});
@@ -231,9 +230,6 @@ public class CheckoutController : ControllerBase
 		{
 			TotalIqd = totalIqd,
 			Status = "Pending",
-			CustomerName = "WhatsApp",
-			CustomerPhone = "",
-			DeliveryAddress = "",
 			CreatedAt = DateTime.UtcNow,
 			Items = orderItems
 		};
@@ -251,7 +247,7 @@ public class CheckoutController : ControllerBase
 
 		foreach (var oi in orderItems)
 		{
-			msgLines.Add($"{oi.ProductTitle} x{oi.Quantity} = {oi.LineTotalIqd:n0} IQD");
+			msgLines.Add($"{products.FirstOrDefault(x => x.Id == oi.ProductId)?.Title ?? oi.ProductId.ToString()} x{oi.Quantity} = {oi.LineTotalIqd:n0} IQD");
 		}
 
 		msgLines.Add("--------------------");

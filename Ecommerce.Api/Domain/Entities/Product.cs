@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 // Ecommerce.Api/Domain/Entities/Product.cs
 namespace Ecommerce.Api.Domain.Entities;
 
@@ -12,6 +13,9 @@ public class Product
     /// السعر بالدينار العراقي (المعتمد في الواجهة).
     /// </summary>
     public decimal PriceIqd { get; set; }
+
+		[NotMapped]
+		public string Currency { get; set; } = "IQD";
 
     /// <summary>
     /// (قديم) كان يستخدم بالدولار. أبقيناه للتوافق الخلفي فقط.
