@@ -14,8 +14,9 @@ public class AdminProductsController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IWebHostEnvironment _env;
+    private readonly Ecommerce.Api.Infrastructure.Storage.IObjectStorage _storage;
 
-    public AdminProductsController(AppDbContext db, IWebHostEnvironment env)
+    public AdminProductsController(AppDbContext db, IWebHostEnvironment env, Ecommerce.Api.Infrastructure.Storage.IObjectStorage storage)
     {
         _db = db;
         _env = env;
@@ -260,96 +261,29 @@ public async Task<IActionResult> Delete([FromRoute] Guid id)
             return BadRequest(new { message = "No files uploaded." });
 
         var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        { ".jpg", ".jpeg", ".png", ".webp" };
+        { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".svg" };
 
-        var webRoot = _env.WebRootPath;
-        if (string.IsNullOrWhiteSpace(webRoot))
-            webRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+        const long maxBytes = 20L * 1024 * 1024; // 20MB لكل صورة
 
-        var dir = Path.Combine(webRoot, "uploads", "products", id.ToString());
-        Directory.CreateDirectory(dir);
-
-        var maxOrder = await _db.ProductImages
-            .Where(i => i.ProductId == id)
-            .Select(i => (int?)i.SortOrder)
+        // نحدد الترتيب الحالي (Order) حتى نضيف الصور بعده
+        var maxOrder = await _db.ProductAssets
+            .Where(x => x.ProductId == id)
+            .Select(x => (int?)x.Order)
             .MaxAsync() ?? 0;
-
-        var created = new List<object>();
 
         foreach (var f in files)
         {
-            var ext = Path.GetExtension(f.FileName);
+            var ext = (Path.GetExtension(f.FileName) ?? string.Empty).ToLowerInvariant();
             if (!allowed.Contains(ext))
-                return BadRequest(new { message = $"File type not allowed: {ext}" });
+                return BadRequest("Unsupported image format.");
 
-            var safeName = $"{Guid.NewGuid():N}{ext}";
-            var fullPath = Path.Combine(dir, safeName);
+            if (f.Length <= 0 || f.Length > maxBytes)
+                return BadRequest($"Invalid image size. Max {maxBytes / (1024 * 1024)}MB");
 
-            await using (var fs = System.IO.File.Create(fullPath))
-            {
-                await f.CopyToAsync(fs);
-            }
-
-            // ✅ نخزن الرابط كـ RELATIVE PATH لتجنب مشاكل البروكسي (http/https) والهوست.
-            // الواجهة (أو BFF) تحولّه إلى رابط كامل عند العرض.
-            var publicUrl = $"/uploads/products/{id}/{safeName}";
-
-            var img = new ProductImage
-            {
-                Id = Guid.NewGuid(),
-                ProductId = id,
-                Url = publicUrl,
-                Alt = string.IsNullOrWhiteSpace(alt)
-                    ? Path.GetFileNameWithoutExtension(f.FileName)
-                    : alt.Trim(),
-                SortOrder = ++maxOrder,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _db.ProductImages.Add(img);
-            created.Add(new { img.Id, img.Url, img.Alt, img.SortOrder });
-        }
-
-        await _db.SaveChangesAsync();
-        return Ok(new { items = created });
-    }
-
-    [HttpPut("{id:guid}/images/reorder")]
-    public async Task<IActionResult> ReorderImages([FromRoute] Guid id, [FromBody] ReorderImagesRequest req)
-    {
-        if (req?.ImageIds == null || req.ImageIds.Count == 0)
-            return BadRequest(new { message = "ImageIds is required" });
-
-        var exists = await _db.Products.AnyAsync(x => x.Id == id);
-        if (!exists) return NotFound(new { message = "Product not found" });
-
-        var images = await _db.ProductImages
-            .Where(i => i.ProductId == id)
-            .ToListAsync();
-
-        var set = images.Select(i => i.Id).ToHashSet();
-        foreach (var imgId in req.ImageIds)
-            if (!set.Contains(imgId))
-                return BadRequest(new { message = $"ImageId {imgId} not found for this product" });
-
-        for (int idx = 0; idx < req.ImageIds.Count; idx++)
-        {
-            var imgId = req.ImageIds[idx];
-            var img = images.First(x => x.Id == imgId);
-            img.SortOrder = idx + 1;
-        }
-
-        await _db.SaveChangesAsync();
-        return Ok(new { message = "Reordered" });
-    }
-
-    [HttpDelete("{id:guid}/images/{imageId:guid}")]
-    public async Task<IActionResult> DeleteImage([FromRoute] Guid id, [FromRoute] Guid imageId)
-    {
-        var img = await _db.ProductImages.FirstOrDefaultAsync(i => i.ProductId == id && i.Id == imageId);
-        if (img == null) return NotFound(new { message = "Image not found" });
-
-        TryDeletePhysicalFile(img.Url);
+            // key داخل التخزين (S3 أو محلي)
+                    var key = ExtractStorageKeyFromUrl(img.Url);
+        if (!string.IsNullOrWhiteSpace(key))
+            await _storage.DeleteAsync(key, HttpContext.RequestAborted);
 
         _db.ProductImages.Remove(img);
         await _db.SaveChangesAsync();

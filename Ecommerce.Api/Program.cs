@@ -94,6 +94,17 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseNpgsql(conn);
 });
 
+// Object storage (images)
+builder.Services.Configure<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>(builder.Configuration.GetSection("ObjectStorage"));
+builder.Services.AddSingleton<Ecommerce.Api.Infrastructure.Storage.IObjectStorage>(sp =>
+{
+    var opt = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>>().Value;
+    var provider = (opt.Provider ?? "Local").Trim().ToLowerInvariant();
+    if (provider == "s3")
+        return new Ecommerce.Api.Infrastructure.Storage.S3ObjectStorage(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>>());
+    return new Ecommerce.Api.Infrastructure.Storage.LocalObjectStorage(sp.GetRequiredService<IWebHostEnvironment>(), sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>>());
+});
+
 // ============================
 // CORS
 // ============================
