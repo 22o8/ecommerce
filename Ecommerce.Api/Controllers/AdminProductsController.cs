@@ -1,6 +1,6 @@
-using System.ComponentModel.DataAnnotations;
-using Ecommerce.Api.Domain.Entities;
+using System.Globalization;
 using Ecommerce.Api.Infrastructure.Data;
+using Ecommerce.Api.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,122 +13,96 @@ namespace Ecommerce.Api.Controllers;
 public class AdminProductsController : ControllerBase
 {
     private readonly AppDbContext _db;
-    private readonly IWebHostEnvironment _env;
-    private readonly Ecommerce.Api.Infrastructure.Storage.IObjectStorage _storage;
+    private readonly IObjectStorage _storage;
 
-    public AdminProductsController(AppDbContext db, IWebHostEnvironment env, Ecommerce.Api.Infrastructure.Storage.IObjectStorage storage)
+    public AdminProductsController(AppDbContext db, IObjectStorage storage)
     {
         _db = db;
-        _env = env;
+        _storage = storage;
     }
 
-    // ============================
-    // CRUD (Admin)
-    // ============================
+    // -----------------------------
+    // Products CRUD
+    // -----------------------------
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
     {
-        try
-        {
-            // NOTE:
-            // We intentionally avoid projecting navigation property counts directly (p.Images.Count)
-            // because some provider/schema states can surface translation/runtime issues in production.
-            // A correlated subquery is more robust.
-            var items = await _db.Products
-                .AsNoTracking()
-                .OrderByDescending(p => p.CreatedAt)
-                .Select(p => new
-                {
-                    p.Id,
-                    p.Title,
-                    p.Slug,
-                    p.PriceIqd,
-                    p.PriceUsd,
-                    p.IsPublished,
-                    p.IsFeatured,
-                    p.Brand,
-                    p.CreatedAt,
-                    imagesCount = _db.ProductImages.Count(i => i.ProductId == p.Id)
-                })
-                .ToListAsync();
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 200);
 
-            return Ok(items);
-        }
-        catch (Exception ex)
-        {
-            // Keep payload small but helpful; the traceId in the hosting platform logs is still the main reference.
-            return StatusCode(500, new
+        var q = _db.Products
+            .AsNoTracking()
+            .Include(p => p.Brand)
+            .OrderByDescending(p => p.CreatedAt);
+
+        var total = await q.CountAsync();
+        var items = await q
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(p => new
             {
-                error = "Internal Server Error",
-                message = ex.Message
-            });
-        }
+                p.Id,
+                p.Name,
+                p.Slug,
+                p.Price,
+                p.Description,
+                p.IsActive,
+                p.IsFeatured,
+                Brand = p.Brand == null ? null : new { p.Brand.Id, p.Brand.Name, p.Brand.Slug },
+                p.CreatedAt,
+                p.UpdatedAt
+            })
+            .ToListAsync();
+
+        return Ok(new { page, pageSize, total, items });
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById([FromRoute] Guid id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var p = await _db.Products
             .AsNoTracking()
-            .Where(x => x.Id == id)
-            .Select(x => new
-            {
-                x.Id,
-                x.Title,
-                x.Slug,
-                x.Description,
-                x.PriceIqd,
-                x.PriceUsd,
-                x.IsPublished,
-                x.IsFeatured,
-                x.Brand,
-                x.CreatedAt,
-                x.RatingAvg,
-                x.RatingCount,
-                images = _db.ProductImages
-                    .Where(i => i.ProductId == x.Id)
-                    .OrderBy(i => i.SortOrder)
-                    .ThenBy(i => i.CreatedAt)
-                    .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
-                    .ToList()
-            })
-            .FirstOrDefaultAsync();
+            .Include(x => x.Brand)
+            .FirstOrDefaultAsync(x => x.Id == id);
 
-        if (p == null) return NotFound(new { message = "Product not found" });
-        return Ok(p);
+        if (p == null) return NotFound();
+
+        return Ok(new
+        {
+            p.Id,
+            p.Name,
+            p.Slug,
+            p.Price,
+            p.Description,
+            p.IsActive,
+            p.IsFeatured,
+            Brand = p.Brand == null ? null : new { p.Brand.Id, p.Brand.Name, p.Brand.Slug },
+            p.CreatedAt,
+            p.UpdatedAt
+        });
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] UpsertProductRequest req)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
-        var brandSlug = NormalizeSlug(req.Brand);
-        if (string.IsNullOrWhiteSpace(brandSlug))
-            return BadRequest(new { message = "Brand is required" });
+        var brand = await _db.Brands.FirstOrDefaultAsync(b => b.Id == req.BrandId);
+        if (brand == null) return BadRequest(new { message = "Brand not found" });
 
-        var brandOk = await _db.Brands.AsNoTracking().AnyAsync(b => b.IsActive && b.Slug.ToLower() == brandSlug);
-        if (!brandOk)
-            return BadRequest(new { message = "Invalid brand" });
-var slug = NormalizeSlug(req.Slug);
-        if (string.IsNullOrWhiteSpace(slug))
-            slug = Slugify(req.Title);
+        var now = DateTimeOffset.UtcNow;
 
-        var exists = await _db.Products.AnyAsync(x => x.Slug.ToLower() == slug);
-        if (exists) return BadRequest(new { message = "Slug already exists" });
-
-        var p = new Product
+        var p = new Ecommerce.Api.Domain.Entities.Product
         {
             Id = Guid.NewGuid(),
-            Title = req.Title.Trim(),
-            Slug = slug,
-            Description = (req.Description ?? "").Trim(),
-            PriceIqd = (req.PriceIqd > 0 ? req.PriceIqd : req.PriceUsd),
-            PriceUsd = req.PriceUsd,
-            IsPublished = req.IsPublished,
+            Name = (req.Name ?? "").Trim(),
+            Slug = BuildSlug(req.Slug, req.Name),
+            Description = req.Description,
+            Price = NormalizePrice(req.Price),
+            BrandId = req.BrandId,
+            IsActive = req.IsActive,
             IsFeatured = req.IsFeatured,
-            Brand = brandSlug,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now,
+            UpdatedAt = now
         };
 
         _db.Products.Add(p);
@@ -138,248 +112,217 @@ var slug = NormalizeSlug(req.Slug);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpsertProductRequest req)
-    {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
-
-        var p = await _db.Products.FirstOrDefaultAsync(x => x.Id == id);
-        if (p == null) return NotFound(new { message = "Product not found" });
-
-        var slug = NormalizeSlug(req.Slug);
-        if (string.IsNullOrWhiteSpace(slug))
-            slug = Slugify(req.Title);
-
-        var exists = await _db.Products.AnyAsync(x => x.Id != id && x.Slug.ToLower() == slug);
-        if (exists) return BadRequest(new { message = "Slug already exists" });
-
-        p.Title = req.Title.Trim();
-        p.Slug = slug;
-        p.Description = (req.Description ?? "").Trim();
-        p.PriceIqd = (req.PriceIqd > 0 ? req.PriceIqd : req.PriceUsd);
-        p.PriceUsd = req.PriceUsd;
-        p.IsPublished = req.IsPublished;
-        p.IsFeatured = req.IsFeatured;
-        var brandSlug = NormalizeSlug(req.Brand);
-        if (string.IsNullOrWhiteSpace(brandSlug))
-            return BadRequest(new { message = "Brand is required" });
-
-        var brandOk = await _db.Brands.AsNoTracking().AnyAsync(b => b.IsActive && b.Slug.ToLower() == brandSlug);
-        if (!brandOk)
-            return BadRequest(new { message = "Invalid brand" });
-
-        p.Brand = brandSlug;
-
-        await _db.SaveChangesAsync();
-        return Ok(new { message = "Updated" });
-    }
-
-    // ✅ Quick toggle featured without resending the full product payload
-    [HttpPatch("{id:guid}/featured")]
-    public async Task<IActionResult> SetFeatured([FromRoute] Guid id, [FromBody] SetFeaturedRequest req)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpsertProductRequest req)
     {
         var p = await _db.Products.FirstOrDefaultAsync(x => x.Id == id);
-        if (p == null) return NotFound(new { message = "Product not found" });
+        if (p == null) return NotFound();
 
+        var brand = await _db.Brands.FirstOrDefaultAsync(b => b.Id == req.BrandId);
+        if (brand == null) return BadRequest(new { message = "Brand not found" });
+
+        p.Name = (req.Name ?? "").Trim();
+        p.Slug = BuildSlug(req.Slug, req.Name);
+        p.Description = req.Description;
+        p.Price = NormalizePrice(req.Price);
+        p.BrandId = req.BrandId;
+        p.IsActive = req.IsActive;
         p.IsFeatured = req.IsFeatured;
+        p.UpdatedAt = DateTimeOffset.UtcNow;
+
         await _db.SaveChangesAsync();
-        return Ok(new { message = "Updated", id = p.Id, p.IsFeatured });
+        return Ok(new { p.Id });
     }
 
     [HttpDelete("{id:guid}")]
-public async Task<IActionResult> Delete([FromRoute] Guid id)
-{
-    var product = await _db.Products
-        .Include(p => p.Images)
-        .FirstOrDefaultAsync(p => p.Id == id);
-
-    if (product == null)
-        return NotFound(new { message = "Product not found" });
-
-    // إذا المنتج مرتبط بطلبات → امنع الحذف
-    var hasOrders = await _db.OrderItems.AnyAsync(o => o.ProductId == id);
-    if (hasOrders)
+    public async Task<IActionResult> Delete(Guid id)
     {
-        return BadRequest(new
+        var p = await _db.Products
+            .Include(x => x.Images)
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (p == null) return NotFound();
+
+        // best-effort delete images from storage
+        if (p.Images != null)
         {
-            message = "Cannot delete product because it has related orders. Unpublish it instead."
-        });
+            foreach (var img in p.Images)
+            {
+                var key = !string.IsNullOrWhiteSpace(img.StorageKey) ? img.StorageKey : ExtractStorageKeyFromUrl(img.Url);
+                if (!string.IsNullOrWhiteSpace(key))
+                {
+                    try { await _storage.DeleteAsync(key); } catch { /* ignore */ }
+                }
+            }
+        }
+
+        _db.Products.Remove(p);
+        await _db.SaveChangesAsync();
+        return NoContent();
     }
 
-    // حذف الصور من قاعدة البيانات فقط (بدون لمس الملفات)
-    if (product.Images?.Any() == true)
-        _db.ProductImages.RemoveRange(product.Images);
-
-    _db.Products.Remove(product);
-    await _db.SaveChangesAsync();
-
-    return Ok(new { message = "Deleted successfully" });
-}
-
-
-    // ============================
-    // Images (Admin)
-    // ============================
+    // -----------------------------
+    // Images (R2 / S3)
+    // -----------------------------
 
     [HttpGet("{id:guid}/images")]
-    public async Task<IActionResult> GetImages([FromRoute] Guid id)
+    public async Task<IActionResult> GetImages(Guid id)
     {
-        var exists = await _db.Products.AnyAsync(x => x.Id == id);
-        if (!exists) return NotFound(new { message = "Product not found" });
+        var exists = await _db.Products.AsNoTracking().AnyAsync(p => p.Id == id);
+        if (!exists) return NotFound();
 
-        var items = await _db.ProductImages
+        var images = await _db.ProductImages
             .AsNoTracking()
             .Where(i => i.ProductId == id)
-            .OrderBy(i => i.SortOrder)
+            .OrderBy(i => i.Order)
             .ThenBy(i => i.CreatedAt)
-            .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
+            .Select(i => new
+            {
+                i.Id,
+                i.ProductId,
+                i.Url,
+                i.StorageKey,
+                i.Order,
+                i.CreatedAt
+            })
             .ToListAsync();
 
-        // خليها {items} حتى تكون ثابتة للفرونت
-        return Ok(new { items });
+        return Ok(images);
     }
 
-    // ✅ يقبل:
-    // - images (متعدد)  => الفرونت الحالي عندك
-    // - file   (مفرد)   => اذا اكو مكان ثاني يرسل file
     [HttpPost("{id:guid}/images")]
-    [RequestSizeLimit(30_000_000)]
-    public async Task<IActionResult> UploadImages(
-        [FromRoute] Guid id,
-        [FromForm(Name = "images")] List<IFormFile>? images,
-        [FromForm(Name = "file")] IFormFile? file,
-        [FromForm] string? alt
-    )
+    [RequestSizeLimit(25_000_000)]
+    public async Task<IActionResult> UploadImages(Guid id, [FromForm] IFormFileCollection files)
     {
-        var product = await _db.Products.FirstOrDefaultAsync(x => x.Id == id);
-        if (product == null) return NotFound(new { message = "Product not found" });
+        var product = await _db.Products
+            .Include(p => p.Images)
+            .FirstOrDefaultAsync(p => p.Id == id);
 
-        var files = new List<IFormFile>();
-        if (images is { Count: > 0 }) files.AddRange(images);
-        if (file != null && file.Length > 0) files.Add(file);
+        if (product == null) return NotFound();
+        if (files == null || files.Count == 0) return BadRequest(new { message = "No files" });
 
-        if (files.Count == 0)
-            return BadRequest(new { message = "No files uploaded." });
-
-        var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".svg" };
-
-        const long maxBytes = 20L * 1024 * 1024; // 20MB لكل صورة
-
-        // نحدد الترتيب الحالي (Order) حتى نضيف الصور بعده
-        var maxOrder = await _db.ProductAssets
+        var maxOrder = await _db.ProductImages
             .Where(x => x.ProductId == id)
-            .Select(x => (int?)x.Order)
-            .MaxAsync() ?? 0;
+            .MaxAsync(x => (int?)x.Order) ?? 0;
 
-        foreach (var f in files)
+        var created = new List<object>();
+
+        foreach (var file in files)
         {
-            var ext = (Path.GetExtension(f.FileName) ?? string.Empty).ToLowerInvariant();
-            if (!allowed.Contains(ext))
-                return BadRequest("Unsupported image format.");
+            if (file.Length <= 0) continue;
 
-            if (f.Length <= 0 || f.Length > maxBytes)
-                return BadRequest($"Invalid image size. Max {maxBytes / (1024 * 1024)}MB");
+            // Accept any image (even if content-type is missing) but block absurdly large single files
+            if (file.Length > 20_000_000)
+                return BadRequest(new { message = "File too large (max 20MB each)" });
 
-            // key داخل التخزين (S3 أو محلي)
-                    var key = ExtractStorageKeyFromUrl(img.Url);
+            var ext = Path.GetExtension(file.FileName);
+            if (string.IsNullOrWhiteSpace(ext)) ext = GuessExtension(file.ContentType);
+            if (string.IsNullOrWhiteSpace(ext)) ext = ".bin";
+            ext = ext.StartsWith('.') ? ext : "." + ext;
+
+            var key = $"products/{id:D}/{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
+
+            await using var stream = file.OpenReadStream();
+            var url = await _storage.UploadAsync(key, stream, file.ContentType);
+
+            var img = new Ecommerce.Api.Domain.Entities.ProductImage
+            {
+                Id = Guid.NewGuid(),
+                ProductId = id,
+                Url = url,
+                StorageKey = key,
+                Order = ++maxOrder,
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+
+            _db.ProductImages.Add(img);
+            created.Add(new { img.Id, img.Url, img.StorageKey, img.Order });
+        }
+
+        await _db.SaveChangesAsync();
+        return Ok(created);
+    }
+
+    [HttpDelete("{id:guid}/images/{imageId:guid}")]
+    public async Task<IActionResult> DeleteImage(Guid id, Guid imageId)
+    {
+        var img = await _db.ProductImages.FirstOrDefaultAsync(i => i.Id == imageId && i.ProductId == id);
+        if (img == null) return NotFound();
+
+        var key = !string.IsNullOrWhiteSpace(img.StorageKey) ? img.StorageKey : ExtractStorageKeyFromUrl(img.Url);
         if (!string.IsNullOrWhiteSpace(key))
-            await _storage.DeleteAsync(key, HttpContext.RequestAborted);
+        {
+            try { await _storage.DeleteAsync(key); } catch { /* ignore */ }
+        }
 
         _db.ProductImages.Remove(img);
         await _db.SaveChangesAsync();
-
-        return Ok(new { message = "Deleted" });
+        return NoContent();
     }
 
-    // ============================
+    // -----------------------------
     // Helpers
-    // ============================
+    // -----------------------------
 
-    private static string NormalizeSlug(string? slug)
-        => (slug ?? "").Trim().ToLowerInvariant();
-
-    private static string Slugify(string input)
+    private static string BuildSlug(string? slug, string? name)
     {
-        input = (input ?? "").Trim().ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(input)) return "item";
+        var baseText = string.IsNullOrWhiteSpace(slug) ? (name ?? "") : slug;
+        baseText = baseText.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(baseText)) return Guid.NewGuid().ToString("N");
 
-        var chars = input.Select(c =>
-        {
-            if (char.IsLetterOrDigit(c)) return c;
-            if (char.IsWhiteSpace(c) || c == '-' || c == '_') return '-';
-            return '-';
-        }).ToArray();
+        // very simple slugify (latin + numbers + dashes)
+        var chars = baseText
+            .Normalize(NormalizationForm.FormD)
+            .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+            .Select(c => char.IsLetterOrDigit(c) ? c : '-');
 
-        var s = new string(chars);
-        while (s.Contains("--")) s = s.Replace("--", "-");
-        s = s.Trim('-');
-
-        return string.IsNullOrWhiteSpace(s) ? "item" : s;
+        var cleaned = new string(chars.ToArray());
+        while (cleaned.Contains("--")) cleaned = cleaned.Replace("--", "-");
+        cleaned = cleaned.Trim('-');
+        return string.IsNullOrWhiteSpace(cleaned) ? Guid.NewGuid().ToString("N") : cleaned;
     }
 
-    private void TryDeletePhysicalFile(string? url)
+    private static decimal NormalizePrice(decimal price)
     {
-        try
+        if (price < 0) price = 0;
+        return decimal.Round(price, 2);
+    }
+
+    private static string? GuessExtension(string? contentType)
+    {
+        if (string.IsNullOrWhiteSpace(contentType)) return null;
+        contentType = contentType.ToLowerInvariant();
+        return contentType switch
         {
-            if (string.IsNullOrWhiteSpace(url)) return;
+            "image/jpeg" or "image/jpg" => ".jpg",
+            "image/png" => ".png",
+            "image/webp" => ".webp",
+            "image/gif" => ".gif",
+            "image/svg+xml" => ".svg",
+            "image/avif" => ".avif",
+            _ => null
+        };
+    }
 
-            // اذا رابط كامل (https://..) نحوله لمسار
-            string relative;
-            if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
-                relative = uri.AbsolutePath.TrimStart('/');
-            else
-                relative = url.TrimStart('/');
-
-            var fullPath = Path.Combine(_env.WebRootPath ?? "wwwroot",
-                relative.Replace('/', Path.DirectorySeparatorChar));
-
-            if (System.IO.File.Exists(fullPath))
-                System.IO.File.Delete(fullPath);
-        }
-        catch
-        {
-            // تجاهل
-        }
+    private static string? ExtractStorageKeyFromUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return null;
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return null;
+        var path = uri.AbsolutePath.TrimStart('/');
+        // some endpoints might include bucket name in path (s3 style): /bucket/key
+        // our public URLs (r2.dev / custom domain) usually are just /key
+        if (path.StartsWith("ecommerce-images/", StringComparison.OrdinalIgnoreCase))
+            path = path.Substring("ecommerce-images/".Length);
+        return string.IsNullOrWhiteSpace(path) ? null : path;
     }
 }
-
-// ============================
-// Requests
-// ============================
 
 public class UpsertProductRequest
 {
-    [Required]
-    [MinLength(2)]
-    public string Title { get; set; } = "";
-
+    public string? Name { get; set; }
     public string? Slug { get; set; }
     public string? Description { get; set; }
-
-    // ✅ المعتمد الآن: السعر بالدينار العراقي
-    [Range(0, 999999999)]
-    public decimal PriceIqd { get; set; }
-
-    [Range(0, 999999)]
-    public decimal PriceUsd { get; set; }
-
-    [Required]
-    [MinLength(1)]
-    public string Brand { get; set; } = "Unspecified";
-
-    public bool IsPublished { get; set; }
-
-    // Show on home page (Featured Products)
-    public bool IsFeatured { get; set; }
-}
-
-public class SetFeaturedRequest
-{
-    public bool IsFeatured { get; set; }
-}
-
-public class ReorderImagesRequest
-{
-    [Required]
-    public List<Guid> ImageIds { get; set; } = new();
+    public decimal Price { get; set; }
+    public Guid BrandId { get; set; }
+    public bool IsActive { get; set; } = true;
+    public bool IsFeatured { get; set; } = false;
 }

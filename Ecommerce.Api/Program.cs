@@ -96,6 +96,42 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 
 // Object storage (images)
 builder.Services.Configure<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>(builder.Configuration.GetSection("ObjectStorage"));
+
+// دعم أسرار Fly البسيطة: R2_* (بدون ما تحتاج تكتب ObjectStorage__*)
+builder.Services.PostConfigure<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>(opt =>
+{
+    // إذا منطي إعدادات ObjectStorage بشكل صريح، لا نلمسها
+    if (!string.IsNullOrWhiteSpace(opt.Provider) &&
+        !string.IsNullOrWhiteSpace(opt.Bucket) &&
+        !string.IsNullOrWhiteSpace(opt.Endpoint) &&
+        !string.IsNullOrWhiteSpace(opt.AccessKeyId) &&
+        !string.IsNullOrWhiteSpace(opt.SecretAccessKey) &&
+        !string.IsNullOrWhiteSpace(opt.PublicBaseUrl))
+        return;
+
+    var r2Endpoint = builder.Configuration["R2_ENDPOINT"];
+    var r2Bucket = builder.Configuration["R2_BUCKET_NAME"];
+    var r2AccessKey = builder.Configuration["R2_ACCESS_KEY_ID"];
+    var r2Secret = builder.Configuration["R2_SECRET_ACCESS_KEY"];
+    var r2PublicBase = builder.Configuration["R2_PUBLIC_BASE_URL"];
+    var r2Region = builder.Configuration["R2_REGION"]; // اختياري
+
+    if (string.IsNullOrWhiteSpace(r2Endpoint) ||
+        string.IsNullOrWhiteSpace(r2Bucket) ||
+        string.IsNullOrWhiteSpace(r2AccessKey) ||
+        string.IsNullOrWhiteSpace(r2Secret) ||
+        string.IsNullOrWhiteSpace(r2PublicBase))
+        return;
+
+    opt.Provider = "S3";
+    opt.Endpoint = r2Endpoint;
+    opt.Bucket = r2Bucket;
+    opt.AccessKeyId = r2AccessKey;
+    opt.SecretAccessKey = r2Secret;
+    opt.PublicBaseUrl = r2PublicBase;
+    opt.Region = r2Region;
+});
+
 builder.Services.AddSingleton<Ecommerce.Api.Infrastructure.Storage.IObjectStorage>(sp =>
 {
     var opt = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>>().Value;
