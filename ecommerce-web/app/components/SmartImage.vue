@@ -1,6 +1,5 @@
 <template>
-  <div
-      :style="props.wrapperStyle"
+  <div :style="props.imgStyle"
       :class="['relative overflow-hidden', props.rounded, props.background, props.wrapperClass]">
     <img
       :src="currentSrc"
@@ -29,7 +28,6 @@ type SmartImageProps = {
   wrapperClass?: string
   imgClass?: string
   imgStyle?: any
-  wrapperStyle?: any
   rounded?: string
   background?: string
 }
@@ -41,7 +39,6 @@ const props = withDefaults(defineProps<SmartImageProps>(), {
   wrapperClass: '',
   imgClass: '',
   imgStyle: undefined,
-  wrapperStyle: undefined,
   rounded: 'rounded-xl',
   background: 'bg-transparent',
 })

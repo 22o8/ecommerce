@@ -1,11 +1,4 @@
+// app/plugins/i18n.ts
 export default defineNuxtPlugin(() => {
-  const { t } = useI18n()
-  return {
-    provide: { t },
-    vueApp: {
-      config: {
-        globalProperties: { $t: t }
-      }
-    }
-  }
+  // Plugin فقط لضمان تحميل composable قبل أي صفحة
 })

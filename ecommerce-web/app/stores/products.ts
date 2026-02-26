@@ -24,8 +24,7 @@ export const useProductsStore = defineStore('products', () => {
   if(!p) return p
   // API returns Title/PriceUsd/coverImage; UI expects name/priceUsd/imageUrl
   const name = p.name ?? p.title ?? p.Title ?? p.productName ?? ''
-    const priceIqd = p.priceIqd ?? p.PriceIqd ?? p.priceIqd ?? p.price ?? p.Price ?? 0
-  const priceUsd = p.priceUsd ?? p.PriceUsd ?? 0
+  const priceUsd = p.priceUsd ?? p.PriceUsd ?? p.price ?? p.Price ?? 0
   const cover = p.coverImage ?? p.imageUrl ?? p.ImageUrl ?? null
   const slug = p.slug ?? p.Slug ?? null
   const images = p.images ?? p.Images ?? null
@@ -41,7 +40,7 @@ export const useProductsStore = defineStore('products', () => {
         .filter(Boolean)
     : []
 
-    return { ...p, name, priceIqd, priceUsd, price: priceIqd, imageUrl, slug, images: normImages, description }
+  return { ...p, name, priceUsd, imageUrl, slug, images: normImages, description }
 }
 
 

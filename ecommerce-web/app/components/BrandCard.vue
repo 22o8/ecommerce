@@ -3,11 +3,11 @@
   <component
     :is="safeTo ? 'NuxtLink' : 'div'"
     :to="safeTo ? `/brands/${b?.slug}` : undefined"
-    class="group block rounded-2xl border border-app bg-surface-2 hover:bg-surface transition overflow-hidden"
+    class="group block rounded-2xl border border-[rgba(var(--border),1)] bg-white/[0.03] hover:bg-white/[0.06] transition overflow-hidden"
   >
     <div class="p-4 flex gap-4 items-center">
       <div
-        class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-surface border border-app overflow-hidden flex items-center justify-center"
+        class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-black/20 border border-[rgba(var(--border),1)] overflow-hidden flex items-center justify-center"
       >
         <SmartImage
           :src="logo || ''"

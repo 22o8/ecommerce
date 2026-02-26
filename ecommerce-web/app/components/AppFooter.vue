@@ -12,7 +12,7 @@
           </div>
         </div>
         <p class="text-sm text-muted rtl-text">
-          {{ t('home.hero.subtitle') }}
+          {{ t('home.subtitle') }}
         </p>
       </div>
 

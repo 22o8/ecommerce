@@ -27,9 +27,7 @@
         <div class="admin-tr admin-th">
           <div>ID</div>
           <div class="rtl-text">{{ t('admin.status') }}</div>
-          <div class="rtl-text">المنتج</div>
           <div class="rtl-text">{{ t('admin.user') }}</div>
-          <div class="rtl-text">التاريخ</div>
           <div class="text-right rtl-text">{{ t('common.actions') }}</div>
         </div>
 
@@ -40,11 +38,7 @@
             <span :class="statusClass(o.status)">{{ o.status }}</span>
           </div>
 
-          <div class="truncate rtl-text">{{ o.primaryItemTitle || '-' }}</div>
-
-          <div class="truncate">{{ o.userName || o.userEmail || '-' }}</div>
-
-          <div class="keep-ltr text-xs text-muted">{{ formatDate(o.createdAt) }}</div>
+          <div class="truncate">{{ o.userEmail || '-' }}</div>
 
           <div class="flex justify-end gap-2">
             <NuxtLink class="admin-pill" :to="`/admin/orders/${o.id}`">{{ t('common.details') }}</NuxtLink>
@@ -66,16 +60,11 @@ definePageMeta({ layout: 'admin', middleware: ['admin'] })
 import { ref } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useI18n } from '~/composables/useI18n'
-import { formatIqd } from '~/composables/useMoney'
 
 type OrderRow = {
   id: string
   status: string
-  primaryItemTitle?: string
-  userName?: string
   userEmail?: string
-  createdAt?: string
-  totalIqd?: number
 }
 
 const { t } = useI18n()
@@ -105,11 +94,6 @@ function extractErr(e: any) {
   return e?.data?.message || e?.message || t('common.requestFailed')
 }
 
-function formatDate(iso?: string){
-  if (!iso) return '—'
-  try { return new Date(iso).toLocaleString('en-US') } catch { return iso }
-}
-
 function statusClass(status: string) {
   const s = (status || '').toLowerCase()
   if (s.includes('paid') || s.includes('completed') || s.includes('success')) return 'badge-on'
@@ -126,11 +110,7 @@ async function fetchOrders() {
     orders.value = list.map(x => ({
       id: String(x.id),
       status: String(x.status || 'Unknown'),
-      primaryItemTitle: x.primaryItemTitle ? String(x.primaryItemTitle) : '',
-      userName: x.userFullName ? String(x.userFullName) : (x.user?.fullName ? String(x.user.fullName) : ''),
       userEmail: x.userEmail ? String(x.userEmail) : (x.user?.email ? String(x.user.email) : ''),
-      createdAt: x.createdAt ? String(x.createdAt) : '',
-      totalIqd: Number(x.totalIqd ?? 0),
     }))
   } catch (e: any) {
     error.value = extractErr(e)
@@ -186,7 +166,7 @@ fetchOrders()
 .admin-table{ display: grid; }
 .admin-tr{
   display: grid;
-  grid-template-columns: 2fr 1fr 1.2fr 1.2fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 12px;
   padding: 12px 16px;
   border-top: 1px solid rgb(var(--border));

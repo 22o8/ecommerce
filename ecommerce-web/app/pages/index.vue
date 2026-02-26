@@ -4,7 +4,7 @@ import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 
 const brandsStore = useBrandsStore()
 const productsStore = useProductsStore()
@@ -59,22 +59,12 @@ const topBrands = computed(() => {
   }
   return uniq.slice(0, 10)
 })
-const categoryCards = [
-  { key: "serum", icon: "💧", labelKey: "home.catSerum", q: { ar: "سيروم", en: "serum" } },
-  { key: "moisturizer", icon: "🧴", labelKey: "home.catMoisturizer", q: { ar: "مرطب", en: "moisturizer" } },
-  { key: "sunscreen", icon: "☀️", labelKey: "home.catSunscreen", q: { ar: "واقي شمس", en: "sunscreen" } },
-  { key: "cleanser", icon: "🫧", labelKey: "home.catCleanser", q: { ar: "غسول", en: "cleanser" } },
-  { key: "perfume", icon: "🌸", labelKey: "home.catPerfume", q: { ar: "عطر", en: "perfume" } },
-] as const
-
-const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "ar" ? c.q.ar : c.q.en)
-
 </script>
 
 <template>
   <div class="min-h-screen">
     <!-- Hero -->
-    <section class="relative hero-shimmer rounded-3xl mx-auto max-w-6xl px-4">
+    <section class="relative">
       <div class="mx-auto max-w-6xl px-4 py-20 sm:py-24">
         <div class="text-center">
           <h1 class="text-4xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-6xl">
@@ -85,23 +75,16 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
             {{ t('homeHero.subtitle') }}
           </p>
 
-          
           <div class="mt-8 flex items-center justify-center gap-3">
             <NuxtLink
               to="/products"
-              class="btn-cta-animated inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
+              class="btn-cta-animated cta-glow-wrap inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
             >
-              {{ t('homeHero.products') }}
-            </NuxtLink>
-
-            <NuxtLink
-              to="/brands"
-              class="btn-cta-animated btn-cta-outline inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
-            >
-              {{ t('homeHero.categories') }}
+              <span class="cta-glow" aria-hidden="true"></span>
+              <span class="relative z-10">{{ t('homeHero.shopNow') }}</span>
+              <span class="relative z-10" aria-hidden="true">→</span>
             </NuxtLink>
           </div>
-
         </div>
       </div>
     </section>
@@ -126,65 +109,8 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
 
     <!-- Brands -->
     <section class="mx-auto max-w-6xl px-4 pb-20">
-      <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">{{ t('home.brands') }}</h2>
-          <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">{{ t('home.brandsSubtitle') }}</p>
-        </div>
-        <NuxtLink
-          to="/brands"
-          class="btn inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
-        >
-          {{ t('nav.brands') }}
-          <span aria-hidden="true">→</span>
-        </NuxtLink>
-      </div>
-
-      <!-- Natural brands showcase -->
-      <BrandMarquee :brands="topBrands" />
-    </section>
-
-    <!-- Spotlight categories -->
-    <section class="mx-auto max-w-6xl px-4 pb-24">
-      <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">
-            {{ t('home.spotlightTitle') }}
-          </h2>
-          <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">
-            {{ t('home.spotlightSubtitle') }}
-          </p>
-        </div>
-
-        <NuxtLink to="/products" class="btn inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold">
-          {{ t('home.viewAll') }}
-        </NuxtLink>
-      </div>
-
-      <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <NuxtLink
-          v-for="c in categoryCards"
-          :key="c.key"
-          :to="`/products?q=${encodeURIComponent(categoryQuery(c))}`"
-          class="group relative overflow-hidden rounded-2xl border border-app bg-surface-2 p-4 backdrop-blur transition hover:-translate-y-0.5 hover:bg-surface"
-        >
-          <div class="flex items-center gap-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-surface text-lg">
-              {{ c.icon }}
-            </div>
-            <div class="min-w-0">
-              <div class="truncate text-sm font-extrabold text-[rgb(var(--text))]">
-                {{ t(c.labelKey) }}
-              </div>
-              <div class="mt-0.5 truncate text-xs text-[rgb(var(--muted))]">
-                {{ t('home.tapToExplore') }}
-              </div>
-            </div>
-          </div>
-
-          <div class="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-gradient-to-br from-[rgb(var(--primary))]/20 to-transparent opacity-0 blur-2xl transition group-hover:opacity-100"></div>
-        </NuxtLink>
-      </div>
+      <!-- 3D circular orbit (logos only) -->
+      <BrandOrbit3D :brands="topBrands" :radius="250" :tilt-deg="18" :speed-sec="18" />
     </section>
   </div>
 </template>

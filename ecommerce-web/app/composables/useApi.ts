@@ -17,16 +17,6 @@ export type FetchOpts = {
 export function buildAssetUrl(p?: string | null) {
   if (!p) return ''
 
-  // ✅ iOS Safari وبعض المتصفحات تكون حساسة لمسارات تحتوي مسافات أو backslashes
-  const safeUrl = (s: string) => {
-    const fixed = String(s).replace(/\\/g, '/')
-    try {
-      return encodeURI(fixed)
-    } catch {
-      return fixed
-    }
-  }
-
   const config = useRuntimeConfig()
   const apiBase = String((config.public as any)?.apiBase || '').replace(/\/$/, '')
   const apiOrigin = String((config.public as any)?.apiOrigin || '').replace(/\/$/, '')
@@ -45,7 +35,7 @@ export function buildAssetUrl(p?: string | null) {
           const o = new URL(apiOrigin)
           if (u.hostname === o.hostname) {
             const b = apiBase.replace(/\/$/, '')
-            return safeUrl(`${b}${u.pathname}`)
+            return `${b}${u.pathname}`
           }
         } catch {
           // ignore
@@ -63,13 +53,13 @@ export function buildAssetUrl(p?: string | null) {
         }
         if (looksLikeFly || looksLikeSameHost) {
           u.protocol = 'https:'
-          return safeUrl(u.toString())
+          return u.toString()
         }
       }
     } catch {
       // ignore
     }
-    return safeUrl(p)
+    return p
   }
 
   const path = p.startsWith('/') ? p : `/${p}`
@@ -80,15 +70,15 @@ export function buildAssetUrl(p?: string | null) {
   if (path.startsWith('/uploads/')) {
     if (apiBase) {
       const b = apiBase.replace(/\/$/, '')
-      return safeUrl(`${b}${path}`)
+      return `${b}${path}`
     }
     // fallback: لو apiBase غير متوفر
-    if (apiOrigin) return safeUrl(`${apiOrigin}${path}`)
-    return safeUrl(path)
+    if (apiOrigin) return `${apiOrigin}${path}`
+    return path
   }
 
   // 3) any other relative: return as-is
-  return safeUrl(path)
+  return path
 }
 
 

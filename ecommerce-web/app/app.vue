@@ -19,7 +19,7 @@ useHead({
   <div class="min-h-screen bg-app">
     <ApiDebugBanner />
     <NuxtLayout>
-      <NuxtPage :transition="{ name: 'page', mode: 'out-in' }" />
+      <NuxtPage />
     </NuxtLayout>
   </div>
 </template>

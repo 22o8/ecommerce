@@ -98,10 +98,7 @@
               {{ p.isPublished ? t('admin.published') : t('admin.draft') }}
             </span>
 
-            <span v-if="p.isFeatured" class="badge-featured ml-2">
-              <span class="badge-icon">★</span>
-              <span class="badge-text">{{ t('admin.featured') }}</span>
-            </span>
+            <span v-if="p.isFeatured" class="badge-featured ml-2">★ Featured</span>
           </div>
 
           <div class="actions-wrap">

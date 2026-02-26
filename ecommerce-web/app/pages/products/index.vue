@@ -1,20 +1,37 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <!-- Header + Filters (no page search; only Navbar search remains) -->
     <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
       <div>
         <h1 class="text-3xl sm:text-4xl font-extrabold rtl-text">{{ t('productsPage.title') }}</h1>
         <p class="mt-2 text-muted rtl-text">{{ t('productsPage.subtitle') }}</p>
       </div>
 
-      <div class="control-box glass-panel glow-border rounded-2xl p-3 w-full lg:w-[560px] grid grid-cols-1 sm:grid-cols-2 gap-3 lg:sticky lg:top-24">
-        <select v-model="sort" class="input" @change="applyFilters" aria-label="Sort">
-          <option value="priceAsc">{{ t('productsPage.sortPriceAsc') }}</option>
-          <option value="priceDesc">{{ t('productsPage.sortPriceDesc') }}</option>
-          <option value="new">{{ t('productsPage.sortNewest') }}</option>
+      <div class="control-box w-full lg:w-[560px] grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="relative">
+          <input
+            v-model="q"
+            :placeholder="t('productsPage.searchPlaceholder')"
+            class="input"
+            @keydown.enter="applyFilters"
+          />
+          <button
+            v-if="q"
+            type="button"
+            class="absolute left-3 top-1/2 -translate-y-1/2 icon-btn"
+            @click="q = ''"
+            aria-label="clear"
+          >
+            ✕
+          </button>
+        </div>
+
+        <select v-model="sort" class="input py-3">
+          <option value="new">{{ t('productsPage.sort.new') }}</option>
+          <option value="priceAsc">{{ t('productsPage.sort.priceAsc') }}</option>
+          <option value="priceDesc">{{ t('productsPage.sort.priceDesc') }}</option>
         </select>
 
-        <select v-model="brand" class="input" @change="applyFilters" aria-label="Brand">
+        <select v-model="brand" class="input py-3 sm:col-span-2">
           <option value="">{{ t('productsPage.allBrands') }}</option>
           <option v-for="b in brandOptions" :key="b.slug" :value="b.slug">
             {{ b.name }}
@@ -23,18 +40,7 @@
       </div>
     </div>
 
-    <!-- Loading state (API delay) -->
-    <div v-if="products.loading && products.items.length === 0" class="mt-6">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div v-for="n in 8" :key="n" class="skeleton-card" />
-      </div>
-      <div class="mt-6 flex items-center justify-center text-sm text-muted rtl-text">
-        <span class="spinner" aria-hidden="true" />
-        <span class="ms-2">{{ t('common.loading') }}</span>
-      </div>
-    </div>
-
-    <div v-else class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 page-stagger">
+    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <ProductCard v-for="p in products.items" :key="p.id" :p="p" />
     </div>
 
