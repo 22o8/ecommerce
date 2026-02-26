@@ -7,15 +7,24 @@ export default defineEventHandler(async (event) => {
     // لا تستخدم apiBase هنا إطلاقاً.
     // إذا apiOrigin صار فاضي/غلط، كان الكود ياخذ "/api/bff" (apiBase)
     // ويسوي recursion على نفسه -> 500 على Vercel.
-    const apiOrigin =
+    // ✅ fallback ثابت حتى لو صار خلل بقراءة runtimeConfig على Vercel/Edge
+    const FALLBACK_ORIGIN = 'https://ecommerce-api-22o8.fly.dev'
+
+    const apiOriginRaw =
       (config as any).apiOrigin ||
       (config.public as any).apiOrigin ||
       process.env.NUXT_API_ORIGIN ||
-      process.env.NUXT_PUBLIC_API_ORIGIN
+      process.env.NUXT_PUBLIC_API_ORIGIN ||
+      FALLBACK_ORIGIN
+
+    const apiOrigin = String(apiOriginRaw || '').trim()
 
     if (!apiOrigin) {
       setResponseStatus(event, 500)
-      return { error: 'Missing API origin. Set NUXT_API_ORIGIN / NUXT_PUBLIC_API_ORIGIN.' }
+      return {
+        error:
+          'Missing API origin. Set NUXT_API_ORIGIN / NUXT_PUBLIC_API_ORIGIN (WITHOUT /api), e.g. https://ecommerce-api-22o8.fly.dev',
+      }
     }
 
     const method = (event.node.req.method || 'GET').toUpperCase()
@@ -90,11 +99,28 @@ export default defineEventHandler(async (event) => {
       ? undefined
       : await readRawBody(event, false)
 
-    const res = await fetch(targetUrl.toString(), {
-      method,
-      headers: { ...headers },
-      body: body || undefined,
-    })
+    // ✅ fetch failures (DNS/timeout/blocked) لا تجعلها 500 مبهمة
+    let res: Response
+    try {
+      res = await fetch(targetUrl.toString(), {
+        method,
+        headers: { ...headers },
+        body: body || undefined,
+      })
+    } catch (e: any) {
+      console.error('BFF fetch failed:', {
+        routePath,
+        targetUrl: targetUrl.toString(),
+        message: e?.message,
+      })
+      setResponseStatus(event, 502)
+      return {
+        error: 'Upstream fetch failed',
+        routePath,
+        targetUrl: targetUrl.toString(),
+        message: e?.message || String(e),
+      }
+    }
 
     const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
     const isLogout = routePath.toLowerCase() === 'auth/logout'
