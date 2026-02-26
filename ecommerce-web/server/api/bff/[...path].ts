@@ -7,6 +7,15 @@ const HOP_BY_HOP = new Set([
   'connection','keep-alive','proxy-authenticate','proxy-authorization','te','trailer','transfer-encoding','upgrade'
 ])
 
+// لا تمرّر هذه الرؤوس كما هي لأننا نقرأ/نعيد كتابة البودي داخل Nitro.
+// تمرير content-length/content-encoding من الـ upstream يسبب عدم تطابق ويؤدي إلى
+// net::ERR_HTTP2_PROTOCOL_ERROR في المتصفح.
+const STRIP_RESPONSE_HEADERS = new Set([
+  'content-length',
+  'content-encoding',
+  'transfer-encoding'
+])
+
 function sanitizeHeaders(headers: Record<string, string | string[] | undefined>) {
   const out: Record<string, string> = {}
   for (const [k, v] of Object.entries(headers)) {
@@ -68,18 +77,15 @@ export default defineEventHandler(async (event) => {
     res.headers.forEach((v, k) => {
       const lk = k.toLowerCase()
       if (HOP_BY_HOP.has(lk)) return
+      if (STRIP_RESPONSE_HEADERS.has(lk)) return
       // عادةً ما نترك set-cookie يمر، لأن بعض استجابات المصادقة قد تعتمد عليه
       setResponseHeader(event, k, v)
     })
 
-    const ct = res.headers.get('content-type') || ''
-    if (ct.includes('application/json')) {
-      const text = await res.text()
-      try { return JSON.parse(text) } catch { return text }
-    }
-
-    // default: text / blob
-    return await res.text()
+    // رجّع البودي خام بدون إعادة تفسير، حتى نحافظ على التطابق بين الـ headers والبودي.
+    // Nitro سيضع Content-Length الصحيح تلقائياً.
+    const ab = await res.arrayBuffer()
+    return Buffer.from(ab)
   } catch (err: any) {
     // رجّع تفاصيل كافية بدل 500 أعمى (يساعدنا نعرف وين المشكلة)
     setResponseStatus(event, 502)
