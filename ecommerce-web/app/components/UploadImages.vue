@@ -195,8 +195,10 @@ const uploadNow = async () => {
     // fd.append('files', file)
     // fd.append('images', file)
     // fd.append('file', file) (لو ملف واحد)
+    // الباك في /api/admin/products/{id}/images يستقبل: [FromForm] IFormFileCollection files
+    // لذلك لازم يكون اسم الحقل "files"
     for (const it of files.value) {
-      fd.append('images', it.file)
+      fd.append('files', it.file)
     }
 
     // إذا تحتاج تربط الرفع بمنتج
