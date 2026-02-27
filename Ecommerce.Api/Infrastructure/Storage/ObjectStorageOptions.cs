@@ -8,14 +8,7 @@ public sealed class ObjectStorageOptions
     // S3 / R2 settings
     public string? Bucket { get; set; }
     public string? Region { get; set; } // optional (R2 can ignore)
-
-    // NOTE:
-    // - Older code used "Endpoint".
-    // - This project's Fly/Vercel secrets were set as "ObjectStorage__ServiceUrl".
-    // To avoid breaking deployments, we keep BOTH and treat them as aliases.
-    public string? ServiceUrl { get; set; } // AWS SDK ServiceURL (e.g. https://<accountid>.r2.cloudflarestorage.com)
-    public string? Endpoint { get; set; }   // alias for ServiceUrl
-
+    public string? Endpoint { get; set; } // e.g. https://<accountid>.r2.cloudflarestorage.com
     public string? AccessKeyId { get; set; }
     public string? SecretAccessKey { get; set; }
 

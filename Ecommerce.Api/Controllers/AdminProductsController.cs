@@ -125,7 +125,7 @@ public class AdminProductsController : ControllerBase
         {
             Title = req.Title.Trim(),
             Slug = slug,
-            Brand = string.IsNullOrWhiteSpace(req.Brand) ? null : req.Brand.Trim(),
+            Brand = string.IsNullOrWhiteSpace(req.Brand) ? "" : req.Brand.Trim(),
             PriceIqd = req.PriceIqd,
             Currency = string.IsNullOrWhiteSpace(req.Currency) ? "IQD" : req.Currency.Trim().ToUpperInvariant(),
             IsPublished = req.IsActive,
@@ -152,7 +152,7 @@ public class AdminProductsController : ControllerBase
         else if (string.IsNullOrWhiteSpace(p.Slug))
             p.Slug = Slugify(p.Title);
 
-        p.Brand = string.IsNullOrWhiteSpace(req.Brand) ? null : req.Brand.Trim();
+        p.Brand = string.IsNullOrWhiteSpace(req.Brand) ? "" : req.Brand.Trim();
         p.PriceIqd = req.PriceIqd;
         p.Currency = string.IsNullOrWhiteSpace(req.Currency) ? "IQD" : req.Currency.Trim().ToUpperInvariant();
         p.IsPublished = req.IsActive;
@@ -189,12 +189,7 @@ public class AdminProductsController : ControllerBase
             var key = $"products/{p.Id}/{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
             await using var stream = file.OpenReadStream();
 
-            var upload = await _storage.UploadAsync(
-                key: key,
-                content: stream,
-                contentType: string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType,
-                cancellationToken: HttpContext.RequestAborted
-            );
+            var upload = await _storage.UploadAsync(stream, key, string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType, HttpContext.RequestAborted);
 
             var img = new ProductImage
             {

@@ -24,7 +24,7 @@ public class PaymentsController : ControllerBase
     {
         var payment = await _db.Payments
             .Include(p => p.Order)
-                .ThenInclude(o => o.Items)
+                .ThenInclude(o => o!.Items)
             .FirstOrDefaultAsync(p => p.Id == paymentId);
 
         if (payment == null) return NotFound("Payment not found");

@@ -7,9 +7,13 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     // Server-only backend origin (WITHOUT /api)
-	    // IMPORTANT: must be an absolute origin (scheme + host). Do NOT derive from NUXT_PUBLIC_API_BASE
-	    // because on Vercel it's usually a relative path like "/api/bff".
-	    apiOrigin: process.env.NUXT_API_ORIGIN || process.env.API_ORIGIN || 'https://ecommerce-api-22o8.fly.dev',
+    apiOrigin:
+      process.env.NUXT_API_ORIGIN ||
+      (process.env.NUXT_PUBLIC_API_BASE
+        ? process.env.NUXT_PUBLIC_API_BASE.replace(/\/api\/?$/, '')
+        : undefined) ||
+      // ✅ الافتراضي: Render (حسب بنية مشروعك)
+      'https://ecommerce-api-22o8.fly.dev',
 
     public: {
       // سعر التحويل الافتراضي (قابل للتعديل من ENV)
@@ -26,8 +30,13 @@ export default defineNuxtConfig({
         ? (process.env.NUXT_PUBLIC_API_BASE.startsWith('http') ? '/api/bff' : process.env.NUXT_PUBLIC_API_BASE)
         : '/api/bff',
 
-	      // Optional direct client origin (WITHOUT /api). Leave empty unless you want browser-direct calls.
-	      apiOrigin: process.env.NUXT_PUBLIC_API_ORIGIN || '',
+      // Public backend origin (WITHOUT /api)
+      apiOrigin:
+        process.env.NUXT_API_ORIGIN ||
+        (process.env.NUXT_PUBLIC_API_BASE
+          ? process.env.NUXT_PUBLIC_API_BASE.replace(/\/api\/?$/, '')
+          : undefined) ||
+        'https://ecommerce-api-22o8.fly.dev',
 
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
       siteName: process.env.NUXT_PUBLIC_SITE_NAME || 'Ecommerce',

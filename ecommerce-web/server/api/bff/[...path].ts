@@ -1,167 +1,207 @@
-import { defineEventHandler, readBody, getRequestURL, getRequestHeaders, setResponseStatus, setHeader, sendNoContent } from "h3";
-
-/**
- * BFF proxy: forwards /api/bff/** to backend API.
- * - Works on Vercel/Nitro.
- * - Avoids throwing on 204 and empty bodies.
- * - Adds Authorization from cookie `token` if missing.
- */
-
-const hopByHop = new Set([
-  "connection",
-  "keep-alive",
-  "proxy-authenticate",
-  "proxy-authorization",
-  "te",
-  "trailers",
-  "transfer-encoding",
-  "upgrade",
-  "host",
-  "content-length",
-]);
-
-function pickForwardHeaders(headers: Record<string, string | string[] | undefined>) {
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(headers)) {
-    if (!v) continue;
-    const key = k.toLowerCase();
-    // ✅ لا نمرّر pseudo-headers الخاصة بـ HTTP/2 مثل :authority
-    if (key.startsWith(":")) continue;
-    if (hopByHop.has(key)) continue;
-    // ✅ الأفضل عدم تمرير accept-encoding حتى لا تصير مشاكل ضغط/فك ضغط بين Vercel و backend
-    if (key === "accept-encoding") continue;
-    if (Array.isArray(v)) out[key] = v.join(", ");
-    else out[key] = String(v);
-  }
-  return out;
-}
-
-function parseCookie(cookieHeader?: string) {
-  const map: Record<string, string> = {};
-  if (!cookieHeader) return map;
-  const parts = cookieHeader.split(";");
-  for (const part of parts) {
-    const [k, ...rest] = part.trim().split("=");
-    if (!k) continue;
-    map[k] = rest.join("=") ?? "";
-  }
-  return map;
-}
-
-function isJsonResponse(ct?: string | null) {
-  return !!ct && ct.toLowerCase().includes("application/json");
-}
-
+// ecommerce-web/server/api/bff/[...path].ts
 export default defineEventHandler(async (event) => {
-  const runtimeConfig = useRuntimeConfig();
-
-  // Backend origin MUST be an absolute URL (scheme + host).
-  // Never use public.apiBase here because on Vercel it's typically a relative path like "/api/bff".
-  const originRaw = (
-    (runtimeConfig.apiOrigin as string | undefined)
-    || process.env.NUXT_API_ORIGIN
-    || process.env.API_ORIGIN
-    || process.env.API_BASE_URL
-    || "https://ecommerce-api-22o8.fly.dev"
-  ).trim();
-
-  const origin = originRaw.replace(/\/+$/, "");
-  // We proxy to the API under /api/
-  const base = origin + "/api/";
-
-  // Incoming path after /api/bff/
-  const url = getRequestURL(event);
-  const fullPath = url.pathname || "/";
-  const bffPrefix = "/api/bff/";
-  const rest = fullPath.startsWith(bffPrefix) ? fullPath.slice(bffPrefix.length) : "";
-  // If someone calls exactly /api/bff, just 404
-  if (!rest) {
-    setResponseStatus(event, 404);
-    return { error: "BFF path missing" };
-  }
-
-  // Build backend URL
-  // Example: /api/bff/Auth/login  ->  {origin}/api/Auth/login
-  const target = new URL(rest.replace(/^\//, ""), base);
-  // Keep query string
-  target.search = url.search;
-
-  const incomingHeaders = getRequestHeaders(event);
-  const forwardHeaders = pickForwardHeaders(incomingHeaders);
-
-  // Ensure accept json by default
-  if (!forwardHeaders["accept"]) forwardHeaders["accept"] = "application/json";
-
-  // Attach Authorization from cookie token if not provided
-  const cookies = parseCookie(incomingHeaders.cookie as string | undefined);
-  if (!forwardHeaders["authorization"] && cookies.token) {
-    forwardHeaders["authorization"] = `Bearer ${cookies.token}`;
-  }
-
-  // Read body for non-GET/HEAD
-  const method = (event.node.req.method || "GET").toUpperCase();
-  let body: any = undefined;
-  if (method !== "GET" && method !== "HEAD") {
-    const ct = String(incomingHeaders["content-type"] || "");
-    if (ct.includes("application/json")) {
-      body = await readBody(event);
-    } else {
-      // For formdata/others, readBody still works in h3 (string/object)
-      body = await readBody(event);
-    }
-  }
-
-  // Optional legacy fallback: if request is /Checkout/cart and payload items have brand missing,
-  // don't mutate unless explicitly needed. (kept minimal)
   try {
-    const res = await $fetch.raw(target.toString(), {
+    const config = useRuntimeConfig()
+
+    // IMPORTANT:
+    // لا تستخدم apiBase هنا إطلاقاً.
+    // إذا apiOrigin صار فاضي/غلط، كان الكود ياخذ "/api/bff" (apiBase)
+    // ويسوي recursion على نفسه -> 500 على Vercel.
+    const apiOrigin =
+      (config as any).apiOrigin ||
+      (config.public as any).apiOrigin ||
+      process.env.NUXT_API_ORIGIN ||
+      process.env.NUXT_PUBLIC_API_ORIGIN
+
+    if (!apiOrigin) {
+      setResponseStatus(event, 500)
+      return { error: 'Missing API origin. Set NUXT_API_ORIGIN / NUXT_PUBLIC_API_ORIGIN.' }
+    }
+
+    const method = (event.node.req.method || 'GET').toUpperCase()
+    const routePath = getRouterParam(event, 'path') || ''
+
+    const targetBase = String(apiOrigin).replace(/\/$/, '')
+
+    // ✅ المسار الافتراضي للـ API يكون تحت /api
+    // لكن مسارات الملفات المرفوعة تكون عادةً تحت /uploads (بدون /api)
+    // إذا عملنا لها proxy إلى /api/uploads راح نحصل 404.
+    const isUploads = routePath.startsWith('uploads/') || routePath === 'uploads'
+    const apiBase = targetBase.endsWith('/api') ? targetBase : `${targetBase}/api`
+    const targetUrl = new URL(isUploads ? `${targetBase}/${routePath}` : `${apiBase}/${routePath}`)
+
+    // Query params
+    const incomingQuery = getQuery(event) as Record<string, any>
+
+    // ✅ query=JSON => params
+    if (typeof incomingQuery.query === 'string' && incomingQuery.query.trim()) {
+      try {
+        const obj = JSON.parse(incomingQuery.query)
+        if (obj && typeof obj === 'object') {
+          for (const [k, v] of Object.entries(obj)) {
+            if (v === undefined || v === null) continue
+            if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
+            else targetUrl.searchParams.set(k, String(v))
+          }
+        }
+      } catch {
+        targetUrl.searchParams.set('query', incomingQuery.query)
+      }
+      delete incomingQuery.query
+    }
+
+    for (const [k, v] of Object.entries(incomingQuery)) {
+      if (v === undefined || v === null) continue
+      if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
+      else targetUrl.searchParams.set(k, String(v))
+    }
+
+    // Headers
+    const headers = getRequestHeaders(event) as Record<string, any>
+    delete headers.host
+    delete headers.connection
+    delete headers['content-length']
+    // ✅ منع ضغط الاستجابة من المصدر لتفادي JSON مضغوط/غير قابل للقراءة على بعض الشبكات/VPN
+    delete headers['accept-encoding']
+    delete headers['Accept-Encoding']
+    headers['accept-encoding'] = 'identity'
+
+    // ✅ 1) إذا الفرونت مرسل Authorization خليّه مثل ما هو
+    const authHeader = headers.authorization || headers.Authorization
+
+    // ✅ 2) fallback: خذ التوكن من Cookie إذا ماكو Authorization
+    const tokenFromCookie =
+      getCookie(event, 'token') ||
+      getCookie(event, 'access_token') ||
+      getCookie(event, 'access') // ✅ نسمح لـ access هم
+    if (!authHeader && tokenFromCookie) {
+      headers.authorization = `Bearer ${tokenFromCookie}`
+    }
+
+    // ✅ WhatsApp Checkout: أرسل سرّ بسيط للباك إند حتى نمنع الاستدعاء المباشر من أي شخص
+    // ضعه في Vercel Environment Variables باسم CHECKOUT_SECRET
+    if (routePath.toLowerCase() === 'checkout/cart/whatsapp') {
+      const secret = process.env.CHECKOUT_SECRET
+      if (secret) headers['X-Checkout-Secret'] = secret
+    }
+
+    // Body
+    const body = method === 'GET' || method === 'HEAD'
+      ? undefined
+      : await readRawBody(event, false)
+
+    const res = await fetch(targetUrl.toString(), {
       method,
-      headers: forwardHeaders,
-      body: body as any,
-      // Important on server: do NOT throw on non-2xx
-      ignoreResponseError: true,
-    });
+      headers: { ...headers },
+      body: body || undefined,
+    })
 
-    // Pass through status code
-    if (res.status === 204) {
-      // No content
-      setResponseStatus(event, 204);
-      return sendNoContent(event);
+    const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
+    const isLogout = routePath.toLowerCase() === 'auth/logout'
+
+    // ✅ login: خزن cookies
+    if (isLogin) {
+      const json = await res.json().catch(() => null)
+
+      const token = json?.token
+      const role = json?.user?.role || 'User'
+
+      if (token) {
+        const secure = process.env.NODE_ENV === 'production'
+
+        // token httpOnly (أمني)
+        setCookie(event, 'token', token, {
+          httpOnly: true,
+          secure,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 30,
+        })
+
+        // ✅ access غير httpOnly (حل iOS/Telegram 401)
+        setCookie(event, 'access', token, {
+          httpOnly: false,
+          secure,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 30,
+        })
+
+        // role غير httpOnly
+        setCookie(event, 'role', String(role), {
+          httpOnly: false,
+          secure,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 30,
+        })
+
+        // auth flag غير httpOnly
+        setCookie(event, 'auth', '1', {
+          httpOnly: false,
+          secure,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 30,
+        })
+
+        // (اختياري) خزن user كـ JSON
+        if (json?.user) {
+          setCookie(event, 'user', JSON.stringify(json.user), {
+            httpOnly: false,
+            secure,
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 30,
+          })
+        }
+      }
+
+      setResponseStatus(event, res.status)
+
+      return json
     }
 
-    setResponseStatus(event, res.status);
-
-    // Pass through selected headers
-    const passthrough = ["content-type", "cache-control"];
-    for (const h of passthrough) {
-      const v = res.headers.get(h);
-      if (v) setHeader(event, h, v);
+    const ct = (res.headers.get("content-type") || "").toLowerCase()
+    // ✅ logout: امسح cookies
+    if (isLogout) {
+      const json = await res.json().catch(() => null)
+      const names = ['token','access','access_token','role','auth','user']
+      for (const n of names) {
+        try { deleteCookie(event, n, { path: '/' }) } catch { /* ignore */ }
+      }
+      setResponseStatus(event, res.status)
+      return json ?? { ok: res.ok }
     }
 
-    // Pass Set-Cookie if backend sets any
-    const setCookie = res.headers.get("set-cookie");
-    if (setCookie) {
-      setHeader(event, "set-cookie", setCookie);
+    // ✅ ضبط status دائماً قبل القراءة
+    setResponseStatus(event, res.status)
+
+
+    // ✅ على Vercel بعض الـ routes تشتغل Edge runtime، لذلك نتجنب Buffer و node:zlib
+    // ونعتمد فقط على Web APIs (text/json/arrayBuffer).
+    if (ct.includes("application/json")) {
+      const raw = await res.text().catch(() => "")
+      try {
+        return raw ? JSON.parse(raw) : null
+      } catch {
+        return {
+          error: "Upstream returned invalid JSON.",
+          status: res.status,
+          contentType: ct,
+          preview: raw.slice(0, 400),
+        }
+      }
     }
 
-    // Read body safely
-    const ct = res.headers.get("content-type");
-    if (isJsonResponse(ct)) {
-      // res._data is already parsed by $fetch when content-type json
-      return res._data ?? {};
-    }
-
-    // Non-JSON: return as text/buffer
-    // $fetch.raw provides _data as string/Buffer depending on response
-    return res._data ?? null;
+    // non-JSON: رجّعه كباينري (uploads/images)
+    if (ct) setResponseHeader(event, "content-type", ct)
+    const buf = new Uint8Array(await res.arrayBuffer())
+    return buf
 
   } catch (err: any) {
-    // Network / DNS / TLS errors => this is where "Failed to fetch" comes from in browser.
-    setResponseStatus(event, 502);
-    return {
-      error: "BFF_PROXY_ERROR",
-      message: err?.message || String(err),
-      target: target.toString(),
-    };
+    console.error('BFF error:', err)
+    setResponseStatus(event, 500)
+    return { error: err?.message || 'BFF failed' }
   }
-});
+})
