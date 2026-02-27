@@ -1,95 +1,155 @@
-export const runtime = 'nodejs'
+import { defineEventHandler, readBody, getRequestURL, getRequestHeaders, setResponseStatus, setHeader, sendNoContent } from "h3";
 
-import { defineEventHandler, getHeader, getHeaders, getRequestURL, readRawBody, setResponseHeader, setResponseStatus } from 'h3'
-import { parseCookies } from 'h3'
+/**
+ * BFF proxy: forwards /api/bff/** to backend API.
+ * - Works on Vercel/Nitro.
+ * - Avoids throwing on 204 and empty bodies.
+ * - Adds Authorization from cookie `token` if missing.
+ */
 
-const HOP_BY_HOP = new Set([
-  'connection','keep-alive','proxy-authenticate','proxy-authorization','te','trailer','transfer-encoding','upgrade'
-])
+const hopByHop = new Set([
+  "connection",
+  "keep-alive",
+  "proxy-authenticate",
+  "proxy-authorization",
+  "te",
+  "trailers",
+  "transfer-encoding",
+  "upgrade",
+  "host",
+  "content-length",
+]);
 
-function sanitizeHeaders(headers: Record<string, string | string[] | undefined>) {
-  const out: Record<string, string> = {}
+function pickForwardHeaders(headers: Record<string, string | string[] | undefined>) {
+  const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(headers)) {
-    if (!v) continue
-    const lk = k.toLowerCase()
-    if (HOP_BY_HOP.has(lk)) continue
-    if (Array.isArray(v)) out[k] = v.join(', ')
-    else out[k] = v
+    if (!v) continue;
+    const key = k.toLowerCase();
+    if (hopByHop.has(key)) continue;
+    if (Array.isArray(v)) out[key] = v.join(", ");
+    else out[key] = String(v);
   }
-  // لا نرسل Host الخاص بـ Vercel إلى Fly
-  delete out.host
-  delete out.Host
-  return out
+  return out;
+}
+
+function parseCookie(cookieHeader?: string) {
+  const map: Record<string, string> = {};
+  if (!cookieHeader) return map;
+  const parts = cookieHeader.split(";");
+  for (const part of parts) {
+    const [k, ...rest] = part.trim().split("=");
+    if (!k) continue;
+    map[k] = rest.join("=") ?? "";
+  }
+  return map;
+}
+
+function isJsonResponse(ct?: string | null) {
+  return !!ct && ct.toLowerCase().includes("application/json");
 }
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
+  const runtimeConfig = useRuntimeConfig();
 
-  const apiOrigin =
-    (config as any).apiOrigin ||
-    process.env.NUXT_API_ORIGIN ||
-    process.env.NUXT_PUBLIC_API_ORIGIN ||
-    'https://ecommerce-api-22o8.fly.dev'
+  // Backend base (must end without trailing slash)
+  const base = (runtimeConfig.public?.apiBase as string | undefined)
+    || (runtimeConfig.apiBase as string | undefined)
+    || process.env.API_BASE_URL
+    || process.env.NUXT_PUBLIC_API_BASE_URL
+    || "http://localhost:5010";
 
-  const p = event.context.params?.path
-  const parts = Array.isArray(p) ? p : [p]
-  const joined = parts.filter(Boolean).join('/')
-
-  const targetPath = `/api/${joined}`
-  const targetUrl = new URL(targetPath, apiOrigin).toString()
-
-  // Headers
-  const headers = sanitizeHeaders(getHeaders(event) as any)
-
-  // Auth: مرر Authorization إذا موجود، أو خذه من الكوكيز (access / token / access_token)
-  const authHeader = getHeader(event, 'authorization')
-  if (!authHeader) {
-    const cookies = parseCookies(event)
-    const token = cookies.access || cookies.token || cookies.access_token
-    if (token) headers['authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`
+  // Incoming path after /api/bff/
+  const url = getRequestURL(event);
+  const fullPath = url.pathname || "/";
+  const bffPrefix = "/api/bff/";
+  const rest = fullPath.startsWith(bffPrefix) ? fullPath.slice(bffPrefix.length) : "";
+  // If someone calls exactly /api/bff, just 404
+  if (!rest) {
+    setResponseStatus(event, 404);
+    return { error: "BFF path missing" };
   }
 
-  // Body
-  let body: any = undefined
-  const method = event.method || 'GET'
-  if (!['GET', 'HEAD'].includes(method.toUpperCase())) {
-    body = await readRawBody(event)
+  // Build backend URL
+  const target = new URL(rest.replace(/^\//, "") , base.endsWith("/") ? base : base + "/");
+  // Keep query string
+  target.search = url.search;
+
+  const incomingHeaders = getRequestHeaders(event);
+  const forwardHeaders = pickForwardHeaders(incomingHeaders);
+
+  // Ensure accept json by default
+  if (!forwardHeaders["accept"]) forwardHeaders["accept"] = "application/json";
+
+  // Attach Authorization from cookie token if not provided
+  const cookies = parseCookie(incomingHeaders.cookie as string | undefined);
+  if (!forwardHeaders["authorization"] && cookies.token) {
+    forwardHeaders["authorization"] = `Bearer ${cookies.token}`;
   }
 
+  // Read body for non-GET/HEAD
+  const method = (event.node.req.method || "GET").toUpperCase();
+  let body: any = undefined;
+  if (method !== "GET" && method !== "HEAD") {
+    const ct = String(incomingHeaders["content-type"] || "");
+    if (ct.includes("application/json")) {
+      body = await readBody(event);
+    } else {
+      // For formdata/others, readBody still works in h3 (string/object)
+      body = await readBody(event);
+    }
+  }
+
+  // Optional legacy fallback: if request is /Checkout/cart and payload items have brand missing,
+  // don't mutate unless explicitly needed. (kept minimal)
   try {
-    const res = await fetch(targetUrl, {
+    const res = await $fetch.raw(target.toString(), {
       method,
-      headers,
-      body
-    })
+      headers: forwardHeaders,
+      body: body as any,
+      // Important on server: do NOT throw on non-2xx
+      ignoreResponseError: true,
+    });
 
-    // Pass-through status + headers (بشكل آمن)
-    setResponseStatus(event, res.status)
-    res.headers.forEach((v, k) => {
-      const lk = k.toLowerCase()
-      if (HOP_BY_HOP.has(lk)) return
-      // عادةً ما نترك set-cookie يمر، لأن بعض استجابات المصادقة قد تعتمد عليه
-      setResponseHeader(event, k, v)
-    })
-
-    const ct = res.headers.get('content-type') || ''
-    if (ct.includes('application/json')) {
-      const text = await res.text()
-      try { return JSON.parse(text) } catch { return text }
+    // Pass through status code
+    if (res.status === 204) {
+      // No content
+      setResponseStatus(event, 204);
+      return sendNoContent(event);
     }
 
-    // default: text / blob
-    return await res.text()
+    setResponseStatus(event, res.status);
+
+    // Pass through selected headers
+    const passthrough = ["content-type", "cache-control"];
+    for (const h of passthrough) {
+      const v = res.headers.get(h);
+      if (v) setHeader(event, h, v);
+    }
+
+    // Pass Set-Cookie if backend sets any
+    const setCookie = res.headers.get("set-cookie");
+    if (setCookie) {
+      setHeader(event, "set-cookie", setCookie);
+    }
+
+    // Read body safely
+    const ct = res.headers.get("content-type");
+    if (isJsonResponse(ct)) {
+      // res._data is already parsed by $fetch when content-type json
+      return res._data ?? {};
+    }
+
+    // Non-JSON: return as text/buffer
+    // $fetch.raw provides _data as string/Buffer depending on response
+    return res._data ?? null;
+
   } catch (err: any) {
-    // رجّع تفاصيل كافية بدل 500 أعمى (يساعدنا نعرف وين المشكلة)
-    setResponseStatus(event, 502)
+    // Network / DNS / TLS errors => this is where "Failed to fetch" comes from in browser.
+    setResponseStatus(event, 502);
     return {
-      error: 'BFF proxy failed',
+      error: "BFF_PROXY_ERROR",
       message: err?.message || String(err),
-      apiOrigin,
-      targetUrl,
-      path: getRequestURL(event).pathname,
-      traceId: (event.node?.req as any)?.headers?.['x-vercel-id'] || undefined
-    }
+      target: target.toString(),
+    };
   }
-})
+});
