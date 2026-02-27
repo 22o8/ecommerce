@@ -192,7 +192,7 @@ public class CheckoutController : ControllerBase
 
 		var productIds = req.Items.Select(i => i.ProductId).Distinct().ToList();
 		var products = await _db.Products
-			.Include(p => p.Assets)
+			.Include(p => p.Images)
 			.Where(p => productIds.Contains(p.Id))
 			.ToListAsync();
 
@@ -204,11 +204,7 @@ public class CheckoutController : ControllerBase
 			Id = Guid.NewGuid(),
 			UserId = Guid.Empty,
 			Status = "Paid",
-			Currency = "IQD",
 			CreatedAt = DateTime.UtcNow,
-			ShippingAddress = null,
-			PhoneNumber = null,
-			Notes = "WhatsApp checkout",
 			Items = new List<OrderItem>(),
 			Payments = new List<Payment>()
 		};
@@ -229,8 +225,8 @@ public class CheckoutController : ControllerBase
 			order.Items.Add(new OrderItem
 			{
 				Id = Guid.NewGuid(),
+				ItemType = "Product",
 				ProductId = p.Id,
-				ProductName = p.Name,
 				Quantity = i.Quantity,
 				UnitPriceUsd = p.PriceUsd,
 				LineTotalUsd = lineTotalUsd,

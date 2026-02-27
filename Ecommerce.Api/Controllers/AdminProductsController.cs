@@ -20,6 +20,7 @@ public class AdminProductsController : ControllerBase
     {
         _db = db;
         _env = env;
+        _storage = storage;
     }
 
     // ============================
@@ -243,8 +244,6 @@ public async Task<IActionResult> Delete([FromRoute] Guid id)
     // - file   (مفرد)   => اذا اكو مكان ثاني يرسل file
     [HttpPost("{id:guid}/images")]
     [RequestSizeLimit(30_000_000)]
-    [HttpPost("{id:guid}/images")]
-    [RequestSizeLimit(20_000_000)]
     public async Task<IActionResult> UploadImages([FromRoute] Guid id, [FromForm] List<IFormFile> files, [FromForm] string? alt = null)
     {
         if (files is null || files.Count == 0)
@@ -278,7 +277,7 @@ public async Task<IActionResult> Delete([FromRoute] Guid id)
             await using var stream = file.OpenReadStream();
             var contentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType;
 
-            // لاحظ: UploadAsync يستقبل (content, key, contentType, ct)
+            // UploadAsync: (content, key, contentType, cancellationToken)
             var upload = await _storage.UploadAsync(stream, key, contentType, HttpContext.RequestAborted);
 
             sort += 1;
@@ -286,11 +285,10 @@ public async Task<IActionResult> Delete([FromRoute] Guid id)
             {
                 Id = Guid.NewGuid(),
                 ProductId = id,
-                StorageKey = upload.Key,
                 Url = upload.Url,
                 Alt = alt,
                 SortOrder = sort,
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = DateTime.UtcNow
             };
 
             _db.ProductImages.Add(img);
@@ -307,7 +305,10 @@ public async Task<IActionResult> Delete([FromRoute] Guid id)
         var img = await _db.ProductImages.FirstOrDefaultAsync(x => x.ProductId == id && x.Id == imageId);
         if (img is null) return NotFound();
 
-        await _storage.DeleteAsync(img.StorageKey, HttpContext.RequestAborted);
+        // We persist only the public URL in DB; derive the object key from the URL when deleting.
+        var key = ExtractObjectKey(img.Url);
+        if (!string.IsNullOrWhiteSpace(key))
+            await _storage.DeleteAsync(key, HttpContext.RequestAborted);
         _db.ProductImages.Remove(img);
         await _db.SaveChangesAsync();
 
@@ -321,6 +322,28 @@ public async Task<IActionResult> Delete([FromRoute] Guid id)
         s = System.Text.RegularExpressions.Regex.Replace(s, @"[^a-z0-9\-]", "");
         s = System.Text.RegularExpressions.Regex.Replace(s, @"-+", "-");
         return s.Trim('-');
+    }
+
+    private static string NormalizeSlug(string? s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return "";
+        // Allow slugs/brands with spaces or mixed case; normalize consistently.
+        s = s.Trim().ToLowerInvariant();
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"\s+", "-");
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"[^a-z0-9\-]", "");
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"-+", "-");
+        return s.Trim('-');
+    }
+
+    private static string ExtractObjectKey(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return "";
+        // If it's a full URL (https://cdn.example.com/products/..), take the path part.
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            return uri.AbsolutePath.TrimStart('/');
+
+        // If it was stored as a relative path already.
+        return url.TrimStart('/');
     }
 
     private static long ToIqd(long? v) => v ?? 0;
