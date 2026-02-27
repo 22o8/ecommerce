@@ -243,107 +243,90 @@ public async Task<IActionResult> Delete([FromRoute] Guid id)
     // - file   (مفرد)   => اذا اكو مكان ثاني يرسل file
     [HttpPost("{id:guid}/images")]
     [RequestSizeLimit(30_000_000)]
-    public async Task<IActionResult> UploadImages(
-        [FromRoute] Guid id,
-        [FromForm(Name = "images")] List<IFormFile>? images,
-        [FromForm(Name = "file")] IFormFile? file,
-        [FromForm] string? alt
-    )
+    [HttpPost("{id:guid}/images")]
+    [RequestSizeLimit(20_000_000)]
+    public async Task<IActionResult> UploadImages([FromRoute] Guid id, [FromForm] List<IFormFile> files, [FromForm] string? alt = null)
     {
-        var product = await _db.Products.FirstOrDefaultAsync(x => x.Id == id);
-        if (product == null) return NotFound(new { message = "Product not found" });
+        if (files is null || files.Count == 0)
+            return BadRequest(new { message = "No files uploaded" });
 
-        var files = new List<IFormFile>();
-        if (images is { Count: > 0 }) files.AddRange(images);
-        if (file != null && file.Length > 0) files.Add(file);
+        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);
+        if (product is null) return NotFound();
 
-        if (files.Count == 0)
-            return BadRequest(new { message = "No files uploaded." });
-
-        var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".svg" };
-
-        const long maxBytes = 20L * 1024 * 1024; // 20MB لكل صورة
-
-        // نحدد الترتيب الحالي (Order) حتى نضيف الصور بعده
-        var maxOrder = await _db.ProductAssets
+        // اجلب آخر ترتيب صور حتى نكمّل بعده
+        var currentMaxSort = await _db.ProductImages
             .Where(x => x.ProductId == id)
-            .Select(x => (int?)x.Order)
-            .MaxAsync() ?? 0;
+            .Select(x => (int?)x.SortOrder)
+            .MaxAsync();
 
-        foreach (var f in files)
+        var sort = currentMaxSort ?? 0;
+        var allowedExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".webp" };
+
+        var created = new List<object>();
+
+        foreach (var file in files)
         {
-            var ext = (Path.GetExtension(f.FileName) ?? string.Empty).ToLowerInvariant();
-            if (!allowed.Contains(ext))
-                return BadRequest("Unsupported image format.");
+            if (file is null || file.Length <= 0) continue;
 
-            if (f.Length <= 0 || f.Length > maxBytes)
-                return BadRequest($"Invalid image size. Max {maxBytes / (1024 * 1024)}MB");
+            var ext = Path.GetExtension(file.FileName);
+            if (string.IsNullOrWhiteSpace(ext) || !allowedExt.Contains(ext))
+                return BadRequest(new { message = "Invalid file type. Allowed: jpg, jpeg, png, webp" });
 
-            // key داخل التخزين (S3 أو محلي)
-                    var key = ExtractStorageKeyFromUrl(img.Url);
-        if (!string.IsNullOrWhiteSpace(key))
-            await _storage.DeleteAsync(key, HttpContext.RequestAborted);
+            // مفتاح التخزين داخل الـ bucket
+            var key = $"products/{id}/{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
 
+            await using var stream = file.OpenReadStream();
+            var contentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType;
+
+            // لاحظ: UploadAsync يستقبل (content, key, contentType, ct)
+            var upload = await _storage.UploadAsync(stream, key, contentType, HttpContext.RequestAborted);
+
+            sort += 1;
+            var img = new ProductImage
+            {
+                Id = Guid.NewGuid(),
+                ProductId = id,
+                StorageKey = upload.Key,
+                Url = upload.Url,
+                Alt = alt,
+                SortOrder = sort,
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+
+            _db.ProductImages.Add(img);
+            created.Add(new { img.Id, img.Url, img.Alt, img.SortOrder });
+        }
+
+        await _db.SaveChangesAsync();
+        return Ok(new { items = created });
+    }
+
+    [HttpDelete("{id:guid}/images/{imageId:guid}")]
+    public async Task<IActionResult> DeleteImage([FromRoute] Guid id, [FromRoute] Guid imageId)
+    {
+        var img = await _db.ProductImages.FirstOrDefaultAsync(x => x.ProductId == id && x.Id == imageId);
+        if (img is null) return NotFound();
+
+        await _storage.DeleteAsync(img.StorageKey, HttpContext.RequestAborted);
         _db.ProductImages.Remove(img);
         await _db.SaveChangesAsync();
 
-        return Ok(new { message = "Deleted" });
+        return NoContent();
     }
 
-    // ============================
-    // Helpers
-    // ============================
-
-    private static string NormalizeSlug(string? slug)
-        => (slug ?? "").Trim().ToLowerInvariant();
-
-    private static string Slugify(string input)
+    private static string Slugify(string s)
     {
-        input = (input ?? "").Trim().ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(input)) return "item";
-
-        var chars = input.Select(c =>
-        {
-            if (char.IsLetterOrDigit(c)) return c;
-            if (char.IsWhiteSpace(c) || c == '-' || c == '_') return '-';
-            return '-';
-        }).ToArray();
-
-        var s = new string(chars);
-        while (s.Contains("--")) s = s.Replace("--", "-");
-        s = s.Trim('-');
-
-        return string.IsNullOrWhiteSpace(s) ? "item" : s;
+        s = s.Trim().ToLowerInvariant();
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"\s+", "-");
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"[^a-z0-9\-]", "");
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"-+", "-");
+        return s.Trim('-');
     }
 
-    private void TryDeletePhysicalFile(string? url)
-    {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(url)) return;
+    private static long ToIqd(long? v) => v ?? 0;
 
-            // اذا رابط كامل (https://..) نحوله لمسار
-            string relative;
-            if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
-                relative = uri.AbsolutePath.TrimStart('/');
-            else
-                relative = url.TrimStart('/');
-
-            var fullPath = Path.Combine(_env.WebRootPath ?? "wwwroot",
-                relative.Replace('/', Path.DirectorySeparatorChar));
-
-            if (System.IO.File.Exists(fullPath))
-                System.IO.File.Delete(fullPath);
-        }
-        catch
-        {
-            // تجاهل
-        }
-    }
 }
 
-// ============================
 // Requests
 // ============================
 
