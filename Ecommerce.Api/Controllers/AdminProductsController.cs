@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 using Ecommerce.Api.Domain.Entities;
 using Ecommerce.Api.Infrastructure.Data;
+using Ecommerce.Api.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,13 +15,11 @@ namespace Ecommerce.Api.Controllers;
 public class AdminProductsController : ControllerBase
 {
     private readonly AppDbContext _db;
-    private readonly IWebHostEnvironment _env;
-    private readonly Ecommerce.Api.Infrastructure.Storage.IObjectStorage _storage;
+    private readonly IObjectStorage _storage;
 
-    public AdminProductsController(AppDbContext db, IWebHostEnvironment env, Ecommerce.Api.Infrastructure.Storage.IObjectStorage storage)
+    public AdminProductsController(AppDbContext db, IObjectStorage storage)
     {
         _db = db;
-        _env = env;
         _storage = storage;
     }
 
@@ -32,10 +32,6 @@ public class AdminProductsController : ControllerBase
     {
         try
         {
-            // NOTE:
-            // We intentionally avoid projecting navigation property counts directly (p.Images.Count)
-            // because some provider/schema states can surface translation/runtime issues in production.
-            // A correlated subquery is more robust.
             var items = await _db.Products
                 .AsNoTracking()
                 .OrderByDescending(p => p.CreatedAt)
@@ -50,7 +46,7 @@ public class AdminProductsController : ControllerBase
                     p.IsFeatured,
                     p.Brand,
                     p.CreatedAt,
-                    imagesCount = _db.ProductImages.Count(i => i.ProductId == p.Id)
+                    imagesCount = p.Images.Count()
                 })
                 .ToListAsync();
 
@@ -58,12 +54,7 @@ public class AdminProductsController : ControllerBase
         }
         catch (Exception ex)
         {
-            // Keep payload small but helpful; the traceId in the hosting platform logs is still the main reference.
-            return StatusCode(500, new
-            {
-                error = "Internal Server Error",
-                message = ex.Message
-            });
+            return StatusCode(500, new { error = "Internal Server Error", message = ex.Message });
         }
     }
 
@@ -87,8 +78,7 @@ public class AdminProductsController : ControllerBase
                 x.CreatedAt,
                 x.RatingAvg,
                 x.RatingCount,
-                images = _db.ProductImages
-                    .Where(i => i.ProductId == x.Id)
+                images = x.Images
                     .OrderBy(i => i.SortOrder)
                     .ThenBy(i => i.CreatedAt)
                     .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
@@ -104,6 +94,7 @@ public class AdminProductsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] UpsertProductRequest req)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
+
         var brandSlug = NormalizeSlug(req.Brand);
         if (string.IsNullOrWhiteSpace(brandSlug))
             return BadRequest(new { message = "Brand is required" });
@@ -111,7 +102,8 @@ public class AdminProductsController : ControllerBase
         var brandOk = await _db.Brands.AsNoTracking().AnyAsync(b => b.IsActive && b.Slug.ToLower() == brandSlug);
         if (!brandOk)
             return BadRequest(new { message = "Invalid brand" });
-var slug = NormalizeSlug(req.Slug);
+
+        var slug = NormalizeSlug(req.Slug);
         if (string.IsNullOrWhiteSpace(slug))
             slug = Slugify(req.Title);
 
@@ -153,13 +145,6 @@ var slug = NormalizeSlug(req.Slug);
         var exists = await _db.Products.AnyAsync(x => x.Id != id && x.Slug.ToLower() == slug);
         if (exists) return BadRequest(new { message = "Slug already exists" });
 
-        p.Title = req.Title.Trim();
-        p.Slug = slug;
-        p.Description = (req.Description ?? "").Trim();
-        p.PriceIqd = (req.PriceIqd > 0 ? req.PriceIqd : req.PriceUsd);
-        p.PriceUsd = req.PriceUsd;
-        p.IsPublished = req.IsPublished;
-        p.IsFeatured = req.IsFeatured;
         var brandSlug = NormalizeSlug(req.Brand);
         if (string.IsNullOrWhiteSpace(brandSlug))
             return BadRequest(new { message = "Brand is required" });
@@ -168,13 +153,19 @@ var slug = NormalizeSlug(req.Slug);
         if (!brandOk)
             return BadRequest(new { message = "Invalid brand" });
 
+        p.Title = req.Title.Trim();
+        p.Slug = slug;
+        p.Description = (req.Description ?? "").Trim();
+        p.PriceIqd = (req.PriceIqd > 0 ? req.PriceIqd : req.PriceUsd);
+        p.PriceUsd = req.PriceUsd;
+        p.IsPublished = req.IsPublished;
+        p.IsFeatured = req.IsFeatured;
         p.Brand = brandSlug;
 
         await _db.SaveChangesAsync();
         return Ok(new { message = "Updated" });
     }
 
-    // ✅ Quick toggle featured without resending the full product payload
     [HttpPatch("{id:guid}/featured")]
     public async Task<IActionResult> SetFeatured([FromRoute] Guid id, [FromBody] SetFeaturedRequest req)
     {
@@ -187,35 +178,32 @@ var slug = NormalizeSlug(req.Slug);
     }
 
     [HttpDelete("{id:guid}")]
-public async Task<IActionResult> Delete([FromRoute] Guid id)
-{
-    var product = await _db.Products
-        .Include(p => p.Images)
-        .FirstOrDefaultAsync(p => p.Id == id);
-
-    if (product == null)
-        return NotFound(new { message = "Product not found" });
-
-    // إذا المنتج مرتبط بطلبات → امنع الحذف
-    var hasOrders = await _db.OrderItems.AnyAsync(o => o.ProductId == id);
-    if (hasOrders)
+    public async Task<IActionResult> Delete([FromRoute] Guid id)
     {
-        return BadRequest(new
+        var product = await _db.Products
+            .Include(p => p.Images)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (product == null)
+            return NotFound(new { message = "Product not found" });
+
+        var hasOrders = await _db.OrderItems.AnyAsync(o => o.ProductId == id);
+        if (hasOrders)
         {
-            message = "Cannot delete product because it has related orders. Unpublish it instead."
-        });
+            return BadRequest(new
+            {
+                message = "Cannot delete product because it has related orders. Unpublish it instead."
+            });
+        }
+
+        if (product.Images?.Any() == true)
+            _db.ProductImages.RemoveRange(product.Images);
+
+        _db.Products.Remove(product);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Deleted successfully" });
     }
-
-    // حذف الصور من قاعدة البيانات فقط (بدون لمس الملفات)
-    if (product.Images?.Any() == true)
-        _db.ProductImages.RemoveRange(product.Images);
-
-    _db.Products.Remove(product);
-    await _db.SaveChangesAsync();
-
-    return Ok(new { message = "Deleted successfully" });
-}
-
 
     // ============================
     // Images (Admin)
@@ -235,13 +223,9 @@ public async Task<IActionResult> Delete([FromRoute] Guid id)
             .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
             .ToListAsync();
 
-        // خليها {items} حتى تكون ثابتة للفرونت
         return Ok(new { items });
     }
 
-    // ✅ يقبل:
-    // - images (متعدد)  => الفرونت الحالي عندك
-    // - file   (مفرد)   => اذا اكو مكان ثاني يرسل file
     [HttpPost("{id:guid}/images")]
     [RequestSizeLimit(30_000_000)]
     public async Task<IActionResult> UploadImages([FromRoute] Guid id, [FromForm] List<IFormFile> files, [FromForm] string? alt = null)
@@ -250,9 +234,8 @@ public async Task<IActionResult> Delete([FromRoute] Guid id)
             return BadRequest(new { message = "No files uploaded" });
 
         var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);
-        if (product is null) return NotFound();
+        if (product is null) return NotFound(new { message = "Product not found" });
 
-        // اجلب آخر ترتيب صور حتى نكمّل بعده
         var currentMaxSort = await _db.ProductImages
             .Where(x => x.ProductId == id)
             .Select(x => (int?)x.SortOrder)
@@ -260,7 +243,6 @@ public async Task<IActionResult> Delete([FromRoute] Guid id)
 
         var sort = currentMaxSort ?? 0;
         var allowedExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".webp" };
-
         var created = new List<object>();
 
         foreach (var file in files)
@@ -271,13 +253,11 @@ public async Task<IActionResult> Delete([FromRoute] Guid id)
             if (string.IsNullOrWhiteSpace(ext) || !allowedExt.Contains(ext))
                 return BadRequest(new { message = "Invalid file type. Allowed: jpg, jpeg, png, webp" });
 
-            // مفتاح التخزين داخل الـ bucket
             var key = $"products/{id}/{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
 
             await using var stream = file.OpenReadStream();
             var contentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType;
 
-            // UploadAsync: (content, key, contentType, cancellationToken)
             var upload = await _storage.UploadAsync(stream, key, contentType, HttpContext.RequestAborted);
 
             sort += 1;
@@ -303,55 +283,51 @@ public async Task<IActionResult> Delete([FromRoute] Guid id)
     public async Task<IActionResult> DeleteImage([FromRoute] Guid id, [FromRoute] Guid imageId)
     {
         var img = await _db.ProductImages.FirstOrDefaultAsync(x => x.ProductId == id && x.Id == imageId);
-        if (img is null) return NotFound();
+        if (img is null) return NotFound(new { message = "Image not found" });
 
-        // We persist only the public URL in DB; derive the object key from the URL when deleting.
-        var key = ExtractObjectKey(img.Url);
+        var key = ExtractStorageKeyFromUrl(img.Url);
         if (!string.IsNullOrWhiteSpace(key))
             await _storage.DeleteAsync(key, HttpContext.RequestAborted);
+
         _db.ProductImages.Remove(img);
         await _db.SaveChangesAsync();
 
         return NoContent();
     }
 
+    // ============================
+    // Helpers
+    // ============================
+
+    private static string NormalizeSlug(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return "";
+        return Slugify(input);
+    }
+
     private static string Slugify(string s)
     {
         s = s.Trim().ToLowerInvariant();
-        s = System.Text.RegularExpressions.Regex.Replace(s, @"\s+", "-");
-        s = System.Text.RegularExpressions.Regex.Replace(s, @"[^a-z0-9\-]", "");
-        s = System.Text.RegularExpressions.Regex.Replace(s, @"-+", "-");
+        s = Regex.Replace(s, @"\s+", "-");
+        s = Regex.Replace(s, @"[^a-z0-9\-]", "");
+        s = Regex.Replace(s, @"-+", "-");
         return s.Trim('-');
     }
 
-    private static string NormalizeSlug(string? s)
-    {
-        if (string.IsNullOrWhiteSpace(s)) return "";
-        // Allow slugs/brands with spaces or mixed case; normalize consistently.
-        s = s.Trim().ToLowerInvariant();
-        s = System.Text.RegularExpressions.Regex.Replace(s, @"\s+", "-");
-        s = System.Text.RegularExpressions.Regex.Replace(s, @"[^a-z0-9\-]", "");
-        s = System.Text.RegularExpressions.Regex.Replace(s, @"-+", "-");
-        return s.Trim('-');
-    }
-
-    private static string ExtractObjectKey(string? url)
+    private static string ExtractStorageKeyFromUrl(string? url)
     {
         if (string.IsNullOrWhiteSpace(url)) return "";
-        // If it's a full URL (https://cdn.example.com/products/..), take the path part.
-        if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
-            return uri.AbsolutePath.TrimStart('/');
-
-        // If it was stored as a relative path already.
-        return url.TrimStart('/');
+        try
+        {
+            var u = new Uri(url);
+            return u.AbsolutePath.TrimStart('/');
+        }
+        catch
+        {
+            return url.TrimStart('/');
+        }
     }
-
-    private static long ToIqd(long? v) => v ?? 0;
-
 }
-
-// Requests
-// ============================
 
 public class UpsertProductRequest
 {
@@ -362,7 +338,6 @@ public class UpsertProductRequest
     public string? Slug { get; set; }
     public string? Description { get; set; }
 
-    // ✅ المعتمد الآن: السعر بالدينار العراقي
     [Range(0, 999999999)]
     public decimal PriceIqd { get; set; }
 
@@ -374,18 +349,10 @@ public class UpsertProductRequest
     public string Brand { get; set; } = "Unspecified";
 
     public bool IsPublished { get; set; }
-
-    // Show on home page (Featured Products)
     public bool IsFeatured { get; set; }
 }
 
 public class SetFeaturedRequest
 {
     public bool IsFeatured { get; set; }
-}
-
-public class ReorderImagesRequest
-{
-    [Required]
-    public List<Guid> ImageIds { get; set; } = new();
 }
