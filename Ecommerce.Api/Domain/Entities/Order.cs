@@ -3,8 +3,7 @@ namespace Ecommerce.Api.Domain.Entities;
 public class Order
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    // ✅ Nullable لتسهيل طلبات الزائر (WhatsApp Checkout) بدون حساب
-    public Guid? UserId { get; set; }
+    public Guid UserId { get; set; }
     public User? User { get; set; }
 
     // (قديم) للتوافق

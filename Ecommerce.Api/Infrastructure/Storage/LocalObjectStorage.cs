@@ -13,7 +13,7 @@ public sealed class LocalObjectStorage : IObjectStorage
         _opt = opt.Value;
     }
 
-    public async Task<StoredObject> UploadAsync(Stream content, string key, string contentType, CancellationToken cancellationToken = default)
+    public async Task<StoredObject> UploadAsync(Stream content, string key, string contentType, CancellationToken ct = default)
     {
         // key example: products/{productId}/{fileName}.ext
         var uploadsRoot = Path.Combine(_env.WebRootPath ?? Path.Combine(AppContext.BaseDirectory, "wwwroot"), "uploads");
@@ -21,7 +21,7 @@ public sealed class LocalObjectStorage : IObjectStorage
         Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
 
         await using var fs = new FileStream(fullPath, FileMode.Create, FileAccess.Write, FileShare.None);
-        await content.CopyToAsync(fs, cancellationToken);
+        await content.CopyToAsync(fs, ct);
 
         // Return a URL that frontend can load.
         // If PublicBaseUrl is set, use it. Otherwise keep legacy relative path.
@@ -33,7 +33,7 @@ public sealed class LocalObjectStorage : IObjectStorage
         return new StoredObject(key, url);
     }
 
-    public Task DeleteAsync(string key, CancellationToken cancellationToken = default)
+    public Task DeleteAsync(string key, CancellationToken ct = default)
     {
         var uploadsRoot = Path.Combine(_env.WebRootPath ?? Path.Combine(AppContext.BaseDirectory, "wwwroot"), "uploads");
         var fullPath = Path.Combine(uploadsRoot, key.Replace('/', Path.DirectorySeparatorChar));

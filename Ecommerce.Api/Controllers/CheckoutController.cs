@@ -187,80 +187,76 @@ public class CheckoutController : ControllerBase
 	[HttpPost("cart/whatsapp")]
 	public async Task<IActionResult> CheckoutCartWhatsApp([FromBody] CheckoutCartRequest req)
 	{
-		if (req?.Items == null || req.Items.Count == 0)
-			return BadRequest("Cart is empty.");
+		if (!ValidateCheckoutSecret())
+			return Unauthorized(new { message = "Invalid checkout secret" });
 
 		var productIds = req.Items.Select(i => i.ProductId).Distinct().ToList();
-
 		var products = await _db.Products
-			.Where(p => productIds.Contains(p.Id) && p.IsPublished)
+			.Include(p => p.Assets)
+			.Where(p => productIds.Contains(p.Id))
 			.ToListAsync();
 
 		if (products.Count == 0)
-			return BadRequest("No valid products.");
-
-		// Build order items
-		var orderItems = new List<OrderItem>();
-		decimal totalIqd = 0;
-
-		foreach (var it in req.Items)
-		{
-			var p = products.FirstOrDefault(x => x.Id == it.ProductId);
-			if (p == null) continue;
-
-			var qty = Math.Max(1, it.Quantity);
-			var unit = p.PriceIqd;
-			var line = unit * qty;
-
-			totalIqd += line;
-
-			orderItems.Add(new OrderItem
-			{
-				ProductId = p.Id,
-								Quantity = qty,
-				UnitPriceIqd = unit,
-				LineTotalIqd = line
-			});
-		}
-
-		if (orderItems.Count == 0)
-			return BadRequest("No valid items.");
+			return BadRequest(new { message = "Cart is empty" });
 
 		var order = new Order
 		{
-			TotalIqd = totalIqd,
-			Status = "Pending",
+			Id = Guid.NewGuid(),
+			UserId = Guid.Empty,
+			Status = "Paid",
+			Currency = "IQD",
 			CreatedAt = DateTime.UtcNow,
-			Items = orderItems
+			ShippingAddress = null,
+			PhoneNumber = null,
+			Notes = "WhatsApp checkout",
+			Items = new List<OrderItem>(),
+			Payments = new List<Payment>()
 		};
 
+		decimal totalIqd = 0;
+		decimal totalUsd = 0;
+
+		foreach (var i in req.Items)
+		{
+			var p = products.FirstOrDefault(x => x.Id == i.ProductId);
+			if (p == null) continue;
+
+			var lineTotalUsd = p.PriceUsd * i.Quantity;
+			var lineTotalIqd = p.PriceIqd * i.Quantity;
+			totalUsd += lineTotalUsd;
+			totalIqd += lineTotalIqd;
+
+			order.Items.Add(new OrderItem
+			{
+				Id = Guid.NewGuid(),
+				ProductId = p.Id,
+				ProductName = p.Name,
+				Quantity = i.Quantity,
+				UnitPriceUsd = p.PriceUsd,
+				LineTotalUsd = lineTotalUsd,
+				UnitPriceIqd = p.PriceIqd,
+				LineTotalIqd = lineTotalIqd
+			});
+		}
+
+		order.TotalUsd = totalUsd;
+		order.TotalIqd = totalIqd;
+
+		var payment = new Payment
+		{
+			Order = order,
+			Provider = "WhatsApp",
+			Status = "Succeeded",
+			ProviderRef = $"WA-{Guid.NewGuid():N}",
+			AmountUsd = order.TotalUsd,
+			AmountIqd = order.TotalIqd
+		};
+
+		order.Payments.Add(payment);
 		_db.Orders.Add(order);
 		await _db.SaveChangesAsync();
 
-		// WhatsApp message (simple)
-		var msgLines = new List<string>
-		{
-			"طلب جديد:",
-			$"رقم الطلب: {order.Id}",
-			"--------------------"
-		};
-
-		foreach (var oi in orderItems)
-		{
-			msgLines.Add($"{products.FirstOrDefault(x => x.Id == oi.ProductId)?.Title ?? oi.ProductId.ToString()} x{oi.Quantity} = {oi.LineTotalIqd:n0} IQD");
-		}
-
-		msgLines.Add("--------------------");
-		msgLines.Add($"المجموع: {totalIqd:n0} IQD");
-
-		var message = string.Join("\n", msgLines);
-
-		return Ok(new
-		{
-			orderId = order.Id,
-			totalIqd,
-			message
-		});
+		return Ok(new { orderId = order.Id, status = order.Status });
 	}
 
     // POST /api/checkout/services
