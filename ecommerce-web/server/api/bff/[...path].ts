@@ -25,7 +25,11 @@ function pickForwardHeaders(headers: Record<string, string | string[] | undefine
   for (const [k, v] of Object.entries(headers)) {
     if (!v) continue;
     const key = k.toLowerCase();
+    // ✅ لا نمرّر pseudo-headers الخاصة بـ HTTP/2 مثل :authority
+    if (key.startsWith(":")) continue;
     if (hopByHop.has(key)) continue;
+    // ✅ الأفضل عدم تمرير accept-encoding حتى لا تصير مشاكل ضغط/فك ضغط بين Vercel و backend
+    if (key === "accept-encoding") continue;
     if (Array.isArray(v)) out[key] = v.join(", ");
     else out[key] = String(v);
   }
