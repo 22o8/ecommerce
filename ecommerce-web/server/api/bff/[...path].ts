@@ -65,6 +65,11 @@ export default defineEventHandler(async (event) => {
 
     // Pass-through status + headers (بشكل آمن)
     setResponseStatus(event, res.status)
+
+    // ✅ مهم: 204/304 ممنوع بيها Body. إرسال Body يسبب ERR_HTTP2_PROTOCOL_ERROR بالمتصفح.
+    if (res.status === 204 || res.status === 304) {
+      return
+    }
     res.headers.forEach((v, k) => {
       const lk = k.toLowerCase()
       if (HOP_BY_HOP.has(lk)) return

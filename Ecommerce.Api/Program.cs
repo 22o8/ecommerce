@@ -95,14 +95,46 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 });
 
 // Object storage (images)
+
 builder.Services.Configure<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>(builder.Configuration.GetSection("ObjectStorage"));
 builder.Services.AddSingleton<Ecommerce.Api.Infrastructure.Storage.IObjectStorage>(sp =>
 {
-    var opt = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>>().Value;
+    var optAccessor = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>>();
+    var opt = optAccessor.Value;
+
     var provider = (opt.Provider ?? "Local").Trim().ToLowerInvariant();
+    var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("ObjectStorage");
+
+    // ✅ Don't crash the whole API if S3 config is missing.
+    // If S3 is not fully configured on Fly, we fall back to Local storage automatically.
+    var hasS3Endpoint = !(string.IsNullOrWhiteSpace(opt.ServiceUrl) && string.IsNullOrWhiteSpace(opt.Region));
+    var hasS3Creds = !string.IsNullOrWhiteSpace(opt.AccessKeyId) && !string.IsNullOrWhiteSpace(opt.SecretAccessKey);
+    var hasBucket = !string.IsNullOrWhiteSpace(opt.Bucket);
+    var s3Configured = hasS3Endpoint && hasS3Creds && hasBucket;
+
     if (provider == "s3")
-        return new Ecommerce.Api.Infrastructure.Storage.S3ObjectStorage(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>>());
-    return new Ecommerce.Api.Infrastructure.Storage.LocalObjectStorage(sp.GetRequiredService<IWebHostEnvironment>(), sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>>());
+    {
+        if (s3Configured)
+        {
+            try
+            {
+                return new Ecommerce.Api.Infrastructure.Storage.S3ObjectStorage(optAccessor);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to initialize S3 storage. Falling back to Local storage.");
+            }
+        }
+        else
+        {
+            logger.LogWarning("ObjectStorage provider is set to S3 but configuration is incomplete. Falling back to Local storage.");
+        }
+    }
+
+    return new Ecommerce.Api.Infrastructure.Storage.LocalObjectStorage(
+        sp.GetRequiredService<IWebHostEnvironment>(),
+        optAccessor
+    );
 });
 
 // ============================
