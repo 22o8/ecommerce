@@ -51,12 +51,19 @@ function isJsonResponse(ct?: string | null) {
 export default defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig();
 
-  // Backend base (must end without trailing slash)
-  const base = (runtimeConfig.public?.apiBase as string | undefined)
-    || (runtimeConfig.apiBase as string | undefined)
+  // Backend origin MUST be an absolute URL (scheme + host).
+  // Never use public.apiBase here because on Vercel it's typically a relative path like "/api/bff".
+  const originRaw = (
+    (runtimeConfig.apiOrigin as string | undefined)
+    || process.env.NUXT_API_ORIGIN
+    || process.env.API_ORIGIN
     || process.env.API_BASE_URL
-    || process.env.NUXT_PUBLIC_API_BASE_URL
-    || "http://localhost:5010";
+    || "https://ecommerce-api-22o8.fly.dev"
+  ).trim();
+
+  const origin = originRaw.replace(/\/+$/, "");
+  // We proxy to the API under /api/
+  const base = origin + "/api/";
 
   // Incoming path after /api/bff/
   const url = getRequestURL(event);
@@ -70,7 +77,8 @@ export default defineEventHandler(async (event) => {
   }
 
   // Build backend URL
-  const target = new URL(rest.replace(/^\//, "") , base.endsWith("/") ? base : base + "/");
+  // Example: /api/bff/Auth/login  ->  {origin}/api/Auth/login
+  const target = new URL(rest.replace(/^\//, ""), base);
   // Keep query string
   target.search = url.search;
 
