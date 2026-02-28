@@ -29,6 +29,15 @@ public sealed class S3ObjectStorage : IObjectStorage
             cfg.RegionEndpoint = RegionEndpoint.GetBySystemName(_opt.Region);
         }
 
+        // If neither Region nor Endpoint is provided, the AWS SDK throws:
+        // "No RegionEndpoint or ServiceURL configured".
+        // Default to a region so non-storage endpoints can work even when
+        // object storage isn't configured yet.
+        if (cfg.RegionEndpoint is null && string.IsNullOrWhiteSpace(cfg.ServiceURL))
+        {
+            cfg.RegionEndpoint = RegionEndpoint.USEast1;
+        }
+
         _s3 = new AmazonS3Client(_opt.AccessKeyId, _opt.SecretAccessKey, cfg);
     }
 
