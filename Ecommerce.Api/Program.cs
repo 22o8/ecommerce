@@ -100,9 +100,25 @@ builder.Services.AddSingleton<Ecommerce.Api.Infrastructure.Storage.IObjectStorag
 {
     var opt = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>>().Value;
     var provider = (opt.Provider ?? "Local").Trim().ToLowerInvariant();
+
+    // ✅ Fail-safe: if S3 is selected but required config is missing, fall back to local storage
+    // instead of crashing requests (common on Fly when env vars aren't set yet).
     if (provider == "s3")
-        return new Ecommerce.Api.Infrastructure.Storage.S3ObjectStorage(sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>>());
-    return new Ecommerce.Api.Infrastructure.Storage.LocalObjectStorage(sp.GetRequiredService<IWebHostEnvironment>(), sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>>());
+    {
+        var hasEndpointOrRegion = !string.IsNullOrWhiteSpace(opt.Endpoint) || !string.IsNullOrWhiteSpace(opt.Region);
+        var hasKeys = !string.IsNullOrWhiteSpace(opt.AccessKeyId) && !string.IsNullOrWhiteSpace(opt.SecretAccessKey);
+        var hasBucket = !string.IsNullOrWhiteSpace(opt.Bucket);
+
+        if (hasEndpointOrRegion && hasKeys && hasBucket)
+            return new Ecommerce.Api.Infrastructure.Storage.S3ObjectStorage(
+                sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>>());
+
+        provider = "local";
+    }
+
+    return new Ecommerce.Api.Infrastructure.Storage.LocalObjectStorage(
+        sp.GetRequiredService<IWebHostEnvironment>(),
+        sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>>());
 });
 
 // ============================

@@ -228,9 +228,18 @@ public class AdminProductsController : ControllerBase
 
     [HttpPost("{id:guid}/images")]
     [RequestSizeLimit(30_000_000)]
-    public async Task<IActionResult> UploadImages([FromRoute] Guid id, [FromForm] List<IFormFile> files, [FromForm] string? alt = null)
+    public async Task<IActionResult> UploadImages([FromRoute] Guid id, [FromForm] List<IFormFile>? files, [FromForm] string? alt = null)
     {
-        if (files is null || files.Count == 0)
+        // Some clients send field name "images" instead of "files".
+        // To be resilient, fall back to reading any multipart files from the request.
+        files ??= new List<IFormFile>();
+        if (files.Count == 0 && Request.HasFormContentType)
+        {
+            foreach (var f in Request.Form.Files)
+                files.Add(f);
+        }
+
+        if (files.Count == 0)
             return BadRequest(new { message = "No files uploaded" });
 
         var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);

@@ -187,6 +187,9 @@ public class CheckoutController : ControllerBase
 	[HttpPost("cart/whatsapp")]
 	public async Task<IActionResult> CheckoutCartWhatsApp([FromBody] CheckoutCartRequest req)
 	{
+		if (req == null || req.Items == null || req.Items.Count == 0)
+			return BadRequest(new { message = "Cart is empty" });
+
 		if (!ValidateCheckoutSecret())
 			return Unauthorized(new { message = "Invalid checkout secret" });
 

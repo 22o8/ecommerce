@@ -191,12 +191,9 @@ const uploadNow = async () => {
     const fd = new FormData();
 
     // ✅ أهم نقطة: اسم الحقل لازم يطابق اللي بالباك
-    // جرّب واحد من هذني إذا ما يشتغل:
-    // fd.append('files', file)
-    // fd.append('images', file)
-    // fd.append('file', file) (لو ملف واحد)
+    // Backend يعتمد 'files' للرفع.
     for (const it of files.value) {
-      fd.append('images', it.file)
+      fd.append('files', it.file)
     }
 
     // إذا تحتاج تربط الرفع بمنتج

@@ -36,7 +36,7 @@ export function useAdminApi() {
     uploadProductImage: async <T>(productId: string, file: File, alt?: string) => {
       const fd = new FormData()
       // Swagger: field name "images" (array). نرسل ملف واحد ضمنها.
-      fd.append('images', file)
+      fd.append('files', file)
       if (alt) fd.append('alt', alt)
       return await api.postForm<T>(`/admin/products/${productId}/images`, fd)
     },
@@ -52,7 +52,7 @@ export function useAdminApi() {
         // reuse single-upload endpoint
         const r = await (api.postForm<T>(`/admin/products/${productId}/images`, (() => {
           const fd = new FormData()
-          fd.append('images', f)
+          fd.append('files', f)
           if (alt) fd.append('alt', alt)
           return fd
         })()))
@@ -70,7 +70,7 @@ export function useAdminApi() {
     listProductImages: <T>(productId: string) => api.get<T>(`/admin/products/${productId}/images`),
     addProductImage: async <T>(productId: string, file: File, alt?: string) => {
       const fd = new FormData()
-      fd.append('images', file)
+      fd.append('files', file)
       if (alt) fd.append('alt', alt)
       return await api.postForm<T>(`/admin/products/${productId}/images`, fd)
     },
