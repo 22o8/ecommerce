@@ -8,7 +8,9 @@ public sealed class ObjectStorageOptions
     // S3 / R2 settings
     public string? Bucket { get; set; }
     public string? Region { get; set; } // optional (R2 can ignore)
-    public string? Endpoint { get; set; } // e.g. https://<accountid>.r2.cloudflarestorage.com
+    public string? Endpoint { get; set; }
+    // دعم أسماء بيئة أقدم: ObjectStorage__ServiceUrl
+    public string? ServiceUrl { get; set; } // e.g. https://<accountid>.r2.cloudflarestorage.com
     public string? AccessKeyId { get; set; }
     public string? SecretAccessKey { get; set; }
 
