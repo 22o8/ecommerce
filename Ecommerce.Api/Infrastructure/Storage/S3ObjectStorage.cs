@@ -24,7 +24,11 @@ public sealed class S3ObjectStorage : IObjectStorage
 
         var cfg = new AmazonS3Config
         {
-            ForcePathStyle = true
+            ForcePathStyle = true,
+            // Cloudflare R2 (وأغلب S3-compatible) لا يدعم بعض أنماط الـ streaming/chunked
+            // التي يستخدمها AWS SDK افتراضياً مع التوقيع. تعطيلها يمنع خطأ:
+            // STREAMING-AWS4-HMAC-SHA256-PAYLOAD-TRAILER not implemented
+            UseChunkEncoding = false
         };
 
         var endpoint = !string.IsNullOrWhiteSpace(_opt.Endpoint) ? _opt.Endpoint : _opt.ServiceUrl;
@@ -57,19 +61,52 @@ public sealed class S3ObjectStorage : IObjectStorage
 
         var normalizedKey = NormalizeKey(key);
 
+        // مهم: حتى نتجنب aws-chunked/streaming signing
+        // لازم نرسل Content-Length. إذا الـ stream غير قابل للـ seek نعمل buffering.
+        Stream uploadStream = content;
+        MemoryStream? buffered = null;
+        if (content is null) throw new ArgumentNullException(nameof(content));
+
+        if (!content.CanSeek)
+        {
+            buffered = new MemoryStream();
+            await content.CopyToAsync(buffered, ct);
+            buffered.Position = 0;
+            uploadStream = buffered;
+        }
+        else
+        {
+            // تأكد البوزيشن بالبداية حتى لا يرفع ملف ناقص
+            if (content.Position != 0) content.Position = 0;
+        }
+
         var put = new PutObjectRequest
         {
             BucketName = _opt.Bucket,
             Key = normalizedKey,
-            InputStream = content,
+            InputStream = uploadStream,
             ContentType = string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType,
         };
+
+        // ضروري لتجنب chunked upload
+        if (uploadStream.CanSeek)
+            put.ContentLength = uploadStream.Length;
+
+        // تعزيز التوافق مع R2/S3-compatible
+        // (إجبار Content-Length + تعطيل chunked في config أعلاه)
 
         // PublicRead works on AWS S3; for R2 use bucket policy instead.
         // We keep it optional to avoid failures.
         try { put.CannedACL = S3CannedACL.PublicRead; } catch { /* ignore */ }
 
-        await _s3.PutObjectAsync(put, ct);
+        try
+        {
+            await _s3.PutObjectAsync(put, ct);
+        }
+        finally
+        {
+            buffered?.Dispose();
+        }
 
         var url = BuildPublicUrl(key);
         return new StoredObject(key, url);
