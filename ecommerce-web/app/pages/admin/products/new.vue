@@ -65,7 +65,7 @@
 
             <div>
               <label class="mb-1 block text-sm text-white/80">{{ t('admin.price') }}</label>
-              <UiInput v-model.number="form.priceUsd" type="number" min="0" step="0.01" />
+              <UiInput v-model.number="form.priceIqd" type="number" min="0" step="0.01" />
             </div>
 
             <div class="flex flex-wrap items-end gap-6">
@@ -159,12 +159,12 @@ const brands = ref<BrandItem[]>([])
 const loading = ref(false)
 
 // ✅ مفاتيح الفورم لازم تكون مطابقة لطلب الـ API (.NET)
-// UpsertProductRequest: title, slug, description, priceUsd, isPublished, brand
+// UpsertProductRequest: title, slug, description, priceIqd, isPublished, brand
 const form = reactive({
   title: '',
   slug: '',
   description: '',
-  priceUsd: 0,
+  priceIqd: 0,
   // slug الخاص بالبراند (نرسله للباك ضمن الحقل brand)
   brand: '',
   isPublished: true,
@@ -246,7 +246,7 @@ async function onCreate() {
       slug: form.slug,
       description: form.description,
       // تأكد أنه رقم (مو نص) حتى ما يرجع 400 من .NET
-      priceUsd: Number(form.priceUsd ?? 0),
+      priceIqd: Number(form.priceIqd ?? 0),
       // Backend validates brand by NAME; UI selects by slug.
       brand: match?.name || form.brand,
       isPublished: !!form.isPublished,

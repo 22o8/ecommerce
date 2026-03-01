@@ -17,4 +17,9 @@ public sealed class ObjectStorageOptions
     // Public base url used to build image URLs (CDN/custom domain recommended)
     // Example: https://cdn.example.com
     public string? PublicBaseUrl { get; set; }
+    // Optional prefix inside the bucket (e.g. "uploads").
+    // If you set PublicBaseUrl to include a path (like .../uploads), also set KeyPrefix="uploads"
+    // so stored keys match the generated public URLs.
+    public string? KeyPrefix { get; set; }
+
 }

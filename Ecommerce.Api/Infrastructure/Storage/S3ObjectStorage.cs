@@ -10,6 +10,14 @@ public sealed class S3ObjectStorage : IObjectStorage
     private readonly ObjectStorageOptions _opt;
     private readonly IAmazonS3 _s3;
 
+    private string NormalizeKey(string key)
+    {
+        key = (key ?? string.Empty).TrimStart('/');
+        var prefix = _opt.KeyPrefix?.Trim().Trim('/');
+        if (string.IsNullOrWhiteSpace(prefix)) return key;
+        return $"{prefix}/{key}";
+    }
+
     public S3ObjectStorage(IOptions<ObjectStorageOptions> opt)
     {
         _opt = opt.Value;
@@ -46,10 +54,12 @@ public sealed class S3ObjectStorage : IObjectStorage
         if (string.IsNullOrWhiteSpace(_opt.Bucket))
             throw new InvalidOperationException("Object storage bucket is not configured.");
 
+        var normalizedKey = NormalizeKey(key);
+
         var put = new PutObjectRequest
         {
             BucketName = _opt.Bucket,
-            Key = key,
+            Key = normalizedKey,
             InputStream = content,
             ContentType = string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType,
         };
@@ -67,11 +77,12 @@ public sealed class S3ObjectStorage : IObjectStorage
     public async Task DeleteAsync(string key, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(_opt.Bucket)) return;
-        await _s3.DeleteObjectAsync(_opt.Bucket, key, ct);
+        await _s3.DeleteObjectAsync(_opt.Bucket, NormalizeKey(key), ct);
     }
 
     private string BuildPublicUrl(string key)
     {
+        key = NormalizeKey(key);
         // Best practice: set PublicBaseUrl to your CDN/custom domain.
         if (!string.IsNullOrWhiteSpace(_opt.PublicBaseUrl))
             return _opt.PublicBaseUrl.TrimEnd('/') + "/" + key;

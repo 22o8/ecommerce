@@ -220,11 +220,11 @@ const images = ref<any[]>([])
 
 function resetForm() {
   if (!product.value) return
-  // backend (ASP.NET) returns camelCase: title, priceUsd, brand, isPublished, isFeatured
+  // backend (ASP.NET) returns camelCase: title, priceIqd, brand, isPublished, isFeatured
   form.name = product.value.title || product.value.name || ''
   form.slug = product.value.slug || ''
   form.description = product.value.description || ''
-  form.price = Number(product.value.priceUsd ?? product.value.price ?? 0)
+  form.price = Number(product.value.priceIqd ?? product.value.price ?? 0)
   // we store brand slug/name in the same field; API expects "brand"
   form.brandSlug = product.value.brand || product.value.brandSlug || ''
   // If API returns brand NAME, map it to slug so the dropdown selects correctly.
@@ -352,7 +352,7 @@ async function onSave() {
       title: form.name.trim(),
       slug: form.slug.trim(),
       description: form.description?.trim() || '',
-      priceUsd: Number(form.price),
+      priceIqd: Number(form.price),
       // Backend validates brand by NAME; UI selects by slug.
       brand: match?.name || form.brandSlug,
       isPublished: Boolean(form.isActive),
