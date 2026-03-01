@@ -183,7 +183,8 @@ public class CheckoutController : ControllerBase
 	// POST /api/checkout/cart/whatsapp
 	// Checkout عبر واتساب (بدون بوابة دفع): نسجل الطلب كـ مدفوع + نسجل Payment ناجح حتى يظهر بالإحصائيات
 	// ملاحظة أمنية: فعّل Checkout:Secret وأرسل X-Checkout-Secret من الـ BFF فقط.
-	[AllowAnonymous]
+	// مهم: لازم المستخدم يكون مسجل دخول حتى ما نخسر قيود FK على UserId.
+	[Authorize]
 	[HttpPost("cart/whatsapp")]
 	public async Task<IActionResult> CheckoutCartWhatsApp([FromBody] CheckoutCartRequest req)
 	{
@@ -192,6 +193,18 @@ public class CheckoutController : ControllerBase
 
 		if (!ValidateCheckoutSecret())
 			return Unauthorized(new { message = "Invalid checkout secret" });
+
+		var userId = TryGetUserId();
+		if (userId == null) return Unauthorized(new { message = "Unauthorized" });
+
+		// نفس منطق /cart: نظّف الكميات
+		req.Items = req.Items
+			.Where(i => i.ProductId != Guid.Empty)
+			.Select(i => new CheckoutCartItem { ProductId = i.ProductId, Quantity = Math.Max(1, i.Quantity) })
+			.ToList();
+
+		if (req.Items.Count == 0)
+			return BadRequest(new { message = "Cart is empty" });
 
 		var productIds = req.Items.Select(i => i.ProductId).Distinct().ToList();
 		var products = await _db.Products
@@ -205,7 +218,7 @@ public class CheckoutController : ControllerBase
 		var order = new Order
 		{
 			Id = Guid.NewGuid(),
-			UserId = Guid.Empty,
+			UserId = userId.Value,
 			Status = "Paid",
 			CreatedAt = DateTime.UtcNow,
 			Items = new List<OrderItem>(),
