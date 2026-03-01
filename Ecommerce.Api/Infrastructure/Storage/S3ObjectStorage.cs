@@ -30,6 +30,11 @@ public sealed class S3ObjectStorage : IObjectStorage
             // STREAMING-AWS4-HMAC-SHA256-PAYLOAD-TRAILER not implemented
         };
 
+        // بعض نسخ AWSSDK تحتوي خصائص مثل UseChunkEncoding / DisablePayloadSigning، وبعضها لا.
+        // حتى ما يصير فشل compile، نضبطها عبر Reflection إذا كانت موجودة.
+        TrySet(cfg, "UseChunkEncoding", false);
+        TrySet(cfg, "DisablePayloadSigning", true);
+
         var endpoint = !string.IsNullOrWhiteSpace(_opt.Endpoint) ? _opt.Endpoint : _opt.ServiceUrl;
         if (!string.IsNullOrWhiteSpace(endpoint))
         {
@@ -87,6 +92,10 @@ public sealed class S3ObjectStorage : IObjectStorage
             ContentType = string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType,
         };
 
+        // نفس الشي على مستوى الطلب، إذا كانت الخصائص متاحة نطفي chunking ونطفي توقيع الحمولة.
+        TrySet(put, "UseChunkEncoding", false);
+        TrySet(put, "DisablePayloadSigning", true);
+
         // ضروري لتجنب chunked upload
         if (uploadStream.CanSeek)
             // بعض إصدارات AWS SDK لا تحتوي PutObjectRequest.ContentLength؛ نستخدم Headers.ContentLength بدلاً عنه
@@ -116,6 +125,20 @@ public sealed class S3ObjectStorage : IObjectStorage
     {
         if (string.IsNullOrWhiteSpace(_opt.Bucket)) return;
         await _s3.DeleteObjectAsync(_opt.Bucket, NormalizeKey(key), ct);
+    }
+
+    private static void TrySet(object obj, string propName, object value)
+    {
+        try
+        {
+            var p = obj.GetType().GetProperty(propName);
+            if (p is null || !p.CanWrite) return;
+            p.SetValue(obj, value);
+        }
+        catch
+        {
+            // ignore
+        }
     }
 
     private string BuildPublicUrl(string key)
