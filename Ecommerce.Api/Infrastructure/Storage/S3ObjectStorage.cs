@@ -27,9 +27,10 @@ public sealed class S3ObjectStorage : IObjectStorage
             ForcePathStyle = true
         };
 
-        if (!string.IsNullOrWhiteSpace(_opt.Endpoint))
+        var endpoint = !string.IsNullOrWhiteSpace(_opt.Endpoint) ? _opt.Endpoint : _opt.ServiceUrl;
+        if (!string.IsNullOrWhiteSpace(endpoint))
         {
-            cfg.ServiceURL = _opt.Endpoint;
+            cfg.ServiceURL = endpoint;
         }
 
         if (!string.IsNullOrWhiteSpace(_opt.Region))
@@ -88,8 +89,9 @@ public sealed class S3ObjectStorage : IObjectStorage
             return _opt.PublicBaseUrl.TrimEnd('/') + "/" + key;
 
         // Fallback to endpoint/bucket-style URL (may not be public depending on provider).
-        if (!string.IsNullOrWhiteSpace(_opt.Endpoint))
-            return _opt.Endpoint.TrimEnd('/') + "/" + _opt.Bucket + "/" + key;
+        var ep = !string.IsNullOrWhiteSpace(_opt.Endpoint) ? _opt.Endpoint : _opt.ServiceUrl;
+        if (!string.IsNullOrWhiteSpace(ep))
+            return ep.TrimEnd('/') + "/" + _opt.Bucket + "/" + key;
 
         return key;
     }

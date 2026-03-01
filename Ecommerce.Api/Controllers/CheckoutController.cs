@@ -23,7 +23,7 @@ public class CheckoutController : ControllerBase
 
 	private bool ValidateCheckoutSecret()
 	{
-		var expected = _config["Checkout:Secret"];
+		var expected = _config["Checkout:Secret"] ?? _config["CHECKOUT_SECRET"] ?? Environment.GetEnvironmentVariable("CHECKOUT_SECRET");
 		if (string.IsNullOrWhiteSpace(expected)) return true;
 		var provided = Request.Headers["X-Checkout-Secret"].ToString();
 		return !string.IsNullOrWhiteSpace(provided) && provided == expected;

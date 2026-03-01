@@ -96,6 +96,35 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 
 // Object storage (images)
 builder.Services.Configure<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>(builder.Configuration.GetSection("ObjectStorage"));
+builder.Services.PostConfigure<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>(opt =>
+{
+    // دعم أسماء بيئة أقدم: ObjectStorage__ServiceUrl
+    if (string.IsNullOrWhiteSpace(opt.Endpoint) && !string.IsNullOrWhiteSpace(opt.ServiceUrl))
+        opt.Endpoint = opt.ServiceUrl;
+
+    // توحيد PublicBaseUrl + KeyPrefix:
+    // إذا PublicBaseUrl يحتوي path مثل: https://pub-xxx.r2.dev/uploads
+    // ولم يتم ضبط KeyPrefix -> نستخرجه تلقائياً ("uploads") ونحذف الـ path من PublicBaseUrl
+    if (!string.IsNullOrWhiteSpace(opt.PublicBaseUrl))
+    {
+        try
+        {
+            var uri = new Uri(opt.PublicBaseUrl);
+            var path = uri.AbsolutePath?.Trim('/');
+            if (!string.IsNullOrWhiteSpace(path) && string.IsNullOrWhiteSpace(opt.KeyPrefix))
+                opt.KeyPrefix = path;
+
+            // احتفظ فقط بالـ origin (scheme + host + port)
+            var origin = uri.GetLeftPart(UriPartial.Authority);
+            opt.PublicBaseUrl = origin;
+        }
+        catch
+        {
+            // ignore invalid urls
+        }
+    }
+});
+
 builder.Services.AddSingleton<Ecommerce.Api.Infrastructure.Storage.IObjectStorage>(sp =>
 {
     var opt = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Ecommerce.Api.Infrastructure.Storage.ObjectStorageOptions>>().Value;
@@ -105,7 +134,7 @@ builder.Services.AddSingleton<Ecommerce.Api.Infrastructure.Storage.IObjectStorag
     // instead of crashing requests (common on Fly when env vars aren't set yet).
     if (provider == "s3")
     {
-        var hasEndpointOrRegion = !string.IsNullOrWhiteSpace(opt.Endpoint) || !string.IsNullOrWhiteSpace(opt.Region);
+        var hasEndpointOrRegion = !string.IsNullOrWhiteSpace(opt.Endpoint) || !string.IsNullOrWhiteSpace(opt.ServiceUrl) || !string.IsNullOrWhiteSpace(opt.Region);
         var hasKeys = !string.IsNullOrWhiteSpace(opt.AccessKeyId) && !string.IsNullOrWhiteSpace(opt.SecretAccessKey);
         var hasBucket = !string.IsNullOrWhiteSpace(opt.Bucket);
 
