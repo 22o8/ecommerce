@@ -28,7 +28,6 @@ public sealed class S3ObjectStorage : IObjectStorage
             // Cloudflare R2 (وأغلب S3-compatible) لا يدعم بعض أنماط الـ streaming/chunked
             // التي يستخدمها AWS SDK افتراضياً مع التوقيع. تعطيلها يمنع خطأ:
             // STREAMING-AWS4-HMAC-SHA256-PAYLOAD-TRAILER not implemented
-            UseChunkEncoding = false
         };
 
         var endpoint = !string.IsNullOrWhiteSpace(_opt.Endpoint) ? _opt.Endpoint : _opt.ServiceUrl;
@@ -90,7 +89,8 @@ public sealed class S3ObjectStorage : IObjectStorage
 
         // ضروري لتجنب chunked upload
         if (uploadStream.CanSeek)
-            put.ContentLength = uploadStream.Length;
+            // بعض إصدارات AWS SDK لا تحتوي PutObjectRequest.ContentLength؛ نستخدم Headers.ContentLength بدلاً عنه
+            put.Headers.ContentLength = uploadStream.Length;
 
         // تعزيز التوافق مع R2/S3-compatible
         // (إجبار Content-Length + تعطيل chunked في config أعلاه)
