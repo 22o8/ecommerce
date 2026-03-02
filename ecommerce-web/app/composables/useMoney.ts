@@ -8,3 +8,9 @@ export function formatIqd(value: any) {
   const num = safe.toLocaleString('en-US')
   return `${num} د.ع`
 }
+
+// بعض الصفحات تتوقع composable باسم useMoney() بدل استدعاء formatIqd مباشرة.
+// نضيفه للتوافقية بدون ما نغيّر بقية الكود.
+export function useMoney() {
+  return { formatIqd }
+}
