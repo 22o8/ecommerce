@@ -86,17 +86,17 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
           </p>
 
           
-          <div class="mt-8 flex items-center justify-center gap-3">
+          <div class="mt-8 flex items-center justify-center gap-3 hero-cta">
             <NuxtLink
               to="/products"
-              class="btn-cta-animated inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
+              class="btn-cta-animated btn-cta-hero inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
             >
               {{ t('homeHero.products') }}
             </NuxtLink>
 
             <NuxtLink
               to="/brands"
-              class="btn-cta-animated btn-cta-outline inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
+              class="btn-cta-animated btn-cta-outline btn-cta-hero inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
             >
               {{ t('homeHero.categories') }}
             </NuxtLink>

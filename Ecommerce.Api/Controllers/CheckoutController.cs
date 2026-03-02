@@ -194,9 +194,8 @@ public class CheckoutController : ControllerBase
 		if (!ValidateCheckoutSecret())
 			return Unauthorized(new { message = "Invalid checkout secret" });
 
-		// لازم يكون المستخدم مسجل دخول ونقدر نستخرج الـ UserId من الـ JWT
-		if (!TryGetUserId(out var userId))
-			return Unauthorized(new { message = "Unauthorized" });
+		var userId = TryGetUserId();
+		if (userId == null) return Unauthorized(new { message = "Unauthorized" });
 
 		// نفس منطق /cart: نظّف الكميات
 		req.Items = req.Items
@@ -219,7 +218,7 @@ public class CheckoutController : ControllerBase
 		var order = new Order
 		{
 			Id = Guid.NewGuid(),
-			UserId = userId,
+			UserId = userId.Value,
 			Status = "Paid",
 			CreatedAt = DateTime.UtcNow,
 			Items = new List<OrderItem>(),

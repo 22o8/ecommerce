@@ -26,8 +26,8 @@
       </div>
     </div>
 
-    <!-- KPI Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <!-- KPI Cards (حسب الطلب: حذفنا بوكس الزبون + إجمالي الإيرادات) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4">
       <div class="kpi-card">
         <div class="kpi-icon">
           <svg viewBox="0 0 24 24" class="kpi-ic" fill="none" stroke="currentColor" stroke-width="2">
@@ -38,36 +38,6 @@
           <div class="kpi-label rtl-text">{{ $t('admin.cards.orders') }}</div>
           <div class="kpi-value keep-ltr">{{ stats.totalOrders }}</div>
           <div class="kpi-sub rtl-text">{{ $t('admin.lastUpdated') }}: {{ lastUpdatedLabel }}</div>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-icon">
-          <svg viewBox="0 0 24 24" class="kpi-ic" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M16 11c1.66 0 3-1.34 3-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3Z"/>
-            <path d="M8 11c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3Z"/>
-            <path d="M2 19c0-2.21 3.58-4 8-4"/>
-            <path d="M22 19c0-2.21-3.58-4-8-4"/>
-          </svg>
-        </div>
-        <div class="min-w-0">
-          <div class="kpi-label rtl-text">{{ $t('admin.cards.users') }}</div>
-          <div class="kpi-value keep-ltr">{{ stats.totalUsers }}</div>
-          <div class="kpi-sub rtl-text">{{ $t('admin.registeredUsers') }}</div>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-icon">
-          <svg viewBox="0 0 24 24" class="kpi-ic" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 1v22"/>
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
-          </svg>
-        </div>
-        <div class="min-w-0">
-          <div class="kpi-label rtl-text">{{ $t('admin.cards.revenue') }}</div>
-          <div class="kpi-value keep-ltr">{{ formatMoney(stats.totalRevenueIqd) }}</div>
-          <div class="kpi-sub rtl-text">{{ t('admin.revenueHint') }}</div>
         </div>
       </div>
 
@@ -382,6 +352,17 @@ loadAll()
   border: 1px solid rgb(var(--border));
   background: rgb(var(--surface));
   padding: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(16,24,40,.08);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  animation: fadeUp .42s ease both;
+}
+
+.admin-box:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 28px 74px rgba(16,24,40,.12);
+  border-color: color-mix(in srgb, rgb(var(--border)) 70%, rgb(var(--primary)) 30%);
 }
 .admin-muted{ color: rgb(var(--muted)); }
 .admin-error{
@@ -413,7 +394,32 @@ loadAll()
   display: flex;
   gap: 12px;
   align-items: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,.10);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(16,24,40,.10);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  animation: fadeUp .38s ease both;
+}
+
+.kpi-card::after{
+  content:"";
+  position:absolute;
+  top:-40%;
+  left:-70%;
+  width:55%;
+  height:190%;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.24) 18%, transparent 36%);
+  transform: rotate(12deg);
+  opacity: 0;
+  transition: opacity .18s ease, left .75s ease;
+  pointer-events:none;
+}
+.kpi-card:hover::after{ opacity: .9; left: 125%; }
+
+.kpi-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 28px 74px rgba(16,24,40,.14);
+  border-color: color-mix(in srgb, rgb(var(--border)) 70%, rgb(var(--primary)) 30%);
 }
 .kpi-icon{
   width: 44px; height: 44px;
@@ -536,6 +542,11 @@ loadAll()
   transform: translateY(-2px);
   border-color: rgba(124,58,237,.45);
   background: rgba(124,58,237,.10);
+}
+
+@keyframes fadeUp{
+  from{ opacity: 0; transform: translateY(10px); }
+  to{ opacity: 1; transform: translateY(0); }
 }
 
 </style>
