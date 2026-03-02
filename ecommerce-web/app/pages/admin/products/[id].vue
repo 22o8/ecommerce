@@ -81,7 +81,8 @@
             </label>
 
             <div class="flex flex-wrap gap-2">
-              <UiButton type="submit" :disabled="saving">{{ saving ? t('common.saving') : t('common.save') }}</UiButton>
+              <!-- ✅ ضمان عمل زر الحفظ على الموبايل (أحيانًا submit داخل مكوّنات مخصّصة ما يتفعّل) -->
+              <UiButton type="button" :disabled="saving" @click="onSave">{{ saving ? t('common.saving') : t('common.save') }}</UiButton>
               <UiButton variant="ghost" type="button" :disabled="saving" @click="resetForm">
                 {{ t('common.reset') }}
               </UiButton>

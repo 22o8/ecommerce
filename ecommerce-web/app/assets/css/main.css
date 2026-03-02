@@ -209,7 +209,18 @@ html.theme-dark .btn-cta-outline{ box-shadow: 0 12px 32px rgba(0,0,0,.22); }
   border-radius: 999px;
 }
 
-.home-cat-card{ position: relative; }
+.home-cat-card{
+  position: relative;
+  /* تثبيت لون/شكل بوكسات التصنيفات بكل الثيمات (حتى تبقى داخل بوكس واضح مثل قبل) */
+  background: rgba(var(--surface), .92) !important;
+  border: 1px solid rgba(var(--border), .90) !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,.07);
+}
+
+html.theme-light .home-cat-card{
+  background: rgba(var(--surface), .98) !important;
+  border-color: rgba(var(--primary), .14) !important;
+}
 .home-cat-card::before{
   content: "";
   position: absolute;
@@ -449,23 +460,24 @@ html.theme-dark .skeleton {
   border-radius: 1rem;
   padding: .55rem 1rem;
   font-weight: 700;
-  background: rgba(var(--surface), 0.9);
-  border: 1px solid rgba(var(--border), 1);
-  color: rgb(var(--text));
+  /* زر ثانوي بنفس روح الزر الأساسي (حتى "المنتجات" و"الأقسام" يطلعون متشابهين باللون) */
+  background: rgba(var(--primary), 0.10);
+  border: 1px solid rgba(var(--primary), 0.22);
+  color: rgb(var(--primary));
   transition: background .15s ease, transform .15s ease, opacity .15s ease;
 }
-.btn-secondary:hover{ background: rgba(var(--surface-2), 1); }
+.btn-secondary:hover{ background: rgba(var(--primary), 0.14); }
 .btn-secondary:active{ transform: translateY(1px); }
 .btn-secondary:disabled{ opacity: .5; cursor: not-allowed; }
 
 /* على الثيم الفاتح: خلي الأزرار أوضح وبارزة */
 html.theme-light .btn-secondary{
-  background: #fff;
-  border: 1px solid rgba(var(--border), 1);
+  background: rgba(var(--primary), 0.10);
+  border: 1px solid rgba(var(--primary), 0.22);
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
 }
 html.theme-light .btn-secondary:hover{
-  background: rgba(var(--surface), 0.9);
+  background: rgba(var(--primary), 0.14);
 }
 
 .btn-danger{
