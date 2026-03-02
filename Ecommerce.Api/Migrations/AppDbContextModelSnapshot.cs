@@ -61,6 +61,69 @@ namespace Ecommerce.Api.Migrations
                     b.ToTable("DownloadTokens");
                 });
 
+            modelBuilder.Entity("Ecommerce.Api.Domain.Entities.AppearanceConfig", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EnabledThemesJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("EnabledEffectsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AppearanceConfigs");
+                });
+
+            modelBuilder.Entity("Ecommerce.Api.Domain.Entities.AppearanceAd", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AppearanceConfigId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Subtitle")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("LinkUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppearanceConfigId", "SortOrder");
+
+                    b.ToTable("AppearanceAds");
+                });
+
             modelBuilder.Entity("Ecommerce.Api.Domain.Entities.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -645,6 +708,17 @@ namespace Ecommerce.Api.Migrations
                     b.Navigation("Service");
                 });
 
+            modelBuilder.Entity("Ecommerce.Api.Domain.Entities.AppearanceAd", b =>
+                {
+                    b.HasOne("Ecommerce.Api.Domain.Entities.AppearanceConfig", "AppearanceConfig")
+                        .WithMany("Ads")
+                        .HasForeignKey("AppearanceConfigId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AppearanceConfig");
+                });
+
             modelBuilder.Entity("Ecommerce.Api.Domain.Entities.Order", b =>
                 {
                     b.Navigation("Items");
@@ -669,6 +743,11 @@ namespace Ecommerce.Api.Migrations
             modelBuilder.Entity("Ecommerce.Api.Domain.Entities.ServiceRequest", b =>
                 {
                     b.Navigation("Answers");
+                });
+
+            modelBuilder.Entity("Ecommerce.Api.Domain.Entities.AppearanceConfig", b =>
+                {
+                    b.Navigation("Ads");
                 });
 #pragma warning restore 612, 618
         }

@@ -3,10 +3,12 @@ import { defineStore } from 'pinia'
 export type AppearanceAd = {
   id: string
   title?: string
+  subtitle?: string
   imageUrl: string
   linkUrl?: string
   isActive: boolean
   position?: 'hero' | 'popup'
+  sortOrder?: number
 }
 
 export type AppearanceState = {
@@ -38,13 +40,51 @@ export const useAppearanceStore = defineStore('appearance', {
     data: DEFAULT as AppearanceState,
   }),
   actions: {
+    mapFromApi(res: any) {
+      const enabledThemes: string[] = res?.enabledThemes ?? res?.EnabledThemes ?? res?.themes ?? []
+      const enabledEffects: string[] = res?.enabledEffects ?? res?.EnabledEffects ?? []
+      const ads: any[] = res?.ads ?? res?.Ads ?? []
+
+      const effects = { ...DEFAULT.effects }
+      for (const k of Object.keys(effects)) {
+        ;(effects as any)[k] = enabledEffects.includes(k)
+      }
+
+      this.data = {
+        ...DEFAULT,
+        version: res?.version ?? 1,
+        updatedAt: res?.updatedAt ?? res?.UpdatedAt,
+        themes: enabledThemes,
+        effects,
+        ads: ads.map((a: any) => ({
+          id: a.id ?? a.Id,
+          title: a.title ?? a.Title,
+          subtitle: a.subtitle ?? a.Subtitle,
+          imageUrl: a.imageUrl ?? a.ImageUrl,
+          linkUrl: a.linkUrl ?? a.LinkUrl,
+          isActive: a.isEnabled ?? a.IsEnabled ?? a.isActive ?? a.IsActive ?? true,
+          sortOrder: a.sortOrder ?? a.SortOrder ?? 0,
+        })),
+      }
+    },
+
     async refresh() {
       try {
-        const res = await $fetch<AppearanceState>('/api/appearance', { timeout: 8000 })
-        this.data = { ...DEFAULT, ...(res as any) }
+        const res = await $fetch<any>('/api/bff/appearance', { timeout: 8000 })
+        this.mapFromApi(res)
         this.loaded = true
       } catch {
         this.data = DEFAULT
+        this.loaded = true
+      }
+    },
+
+    async fetchAdminAppearance() {
+      try {
+        const res = await $fetch<any>('/api/bff/admin/appearance', { timeout: 8000 })
+        this.mapFromApi(res)
+        this.loaded = true
+      } catch {
         this.loaded = true
       }
     },

@@ -174,7 +174,7 @@ async function uploadAdImage(e: Event, ad: any) {
   fd.append('file', f)
 
   try {
-    const res: any = await $fetch('/api/admin/appearance-upload', {
+    const res: any = await $fetch('/api/bff/admin/appearance/upload', {
       method: 'POST',
       body: fd,
     })
@@ -197,7 +197,7 @@ async function save() {
       effects: draft.effects,
       ads: draft.ads,
     }
-    await $fetch('/api/admin/appearance', { method: 'POST', body: payload })
+    await $fetch('/api/bff/admin/appearance', { method: 'POST', body: payload })
     await store.refresh()
     notify('تم الحفظ')
   } catch {

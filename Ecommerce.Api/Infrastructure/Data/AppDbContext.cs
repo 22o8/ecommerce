@@ -29,6 +29,10 @@ public class AppDbContext : DbContext
     public DbSet<ProductView> ProductViews => Set<ProductView>();
     public DbSet<SiteVisit> SiteVisits => Set<SiteVisit>();
 
+    // ✅ Appearance / Ads
+    public DbSet<AppearanceConfig> AppearanceConfigs => Set<AppearanceConfig>();
+    public DbSet<AppearanceAd> AppearanceAds => Set<AppearanceAd>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -100,5 +104,25 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Brand>()
             .Property(b => b.LogoUrl)
             .HasMaxLength(400);
+
+        // =========================
+        // ✅ Appearance / Ads
+        // =========================
+        modelBuilder.Entity<AppearanceConfig>()
+            .HasMany(x => x.Ads)
+            .WithOne(x => x.AppearanceConfig)
+            .HasForeignKey(x => x.AppearanceConfigId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AppearanceAd>()
+            .HasIndex(x => new { x.AppearanceConfigId, x.SortOrder });
+
+        modelBuilder.Entity<AppearanceAd>()
+            .Property(x => x.ImageUrl)
+            .HasMaxLength(2000);
+
+        modelBuilder.Entity<AppearanceAd>()
+            .Property(x => x.LinkUrl)
+            .HasMaxLength(1000);
     }
 }
