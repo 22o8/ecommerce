@@ -102,6 +102,36 @@ body{
 .border-app{ border-color: rgb(var(--border)); }
 .ring-app{ box-shadow: 0 0 0 4px rgba(var(--ring), .18); }
 
+/* ============================
+   Seasonal themes (can stack)
+   ============================ */
+
+.theme-ramadan .bg-app{
+  background:
+    radial-gradient(800px 420px at 85% 15%, rgba(255, 196, 77, 0.16), transparent 60%),
+    radial-gradient(900px 500px at 10% 20%, rgba(24, 178, 255, 0.09), transparent 60%),
+    rgb(var(--bg));
+}
+
+.theme-eid .bg-app{
+  background:
+    radial-gradient(900px 520px at 20% 10%, rgba(168, 85, 247, 0.11), transparent 60%),
+    radial-gradient(820px 460px at 82% 30%, rgba(34, 197, 94, 0.08), transparent 60%),
+    rgb(var(--bg));
+}
+
+.theme-christmas .bg-app{
+  background:
+    radial-gradient(720px 420px at 50% 0%, rgba(255, 255, 255, 0.22), transparent 60%),
+    rgb(var(--bg));
+}
+
+.theme-valentines .bg-app{
+  background:
+    radial-gradient(900px 520px at 65% 0%, rgba(244, 63, 94, 0.11), transparent 60%),
+    rgb(var(--bg));
+}
+
 /* Subtle animated glow for primary CTA (works in both themes) */
 .btn-cta-animated{
   position: relative;
