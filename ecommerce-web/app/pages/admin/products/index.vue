@@ -221,6 +221,8 @@ const sort = ref<'newest' | 'oldest' | 'title' | 'priceHigh' | 'priceLow'>('newe
 
 const loading = ref(false)
 const pending = ref(false)
+// used to prevent double clicks on per-row actions (feature/publish toggles)
+const busyId = ref<string | null>(null)
 const error = ref('')
 const success = ref('')
 

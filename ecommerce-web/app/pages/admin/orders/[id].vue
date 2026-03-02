@@ -20,11 +20,11 @@
         </div>
         <div class="sub-box">
           <div class="label rtl-text">معلومات الحساب</div>
-          <div class="font-extrabold">{{ order.customer?.fullName || '—' }}</div>
-          <div class="text-sm text-muted keep-ltr">{{ order.customer?.email || '—' }}</div>
-          <div class="text-sm text-muted keep-ltr">{{ order.customer?.phone || order.customer?.phoneNumber || '—' }}</div>
+          <div class="font-extrabold">{{ accountDisplay.fullName }}</div>
+          <div class="text-sm text-muted keep-ltr">{{ accountDisplay.email }}</div>
+          <div class="text-sm text-muted keep-ltr">{{ accountDisplay.phone }}</div>
           <div class="mt-2 text-xs admin-muted rtl-text">معرّف الحساب</div>
-          <div class="text-sm keep-ltr">{{ order.customer?.id || order.customer?.userId || '—' }}</div>
+          <div class="text-sm keep-ltr">{{ accountDisplay.id }}</div>
         </div>
         <div class="sub-box">
           <div class="label rtl-text">التاريخ</div>
@@ -98,12 +98,43 @@ const loading = ref(true)
 const error = ref('')
 const order = ref<any | null>(null)
 
+const account = ref<any | null>(null)
+const accountLoading = ref(false)
+
+const accountDisplay = computed(() => {
+  const o: any = order.value
+  const a: any = account.value || o?.customer || o?.user || o?.account || o?.userInfo || o?.createdBy || null
+  const fullName = a?.fullName || a?.name || a?.displayName || a?.username || '—'
+  const email = a?.email || '—'
+  const phone = a?.phone || a?.phoneNumber || a?.mobile || a?.mobileNumber || '—'
+  const id = a?.id || a?.userId || o?.userId || o?.customerId || '—'
+  return { fullName, email, phone, id }
+})
+
 async function load() {
   loading.value = true
   error.value = ''
   try {
     const res: any = await api.get(`/admin/orders/${id.value}`)
     order.value = res || null
+
+    // try to resolve account info (some APIs only return userId)
+    const o: any = order.value
+    account.value = o?.customer || o?.user || o?.account || o?.userInfo || o?.createdBy || null
+
+    const needsUser = !account.value && (o?.userId || o?.customerId)
+    if (needsUser) {
+      const uid = String(o.userId || o.customerId)
+      try {
+        accountLoading.value = true
+        const u: any = await api.get(`/admin/users/${uid}`)
+        account.value = u || null
+      } catch {
+        // ignore (order details should still load)
+      } finally {
+        accountLoading.value = false
+      }
+    }
   } catch (e: any) {
     error.value = e?.data?.message || e?.message || t('failedLoad')
   } finally {

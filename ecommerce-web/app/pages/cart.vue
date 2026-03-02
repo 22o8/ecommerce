@@ -122,8 +122,16 @@ function whatsappText() {
 async function openWhatsApp() {
   error.value = ''
 
-  // ✅ سجّل الطلب كعملية ناجحة (مدفوع) حتى ينعكس مباشرة في لوحة التحكم/الإحصائيات
-  // (يبقى فتح واتساب دائماً حتى لو فشل الطلب)
+  const number = (config.public as any).whatsappNumber || (config.public as any).whatsappPhone || ''
+  const text = encodeURIComponent(whatsappText())
+  const url = number
+    ? `https://wa.me/${String(number).replace(/\D/g, '')}?text=${text}`
+    : `https://wa.me/?text=${text}`
+
+  // ✅ على الهاتف (خصوصاً iOS) window.open بعد await قد يُحجب، لذلك نفتح النافذة فوراً
+  // ثم نغيّر رابطها بعد إنشاء الطلب.
+  const preOpened = typeof window !== 'undefined' ? window.open('about:blank', '_blank') : null
+
   try {
     await $fetch('/api/bff/checkout/cart/whatsapp', {
       method: 'POST',
@@ -132,15 +140,17 @@ async function openWhatsApp() {
       }
     })
   } catch (e: any) {
+    // حتى لو فشل إنشاء الطلب، نخلي تحويل واتساب يشتغل
     console.error(e)
   }
 
-  const number = (config.public as any).whatsappNumber || (config.public as any).whatsappPhone || ''
-  const text = encodeURIComponent(whatsappText())
-  const url = number
-    ? `https://wa.me/${String(number).replace(/\D/g, '')}?text=${text}`
-    : `https://wa.me/?text=${text}`
-  window.open(url, '_blank')
+  if (preOpened && !preOpened.closed) {
+    preOpened.location.href = url
+    return
+  }
+
+  // fallback (إذا المتصفح منع فتح نافذة جديدة)
+  window.location.href = url
 }
 
 onMounted(() => profile.hydrateFromAuth(auth.token || ''))
