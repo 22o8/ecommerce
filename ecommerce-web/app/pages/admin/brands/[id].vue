@@ -13,11 +13,11 @@
 
       <div class="mt-6 grid gap-6 md:grid-cols-[220px,1fr]">
         <!-- Logo upload -->
-        <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+        <div class="rounded-2xl border border-[rgba(var(--border),0.9)] bg-[rgba(var(--surface),0.95)] p-4">
           <div class="font-extrabold rtl-text">{{ t('admin.logo') }}</div>
           <div class="admin-muted text-sm rtl-text mt-1">{{ t('admin.logoHint') }}</div>
 
-          <div class="mt-4 w-full aspect-square rounded-2xl overflow-hidden border border-white/10 bg-black/20 flex items-center justify-center">
+          <div class="mt-4 w-full aspect-square rounded-2xl overflow-hidden border border-[rgba(var(--border),0.9)] bg-[rgba(var(--surface-2),0.65)] flex items-center justify-center">
             <SmartImage v-if="logoPreview" :src="logoPreview" :alt="name" class="w-full h-full object-cover" />
             <div v-else class="text-xs admin-muted">LOGO</div>
           </div>
@@ -58,7 +58,7 @@
               <button class="admin-primary" type="submit" :disabled="pending">
                 {{ pending ? t('common.saving') : t('common.save') }}
               </button>
-              <button class="admin-btn-danger" type="button" :disabled="pending" @click="disable">
+              <button class="admin-danger" type="button" :disabled="pending" @click="disable">
                 {{ t('admin.disable') }}
               </button>
             </div>

@@ -190,12 +190,10 @@ html.theme-dark .btn-cta-outline{ box-shadow: 0 12px 32px rgba(0,0,0,.22); }
 
 /* Secondary CTA (نفس الهوية لكن أهدأ شوي حتى الأزرار تصير متشابهة) */
 .btn-cta-secondary{
-  --cta-bg: linear-gradient(135deg,
-    rgba(var(--primary), 0.92),
-    rgba(var(--primary), 0.78)
-  );
-  --cta-text: 255,255,255;
-  border: 1px solid rgba(var(--primary), 0.30);
+  /* زر (الأقسام): واضح وبنفس هوية (المنتجات) بدون ما يصير مبهرج */
+  --cta-bg: rgb(var(--surface));
+  --cta-text: rgb(var(--primary));
+  --cta-border: rgba(var(--primary), 0.35);
 }
 
 /* تحسين سكرول التصنيفات */
@@ -386,6 +384,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   font-weight: 700;
   background: rgb(var(--primary));
   color: rgb(var(--bg));
+}
+
+.admin-danger{
+  display:inline-flex; align-items:center; justify-content:center;
+  border-radius: 1.1rem;
+  padding: 10px 14px;
+  font-weight: 700;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: rgba(239, 68, 68, 0.95);
 }
 
 /* Featured badge (Admin Products) */

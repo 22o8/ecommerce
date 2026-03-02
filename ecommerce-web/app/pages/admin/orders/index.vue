@@ -25,16 +25,41 @@
 
       <div v-else class="admin-table">
         <div class="admin-tr admin-th">
-          <div>ID</div>
+          <div class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              class="h-4 w-4 accent-[rgb(var(--primary))]"
+              :checked="allSelected"
+              @change="toggleAll"
+            />
+            <span class="hidden md:inline">ID</span>
+          </div>
           <div class="rtl-text">{{ t('admin.status') }}</div>
           <div class="rtl-text">المنتج</div>
-          <div class="rtl-text">{{ t('admin.user') }}</div>
+          <div class="rtl-text hidden md:block">{{ t('admin.user') }}</div>
           <div class="rtl-text">التاريخ</div>
           <div class="text-right rtl-text">{{ t('common.actions') }}</div>
         </div>
 
+        <div v-if="selectedIds.length" class="px-4 py-3 flex items-center justify-between border-b border-[rgba(var(--border),0.9)]">
+          <div class="text-sm admin-muted rtl-text">
+            {{ (t('common.selected') || 'المحدد') }}: <span class="font-semibold">{{ selectedIds.length }}</span>
+          </div>
+          <button class="admin-danger" type="button" @click="removeSelected" :disabled="loading">
+            {{ t('common.delete') }}
+          </button>
+        </div>
+
         <div v-for="o in orders" :key="o.id" class="admin-tr">
-          <div class="font-mono text-xs break-all">{{ o.id }}</div>
+          <div class="flex items-start gap-2">
+            <input
+              type="checkbox"
+              class="mt-1 h-4 w-4 accent-[rgb(var(--primary))]"
+              :checked="selectedIds.includes(o.id)"
+              @change="toggleOne(o.id)"
+            />
+            <div class="font-mono text-xs break-all hidden md:block">{{ o.id }}</div>
+          </div>
 
           <div>
             <span :class="statusClass(o.status)">{{ o.status }}</span>
@@ -42,7 +67,7 @@
 
           <div class="truncate rtl-text">{{ o.primaryItemTitle || '-' }}</div>
 
-          <div class="truncate">{{ o.userName || o.userEmail || '-' }}</div>
+          <div class="truncate hidden md:block">{{ o.userName || o.userEmail || '-' }}</div>
 
           <div class="keep-ltr text-xs text-muted">{{ formatDate(o.createdAt) }}</div>
 
@@ -63,7 +88,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useApi } from '~/composables/useApi'
 import { useI18n } from '~/composables/useI18n'
 import { formatIqd } from '~/composables/useMoney'
@@ -85,6 +110,25 @@ const loading = ref(false)
 const error = ref('')
 const orders = ref<OrderRow[]>([])
 
+// تحديد متعدد (تحديد الكل + حذف جماعي)
+const selectedIds = ref<string[]>([])
+
+const allSelected = computed(() => {
+  const total = orders.value.length
+  return total > 0 && selectedIds.value.length === total
+})
+
+function toggleAll() {
+  selectedIds.value = allSelected.value ? [] : orders.value.map(o => o.id)
+}
+
+function toggleOne(id: string) {
+  const set = new Set(selectedIds.value)
+  if (set.has(id)) set.delete(id)
+  else set.add(id)
+  selectedIds.value = Array.from(set)
+}
+
 async function removeOrder(id: string) {
   const ok = confirm(t('admin.confirmDeleteOrder'))
   if (!ok) return
@@ -94,6 +138,26 @@ async function removeOrder(id: string) {
   try {
     await api.del(`/admin/orders/${id}`)
     orders.value = orders.value.filter(o => o.id !== id)
+  } catch (e: any) {
+    error.value = extractErr(e)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function removeSelected() {
+  if (!selectedIds.value.length) return
+  const ok = confirm((t('admin.confirmDeleteOrder') || t('common.confirmDelete') || 'Delete?') + ` (${selectedIds.value.length})`)
+  if (!ok) return
+
+  loading.value = true
+  error.value = ''
+  try {
+    for (const id of selectedIds.value) {
+      await api.del(`/admin/orders/${id}`)
+    }
+    orders.value = orders.value.filter(o => !selectedIds.value.includes(o.id))
+    selectedIds.value = []
   } catch (e: any) {
     error.value = extractErr(e)
   } finally {
@@ -132,6 +196,7 @@ async function fetchOrders() {
       createdAt: x.createdAt ? String(x.createdAt) : '',
       totalIqd: Number(x.totalIqd ?? 0),
     }))
+    selectedIds.value = []
   } catch (e: any) {
     error.value = extractErr(e)
   } finally {
@@ -186,11 +251,18 @@ fetchOrders()
 .admin-table{ display: grid; }
 .admin-tr{
   display: grid;
-  grid-template-columns: 2fr 1fr 1.2fr 1.2fr 1fr 1fr;
+  /* موبايل: اخفِ أعمدة غير مهمة */
+  grid-template-columns: 1.2fr 1fr 1.6fr 1fr 1fr;
   gap: 12px;
   padding: 12px 16px;
   border-top: 1px solid rgb(var(--border));
   align-items: center;
+}
+
+@media (min-width: 768px){
+  .admin-tr{
+    grid-template-columns: 2fr 1fr 1.2fr 1.2fr 1fr 1fr;
+  }
 }
 .admin-th{
   border-top: none;

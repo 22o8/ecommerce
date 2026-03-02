@@ -92,9 +92,10 @@
               @change.stop="toggleOne(p.id)"
             />
 
-            <div class="thumb">
+            <div class="thumb" aria-hidden="true">
+              <!-- إزالة صندوق IMG حتى يصير أنظف بصرياً -->
               <div class="thumb-inner">
-                <span class="text-xs admin-muted">IMG</span>
+                <span class="thumb-dot" />
               </div>
             </div>
 
@@ -425,4 +426,5 @@ onMounted(() => fetchList(1))
 
 .thumb{ width: 46px; height: 46px; border-radius: 14px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); flex: 0 0 auto; overflow: hidden; }
 .thumb-inner{ width: 100%; height: 100%; display:flex; align-items:center; justify-content:center; }
+.thumb-dot{ width: 10px; height: 10px; border-radius: 999px; background: rgba(var(--primary), 0.35); box-shadow: 0 0 0 6px rgba(var(--primary), 0.12); }
 </style>
