@@ -19,9 +19,12 @@
           <div class="font-extrabold">{{ order.status || '—' }}</div>
         </div>
         <div class="sub-box">
-          <div class="label rtl-text">الزبون</div>
+          <div class="label rtl-text">معلومات الحساب</div>
           <div class="font-extrabold">{{ order.customer?.fullName || '—' }}</div>
           <div class="text-sm text-muted keep-ltr">{{ order.customer?.email || '—' }}</div>
+          <div class="text-sm text-muted keep-ltr">{{ order.customer?.phone || order.customer?.phoneNumber || '—' }}</div>
+          <div class="mt-2 text-xs admin-muted rtl-text">معرّف الحساب</div>
+          <div class="text-sm keep-ltr">{{ order.customer?.id || order.customer?.userId || '—' }}</div>
         </div>
         <div class="sub-box">
           <div class="label rtl-text">التاريخ</div>

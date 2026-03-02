@@ -196,6 +196,10 @@ export function useApi() {
   const put = <T>(path: string, body?: any, query?: any, headers?: Record<string, string>) =>
     request<T>(path, { method: 'PUT', body, query, headers })
 
+  // PATCH helper (used for partial updates like toggling featured, etc.)
+  const patch = <T>(path: string, body?: any, query?: any, headers?: Record<string, string>) =>
+    request<T>(path, { method: 'PATCH', body, query, headers })
+
   const del = <T>(path: string, query?: any, headers?: Record<string, string>) =>
     request<T>(path, { method: 'DELETE', query, headers })
 
@@ -238,5 +242,5 @@ export function useApi() {
 
   const upload = postForm
 
-  return { request, get, post, put, del, postForm, upload, buildAssetUrl: buildAssetUrlLocal }
+  return { request, get, post, put, patch, del, postForm, upload, buildAssetUrl: buildAssetUrlLocal }
 }

@@ -27,7 +27,7 @@
     </div>
 
     <!-- KPI Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4">
       <div class="kpi-card">
         <div class="kpi-icon">
           <svg viewBox="0 0 24 24" class="kpi-ic" fill="none" stroke="currentColor" stroke-width="2">
@@ -41,35 +41,7 @@
         </div>
       </div>
 
-      <div class="kpi-card">
-        <div class="kpi-icon">
-          <svg viewBox="0 0 24 24" class="kpi-ic" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M16 11c1.66 0 3-1.34 3-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3Z"/>
-            <path d="M8 11c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3Z"/>
-            <path d="M2 19c0-2.21 3.58-4 8-4"/>
-            <path d="M22 19c0-2.21-3.58-4-8-4"/>
-          </svg>
-        </div>
-        <div class="min-w-0">
-          <div class="kpi-label rtl-text">{{ $t('admin.cards.users') }}</div>
-          <div class="kpi-value keep-ltr">{{ stats.totalUsers }}</div>
-          <div class="kpi-sub rtl-text">{{ $t('admin.registeredUsers') }}</div>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-icon">
-          <svg viewBox="0 0 24 24" class="kpi-ic" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 1v22"/>
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
-          </svg>
-        </div>
-        <div class="min-w-0">
-          <div class="kpi-label rtl-text">{{ $t('admin.cards.revenue') }}</div>
-          <div class="kpi-value keep-ltr">{{ formatMoney(stats.totalRevenueIqd) }}</div>
-          <div class="kpi-sub rtl-text">{{ t('admin.revenueHint') }}</div>
-        </div>
-      </div>
+      <!-- تم إخفاء (المستخدمين) و(الإيرادات) حسب الطلب -->
 
       <div class="kpi-card">
         <div class="kpi-icon">

@@ -75,9 +75,22 @@
           <div class="text-right rtl-text">{{ t('common.actions') }}</div>
         </div>
 
-        <div v-for="p in pagedItems" :key="p.id" class="admin-tr products-tr">
+        <div
+          v-for="p in pagedItems"
+          :key="p.id"
+          class="admin-tr products-tr cursor-pointer select-none"
+          role="button"
+          tabindex="0"
+          @click="goDetails(p.id)"
+          @keydown.enter="goDetails(p.id)"
+        >
           <div class="flex items-center gap-3 min-w-0">
-            <input type="checkbox" :checked="selectedIds.includes(p.id)" @change="toggleOne(p.id)" />
+            <input
+              type="checkbox"
+              :checked="selectedIds.includes(p.id)"
+              @click.stop
+              @change.stop="toggleOne(p.id)"
+            />
 
             <div class="thumb">
               <div class="thumb-inner">
@@ -91,7 +104,10 @@
             </div>
           </div>
 
-          <div class="font-bold">${{ Number(p.priceUsd || 0).toFixed(0) }}</div>
+          <div class="font-bold leading-tight">
+            {{ formatIqd(p.priceIqd || 0) }}
+            <div v-if="p.priceUsd" class="text-xs opacity-70">${{ Number(p.priceUsd).toFixed(0) }}</div>
+          </div>
 
           <div>
             <span :class="p.isPublished ? 'badge-on' : 'badge-off'">
@@ -104,12 +120,13 @@
             </span>
           </div>
 
-          <div class="actions-wrap">
+          <div class="actions-wrap" @click.stop>
             <NuxtLink
               class="admin-icon-btn"
               :to="`/admin/products/${p.id}`"
               :title="t('common.details')"
               :aria-label="t('common.details')"
+              @click.stop
             >
               <Icon name="mdi:information-outline" class="text-lg" />
               <span class="btn-label">{{ t('common.details') }}</span>
@@ -118,7 +135,7 @@
             <button
               class="admin-icon-btn"
               type="button"
-              @click="quickToggle(p)"
+              @click.stop="quickToggle(p)"
               :disabled="pending"
               :title="p.isPublished ? t('admin.unpublish') : t('admin.publish')"
               :aria-label="p.isPublished ? t('admin.unpublish') : t('admin.publish')"
@@ -130,7 +147,7 @@
             <button
               class="admin-icon-btn"
               type="button"
-              @click="toggleFeatured(p)"
+              @click.stop="toggleFeatured(p)"
               :disabled="pending"
               :title="p.isFeatured ? t('admin.unfeature') : t('admin.feature')"
               :aria-label="p.isFeatured ? t('admin.unfeature') : t('admin.feature')"
@@ -142,7 +159,7 @@
             <button
               class="admin-icon-btn danger"
               type="button"
-              @click="removeOne(p)"
+              @click.stop="removeOne(p)"
               :disabled="pending"
               :title="t('admin.delete')"
               :aria-label="t('admin.delete')"
@@ -175,18 +192,28 @@ definePageMeta({ layout: 'admin', middleware: ['admin'] })
 import { ref, computed, onMounted } from 'vue'
 import { useAdminApi } from '~/composables/useAdminApi'
 import { useI18n } from '~/composables/useI18n'
+import { useMoney } from '~/composables/useMoney'
 
 type Product = {
   id: string
   title: string
   slug: string
-  priceUsd: number
+  // Backend might expose different price fields; we normalize for display
+  priceIqd: number
+  priceUsd?: number
   isPublished: boolean
   isFeatured: boolean
 }
 
 const { t } = useI18n()
 const api = useAdminApi()
+const { formatIqd } = useMoney()
+
+const router = useRouter()
+
+function goDetails(id: string) {
+  router.push(`/admin/products/${id}`)
+}
 
 const q = ref('')
 const status = ref<'published' | 'draft' | ''>('')
@@ -255,10 +282,13 @@ async function fetchList(p = 1) {
     const list = Array.isArray(res) ? res : []
     items.value = applyClientFilters(list.map(x => ({
       id: String(x.id),
-      title: String(x.title || ''),
+      title: String(x.name ?? x.title ?? ''),
       slug: String(x.slug || ''),
-      priceUsd: Number(x.priceUsd || 0),
-      isPublished: !!x.isPublished,
+      // Display IQD (fallback to whatever field exists)
+      priceIqd: Number((x.priceIqd ?? x.price ?? x.priceUsd) ?? 0),
+      // Keep USD if backend provides it (optional)
+      priceUsd: x.priceUsd == null ? undefined : Number(x.priceUsd),
+      isPublished: !!(x.isActive ?? x.isPublished),
       isFeatured: !!x.isFeatured,
     })))
 

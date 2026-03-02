@@ -1,7 +1,7 @@
 <template>
   <button
     :type="props.type"
-    class="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition will-change-transform hover:-translate-y-0.5 hover:shadow-md hover:shadow-[rgb(var(--primary))]/10 active:translate-y-0 active:scale-[.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[rgb(var(--primary))]/35 disabled:opacity-60 disabled:pointer-events-none"
+    class="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition will-change-transform select-none touch-manipulation hover:-translate-y-0.5 hover:shadow-md hover:shadow-[rgb(var(--primary))]/10 active:translate-y-0 active:scale-[.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[rgb(var(--primary))]/35 disabled:opacity-60 disabled:pointer-events-none"
     :class="classes"
     :disabled="disabled || loading"
   >

@@ -113,7 +113,8 @@ html[data-theme="light"] .side-link {
 @media (max-width: 900px) {
   .admin-tr,
   .admin-tr.brands-tr,
-  .admin-tr.orders-tr {
+  .admin-tr.orders-tr,
+  .admin-tr.products-tr {
     grid-template-columns: 1fr;
     gap: 6px;
   }

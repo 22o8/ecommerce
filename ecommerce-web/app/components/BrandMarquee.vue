@@ -106,8 +106,8 @@ const loop = computed(() => [...clean.value, ...clean.value])
   width: max-content;
   padding: 6px var(--gap);
   will-change: transform;
-  transform: translate3d(-50%, 0, 0);
-  animation: marquee-ltr var(--speed) linear infinite;
+  transform: translate3d(0, 0, 0);
+  animation: marquee-loop var(--speed) linear infinite;
   backface-visibility: hidden;
 }
 
@@ -159,9 +159,9 @@ const loop = computed(() => [...clean.value, ...clean.value])
   white-space: nowrap;
 }
 
-@keyframes marquee-ltr{
-  from{ transform: translate3d(-50%, 0, 0); }
-  to{ transform: translate3d(0, 0, 0); }
+@keyframes marquee-loop{
+  from{ transform: translate3d(0, 0, 0); }
+  to{ transform: translate3d(-50%, 0, 0); }
 }
 
 /* احترام تفضيل تقليل الحركة */
