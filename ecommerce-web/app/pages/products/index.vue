@@ -34,8 +34,15 @@
       </div>
     </div>
 
-    <div v-else class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 page-stagger">
-      <ProductCard v-for="p in products.items" :key="p.id" :p="p" />
+    <div v-else class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <RevealOnScroll
+        v-for="(p, idx) in products.items"
+        :key="p.id"
+        :parity="(idx % 2) as 0 | 1"
+        :delay="35 * (idx % 8)"
+      >
+        <ProductCard :p="p" />
+      </RevealOnScroll>
     </div>
 
     <div v-if="!products.loading && products.items.length === 0" class="mt-10 card-soft p-10 text-center text-muted rtl-text">

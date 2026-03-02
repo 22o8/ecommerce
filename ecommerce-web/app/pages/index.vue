@@ -86,17 +86,17 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
           </p>
 
           
-          <div class="mt-8 flex items-center justify-center gap-3 hero-cta">
+          <div class="mt-8 flex items-center justify-center gap-3">
             <NuxtLink
               to="/products"
-              class="btn-cta-animated btn-cta-hero inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
+              class="btn-cta-animated inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
             >
               {{ t('homeHero.products') }}
             </NuxtLink>
 
             <NuxtLink
               to="/brands"
-              class="btn-cta-animated btn-cta-outline btn-cta-hero inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
+              class="btn-cta-animated btn-cta-outline inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
             >
               {{ t('homeHero.categories') }}
             </NuxtLink>
@@ -162,28 +162,37 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
       </div>
 
       <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <NuxtLink
-          v-for="c in categoryCards"
+        <RevealOnScroll
+          v-for="(c, idx) in categoryCards"
           :key="c.key"
-          :to="`/products?q=${encodeURIComponent(categoryQuery(c))}`"
-          class="group relative overflow-hidden rounded-2xl border border-app bg-surface-2 p-4 backdrop-blur transition hover:-translate-y-0.5 hover:bg-surface"
+          :delay="60 * idx"
+          :parity="(idx % 2) as 0 | 1"
+          :delay="50 * idx"
         >
-          <div class="flex items-center gap-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-surface text-lg">
-              {{ c.icon }}
-            </div>
-            <div class="min-w-0">
-              <div class="truncate text-sm font-extrabold text-[rgb(var(--text))]">
-                {{ t(c.labelKey) }}
+          <NuxtLink
+            :to="`/products?q=${encodeURIComponent(categoryQuery(c))}`"
+            class="group relative overflow-hidden rounded-2xl border border-app bg-surface-2 p-4 backdrop-blur transition will-change-transform hover:-translate-y-0.5 hover:bg-surface hover:shadow-lg hover:shadow-[rgb(var(--primary))]/10"
+          >
+            <div class="flex items-center gap-3">
+              <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-surface text-lg transition group-hover:scale-105">
+                {{ c.icon }}
               </div>
-              <div class="mt-0.5 truncate text-xs text-[rgb(var(--muted))]">
-                {{ t('home.tapToExplore') }}
+              <div class="min-w-0">
+                <div class="truncate text-sm font-extrabold text-[rgb(var(--text))]">
+                  {{ t(c.labelKey) }}
+                </div>
+                <div class="mt-0.5 truncate text-xs text-[rgb(var(--muted))]">
+                  {{ t('home.tapToExplore') }}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-gradient-to-br from-[rgb(var(--primary))]/20 to-transparent opacity-0 blur-2xl transition group-hover:opacity-100"></div>
-        </NuxtLink>
+            <div class="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-gradient-to-br from-[rgb(var(--primary))]/25 to-transparent opacity-0 blur-2xl transition group-hover:opacity-100"></div>
+            <div class="pointer-events-none absolute inset-0 opacity-0 transition group-hover:opacity-100">
+              <div class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[rgb(var(--primary))]/50 to-transparent"></div>
+            </div>
+          </NuxtLink>
+        </RevealOnScroll>
       </div>
     </section>
   </div>

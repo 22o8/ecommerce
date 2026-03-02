@@ -33,12 +33,16 @@
       </div>
 
       <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <NuxtLink
-          v-for="b in filtered"
+        <RevealOnScroll
+          v-for="(b, idx) in filtered"
           :key="b.id || b.slug"
-          :to="`/brands/${b.slug}`"
-          class="group card-soft glass-panel glow-border rounded-2xl p-4 hover:-translate-y-0.5 transition duration-300 hover:shadow-lg"
+          :parity="(idx % 2) as 0 | 1"
+          :delay="30 * (idx % 10)"
         >
+          <NuxtLink
+            :to="`/brands/${b.slug}`"
+            class="group card-soft glass-panel glow-border rounded-2xl p-4 hover:-translate-y-0.5 transition duration-300 will-change-transform hover:shadow-xl hover:shadow-[rgb(var(--primary))]/10"
+          >
           <div class="flex items-start gap-3">
             <div
               class="w-14 h-14 rounded-2xl border border-app bg-surface-2 overflow-hidden grid place-items-center flex-shrink-0"
@@ -47,7 +51,7 @@
                 v-if="b.logoUrl"
                 :src="buildAssetUrl(b.logoUrl)"
                 :alt="b.name"
-                class="w-full h-full object-cover"
+                class="w-full h-full object-cover transition duration-500 group-hover:scale-110"
               />
               <div v-else class="text-xs text-muted">Logo</div>
             </div>
@@ -59,7 +63,8 @@
               </div>
             </div>
           </div>
-        </NuxtLink>
+          </NuxtLink>
+        </RevealOnScroll>
       </div>
     </div>
   </div>

@@ -3,7 +3,7 @@
   <div
     role="button"
     tabindex="0"
-    class="group card-soft overflow-hidden transition duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+    class="group relative card-soft overflow-hidden transition duration-300 will-change-transform hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[rgb(var(--primary))]/10"
     @click="openPreview"
     @keydown.enter.prevent="openPreview"
     @keydown.space.prevent="openPreview"
@@ -15,7 +15,7 @@
           :alt="displayName"
           fit="cover"
           wrapper-class="w-full h-full"
-          img-class="w-full h-full object-cover"
+          img-class="w-full h-full object-cover transition duration-500 group-hover:scale-110"
         />
 
         <div class="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition">
@@ -89,7 +89,8 @@
         </div>
       </div>
     </div>
-  </div>
+    <div class="pointer-events-none absolute inset-x-6 -bottom-px h-px bg-gradient-to-r from-transparent via-[rgb(var(--primary))]/55 to-transparent opacity-0 transition group-hover:opacity-100"></div>
+</div>
 </template>
 
 <script setup lang="ts">

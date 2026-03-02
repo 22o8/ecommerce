@@ -4,14 +4,21 @@
     class="reveal"
     :class="{ 'reveal--in': inView }"
     :data-parity="parity"
+    :style="style"
   >
     <slot />
   </div>
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ parity?: 0 | 1 }>()
+// Nuxt auto-imports `ref`, `computed`, `onMounted`.
+const props = defineProps<{ parity?: 0 | 1; delay?: number }>()
+
 const parity = computed(() => (props.parity ?? 0) as 0 | 1)
+const style = computed(() => {
+  const d = Number(props.delay ?? 0)
+  return d > 0 ? { transitionDelay: `${d}ms` } : undefined
+})
 
 const el = ref<HTMLElement | null>(null)
 const inView = ref(false)
