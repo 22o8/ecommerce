@@ -66,7 +66,7 @@ const loop = computed(() => [...clean.value, ...clean.value])
             :to="`/brands/${b.slug}`"
             class="marquee__item"
           >
-            <div class="marquee__card">
+            <div class="marquee__card brand-chip">
               <div class="marquee__logo">
                 <SmartImage
                   v-if="b.logoUrl"
@@ -96,12 +96,19 @@ const loop = computed(() => [...clean.value, ...clean.value])
   position: relative;
 }
 
+/*
+  حركة لا نهائية بدون "نقطة نهاية".
+  لأننا نكرر العناصر مرتين، حالة البداية والنهاية تكون متطابقة بصرياً.
+*/
 .marquee__track{
   display: flex;
   gap: var(--gap);
   width: max-content;
   padding: 6px var(--gap);
-  animation: marquee var(--speed) linear infinite;
+  will-change: transform;
+  transform: translate3d(-50%, 0, 0);
+  animation: marquee-ltr var(--speed) linear infinite;
+  backface-visibility: hidden;
 }
 
 .marquee__item{ text-decoration:none; }
@@ -119,6 +126,26 @@ const loop = computed(() => [...clean.value, ...clean.value])
   border: 1px solid rgb(var(--border));
   background: rgb(var(--surface-1));
   box-shadow: var(--shadow-card);
+  transition: transform 160ms ease, box-shadow 220ms ease, border-color 220ms ease, background 220ms ease;
+}
+
+/* لايت: نخليها أقرب لستايل الدارك (كونتراست + بريق خفيف) */
+:global(html.theme-light) .brand-chip{
+  background: linear-gradient(180deg,
+    rgba(var(--surface-1), 0.96),
+    rgba(var(--surface-2), 0.78)
+  );
+  border-color: rgba(var(--border), 0.95);
+  box-shadow: 0 16px 50px rgba(0,0,0,.08);
+}
+
+:global(html.theme-dark) .brand-chip{
+  background: linear-gradient(180deg,
+    rgba(var(--surface-1), 0.96),
+    rgba(var(--surface-2), 0.72)
+  );
+  border-color: rgba(var(--border), 0.85);
+  box-shadow: 0 18px 60px rgba(0,0,0,.22);
 }
 
 .marquee__card:hover{
@@ -132,9 +159,9 @@ const loop = computed(() => [...clean.value, ...clean.value])
   white-space: nowrap;
 }
 
-@keyframes marquee{
-  from{ transform: translateX(-50%); }
-  to{ transform: translateX(0); }
+@keyframes marquee-ltr{
+  from{ transform: translate3d(-50%, 0, 0); }
+  to{ transform: translate3d(0, 0, 0); }
 }
 
 /* احترام تفضيل تقليل الحركة */

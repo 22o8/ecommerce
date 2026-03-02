@@ -3,7 +3,7 @@
   <component
     :is="safeTo ? 'NuxtLink' : 'div'"
     :to="safeTo ? `/brands/${b?.slug}` : undefined"
-    class="group relative block rounded-2xl border border-app bg-surface-2 hover:bg-surface transition overflow-hidden will-change-transform hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[rgb(var(--primary))]/10"
+    class="group relative block rounded-2xl border border-app bg-surface/70 hover:bg-surface-2 transition overflow-hidden will-change-transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-[rgb(var(--primary))]/14"
   >
     <div class="p-4 flex gap-4 items-center">
       <div

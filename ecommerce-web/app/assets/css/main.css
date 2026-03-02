@@ -188,6 +188,43 @@ html.theme-dark .btn-cta-outline{
 }
 html.theme-dark .btn-cta-outline{ box-shadow: 0 12px 32px rgba(0,0,0,.22); }
 
+/* Secondary CTA (نفس الهوية لكن أهدأ شوي حتى الأزرار تصير متشابهة) */
+.btn-cta-secondary{
+  --cta-bg: linear-gradient(135deg,
+    rgba(var(--primary), 0.92),
+    rgba(var(--primary), 0.78)
+  );
+  --cta-text: 255,255,255;
+  border: 1px solid rgba(var(--primary), 0.30);
+}
+
+/* تحسين سكرول التصنيفات */
+.home-cats-scroll{
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.home-cats-scroll::-webkit-scrollbar{ height: 10px; }
+.home-cats-scroll::-webkit-scrollbar-thumb{
+  background: rgba(var(--border), 0.85);
+  border-radius: 999px;
+}
+
+.home-cat-card{ position: relative; }
+.home-cat-card::before{
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 1rem;
+  background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(var(--primary), 0.18),
+    transparent 45%
+  );
+  opacity: 0;
+  transition: opacity 220ms ease;
+  pointer-events: none;
+}
+.home-cat-card:hover::before{ opacity: 1; }
+
 /* ---------------------- */
 /* Reveal on scroll (Home) */
 /* ---------------------- */

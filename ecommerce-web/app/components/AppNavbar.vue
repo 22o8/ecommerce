@@ -7,8 +7,9 @@
             <Icon name="mdi:shopping-outline" class="text-xl animate-floaty" />
           </div>
           <div class="leading-tight min-w-0">
-            <div class="font-extrabold tracking-wide text-sm sm:text-base truncate">ECOMMERCE</div>
-            <div class="hidden md:block text-xs text-muted -mt-0.5 rtl-text truncate">{{ t('tagline') }}</div>
+            <!-- خلّ الاسم يبين أوضح باللايت بدون ما ينقص بسرعة -->
+            <div class="font-extrabold tracking-wide text-sm sm:text-base max-w-[92px] sm:max-w-[120px] md:max-w-none truncate md:overflow-visible md:text-clip">ECOMMERCE</div>
+            <div class="hidden md:block text-xs text-muted -mt-0.5 rtl-text">{{ t('tagline') }}</div>
           </div>
         </NuxtLink>
 

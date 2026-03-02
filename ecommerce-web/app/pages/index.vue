@@ -94,12 +94,13 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
               {{ t('homeHero.products') }}
             </NuxtLink>
 
-            <NuxtLink
-              to="/brands"
-              class="btn-cta-animated btn-cta-outline inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
+            <!-- نفس لون/هوية زر المنتجات (باللايت والدراك) -->
+            <a
+              href="#categories"
+              class="btn-cta-animated btn-cta-secondary inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
             >
               {{ t('homeHero.categories') }}
-            </NuxtLink>
+            </a>
           </div>
 
         </div>
@@ -145,7 +146,7 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
     </section>
 
     <!-- Spotlight categories -->
-    <section class="mx-auto max-w-6xl px-4 pb-24">
+    <section id="categories" class="mx-auto max-w-6xl px-4 pb-24 scroll-mt-24">
       <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">
@@ -170,7 +171,7 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
         >
           <NuxtLink
             :to="`/products?q=${encodeURIComponent(categoryQuery(c))}`"
-            class="group relative overflow-hidden rounded-2xl border border-app bg-surface-2 p-4 backdrop-blur transition will-change-transform hover:-translate-y-0.5 hover:bg-surface hover:shadow-lg hover:shadow-[rgb(var(--primary))]/10"
+            class="group relative overflow-hidden rounded-2xl border border-app bg-surface/70 p-4 backdrop-blur transition will-change-transform hover:-translate-y-0.5 hover:bg-surface-2 hover:shadow-lg hover:shadow-[rgb(var(--primary))]/12 home-cat-card"
           >
             <div class="flex items-center gap-3">
               <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-surface text-lg transition group-hover:scale-105">

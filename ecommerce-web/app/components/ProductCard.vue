@@ -3,7 +3,7 @@
   <div
     role="button"
     tabindex="0"
-    class="group relative card-soft overflow-hidden transition duration-300 will-change-transform hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[rgb(var(--primary))]/10"
+    class="group relative card-soft overflow-hidden transition duration-300 will-change-transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-[rgb(var(--primary))]/18"
     @click="openPreview"
     @keydown.enter.prevent="openPreview"
     @keydown.space.prevent="openPreview"
