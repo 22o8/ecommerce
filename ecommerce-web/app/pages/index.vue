@@ -165,7 +165,6 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
         <RevealOnScroll
           v-for="(c, idx) in categoryCards"
           :key="c.key"
-          :delay="60 * idx"
           :parity="(idx % 2) as 0 | 1"
           :delay="50 * idx"
         >
