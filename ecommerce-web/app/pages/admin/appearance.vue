@@ -16,12 +16,12 @@
 
     <div class="grid gap-6 lg:grid-cols-2">
       <!-- Themes -->
-      <div class="rounded-3xl border border-zinc-200/70 dark:border-white/10 bg-white/70 dark:bg-zinc-950/60 backdrop-blur p-5">
+      <div class="rounded-3xl border border-zinc-200/70 dark:border-white/10 bg-white dark:bg-zinc-950/60 p-5">
         <h2 class="font-bold text-zinc-900 dark:text-zinc-100">الثيمات</h2>
         <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">تقدر تفعل أكثر من ثيم بنفس الوقت.</p>
 
         <div class="mt-4 grid sm:grid-cols-2 gap-3">
-          <label v-for="t in themeOptions" :key="t.key" class="group cursor-pointer rounded-2xl p-4 border border-zinc-200/70 dark:border-white/10 hover:shadow-md transition">
+          <label v-for="t in themeOptions" :key="t.key" class="group cursor-pointer rounded-2xl p-4 border border-zinc-200/70 dark:border-white/10 bg-zinc-50/70 dark:bg-white/5 hover:shadow-md transition">
             <div class="flex items-center gap-3">
               <input type="checkbox" class="h-5 w-5" v-model="draft.themes" :value="t.key" />
               <div>
@@ -34,12 +34,12 @@
       </div>
 
       <!-- Effects -->
-      <div class="rounded-3xl border border-zinc-200/70 dark:border-white/10 bg-white/70 dark:bg-zinc-950/60 backdrop-blur p-5">
+      <div class="rounded-3xl border border-zinc-200/70 dark:border-white/10 bg-white dark:bg-zinc-950/60 p-5">
         <h2 class="font-bold text-zinc-900 dark:text-zinc-100">تأثيرات الخلفية</h2>
         <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">تقدر تفعل أكثر من تأثير.</p>
 
         <div class="mt-4 grid sm:grid-cols-2 gap-3">
-          <label v-for="e in effectOptions" :key="e.key" class="cursor-pointer rounded-2xl p-4 border border-zinc-200/70 dark:border-white/10 hover:shadow-md transition">
+          <label v-for="e in effectOptions" :key="e.key" class="cursor-pointer rounded-2xl p-4 border border-zinc-200/70 dark:border-white/10 bg-zinc-50/70 dark:bg-white/5 hover:shadow-md transition">
             <div class="flex items-center gap-3">
               <input type="checkbox" class="h-5 w-5" v-model="draft.effects[e.key]" />
               <div>
@@ -53,7 +53,7 @@
     </div>
 
     <!-- Ads -->
-    <div class="rounded-3xl border border-zinc-200/70 dark:border-white/10 bg-white/70 dark:bg-zinc-950/60 backdrop-blur p-5">
+    <div class="rounded-3xl border border-zinc-200/70 dark:border-white/10 bg-white dark:bg-zinc-950/60 p-5">
       <div class="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h2 class="font-bold text-zinc-900 dark:text-zinc-100">الإعلانات</h2>
@@ -63,7 +63,7 @@
       </div>
 
       <div class="mt-4 grid gap-4">
-        <div v-for="(ad, idx) in draft.ads" :key="ad.id" class="rounded-3xl border border-zinc-200/70 dark:border-white/10 p-4">
+        <div v-for="(ad, idx) in draft.ads" :key="ad.id" class="rounded-3xl border border-zinc-200/70 dark:border-white/10 bg-zinc-50/70 dark:bg-white/5 p-4">
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-center gap-3">
               <input type="checkbox" class="h-5 w-5 mt-1" v-model="ad.isActive" />
@@ -141,7 +141,15 @@ const effectOptions = [
 type Draft = {
   themes: string[]
   effects: Record<string, boolean>
-  ads: any[]
+  ads: Array<{
+    id: string
+    title: string
+    subtitle?: string | null
+    imageUrl: string
+    linkUrl?: string | null
+    sortOrder?: number
+    isActive: boolean
+  }>
 }
 
 const draft = reactive<Draft>({
@@ -154,10 +162,11 @@ function addAd() {
   draft.ads.unshift({
     id: crypto.randomUUID(),
     title: '',
+    subtitle: null,
     imageUrl: '',
-    linkUrl: '',
+    linkUrl: null,
+    sortOrder: 0,
     isActive: true,
-    position: 'popup',
   })
 }
 
@@ -192,11 +201,27 @@ async function uploadAdImage(e: Event, ad: any) {
 async function save() {
   saving.value = true
   try {
+    const enabledThemes = draft.themes
+    const enabledEffects = Object.entries(draft.effects)
+      .filter(([, v]) => !!v)
+      .map(([k]) => k)
+
+    const ads = draft.ads.map((a, idx) => ({
+      title: a.title?.trim() || 'Ad',
+      subtitle: (a.subtitle ?? null) ? String(a.subtitle).trim() : null,
+      imageUrl: a.imageUrl?.trim() || '',
+      linkUrl: (a.linkUrl ?? null) ? String(a.linkUrl).trim() : null,
+      sortOrder: Number.isFinite(a.sortOrder as any) ? Number(a.sortOrder) : idx,
+      isEnabled: !!a.isActive,
+    }))
+
     const payload = {
-      themes: draft.themes,
-      effects: draft.effects,
-      ads: draft.ads,
+      isActive: true,
+      enabledThemes,
+      enabledEffects,
+      ads,
     }
+
     await $fetch('/api/bff/admin/appearance', { method: 'POST', body: payload })
     await store.refresh()
     notify('تم الحفظ')
