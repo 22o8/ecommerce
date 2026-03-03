@@ -1,5 +1,5 @@
-using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using System.Text.Json;
 
 #nullable disable
 
@@ -9,8 +9,11 @@ namespace Ecommerce.Api.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // If the columns were created as text in older migrations, convert them to jsonb.
-            migrationBuilder.AlterColumn<string>(
+            // IMPORTANT:
+            // These columns are stored as jsonb in Postgres and are mapped as JsonDocument in the entity.
+            // If a migration uses string as CLR type, EF will send text parameters and Postgres will throw:
+            // "column ... is of type jsonb but expression is of type text".
+            migrationBuilder.AlterColumn<JsonDocument>(
                 name: "EnabledEffectsJson",
                 table: "AppearanceConfigs",
                 type: "jsonb",
@@ -18,7 +21,7 @@ namespace Ecommerce.Api.Migrations
                 oldClrType: typeof(string),
                 oldType: "text");
 
-            migrationBuilder.AlterColumn<string>(
+            migrationBuilder.AlterColumn<JsonDocument>(
                 name: "EnabledThemesJson",
                 table: "AppearanceConfigs",
                 type: "jsonb",
@@ -34,7 +37,7 @@ namespace Ecommerce.Api.Migrations
                 table: "AppearanceConfigs",
                 type: "text",
                 nullable: false,
-                oldClrType: typeof(string),
+                oldClrType: typeof(JsonDocument),
                 oldType: "jsonb");
 
             migrationBuilder.AlterColumn<string>(
@@ -42,7 +45,7 @@ namespace Ecommerce.Api.Migrations
                 table: "AppearanceConfigs",
                 type: "text",
                 nullable: false,
-                oldClrType: typeof(string),
+                oldClrType: typeof(JsonDocument),
                 oldType: "jsonb");
         }
     }

@@ -108,16 +108,13 @@ public class AppDbContext : DbContext
         // =========================
         // ✅ Appearance / Ads
         // =========================
-        // نخزن JSON كنص لتجنب مشاكل cast بين EF/Npgsql عند الكتابة.
         modelBuilder.Entity<AppearanceConfig>()
             .Property(x => x.EnabledThemesJson)
-            .HasColumnType("text")
-            .IsRequired();
+            .HasColumnType("jsonb");
 
         modelBuilder.Entity<AppearanceConfig>()
             .Property(x => x.EnabledEffectsJson)
-            .HasColumnType("text")
-            .IsRequired();
+            .HasColumnType("jsonb");
 
         modelBuilder.Entity<AppearanceConfig>()
             .HasMany(x => x.Ads)
