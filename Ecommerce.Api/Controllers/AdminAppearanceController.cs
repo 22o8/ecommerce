@@ -83,6 +83,7 @@ public class AdminAppearanceController : ControllerBase
 
             config.Ads.Add(new AppearanceAd
             {
+                Id = Guid.NewGuid(),
                 AppearanceConfigId = config.Id,
                 Title = item.Title ?? string.Empty,
                 Subtitle = item.Subtitle,

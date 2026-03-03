@@ -187,8 +187,9 @@ async function uploadAdImage(e: Event, ad: any) {
       method: 'POST',
       body: fd,
     })
-    if (res?.url) {
-      ad.imageUrl = res.url
+    const u = res?.url
+    if (u) {
+      ad.imageUrl = typeof u === 'string' ? u : (typeof u?.url === 'string' ? u.url : '')
       notify('تم رفع الصورة')
     }
   } catch {
@@ -206,14 +207,19 @@ async function save() {
       .filter(([, v]) => !!v)
       .map(([k]) => k)
 
-    const ads = draft.ads.map((a, idx) => ({
+    // تأكيد أن imageUrl سترنغ حتى لا يظهر [object Object] ولا يسبب مشاكل بالسيرفر
+    const ads = draft.ads.map((a, idx) => {
+      const raw = (a as any).imageUrl
+      const url = typeof raw === 'string' ? raw : (typeof raw?.url === 'string' ? raw.url : '')
+      return {
       title: a.title?.trim() || 'Ad',
       subtitle: (a.subtitle ?? null) ? String(a.subtitle).trim() : null,
-      imageUrl: a.imageUrl?.trim() || '',
+      imageUrl: url.trim() || '',
       linkUrl: (a.linkUrl ?? null) ? String(a.linkUrl).trim() : null,
       sortOrder: Number.isFinite(a.sortOrder as any) ? Number(a.sortOrder) : idx,
       isEnabled: !!a.isActive,
-    }))
+      }
+    })
 
     const payload = {
       isActive: true,

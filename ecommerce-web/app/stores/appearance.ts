@@ -34,6 +34,14 @@ const DEFAULT: AppearanceState = {
   ads: [],
 }
 
+function normalizeUrl(v: any): string {
+  if (!v) return ''
+  if (typeof v === 'string') return v
+  if (typeof v?.url === 'string') return v.url
+  if (typeof v?.Url === 'string') return v.Url
+  return ''
+}
+
 export const useAppearanceStore = defineStore('appearance', {
   state: () => ({
     loaded: false as boolean,
@@ -60,7 +68,7 @@ export const useAppearanceStore = defineStore('appearance', {
           id: a.id ?? a.Id,
           title: a.title ?? a.Title,
           subtitle: a.subtitle ?? a.Subtitle,
-          imageUrl: a.imageUrl ?? a.ImageUrl,
+          imageUrl: normalizeUrl(a.imageUrl ?? a.ImageUrl),
           linkUrl: a.linkUrl ?? a.LinkUrl,
           isActive: a.isEnabled ?? a.IsEnabled ?? a.isActive ?? a.IsActive ?? true,
           sortOrder: a.sortOrder ?? a.SortOrder ?? 0,
