@@ -111,7 +111,8 @@ public class AdminAppearanceController : ControllerBase
         var key = $"uploads/appearance/{id}{ext}";
 
         await using var stream = file.OpenReadStream();
-        var url = await _storage.UploadAsync(key, stream, file.ContentType);
+        // IStorageService.UploadAsync expects (Stream stream, string key, string contentType)
+        var url = await _storage.UploadAsync(stream, key, file.ContentType);
 
         return Ok(new { url });
     }
