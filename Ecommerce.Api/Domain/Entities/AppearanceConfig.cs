@@ -11,13 +11,13 @@ public class AppearanceConfig
 
     public bool IsActive { get; set; } = true;
 
-    // Stored as jsonb in Postgres.
-    // IMPORTANT: using JsonDocument ensures Npgsql sends the correct jsonb parameter type.
+    // نخزنها كنص (TEXT) يحتوي JSON.
+    // سابقاً كانت jsonb لكن EF/Npgsql كان يرسلها كـ text بدون cast فتصير 500.
     [Required]
-    public JsonDocument EnabledThemesJson { get; set; } = JsonDocument.Parse("[]");
+    public string EnabledThemesJson { get; set; } = "[]";
 
     [Required]
-    public JsonDocument EnabledEffectsJson { get; set; } = JsonDocument.Parse("[]");
+    public string EnabledEffectsJson { get; set; } = "[]";
 
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 
@@ -27,23 +27,27 @@ public class AppearanceConfig
     public List<string> EnabledThemes
     {
         get => DeserializeList(EnabledThemesJson);
-        set => EnabledThemesJson = JsonDocument.Parse(JsonSerializer.Serialize(value ?? new()));
+        set => EnabledThemesJson = JsonSerializer.Serialize(value ?? new());
     }
 
     [NotMapped]
     public List<string> EnabledEffects
     {
         get => DeserializeList(EnabledEffectsJson);
-        set => EnabledEffectsJson = JsonDocument.Parse(JsonSerializer.Serialize(value ?? new()));
+        set => EnabledEffectsJson = JsonSerializer.Serialize(value ?? new());
     }
 
-    private static List<string> DeserializeList(JsonDocument? doc)
+    private static List<string> DeserializeList(string? json)
     {
         try
         {
-            if (doc is null) return new();
-            if (doc.RootElement.ValueKind != JsonValueKind.Array) return new();
-            return doc.RootElement.Deserialize<List<string>>() ?? new();
+            if (string.IsNullOrWhiteSpace(json)) return new();
+            var list = JsonSerializer.Deserialize<List<string>>(json) ?? new();
+            return list
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
         catch
         {

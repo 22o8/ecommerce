@@ -130,8 +130,8 @@ public class AdminAppearanceController : ControllerBase
 
         config = new AppearanceConfig
         {
-            EnabledThemesJson = JsonDocument.Parse("[]"),
-            EnabledEffectsJson = JsonDocument.Parse("[]"),
+                EnabledThemesJson = "[]",
+                EnabledEffectsJson = "[]",
             IsActive = true,
             UpdatedAt = DateTimeOffset.UtcNow
         };

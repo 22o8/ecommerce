@@ -34,14 +34,24 @@ function draw() {
   if (!ctx) return
 
   ctx.clearRect(0, 0, canvas.width, canvas.height)
-  ctx.globalAlpha = 0.55
-  ctx.fillStyle = '#fff'
+
+  // بالـ Light نخلي الثلج أغمق شوي حتى يبين
+  const rgb = getComputedStyle(document.documentElement)
+    .getPropertyValue('--snow-rgb')
+    .trim() || '255,255,255'
+  const isLight = document.documentElement.classList.contains('theme-light')
+
+  ctx.globalAlpha = isLight ? 0.45 : 0.55
+  ctx.fillStyle = `rgb(${rgb})`
+  ctx.shadowColor = isLight ? `rgba(${rgb},0.22)` : `rgba(${rgb},0.12)`
+  ctx.shadowBlur = isLight ? 6 : 3
   for (const f of flakes) {
     ctx.beginPath()
     ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2)
     ctx.fill()
   }
   ctx.globalAlpha = 1
+  ctx.shadowBlur = 0
 
   const w = canvas.width
   const h = canvas.height
