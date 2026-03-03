@@ -187,7 +187,14 @@ async function uploadAdImage(e: Event, ad: any) {
       method: 'POST',
       body: fd,
     })
-    const u = res?.url
+    // Support multiple response shapes: string | {url} | {data:{url}} | {url:{url}}
+    const u =
+      (typeof res === 'string' ? res : null) ??
+      res?.url ??
+      res?.data?.url ??
+      res?.result?.url ??
+      (typeof res?.url === 'object' ? res?.url?.url : null)
+
     if (u) {
       ad.imageUrl = typeof u === 'string' ? u : (typeof u?.url === 'string' ? u.url : '')
       notify('تم رفع الصورة')

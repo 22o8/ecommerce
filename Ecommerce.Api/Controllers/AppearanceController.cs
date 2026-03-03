@@ -1,5 +1,4 @@
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Ecommerce.Api.Contracts.Appearance;
 using Ecommerce.Api.Infrastructure.Data;
@@ -40,33 +39,18 @@ public class AppearanceController : ControllerBase
             });
         }
 
-        var themes = SafeParseList(config.EnabledThemesJson);
-        var effects = SafeParseList(config.EnabledEffectsJson);
-
         return Ok(new AppearanceResponse
         {
             Id = config.Id,
             IsActive = config.IsActive,
             UpdatedAt = config.UpdatedAt,
-            EnabledThemes = themes,
-            EnabledEffects = effects,
+            EnabledThemes = config.EnabledThemes,
+            EnabledEffects = config.EnabledEffects,
             Ads = config.Ads
                 .Where(a => a.IsEnabled)
                 .OrderBy(a => a.SortOrder)
                 .Select(a => new AppearanceAdDto(a.Id, a.Title, a.Subtitle, a.ImageUrl, a.LinkUrl, a.SortOrder, a.IsEnabled))
                 .ToList()
         });
-    }
-
-    private static System.Collections.Generic.List<string> SafeParseList(string json)
-    {
-        try
-        {
-            return JsonSerializer.Deserialize<System.Collections.Generic.List<string>>(json) ?? new();
-        }
-        catch
-        {
-            return new();
-        }
     }
 }

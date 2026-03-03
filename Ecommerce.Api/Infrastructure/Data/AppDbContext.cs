@@ -109,6 +109,14 @@ public class AppDbContext : DbContext
         // ✅ Appearance / Ads
         // =========================
         modelBuilder.Entity<AppearanceConfig>()
+            .Property(x => x.EnabledThemesJson)
+            .HasColumnType("jsonb");
+
+        modelBuilder.Entity<AppearanceConfig>()
+            .Property(x => x.EnabledEffectsJson)
+            .HasColumnType("jsonb");
+
+        modelBuilder.Entity<AppearanceConfig>()
             .HasMany(x => x.Ads)
             .WithOne(x => x.AppearanceConfig)
             .HasForeignKey(x => x.AppearanceConfigId)

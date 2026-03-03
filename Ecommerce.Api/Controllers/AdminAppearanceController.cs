@@ -41,8 +41,9 @@ public class AdminAppearanceController : ControllerBase
         var config = await GetOrCreateConfig();
 
         config.IsActive = req.IsActive;
-        config.EnabledThemesJson = JsonSerializer.Serialize(req.EnabledThemes ?? new());
-        config.EnabledEffectsJson = JsonSerializer.Serialize(req.EnabledEffects ?? new());
+        // Persist as jsonb via JsonDocument-backed properties
+        config.EnabledThemes = req.EnabledThemes ?? new();
+        config.EnabledEffects = req.EnabledEffects ?? new();
         config.UpdatedAt = DateTimeOffset.UtcNow;
 
         // Sync ads
@@ -129,8 +130,8 @@ public class AdminAppearanceController : ControllerBase
 
         config = new AppearanceConfig
         {
-            EnabledThemesJson = "[]",
-            EnabledEffectsJson = "[]",
+            EnabledThemesJson = JsonDocument.Parse("[]"),
+            EnabledEffectsJson = JsonDocument.Parse("[]"),
             IsActive = true,
             UpdatedAt = DateTimeOffset.UtcNow
         };
@@ -142,32 +143,17 @@ public class AdminAppearanceController : ControllerBase
 
     private static AppearanceResponse ToResponse(AppearanceConfig config)
     {
-        var themes = SafeParseList(config.EnabledThemesJson);
-        var effects = SafeParseList(config.EnabledEffectsJson);
-
         return new AppearanceResponse
         {
             Id = config.Id,
             IsActive = config.IsActive,
             UpdatedAt = config.UpdatedAt,
-            EnabledThemes = themes,
-            EnabledEffects = effects,
+            EnabledThemes = config.EnabledThemes,
+            EnabledEffects = config.EnabledEffects,
             Ads = config.Ads
                 .OrderBy(a => a.SortOrder)
                 .Select(a => new AppearanceAdDto(a.Id, a.Title, a.Subtitle, a.ImageUrl, a.LinkUrl, a.SortOrder, a.IsEnabled))
                 .ToList()
         };
-    }
-
-    private static System.Collections.Generic.List<string> SafeParseList(string json)
-    {
-        try
-        {
-            return JsonSerializer.Deserialize<System.Collections.Generic.List<string>>(json) ?? new();
-        }
-        catch
-        {
-            return new();
-        }
     }
 }
