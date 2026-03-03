@@ -103,6 +103,35 @@ public static class DbBootstrapper
               );",
 
             @"CREATE INDEX IF NOT EXISTS ""IX_Payments_OrderId"" ON ""Payments"" (""OrderId"");",
+
+            // ============================
+            // Appearance (themes + effects + ads)
+            // ============================
+            @"CREATE TABLE IF NOT EXISTS ""AppearanceConfigs"" (
+                ""Id"" uuid NOT NULL,
+                ""IsActive"" boolean NOT NULL DEFAULT TRUE,
+                ""EnabledThemesJson"" jsonb NOT NULL DEFAULT '[]'::jsonb,
+                ""EnabledEffectsJson"" jsonb NOT NULL DEFAULT '[]'::jsonb,
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                CONSTRAINT ""PK_AppearanceConfigs"" PRIMARY KEY (""Id"")
+              );",
+
+            @"CREATE TABLE IF NOT EXISTS ""AppearanceAds"" (
+                ""Id"" uuid NOT NULL,
+                ""AppearanceConfigId"" uuid NOT NULL,
+                ""Title"" character varying(120) NULL,
+                ""Subtitle"" character varying(200) NULL,
+                ""ImageUrl"" character varying(2048) NOT NULL,
+                ""LinkUrl"" character varying(2048) NULL,
+                ""SortOrder"" integer NOT NULL DEFAULT 0,
+                ""IsEnabled"" boolean NOT NULL DEFAULT TRUE,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                CONSTRAINT ""PK_AppearanceAds"" PRIMARY KEY (""Id""),
+                CONSTRAINT ""FK_AppearanceAds_AppearanceConfigs_AppearanceConfigId"" FOREIGN KEY (""AppearanceConfigId"")
+                    REFERENCES ""AppearanceConfigs""(""Id"") ON DELETE CASCADE
+              );",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_AppearanceAds_AppearanceConfigId"" ON ""AppearanceAds"" (""AppearanceConfigId"");",
         };
 
         foreach (var sql in statements)
