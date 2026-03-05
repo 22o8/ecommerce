@@ -5,6 +5,7 @@ definePageMeta({
 })
 
 const { t } = useI18n()
+const toast = useToast()
 const { buildAssetUrl } = useApi()
 const brandsStore = useBrandsStore()
 
@@ -72,8 +73,10 @@ async function removeBrand(id: string) {
   try {
     await brandsStore.deleteBrand(id)
     await brandsStore.fetchAdmin()
+    toast.success(t('common.deleted') || 'تم الحذف')
   } catch (e: any) {
     error.value = e?.data?.message || e?.message || 'Delete failed'
+    toast.error(t('common.requestFailed') || 'فشل الطلب')
   } finally {
     loading.value = false
   }
@@ -91,8 +94,10 @@ async function removeSelected() {
     }
     selectedIds.value = []
     await brandsStore.fetchAdmin()
+    toast.success(t('common.deleted') || 'تم الحذف')
   } catch (e: any) {
     error.value = e?.data?.message || e?.message || 'Delete failed'
+    toast.error(t('common.requestFailed') || 'فشل الطلب')
   } finally {
     loading.value = false
   }

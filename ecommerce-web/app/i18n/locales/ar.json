@@ -28,6 +28,9 @@
     "reset": "إعادة ضبط",
     "refresh": "تحديث",
     "saved": "تم الحفظ",
+    "uploaded": "تم الرفع",
+    "deleted": "تم الحذف",
+    "requestFailed": "فشل الطلب",
     "remove": "إزالة",
     "requestFailed": "فشل الطلب",
     "chooseFiles": "اختر الملفات",
@@ -41,6 +44,12 @@
     "prev": "السابق",
     "next": "التالي",
     "edit": "تعديل"
+  },
+  "admin": {
+    "adsLabel": "الإعلانات",
+    "discount": "نسبة الخصم (%)",
+    "finalPrice": "السعر النهائي",
+    "confirmDeleteAd": "حذف الإعلان؟"
   },
   "nav": {
     "brands": "البراندات",
@@ -406,6 +415,7 @@
   "createAccount": "إنشاء الحساب",
   "browseProducts": "تصفح المنتجات",
   "products": {
+    "description": "الوصف",
     "sortNew": "الأحدث",
     "sortPriceAsc": "السعر: من الأقل للأعلى",
     "quickPreview": "معاينة سريعة",

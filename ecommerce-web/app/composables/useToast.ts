@@ -1,29 +1,44 @@
 type ToastType = 'success' | 'error' | 'info'
 
+export type ToastItem = {
+  id: string
+  type: ToastType
+  title?: string
+  message: string
+  ttlMs: number
+}
+
+function uid() {
+  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
+}
+
 export function useToast() {
-  // Minimal toast composable so pages using it don't crash on SSR.
-  // You can later replace this with a proper toast UI component.
-  const toasts = useState<{ id: string; type: ToastType; message: string }[]>(
-    'toasts',
-    () => [],
-  )
+  const toasts = useState<ToastItem[]>('toasts', () => [])
 
-  const push = (type: ToastType, message: string) => {
-    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`
-    toasts.value.push({ id, type, message })
-
-    // Client-only helper: show a basic alert for now (optional)
+  function push(partial: Omit<ToastItem, 'id'>) {
+    const id = uid()
+    const item: ToastItem = { id, ...partial }
+    toasts.value = [...toasts.value, item]
     if (process.client) {
-      // eslint-disable-next-line no-console
-      console.log(`[toast:${type}]`, message)
+      window.setTimeout(() => remove(id), item.ttlMs)
     }
+    return id
   }
 
-  return {
-    toasts,
-    success: (m: string) => push('success', m),
-    error: (m: string) => push('error', m),
-    info: (m: string) => push('info', m),
-    clear: () => (toasts.value = []),
+  function remove(id: string) {
+    toasts.value = toasts.value.filter((t) => t.id !== id)
   }
+
+  // Helpers
+  function success(message: string, title?: string) {
+    return push({ type: 'success', message, title, ttlMs: 2400 })
+  }
+  function error(message: string, title?: string) {
+    return push({ type: 'error', message, title, ttlMs: 3200 })
+  }
+  function info(message: string, title?: string) {
+    return push({ type: 'info', message, title, ttlMs: 2400 })
+  }
+
+  return { toasts, push, remove, success, error, info }
 }

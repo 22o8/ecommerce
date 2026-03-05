@@ -78,6 +78,7 @@ definePageMeta({ layout: 'admin', middleware: ['auth'] })
 import SmartImage from '~/components/SmartImage.vue'
 
 const { t } = useI18n()
+const toast = useToast()
 const route = useRoute()
 const id = computed(() => String(route.params.id || ''))
 
@@ -151,8 +152,10 @@ const upload = async () => {
     const res: any = await brands.uploadLogo(id.value, picked.value)
     logoUrl.value = res?.logoUrl || logoUrl.value
     picked.value = null
+    toast.success(t('common.uploaded') || 'تم الرفع')
   } catch (e: any) {
     logoError.value = e?.data?.message || e?.message || 'Error'
+    toast.error(t('common.requestFailed') || 'فشل الطلب')
   } finally {
     pendingLogo.value = false
   }
@@ -170,8 +173,10 @@ const save = async () => {
       isActive: isActive.value,
     })
     ok.value = t('common.saved')
+    toast.success(t('common.saved') || 'تم الحفظ')
   } catch (e: any) {
     error.value = e?.data?.message || e?.message || 'Error'
+    toast.error(t('common.requestFailed') || 'فشل الطلب')
   } finally {
     pending.value = false
   }

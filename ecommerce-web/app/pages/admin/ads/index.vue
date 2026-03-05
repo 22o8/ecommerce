@@ -62,7 +62,7 @@ async function create() {
     Object.assign(form, { title: '', subtitle: '', imageUrl: '', linkUrl: '', productId: '', sortOrder: 0, isEnabled: true })
     await load()
   } catch {
-    toast.error(t('common.errorGeneric') || 'حصل خطأ')
+    toast.error(t('common.requestFailed') || t('common.errorGeneric') || 'حصل خطأ')
   }
 }
 
@@ -73,7 +73,7 @@ async function remove(id: string) {
     toast.success(t('common.deleted') || 'تم الحذف')
     await load()
   } catch {
-    toast.error(t('common.errorGeneric') || 'حصل خطأ')
+    toast.error(t('common.requestFailed') || t('common.errorGeneric') || 'حصل خطأ')
   }
 }
 
@@ -97,7 +97,7 @@ async function toggleEnabled(ad: any) {
     })
     await load()
   } catch {
-    toast.error(t('common.errorGeneric') || 'حصل خطأ')
+    toast.error(t('common.requestFailed') || t('common.errorGeneric') || 'حصل خطأ')
   }
 }
 
@@ -112,9 +112,10 @@ async function onPickFile(e: Event) {
       method: 'POST',
       body: fd,
     })
-    form.imageUrl = res?.url || ''
+    form.imageUrl = (res?.url as string) || ''
+    if (form.imageUrl) toast.success(t('common.uploaded') || 'تم الرفع')
   } catch {
-    toast.error(t('common.errorGeneric') || 'حصل خطأ')
+    toast.error(t('common.requestFailed') || t('common.errorGeneric') || 'حصل خطأ')
   } finally {
     uploading.value = false
     ;(e.target as HTMLInputElement).value = ''

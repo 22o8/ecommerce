@@ -10,7 +10,8 @@ useHead({
     // Keep layout stable: always LTR and do not change structural classes when locale changes.
     lang: locale,
     dir: 'ltr',
-    class: 'theme-light ltr',
+    // ⚠️ لا نثبت class هنا حتى لا نمسح classes التي يطبّقها uiStore + appearance plugin
+    // (مثل theme-dark/theme-light + theme-ramadan/theme-blackFriday ...)
   },
 })
 </script>
@@ -18,6 +19,7 @@ useHead({
 <template>
   <div class="min-h-screen bg-app">
     <ApiDebugBanner />
+    <ToastHost />
     <NuxtLayout>
       <NuxtPage :transition="{ name: 'page', mode: 'out-in' }" />
     </NuxtLayout>

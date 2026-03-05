@@ -52,9 +52,6 @@
       </div>
     </div>
 
-    <div v-if="toast" class="fixed bottom-5 right-5 z-[90] rounded-2xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 px-4 py-3 shadow-xl">
-      {{ toast }}
-    </div>
   </div>
 </template>
 
@@ -64,15 +61,10 @@ definePageMeta({ layout: 'admin', middleware: ['admin'] })
 const { t } = useI18n()
 
 const store = useAppearanceStore()
-await store.refresh()
+if (!store.loaded) await store.refresh()
 
 const saving = ref(false)
-const toast = ref<string | null>(null)
-
-function notify(msg: string) {
-  toast.value = msg
-  setTimeout(() => (toast.value = null), 2200)
-}
+const toast = useToast()
 
 const themeOptions = [
   { key: 'ramadan', labelKey: 'season.ramadan', hintKey: 'seasonHints.ramadan' },
@@ -119,9 +111,9 @@ async function save() {
 
     await $fetch('/api/bff/admin/appearance', { method: 'POST', body: payload })
     await store.refresh()
-    notify('تم الحفظ')
+    toast.success(t('common.saved') || 'تم الحفظ')
   } catch {
-    notify('فشل الحفظ (تأكد من cookies/admin + ObjectStorage env)')
+    toast.error(t('common.requestFailed') || 'فشل الطلب')
   } finally {
     saving.value = false
   }

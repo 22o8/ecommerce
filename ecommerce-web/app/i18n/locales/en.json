@@ -42,6 +42,12 @@
     "next": "Next",
     "edit": "Edit"
   },
+  "admin": {
+    "adsLabel": "Ads",
+    "discount": "Discount (%)",
+    "finalPrice": "Final price",
+    "confirmDeleteAd": "Delete ad?"
+  },
   "nav": {
     "logout": "Logout",
     "login": "Login",
@@ -375,6 +381,7 @@
   "createAccount": "Create account",
   "browseProducts": "Browse products",
   "products": {
+    "description": "Description",
     "sortNew": "Sort new",
     "sortPriceAsc": "Price: Low to High",
     "quickPreview": "Quick preview",

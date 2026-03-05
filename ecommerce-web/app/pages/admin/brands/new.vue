@@ -40,6 +40,7 @@
 definePageMeta({ layout: 'admin', middleware: ['auth'] })
 
 const { t } = useI18n()
+const toast = useToast()
 const router = useRouter()
 const brands = useBrandsStore()
 
@@ -80,10 +81,12 @@ const submit = async () => {
       isActive: isActive.value,
     })
     const id = res?.id
+    toast.success(t('common.saved') || 'تم الحفظ')
     if (id) return router.push(`/admin/brands/${id}`)
     router.push('/admin/brands')
   } catch (e: any) {
     error.value = e?.data?.message || e?.message || 'Error'
+    toast.error(t('common.requestFailed') || 'فشل الطلب')
   } finally {
     pending.value = false
   }
