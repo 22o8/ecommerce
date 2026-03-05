@@ -19,7 +19,7 @@
 
           <div class="mt-4 w-full aspect-square rounded-2xl overflow-hidden border border-[rgba(var(--border),0.9)] bg-[rgba(var(--surface-2),0.65)] flex items-center justify-center">
             <SmartImage v-if="logoPreview" :src="logoPreview" :alt="name" class="w-full h-full object-cover" />
-            <div v-else class="text-xs admin-muted">LOGO</div>
+            <div v-else class="text-xs admin-muted">{{ t('admin.logoPlaceholder') }}</div>
           </div>
 
           <input class="mt-4 block w-full text-sm" type="file" accept="image/*" @change="onPick" />
@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: 'admin', middleware: ['auth'] })
+definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
 import SmartImage from '~/components/SmartImage.vue'
 
@@ -128,15 +128,16 @@ const logoPreview = computed(() => {
   return logoUrl.value ? buildAssetUrl(logoUrl.value) : ''
 })
 
-await useAsyncData(`admin-brand-${id.value}`, async () => {
+async function loadBrand() {
   const b: any = await useApi().get(`/admin/brands/${id.value}`)
   name.value = b?.name || ''
   slug.value = b?.slug || ''
   description.value = b?.description || ''
   isActive.value = !!b?.isActive
   logoUrl.value = b?.logoUrl || ''
-  return true
-})
+}
+
+onMounted(() => { loadBrand().catch(() => {}) })
 
 const onPick = (e: Event) => {
   logoError.value = ''

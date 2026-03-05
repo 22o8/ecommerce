@@ -152,7 +152,7 @@ function fmt(v: any) {
         <!-- You may also like -->
         <div v-if="(similar?.length || 0) > 0" class="grid gap-3">
           <div class="flex items-center justify-between">
-            <div class="text-lg font-extrabold rtl-text">You may also like</div>
+            <div class="text-lg font-extrabold rtl-text">{{ t('products.youMayAlsoLike') }}</div>
             <NuxtLink :to="`/products?brand=${encodeURIComponent(brand)}`" class="text-sm text-[rgb(var(--primary))]">{{ t('home.viewAll') }}</NuxtLink>
           </div>
 

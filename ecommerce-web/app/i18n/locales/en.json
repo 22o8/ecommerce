@@ -40,90 +40,14 @@
     "errorGeneric": "Something went wrong",
     "prev": "Prev",
     "next": "Next",
-    "edit": "Edit"
-  },
-  "admin": {
-    "adsLabel": "Ads",
-    "discount": "Discount (%)",
-    "finalPrice": "Final price",
-    "confirmDeleteAd": "Delete ad?"
-  },
-  "nav": {
-    "logout": "Logout",
-    "login": "Login",
-    "dashboard": "Dashboard",
-    "brands": "Brands",
-    "products": "Products",
-    "cart": "Cart",
-    "orders": "Orders",
-    "users": "Users",
-    "backToSite": "Back to site",
-    "viewSite": "View site",
-    "language": "Language",
-    "home": "Home"
-  },
-  "home": {
-    "brands": "Brands",
-    "brandsSubtitle": "Explore our carefully curated selection of premium beauty brands.",
-    "noBrandsFound": "No brands found",
-    "dashboard": "Dashboard",
-    "hero": {
-      "title": "Discover Your Perfect Beauty Routine",
-      "subtitle": "Explore our curated collection of premium skincare and beauty products from the world's best brands.",
-      "cta": "Shop Now"
-    },
-    "featured": {
-      "title": "Featured Products"
-    },
-    "statsFastShipping": "Fast delivery",
-    "statsOriginal": "Authentic products",
-    "statsSupport": "Customer support",
-    "spotlightTitle": "Shop by category",
-    "spotlightSubtitle": "Quick picks to reach what you want in seconds.",
-    "viewAll": "View all",
-    "catSkincare": "Skincare",
-    "catSerum": "Serums",
-    "catSunscreen": "Sunscreen",
-    "catMakeup": "Makeup",
-    "catPerfume": "Perfumes",
-    "brandShowcaseTitle": "Brand showcase",
-    "brandShowcaseSubtitle": "Explore top brands in an interactive 3D view.",
-    "tapToExplore": "Tap to explore",
-    "catMoisturizer": "Moisturizer",
-    "catCleanser": "Cleanser",
-    "subtitle": "Professional digital store"
-  },
-  "productsPage": {
-    "title": "Products",
-    "subtitle": "Choose what fits you and buy directly.",
-    "searchPlaceholder": "Search products...",
-    "filters": "Filters",
-    "brand": "Brand",
-    "price": "Price",
-    "sort": {
-      "priceDesc": "Price desc",
-      "priceAsc": "Price asc",
-      "new": "New"
-    },
-    "newest": "Newest",
-    "priceLow": "Price: Low to High",
-    "priceHigh": "Price: High to Low",
-    "noResults": "No products found",
-    "next": "Next",
-    "allBrands": "All brands",
-    "prev": "Prev",
-    "addToCart": "Add to cart",
-    "page": "Page",
-    "emptyTitle": "Empty title",
-    "emptyDesc": "Empty desc"
-  },
-  "brandsPage": {
-    "title": "Brands",
-    "subtitle": "Add and manage brands. Each product should belong to a brand.",
-    "searchPlaceholder": "Search brands...",
-    "addBrand": "Add brand",
-    "status": "Status",
-    "actions": "Actions"
+    "edit": "Edit",
+    "confirmDelete": "Are you sure you want to delete this item?",
+    "disable": "Disable",
+    "notFound": "Item not found",
+    "retry": "Retry",
+    "selectAll": "Select all",
+    "selected": "Selected",
+    "total": "Total"
   },
   "admin": {
     "title": "Admin Panel",
@@ -138,10 +62,10 @@
     "manageProductsHint": "Create, edit and publish products",
     "manageOrders": "Manage orders",
     "manageOrdersHint": "Track, update and fulfill orders",
-  "appearanceLabel": "Themes & Effects",
-  "adsLabel": "Ads",
-  "discount": "Discount",
-  "finalPrice": "Final price",
+    "appearanceLabel": "Themes & Effects",
+    "adsLabel": "Ads",
+    "discount": "Discount",
+    "finalPrice": "Final price",
     "appearance": {
       "title": "Themes & Effects",
       "subtitle": "Control the backgrounds and effects shown to customers.",
@@ -218,7 +142,7 @@
     },
     "brands": {
       "title": "Brands",
-      "new": "New brand",
+      "new": "Add brand",
       "edit": "Edit brand",
       "name": "Name",
       "slug": "Slug",
@@ -227,7 +151,11 @@
       "logo": "Logo",
       "uploadLogo": "Upload logo",
       "successCreated": "Brand created",
-      "successUpdated": "Brand updated"
+      "successUpdated": "Brand updated",
+      "emptyTitle": "No brands yet",
+      "emptyHint": "Create your first brand to get started.",
+      "hint": "Manage brands and connect them to products easily.",
+      "searchPlaceholder": "Search brands or descriptions..."
     },
     "currentImages": "Current images",
     "editProduct": "Edit product",
@@ -374,7 +302,96 @@
     "manageBrands": "Manage brands",
     "manageBrandsHint": "View / add / edit",
     "insights": "Insights",
-    "insightsHint": "Favorites / visits / purchases analytics"
+    "insightsHint": "Analytics for favorites, visits, and purchases",
+    "rangeDaily": "Daily",
+    "rangeMonthly": "Monthly",
+    "activityMonthly": "Monthly activity",
+    "ordersLabel": "Orders",
+    "newUsersLabel": "New users",
+    "visitsLabel": "Visits",
+    "viewInsightsDetails": "View details in Insights",
+    "logoPlaceholder": "Brand logo"
+  },
+  "nav": {
+    "logout": "Logout",
+    "login": "Login",
+    "dashboard": "Dashboard",
+    "brands": "Brands",
+    "products": "Products",
+    "cart": "Cart",
+    "orders": "Orders",
+    "users": "Users",
+    "backToSite": "Back to site",
+    "viewSite": "View site",
+    "language": "Language",
+    "home": "Home"
+  },
+  "home": {
+    "brands": "Brands",
+    "brandsSubtitle": "Explore our carefully curated selection of premium beauty brands.",
+    "noBrandsFound": "No brands found",
+    "dashboard": "Dashboard",
+    "hero": {
+      "title": "Discover Your Perfect Beauty Routine",
+      "subtitle": "Explore our curated collection of premium skincare and beauty products from the world's best brands.",
+      "cta": "Shop Now"
+    },
+    "featured": {
+      "title": "Featured Products"
+    },
+    "statsFastShipping": "Fast delivery",
+    "statsOriginal": "Authentic products",
+    "statsSupport": "Customer support",
+    "spotlightTitle": "Shop by category",
+    "spotlightSubtitle": "Quick picks to reach what you want in seconds.",
+    "viewAll": "View all",
+    "catSkincare": "Skincare",
+    "catSerum": "Serums",
+    "catSunscreen": "Sunscreen",
+    "catMakeup": "Makeup",
+    "catPerfume": "Perfumes",
+    "brandShowcaseTitle": "Brand showcase",
+    "brandShowcaseSubtitle": "Explore top brands in an interactive 3D view.",
+    "tapToExplore": "Tap to explore",
+    "catMoisturizer": "Moisturizer",
+    "catCleanser": "Cleanser",
+    "subtitle": "Professional digital store"
+  },
+  "productsPage": {
+    "title": "Products",
+    "subtitle": "Choose what fits you and buy directly.",
+    "searchPlaceholder": "Search products...",
+    "filters": "Filters",
+    "brand": "Brand",
+    "price": "Price",
+    "sort": {
+      "priceDesc": "Price desc",
+      "priceAsc": "Price asc",
+      "new": "New"
+    },
+    "newest": "Newest",
+    "priceLow": "Price: Low to High",
+    "priceHigh": "Price: High to Low",
+    "noResults": "No products found",
+    "next": "Next",
+    "allBrands": "All brands",
+    "prev": "Prev",
+    "addToCart": "Add to cart",
+    "page": "Page",
+    "emptyTitle": "Empty title",
+    "emptyDesc": "Empty desc",
+    "viewAll": "View all results",
+    "sortNewest": "Newest",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low"
+  },
+  "brandsPage": {
+    "title": "Brands",
+    "subtitle": "Add and manage brands. Each product should belong to a brand.",
+    "searchPlaceholder": "Search brands...",
+    "addBrand": "Add brand",
+    "status": "Status",
+    "actions": "Actions"
   },
   "errors": {
     "required": "This field is required",
@@ -392,7 +409,8 @@
     "addToCart": "Add to cart",
     "buy": "Buy",
     "searchPlaceholder": "Search for a product...",
-    "sortNewest": "Newest"
+    "sortNewest": "Newest",
+    "youMayAlsoLike": "You may also like"
   },
   "termsPlaceholder": "Terms placeholder",
   "benefit": {
@@ -571,5 +589,14 @@
     "valentinesEffect": "Hearts",
     "blackFridayTheme": "Dark: red glow + neon / Light: confetti",
     "blackFridayEffect": "Discount % particles + neon lines"
+  },
+  "adminPanel": "Admin Panel",
+  "header": {
+    "search": "Search for a product..."
+  },
+  "discounts": {
+    "title": "Discounts",
+    "subtitle": "Products with real discounts",
+    "empty": "There are no discounted products right now."
   }
 }
