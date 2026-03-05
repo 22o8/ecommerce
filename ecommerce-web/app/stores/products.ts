@@ -24,7 +24,9 @@ export const useProductsStore = defineStore('products', () => {
   if(!p) return p
   // API returns Title/PriceUsd/coverImage; UI expects name/priceUsd/imageUrl
   const name = p.name ?? p.title ?? p.Title ?? p.productName ?? ''
-    const priceIqd = p.priceIqd ?? p.PriceIqd ?? p.priceIqd ?? p.price ?? p.Price ?? 0
+    const priceIqd = p.priceIqd ?? p.PriceIqd ?? p.price ?? p.Price ?? 0
+    const discountPercent = Number(p.discountPercent ?? p.DiscountPercent ?? 0)
+    const finalPriceIqd = Number(p.finalPriceIqd ?? p.FinalPriceIqd ?? (discountPercent > 0 ? (priceIqd * (100 - discountPercent) / 100) : priceIqd))
   const priceUsd = p.priceUsd ?? p.PriceUsd ?? 0
   const cover = p.coverImage ?? p.imageUrl ?? p.ImageUrl ?? null
   const slug = p.slug ?? p.Slug ?? null
@@ -41,7 +43,7 @@ export const useProductsStore = defineStore('products', () => {
         .filter(Boolean)
     : []
 
-    return { ...p, name, priceIqd, priceUsd, price: priceIqd, imageUrl, slug, images: normImages, description }
+    return { ...p, name, priceIqd, priceUsd, price: priceIqd, discountPercent, finalPriceIqd, imageUrl, slug, images: normImages, description }
 }
 
 
@@ -49,6 +51,7 @@ export const useProductsStore = defineStore('products', () => {
   // ✅ قائمة المنتجات المميّزة (تُعرض بالصفحة الرئيسية)
   // مفصوله عن items حتى ما تتداخل مع صفحات المنتجات/الفلاتر.
   const featuredItems = ref<any[]>([])
+  const discountItems = ref<any[]>([])
   const totalCount = ref(0)
   const loading = ref(false)
 
@@ -124,6 +127,17 @@ export const useProductsStore = defineStore('products', () => {
     featuredItems.value = items.value.slice(0, take)
   }
 
+  async function fetchDiscounts(take = 24) {
+    const res = await api.get<{ totalCount?: number; items?: any[] }>('/Products/discounts', { take })
+    discountItems.value = (res?.items ?? []).map(normalizeProduct)
+    return res
+  }
+
+  async function liveSearch(q: string, limit = 8) {
+    const res = await api.get<any[]>('/Products/search', { q, limit })
+    return (res ?? []).map(normalizeProduct)
+  }
+
   return {
     items,
     totalCount,
@@ -132,5 +146,8 @@ export const useProductsStore = defineStore('products', () => {
     hasFeatured,
     fetch,
     fetchFeatured,
+    fetchDiscounts,
+    liveSearch,
+    discountItems,
   }
 })

@@ -1,12 +1,12 @@
 <template>
-  <!-- الضغط على الكارد يفتح Quick Preview فقط -->
+  <!-- الضغط على الكارد يفتح صفحة المنتج (والـ Quick Preview عبر زر العين) -->
   <div
     role="button"
     tabindex="0"
     class="group relative card-soft overflow-hidden transition duration-300 will-change-transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-[rgb(var(--primary))]/18"
-    @click="openPreview"
-    @keydown.enter.prevent="openPreview"
-    @keydown.space.prevent="openPreview"
+    @click="goProduct"
+    @keydown.enter.prevent="goProduct"
+    @keydown.space.prevent="goProduct"
   >
     <div class="relative">
       <div class="relative aspect-[4/3] bg-black/20">
@@ -29,6 +29,13 @@
           class="px-3 py-1 rounded-full bg-surface-2 backdrop-blur border border-app text-xs"
         >
           <span class="rtl-text">{{ t('common.new') }}</span>
+        </div>
+      </div>
+
+      <!-- Discount badge -->
+      <div v-if="discountPercent > 0" class="absolute top-3 right-3">
+        <div class="px-3 py-1 rounded-full bg-red-500/90 text-white text-xs font-black keep-ltr shadow-lg">
+          -{{ discountPercent }}%
         </div>
       </div>
     </div>
@@ -65,8 +72,13 @@
       </div>
 
       <div class="flex items-center justify-between gap-3">
-        <div class="text-lg font-black keep-ltr">
-          {{ formatPrice(priceValue) }}
+        <div class="min-w-0">
+          <div class="text-lg font-black keep-ltr">
+            {{ formatPrice(displayFinalPrice) }}
+          </div>
+          <div v-if="discountPercent > 0" class="text-xs text-muted keep-ltr">
+            <span class="line-through opacity-70">{{ formatPrice(priceValue) }}</span>
+          </div>
         </div>
 
         <div class="flex flex-row items-center gap-2">
@@ -112,6 +124,14 @@ const displayName = computed(() => String(p.value?.title ?? p.value?.name ?? '')
 const displayDescription = computed(() => String(p.value?.description ?? '') || '')
 
 const priceValue = computed(() => p.value?.priceIqd ?? p.value?.price ?? p.value?.priceUsd)
+const discountPercent = computed(() => Number(p.value?.discountPercent ?? 0))
+const displayFinalPrice = computed(() => {
+  const v = p.value?.finalPriceIqd
+  if (v != null) return v
+  const price = Number(priceValue.value ?? 0)
+  const d = Number(discountPercent.value ?? 0)
+  return d > 0 ? (price * (100 - d) / 100) : price
+})
 
 const mainImage = computed(() => {
   const raw = p.value?.images?.[0]?.url || p.value?.images?.[0] || p.value?.imageUrl || p.value?.image || ''
@@ -155,5 +175,11 @@ function openPreview() {
     const q: Record<string, any> = { ...route.query, p: id }
     router.replace({ query: q })
   }
+}
+
+function goProduct() {
+  const id = String(p.value?.id ?? '')
+  if (!id) return
+  navigateTo(`/product/${id}`)
 }
 </script>

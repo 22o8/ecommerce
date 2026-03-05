@@ -41,6 +41,7 @@ public class AdminProductsController : ControllerBase
                     p.Title,
                     p.Slug,
                     p.PriceIqd,
+                    p.DiscountPercent,
                     p.PriceUsd,
                     p.IsPublished,
                     p.IsFeatured,
@@ -71,6 +72,7 @@ public class AdminProductsController : ControllerBase
                 x.Slug,
                 x.Description,
                 x.PriceIqd,
+                x.DiscountPercent,
                 x.PriceUsd,
                 x.IsPublished,
                 x.IsFeatured,
@@ -117,6 +119,7 @@ public class AdminProductsController : ControllerBase
             Slug = slug,
             Description = (req.Description ?? "").Trim(),
             PriceIqd = (req.PriceIqd > 0 ? req.PriceIqd : req.PriceUsd),
+            DiscountPercent = ClampDiscount(req.DiscountPercent),
             PriceUsd = req.PriceUsd,
             IsPublished = req.IsPublished,
             IsFeatured = req.IsFeatured,
@@ -157,6 +160,7 @@ public class AdminProductsController : ControllerBase
         p.Slug = slug;
         p.Description = (req.Description ?? "").Trim();
         p.PriceIqd = (req.PriceIqd > 0 ? req.PriceIqd : req.PriceUsd);
+        p.DiscountPercent = ClampDiscount(req.DiscountPercent);
         p.PriceUsd = req.PriceUsd;
         p.IsPublished = req.IsPublished;
         p.IsFeatured = req.IsFeatured;
@@ -323,6 +327,13 @@ public class AdminProductsController : ControllerBase
         return s.Trim('-');
     }
 
+    private static int ClampDiscount(int value)
+    {
+        if (value < 0) return 0;
+        if (value > 100) return 100;
+        return value;
+    }
+
     private static string ExtractStorageKeyFromUrl(string? url)
     {
         if (string.IsNullOrWhiteSpace(url)) return "";
@@ -349,6 +360,9 @@ public class UpsertProductRequest
 
     [Range(0, 999999999)]
     public decimal PriceIqd { get; set; }
+
+    [Range(0, 100)]
+    public int DiscountPercent { get; set; } = 0;
 
     [Range(0, 999999)]
     public decimal PriceUsd { get; set; }

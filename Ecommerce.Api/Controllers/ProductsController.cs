@@ -1,3 +1,4 @@
+using System;
 using Ecommerce.Api.Infrastructure.Data;
 using Ecommerce.Api.Models.Products;
 using Microsoft.AspNetCore.Mvc;
@@ -63,6 +64,10 @@ public class ProductsController : ControllerBase
                 p.Slug,
                 p.Description,
                 p.PriceIqd,
+                p.DiscountPercent,
+                finalPriceIqd = p.DiscountPercent > 0
+                    ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2)
+                    : p.PriceIqd,
                 p.PriceUsd,
                 p.RatingAvg,
                 p.Brand,
@@ -108,6 +113,10 @@ public class ProductsController : ControllerBase
                 p.Slug,
                 p.Description,
                 p.PriceIqd,
+                p.DiscountPercent,
+                finalPriceIqd = p.DiscountPercent > 0
+                    ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2)
+                    : p.PriceIqd,
                 p.PriceUsd,
                 p.RatingAvg,
                 p.Brand,
@@ -138,6 +147,10 @@ public class ProductsController : ControllerBase
                     p.Slug,
                     p.Description,
                     p.PriceIqd,
+                    p.DiscountPercent,
+                    finalPriceIqd = p.DiscountPercent > 0
+                        ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2)
+                        : p.PriceIqd,
                 p.PriceUsd,
                     p.RatingAvg,
                     p.Brand,
@@ -175,6 +188,10 @@ public class ProductsController : ControllerBase
                 x.Slug,
                 x.Description,
                 x.PriceIqd,
+                x.DiscountPercent,
+                finalPriceIqd = x.DiscountPercent > 0
+                    ? Math.Round(x.PriceIqd * (100m - x.DiscountPercent) / 100m, 2)
+                    : x.PriceIqd,
                 x.PriceUsd,
                 x.RatingAvg,
                 x.Brand,
@@ -228,6 +245,10 @@ public class ProductsController : ControllerBase
                 x.Slug,
                 x.Description,
                 x.PriceIqd,
+                x.DiscountPercent,
+                finalPriceIqd = x.DiscountPercent > 0
+                    ? Math.Round(x.PriceIqd * (100m - x.DiscountPercent) / 100m, 2)
+                    : x.PriceIqd,
                 x.PriceUsd,
                 x.RatingAvg,
                 x.Brand,
@@ -245,6 +266,74 @@ public class ProductsController : ControllerBase
 
         if (p == null) return NotFound(new { message = "Product not found" });
         return Ok(p);
+    }
+
+    // GET /api/Products/discounts?take=24
+    [HttpGet("discounts")]
+    public async Task<IActionResult> GetDiscounts([FromQuery] int take = 24)
+    {
+        var safeTake = take is < 1 or > 120 ? 24 : take;
+        var items = await _db.Products
+            .AsNoTracking()
+            .Where(p => p.IsPublished && p.DiscountPercent > 0)
+            .OrderByDescending(p => p.DiscountPercent)
+            .ThenByDescending(p => p.CreatedAt)
+            .Take(safeTake)
+            .Select(p => new
+            {
+                p.Id,
+                p.Title,
+                p.Slug,
+                p.Description,
+                p.PriceIqd,
+                p.DiscountPercent,
+                finalPriceIqd = Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2),
+                p.RatingAvg,
+                p.Brand,
+                p.RatingCount,
+                p.CreatedAt,
+                coverImage = p.Images
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => i.Url)
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
+
+        return Ok(new { totalCount = items.Count, items });
+    }
+
+    // GET /api/Products/search?q=an&limit=8
+    [HttpGet("search")]
+    public async Task<IActionResult> LiveSearch([FromQuery] string? q = null, [FromQuery] int limit = 8)
+    {
+        var qq = (q ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(qq)) return Ok(Array.Empty<object>());
+        var safeLimit = limit is < 1 or > 20 ? 8 : limit;
+
+        var items = await _db.Products
+            .AsNoTracking()
+            .Where(p => p.IsPublished && (p.Title.ToLower().Contains(qq) || p.Slug.ToLower().Contains(qq)))
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(safeLimit)
+            .Select(p => new
+            {
+                p.Id,
+                p.Title,
+                p.Slug,
+                p.Brand,
+                p.PriceIqd,
+                p.DiscountPercent,
+                finalPriceIqd = p.DiscountPercent > 0
+                    ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2)
+                    : p.PriceIqd,
+                coverImage = p.Images
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => i.Url)
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
+
+        return Ok(items);
     }
 
     // POST /api/products/{id}/view

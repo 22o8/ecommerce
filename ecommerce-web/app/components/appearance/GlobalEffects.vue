@@ -18,6 +18,9 @@
 
     <!-- Valentines: floating hearts -->
     <HeartsEffect v-if="effects.valentines" />
+
+    <!-- Black Friday: dark glow + neon / light confetti -->
+    <BlackFridayEffect v-if="effects.blackFriday" />
   </div>
 </template>
 
@@ -25,6 +28,7 @@
 import SnowEffect from '~/components/appearance/effects/SnowEffect.vue'
 import Sparkles from '~/components/appearance/effects/Sparkles.vue'
 import HeartsEffect from '~/components/appearance/effects/HeartsEffect.vue'
+import BlackFridayEffect from '~/components/appearance/effects/BlackFridayEffect.vue'
 import MoonIcon from '~/components/appearance/icons/MoonIcon.vue'
 import LanternIcon from '~/components/appearance/icons/LanternIcon.vue'
 

@@ -132,6 +132,13 @@ body{
     rgb(var(--bg));
 }
 
+.theme-blackFriday .bg-app{
+  background:
+    radial-gradient(900px 520px at 15% 20%, rgba(255, 0, 70, 0.10), transparent 60%),
+    radial-gradient(820px 460px at 82% 30%, rgba(255, 0, 70, 0.06), transparent 60%),
+    rgb(var(--bg));
+}
+
 /* ==========================
    Light-mode upgrades (أقوى وأوضح)
    ========================== */
@@ -144,6 +151,7 @@ html.theme-light.theme-ramadan{ --spark-rgb: 196,140,40; }
 html.theme-light.theme-eid{ --spark-rgb: 150,120,70; }
 html.theme-light.theme-christmas{ --spark-rgb: 150,40,40; }
 html.theme-light.theme-valentines{ --spark-rgb: 210,60,90; }
+html.theme-light.theme-blackFriday{ --spark-rgb: 220,50,80; }
 
 /* خلفيات أوضح للـ Light */
 html.theme-light.theme-ramadan .bg-app{
@@ -178,11 +186,20 @@ html.theme-light.theme-valentines .bg-app{
     rgb(var(--bg));
 }
 
+html.theme-light.theme-blackFriday .bg-app{
+  background:
+    radial-gradient(1200px 700px at 20% 10%, rgba(255, 0, 70, 0.16), transparent 58%),
+    radial-gradient(900px 600px at 80% 0%, rgba(255, 200, 80, 0.14), transparent 60%),
+    radial-gradient(800px 520px at 45% 95%, rgba(255, 0, 70, 0.10), transparent 60%),
+    rgb(var(--bg));
+}
+
 /* Overlay بسيط يعطي "level" أعلى للثيمات بالـ Light */
 html.theme-light.theme-ramadan body::before,
 html.theme-light.theme-eid body::before,
 html.theme-light.theme-christmas body::before,
-html.theme-light.theme-valentines body::before{
+html.theme-light.theme-valentines body::before,
+html.theme-light.theme-blackFriday body::before{
   content: "";
   position: fixed;
   inset: 0;

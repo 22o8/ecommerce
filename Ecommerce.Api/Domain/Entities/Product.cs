@@ -14,6 +14,11 @@ public class Product
     public decimal PriceIqd { get; set; }
 
     /// <summary>
+    /// نسبة الخصم (0..100). إذا كانت 0 يعني لا يوجد خصم.
+    /// </summary>
+    public int DiscountPercent { get; set; } = 0;
+
+    /// <summary>
     /// (قديم) كان يستخدم بالدولار. أبقيناه للتوافق الخلفي فقط.
     /// </summary>
     public decimal PriceUsd { get; set; }

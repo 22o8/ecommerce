@@ -63,6 +63,14 @@
                 <label class="text-sm font-medium">{{ t('admin.price') }}</label>
                 <UiInput v-model.number="form.price" type="number" min="0" step="0.01" />
               </div>
+
+              <div class="grid gap-2">
+                <label class="text-sm font-medium">{{ t('admin.discount') || 'Discount %' }}</label>
+                <UiInput v-model.number="form.discountPercent" type="number" min="0" max="100" step="1" />
+                <div class="text-xs text-white/60 keep-ltr">
+                  {{ (t('admin.finalPrice') || 'Final') }}: {{ formatIqd(finalPrice) }}
+                </div>
+              </div>
             </div>
 
             <div class="grid gap-2">
@@ -170,6 +178,8 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
+import { formatIqd } from '~/composables/useMoney'
+
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
@@ -194,9 +204,16 @@ const form = reactive({
   slug: '',
   description: '',
   price: 0,
+  discountPercent: 0,
   brandSlug: '',
   isActive: true,
   isFeatured: false,
+})
+
+const finalPrice = computed(() => {
+  const price = Number(form.price || 0)
+  const d = Math.max(0, Math.min(100, Number(form.discountPercent || 0)))
+  return d > 0 ? (price * (100 - d) / 100) : price
 })
 
 const slugTouched = ref(false)
@@ -226,6 +243,7 @@ function resetForm() {
   form.slug = product.value.slug || ''
   form.description = product.value.description || ''
   form.price = Number(product.value.priceIqd ?? product.value.price ?? 0)
+  form.discountPercent = Number(product.value.discountPercent ?? 0)
   // we store brand slug/name in the same field; API expects "brand"
   form.brandSlug = product.value.brand || product.value.brandSlug || ''
   // If API returns brand NAME, map it to slug so the dropdown selects correctly.
@@ -354,6 +372,7 @@ async function onSave() {
       slug: form.slug.trim(),
       description: form.description?.trim() || '',
       priceIqd: Number(form.price),
+      discountPercent: Math.max(0, Math.min(100, Number(form.discountPercent || 0))),
       // Backend validates brand by NAME; UI selects by slug.
       brand: match?.name || form.brandSlug,
       isPublished: Boolean(form.isActive),

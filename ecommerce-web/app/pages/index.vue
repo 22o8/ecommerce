@@ -19,6 +19,7 @@ await useAsyncData(
     await Promise.allSettled([
       brandsStore.fetchPublic(),
       productsStore.fetchFeatured(8),
+      productsStore.fetchDiscounts(8),
       // fallback list حتى ما تبقى الصفحة فاضية إذا endpoint المميز ما اشتغل
       productsStore.fetch({ page: 1, pageSize: 8, sort: 'newest' }),
     ])
@@ -45,6 +46,12 @@ const homeFeatured = computed(() => {
 })
 // للتوافق مع الكود القديم بالـ template
 const featuredList = homeFeatured
+
+const tab = ref<'featured' | 'discounts'>('featured')
+const displayedFeatured = computed(() => tab.value === 'featured'
+  ? homeFeatured.value
+  : (productsStore.discountItems ?? []).slice(0, 8)
+)
 
 const brands = computed(() => brandsStore.publicItems)
 const topBrands = computed(() => {
@@ -109,13 +116,35 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
 
     <!-- Featured Products -->
     <section class="mx-auto max-w-6xl px-4 pb-16">
-      <div class="text-center">
+      <div class="flex flex-col items-center justify-center gap-4">
         <h2 class="text-2xl font-extrabold text-[rgb(var(--text))] sm:text-4xl">{{ t('homeHero.featuredProducts') }}</h2>
+
+        <div class="inline-flex items-center rounded-full border border-app bg-surface p-1">
+          <button
+            type="button"
+            class="px-4 py-2 rounded-full text-sm font-bold transition"
+            :class="tab === 'featured' ? 'bg-[rgb(var(--primary))] text-black' : 'text-[rgb(var(--text))] hover:bg-surface-2'"
+            @click="tab = 'featured'"
+          >
+            Featured
+          </button>
+          <button
+            type="button"
+            class="px-4 py-2 rounded-full text-sm font-bold transition"
+            :class="tab === 'discounts' ? 'bg-[rgb(var(--primary))] text-black' : 'text-[rgb(var(--text))] hover:bg-surface-2'"
+            @click="tab = 'discounts'"
+          >
+            Discounts
+          </button>
+          <NuxtLink to="/discounts" class="px-4 py-2 rounded-full text-sm font-bold text-[rgb(var(--text))] hover:bg-surface-2 transition">
+            View all
+          </NuxtLink>
+        </div>
       </div>
 
       <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <RevealOnScroll
-          v-for="(p, idx) in homeFeatured"
+          v-for="(p, idx) in displayedFeatured"
           :key="p.id"
           :parity="idx % 2"
         >

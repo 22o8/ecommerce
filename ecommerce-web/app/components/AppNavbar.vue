@@ -17,14 +17,51 @@
 
         <!-- Search (desktop) -->
         <div class="hidden lg:flex items-center gap-2 w-[420px]">
-          <div class="flex items-center gap-2 w-full rounded-2xl border border-app bg-surface px-3 py-2">
+          <div class="relative w-full">
+            <div class="flex items-center gap-2 w-full rounded-2xl border border-app bg-surface px-3 py-2">
             <Icon name="mdi:magnify" class="text-lg opacity-70" />
             <input
               v-model="q"
               class="w-full bg-transparent outline-none text-sm rtl-text"
               :placeholder="t('productsPage.searchPlaceholder')"
               @keydown.enter="goSearch"
+              @focus="openSearch = true"
             />
+            </div>
+
+            <!-- Live Search dropdown -->
+            <div
+              v-if="openSearch && liveItems.length"
+              class="absolute top-[calc(100%+10px)] left-0 right-0 z-50 rounded-2xl border border-app bg-surface shadow-2xl overflow-hidden"
+            >
+              <button
+                v-for="item in liveItems"
+                :key="item.id"
+                type="button"
+                class="w-full px-3 py-3 text-left hover:bg-surface-2 transition flex items-center gap-3"
+                @click="openLive(item)"
+              >
+                <img
+                  class="h-10 w-10 rounded-xl object-cover border border-app"
+                  :src="item.imageUrl || '/hero-placeholder.svg'"
+                  :alt="item.name"
+                />
+                <div class="min-w-0 flex-1">
+                  <div class="font-extrabold text-sm truncate keep-ltr">{{ item.name }}</div>
+                  <div class="text-xs text-muted truncate">{{ item.brand }}</div>
+                </div>
+                <div class="text-sm font-black keep-ltr">{{ formatIqd(item.finalPriceIqd ?? item.priceIqd) }}</div>
+              </button>
+
+              <NuxtLink
+                v-if="q"
+                :to="{ path: '/products', query: { q } }"
+                class="block px-4 py-3 text-sm font-bold text-[rgb(var(--primary))] bg-surface-2 hover:opacity-90"
+                @click="openSearch = false"
+              >
+                {{ t('productsPage.viewAll') || 'عرض كل النتائج' }}
+              </NuxtLink>
+            </div>
           </div>
           <UiButton variant="secondary" @click="goSearch">
             <Icon name="mdi:arrow-right" class="keep-ltr" />
@@ -171,16 +208,22 @@
 <script setup lang="ts">
 import UiButton from '~/components/ui/UiButton.vue'
 import { useFavoritesStore } from '~/stores/favorites'
+import { useProductsStore } from '~/stores/products'
+import { formatIqd } from '~/composables/useMoney'
 const ui = useUiStore()
 const auth = useAuthStore()
 const cart = useCartStore()
 const fav = useFavoritesStore()
+const products = useProductsStore()
 const { t } = useI18n()
 
 const route = useRoute()
 const router = useRouter()
 const open = ref(false)
 const q = ref(String(route.query.q || ''))
+const openSearch = ref(false)
+const liveItems = ref<any[]>([])
+let liveTimer: any = null
 
 const isAdmin = computed(() => auth.isAdmin)
 
@@ -190,7 +233,47 @@ function toggleLocale(){ ui.setLocale(ui.locale === 'ar' ? 'en' : 'ar') }
 function goSearch(){
   router.push({ path: '/products', query: q.value ? { q: q.value } : {} })
   open.value = false
+  openSearch.value = false
 }
+
+watch(q, (val) => {
+  const v = String(val || '').trim()
+  if (liveTimer) clearTimeout(liveTimer)
+  if (!v || v.length < 2) {
+    liveItems.value = []
+    return
+  }
+
+  liveTimer = setTimeout(async () => {
+    try {
+      liveItems.value = await products.liveSearch(v, 8)
+    } catch {
+      liveItems.value = []
+    }
+  }, 180)
+})
+
+function openLive(item: any){
+  openSearch.value = false
+  q.value = ''
+  navigateTo(`/product/${item.id}`)
+}
+
+const onDocClick = (e: any) => {
+  const target = e?.target as HTMLElement | null
+  if (!target) return
+  // إذا ضغط داخل الهيدر نخليها مفتوحة
+  if (target.closest('header')) return
+  openSearch.value = false
+}
+
+onMounted(() => {
+  document.addEventListener('click', onDocClick)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocClick)
+})
 
 async function logout(){
   auth.logout()

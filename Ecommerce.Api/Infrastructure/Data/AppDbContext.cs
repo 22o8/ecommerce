@@ -33,6 +33,9 @@ public class AppDbContext : DbContext
     public DbSet<AppearanceConfig> AppearanceConfigs => Set<AppearanceConfig>();
     public DbSet<AppearanceAd> AppearanceAds => Set<AppearanceAd>();
 
+    // ✅ Ads (منفصلة عن Appearance)
+    public DbSet<Ad> Ads => Set<Ad>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -132,5 +135,23 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<AppearanceAd>()
             .Property(x => x.LinkUrl)
             .HasMaxLength(1000);
+
+        // =========================
+        // ✅ Ads (منفصلة)
+        // =========================
+        modelBuilder.Entity<Ad>()
+            .Property(x => x.Placement)
+            .HasMaxLength(120);
+
+        modelBuilder.Entity<Ad>()
+            .Property(x => x.ImageUrl)
+            .HasMaxLength(2000);
+
+        modelBuilder.Entity<Ad>()
+            .Property(x => x.LinkUrl)
+            .HasMaxLength(1000);
+
+        modelBuilder.Entity<Ad>()
+            .HasIndex(x => new { x.Type, x.Placement, x.SortOrder });
     }
 }
