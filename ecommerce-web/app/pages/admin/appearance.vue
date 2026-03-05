@@ -2,31 +2,31 @@
   <div class="space-y-6">
     <div class="flex items-center justify-between gap-3 flex-wrap">
       <div>
-        <h1 class="text-2xl font-extrabold text-zinc-900 dark:text-zinc-100">الثيمات والتأثيرات</h1>
-        <p class="text-sm text-zinc-600 dark:text-zinc-400">تحكم بالخلفيات والتأثيرات التي تظهر لكل الزبائن.</p>
+        <h1 class="text-2xl font-extrabold text-zinc-900 dark:text-zinc-100">{{ t('admin.appearance.title') || 'الثيمات والتأثيرات' }}</h1>
+        <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ t('admin.appearance.subtitle') || 'تحكم بالخلفيات والتأثيرات التي تظهر لكل الزبائن.' }}</p>
       </div>
       <button
         class="px-4 py-2 rounded-2xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 hover:opacity-90 transition"
         @click="save"
         :disabled="saving"
       >
-        {{ saving ? 'جارِ الحفظ...' : 'حفظ' }}
+        {{ saving ? (t('common.saving') || 'جارِ الحفظ...') : (t('common.save') || 'حفظ') }}
       </button>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">
       <!-- Themes -->
       <div class="rounded-3xl border border-zinc-200/70 dark:border-white/10 bg-white dark:bg-zinc-950/60 p-5">
-        <h2 class="font-bold text-zinc-900 dark:text-zinc-100">الثيمات</h2>
-        <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">تقدر تفعل أكثر من ثيم بنفس الوقت.</p>
+        <h2 class="font-bold text-zinc-900 dark:text-zinc-100">{{ t('admin.appearance.themes') || 'الثيمات' }}</h2>
+        <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">{{ t('admin.appearance.themesHint') || 'تقدر تفعل أكثر من ثيم بنفس الوقت.' }}</p>
 
         <div class="mt-4 grid sm:grid-cols-2 gap-3">
-          <label v-for="t in themeOptions" :key="t.key" class="group cursor-pointer rounded-2xl p-4 border border-zinc-200/70 dark:border-white/10 bg-zinc-50/70 dark:bg-white/5 hover:shadow-md transition">
+          <label v-for="opt in themeOptions" :key="opt.key" class="group cursor-pointer rounded-2xl p-4 border border-zinc-200/70 dark:border-white/10 bg-zinc-50/70 dark:bg-white/5 hover:shadow-md transition">
             <div class="flex items-center gap-3">
-              <input type="checkbox" class="h-5 w-5" v-model="draft.themes" :value="t.key" />
+              <input type="checkbox" class="h-5 w-5" v-model="draft.themes" :value="opt.key" />
               <div>
-                <div class="font-semibold text-zinc-900 dark:text-zinc-100">{{ t.label }}</div>
-                <div class="text-xs text-zinc-600 dark:text-zinc-400">{{ t.hint }}</div>
+                <div class="font-semibold text-zinc-900 dark:text-zinc-100">{{ t(opt.labelKey) }}</div>
+                <div class="text-xs text-zinc-600 dark:text-zinc-400">{{ t(opt.hintKey) }}</div>
               </div>
             </div>
           </label>
@@ -35,16 +35,16 @@
 
       <!-- Effects -->
       <div class="rounded-3xl border border-zinc-200/70 dark:border-white/10 bg-white dark:bg-zinc-950/60 p-5">
-        <h2 class="font-bold text-zinc-900 dark:text-zinc-100">تأثيرات الخلفية</h2>
-        <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">تقدر تفعل أكثر من تأثير.</p>
+        <h2 class="font-bold text-zinc-900 dark:text-zinc-100">{{ t('admin.appearance.effects') || 'تأثيرات الخلفية' }}</h2>
+        <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">{{ t('admin.appearance.effectsHint') || 'تقدر تفعل أكثر من تأثير.' }}</p>
 
         <div class="mt-4 grid sm:grid-cols-2 gap-3">
           <label v-for="e in effectOptions" :key="e.key" class="cursor-pointer rounded-2xl p-4 border border-zinc-200/70 dark:border-white/10 bg-zinc-50/70 dark:bg-white/5 hover:shadow-md transition">
             <div class="flex items-center gap-3">
               <input type="checkbox" class="h-5 w-5" v-model="draft.effects[e.key]" />
               <div>
-                <div class="font-semibold text-zinc-900 dark:text-zinc-100">{{ e.label }}</div>
-                <div class="text-xs text-zinc-600 dark:text-zinc-400">{{ e.hint }}</div>
+                <div class="font-semibold text-zinc-900 dark:text-zinc-100">{{ t(e.labelKey) }}</div>
+                <div class="text-xs text-zinc-600 dark:text-zinc-400">{{ t(e.hintKey) }}</div>
               </div>
             </div>
           </label>
@@ -61,6 +61,8 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
+const { t } = useI18n()
+
 const store = useAppearanceStore()
 await store.refresh()
 
@@ -73,20 +75,20 @@ function notify(msg: string) {
 }
 
 const themeOptions = [
-  { key: 'ramadan', label: 'رمضان', hint: 'لمسات هلال/فانوس + لمعة' },
-  { key: 'eid', label: 'العيد', hint: 'لمعات خفيفة' },
-  { key: 'christmas', label: 'كرسمس', hint: 'ثلج بالخلفية' },
-  { key: 'valentines', label: 'عيد الحب', hint: 'قلوب بالخلفية' },
-  { key: 'blackFriday', label: 'Black Friday', hint: 'داكن: glow أحمر + neon / فاتح: confetti' },
+  { key: 'ramadan', labelKey: 'season.ramadan', hintKey: 'seasonHints.ramadan' },
+  { key: 'eid', labelKey: 'season.eid', hintKey: 'seasonHints.eid' },
+  { key: 'christmas', labelKey: 'season.christmas', hintKey: 'seasonHints.christmas' },
+  { key: 'valentines', labelKey: 'season.valentines', hintKey: 'seasonHints.valentines' },
+  { key: 'blackFriday', labelKey: 'season.blackFriday', hintKey: 'seasonHints.blackFridayTheme' },
 ]
 
 const effectOptions = [
-  { key: 'snow', label: 'ثلج', hint: 'ينزل بالخلفية' },
-  { key: 'ramadan', label: 'رمضان', hint: 'هلال/فانوس حسب الثيم' },
-  { key: 'eid', label: 'العيد', hint: 'Sparkles' },
-  { key: 'christmas', label: 'كرسمس', hint: 'ثلج + لمعة' },
-  { key: 'valentines', label: 'عيد الحب', hint: 'قلوب' },
-  { key: 'blackFriday', label: 'Black Friday', hint: 'discount particles % + neon lines' },
+  { key: 'snow', labelKey: 'season.snow', hintKey: 'seasonHints.snow' },
+  { key: 'ramadan', labelKey: 'season.ramadan', hintKey: 'seasonHints.ramadanEffect' },
+  { key: 'eid', labelKey: 'season.eid', hintKey: 'seasonHints.eidEffect' },
+  { key: 'christmas', labelKey: 'season.christmas', hintKey: 'seasonHints.christmasEffect' },
+  { key: 'valentines', labelKey: 'season.valentines', hintKey: 'seasonHints.valentinesEffect' },
+  { key: 'blackFriday', labelKey: 'season.blackFriday', hintKey: 'seasonHints.blackFridayEffect' },
 ]
 
 type Draft = {

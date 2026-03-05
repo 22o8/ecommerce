@@ -27,6 +27,10 @@ public static class DbBootstrapper
             @"ALTER TABLE IF EXISTS ""Products""
               ADD COLUMN IF NOT EXISTS ""IsFeatured"" boolean NOT NULL DEFAULT FALSE;",
 
+            // Discounts (Fixes 500s when the latest migration wasn't applied)
+            @"ALTER TABLE IF EXISTS ""Products""
+              ADD COLUMN IF NOT EXISTS ""DiscountPercent"" integer NOT NULL DEFAULT 0;",
+
             @"ALTER TABLE IF EXISTS ""Products""
               ADD COLUMN IF NOT EXISTS ""RatingAvg"" numeric(3,2) NOT NULL DEFAULT 0;",
 

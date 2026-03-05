@@ -17,7 +17,8 @@ function resize() {
   canvas.height = Math.floor(window.innerHeight * dpr)
   canvas.style.width = window.innerWidth + 'px'
   canvas.style.height = window.innerHeight + 'px'
-  const count = Math.min(140, Math.floor(window.innerWidth / 10))
+  // كثافة أعلى (لكن مع سقف حتى ما يأثر على الأداء)
+  const count = Math.min(220, Math.floor(window.innerWidth / 8))
   flakes = Array.from({ length: count }).map(() => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
@@ -56,8 +57,9 @@ function draw() {
   const w = canvas.width
   const h = canvas.height
   for (const f of flakes) {
+    // حركة أنعم + انحراف رياح خفيف
     f.y += f.v
-    f.x += Math.sin(f.d) * 0.25
+    f.x += Math.sin(f.d) * 0.45 + 0.08
     f.d += 0.01
     if (f.y > h + 10) {
       f.y = -10

@@ -17,12 +17,12 @@
 
 <script setup lang="ts">
 const hearts = computed(() => {
-  const count = 14
+  const count = 24
   return Array.from({ length: count }).map((_, i) => ({
     id: i,
     x: Math.random() * 100,
     delay: Math.random() * 4,
-    dur: 8 + Math.random() * 6,
+    dur: 7 + Math.random() * 6,
     scale: 0.7 + Math.random() * 0.9,
     opacity: 0.25 + Math.random() * 0.35,
   }))
@@ -35,10 +35,11 @@ const hearts = computed(() => {
   bottom: -40px;
   font-size: 22px;
   color: rgba(255, 105, 180, 0.7);
+  text-shadow: 0 0 12px rgba(255, 105, 180, 0.35);
   animation: rise linear infinite;
 }
 @keyframes rise {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-120vh); }
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(16px, -120vh, 0); }
 }
 </style>
