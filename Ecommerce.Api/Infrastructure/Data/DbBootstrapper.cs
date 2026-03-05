@@ -136,6 +136,29 @@ public static class DbBootstrapper
               );",
 
             @"CREATE INDEX IF NOT EXISTS ""IX_AppearanceAds_AppearanceConfigId"" ON ""AppearanceAds"" (""AppearanceConfigId"");",
+
+            // Standalone Ads (Fixes 500s on /api/admin/ads when latest migration was not applied)
+            @"CREATE TABLE IF NOT EXISTS ""Ads"" (
+                ""Id"" uuid NOT NULL,
+                ""Type"" integer NOT NULL DEFAULT 2,
+                ""Placement"" character varying(120) NOT NULL DEFAULT 'home_top',
+                ""Title"" text NOT NULL DEFAULT '',
+                ""Subtitle"" text NULL,
+                ""ImageUrl"" character varying(2000) NOT NULL DEFAULT '',
+                ""LinkUrl"" character varying(1000) NULL,
+                ""ProductId"" uuid NULL,
+                ""SortOrder"" integer NOT NULL DEFAULT 0,
+                ""IsEnabled"" boolean NOT NULL DEFAULT TRUE,
+                ""StartAt"" timestamp with time zone NULL,
+                ""EndAt"" timestamp with time zone NULL,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                CONSTRAINT ""PK_Ads"" PRIMARY KEY (""Id"")
+              );",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_Ads_Type_Placement_SortOrder""
+              ON ""Ads"" (""Type"", ""Placement"", ""SortOrder"");",
+
         };
 
         foreach (var sql in statements)

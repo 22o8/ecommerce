@@ -1,13 +1,10 @@
 // ecommerce-web/server/api/bff/[...path].ts
 import { readMultipartFormData, readRawBody } from 'h3'
+
 export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
 
-    // IMPORTANT:
-    // لا تستخدم apiBase هنا إطلاقاً.
-    // إذا apiOrigin صار فاضي/غلط، كان الكود ياخذ "/api/bff" (apiBase)
-    // ويسوي recursion على نفسه -> 500 على Vercel.
     const apiOrigin =
       (config as any).apiOrigin ||
       (config.public as any).apiOrigin ||
@@ -23,24 +20,17 @@ export default defineEventHandler(async (event) => {
     const routePath = getRouterParam(event, 'path') || ''
 
     const targetBase = String(apiOrigin).replace(/\/$/, '')
-
-    // ✅ المسار الافتراضي للـ API يكون تحت /api
-    // لكن مسارات الملفات المرفوعة تكون عادةً تحت /uploads (بدون /api)
-    // إذا عملنا لها proxy إلى /api/uploads راح نحصل 404.
     const isUploads = routePath.startsWith('uploads/') || routePath === 'uploads'
     const apiBase = targetBase.endsWith('/api') ? targetBase : `${targetBase}/api`
     const targetUrl = new URL(isUploads ? `${targetBase}/${routePath}` : `${apiBase}/${routePath}`)
 
-    // Query params
     const incomingQuery = getQuery(event) as Record<string, any>
-
-    // ✅ query=JSON => params
     if (typeof incomingQuery.query === 'string' && incomingQuery.query.trim()) {
       try {
         const obj = JSON.parse(incomingQuery.query)
         if (obj && typeof obj === 'object') {
           for (const [k, v] of Object.entries(obj)) {
-            if (v === undefined || v === null) continue
+            if (v == null) continue
             if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
             else targetUrl.searchParams.set(k, String(v))
           }
@@ -52,63 +42,61 @@ export default defineEventHandler(async (event) => {
     }
 
     for (const [k, v] of Object.entries(incomingQuery)) {
-      if (v === undefined || v === null) continue
+      if (v == null) continue
       if (Array.isArray(v)) v.forEach((vv) => targetUrl.searchParams.append(k, String(vv)))
       else targetUrl.searchParams.set(k, String(v))
     }
 
-    // Headers
     const headers = getRequestHeaders(event) as Record<string, any>
     delete headers.host
     delete headers.connection
     delete headers['content-length']
-    // ✅ منع ضغط الاستجابة من المصدر لتفادي JSON مضغوط/غير قابل للقراءة على بعض الشبكات/VPN
     delete headers['accept-encoding']
     delete headers['Accept-Encoding']
     headers['accept-encoding'] = 'identity'
 
-    // ✅ 1) إذا الفرونت مرسل Authorization خليّه مثل ما هو
     const authHeader = headers.authorization || headers.Authorization
-
-    // ✅ 2) fallback: خذ التوكن من Cookie إذا ماكو Authorization
     const tokenFromCookie =
       getCookie(event, 'token') ||
       getCookie(event, 'access_token') ||
-      getCookie(event, 'access') // ✅ نسمح لـ access هم
+      getCookie(event, 'access')
+
     if (!authHeader && tokenFromCookie) {
       headers.authorization = `Bearer ${tokenFromCookie}`
     }
 
-    // ✅ WhatsApp Checkout: أرسل سرّ بسيط للباك إند حتى نمنع الاستدعاء المباشر من أي شخص
-    // ضعه في Vercel Environment Variables باسم CHECKOUT_SECRET
     if (routePath.toLowerCase() === 'checkout/cart/whatsapp') {
       const secret = process.env.CHECKOUT_SECRET
       if (secret) headers['X-Checkout-Secret'] = secret
     }
 
-    // Body
-    // ✅ رفع الصور (multipart/form-data) لازم يتقرأ ويتعاد إرساله كـ FormData
-    // لأن readRawBody يحول الباينري لنص ويسبب مشاكل مثل: [object Object] + فشل رفع الصور.
     let body: any = undefined
-    const ct = String(headers['content-type'] || headers['Content-Type'] || '')
+    const requestCt = String(headers['content-type'] || headers['Content-Type'] || '')
 
     if (method !== 'GET' && method !== 'HEAD') {
-      if (ct.includes('multipart/form-data')) {
+      if (requestCt.includes('multipart/form-data')) {
         const parts = await readMultipartFormData(event)
         const fd = new FormData()
 
-        for (const p of parts || []) {
-          const anyP: any = p as any
-          if (anyP?.type === 'file') {
-            const blob = new Blob([anyP.data], { type: anyP.type || 'application/octet-stream' })
-            fd.append(anyP.name, blob, anyP.filename || 'upload.bin')
+        for (const part of parts || []) {
+          const name = (part as any)?.name || 'file'
+          const filename = (part as any)?.filename
+          const mime = (part as any)?.type || 'application/octet-stream'
+          const data = (part as any)?.data
+
+          if (filename) {
+            const bytes = data instanceof Uint8Array ? data : new Uint8Array(data || [])
+            const blob = new Blob([bytes], { type: mime })
+            fd.append(name, blob, filename)
           } else {
-            fd.append(anyP.name, anyP.data?.toString?.() ?? String(anyP.data ?? ''))
+            const value = data instanceof Uint8Array
+              ? new TextDecoder().decode(data)
+              : (data?.toString?.() ?? String(data ?? ''))
+            fd.append(name, value)
           }
         }
 
         body = fd
-        // لا نرسل content-type يدوياً مع FormData حتى fetch يضبط الـ boundary
         delete headers['content-type']
         delete headers['Content-Type']
       } else {
@@ -125,105 +113,61 @@ export default defineEventHandler(async (event) => {
     const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
     const isLogout = routePath.toLowerCase() === 'auth/logout'
 
-    // ✅ login: خزن cookies
     if (isLogin) {
       const json = await res.json().catch(() => null)
-
       const token = json?.token
       const role = json?.user?.role || 'User'
 
       if (token) {
         const secure = process.env.NODE_ENV === 'production'
-
-        // token httpOnly (أمني)
-        setCookie(event, 'token', token, {
-          httpOnly: true,
-          secure,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 60 * 60 * 24 * 30,
-        })
-
-        // ✅ access غير httpOnly (حل iOS/Telegram 401)
-        setCookie(event, 'access', token, {
-          httpOnly: false,
-          secure,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 60 * 60 * 24 * 30,
-        })
-
-        // role غير httpOnly
-        setCookie(event, 'role', String(role), {
-          httpOnly: false,
-          secure,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 60 * 60 * 24 * 30,
-        })
-
-        // auth flag غير httpOnly
-        setCookie(event, 'auth', '1', {
-          httpOnly: false,
-          secure,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 60 * 60 * 24 * 30,
-        })
-
-        // (اختياري) خزن user كـ JSON
+        setCookie(event, 'token', token, { httpOnly: true, secure, sameSite: 'lax', path: '/', maxAge: 60 * 60 * 24 * 30 })
+        setCookie(event, 'access', token, { httpOnly: false, secure, sameSite: 'lax', path: '/', maxAge: 60 * 60 * 24 * 30 })
+        setCookie(event, 'role', String(role), { httpOnly: false, secure, sameSite: 'lax', path: '/', maxAge: 60 * 60 * 24 * 30 })
+        setCookie(event, 'auth', '1', { httpOnly: false, secure, sameSite: 'lax', path: '/', maxAge: 60 * 60 * 24 * 30 })
         if (json?.user) {
-          setCookie(event, 'user', JSON.stringify(json.user), {
-            httpOnly: false,
-            secure,
-            sameSite: 'lax',
-            path: '/',
-            maxAge: 60 * 60 * 24 * 30,
-          })
+          setCookie(event, 'user', JSON.stringify(json.user), { httpOnly: false, secure, sameSite: 'lax', path: '/', maxAge: 60 * 60 * 24 * 30 })
         }
       }
 
       setResponseStatus(event, res.status)
-
       return json
     }
 
-    // ✅ logout: امسح cookies
     if (isLogout) {
       const json = await res.json().catch(() => null)
-      const names = ['token','access','access_token','role','auth','user']
+      const names = ['token', 'access', 'access_token', 'role', 'auth', 'user']
       for (const n of names) {
-        try { deleteCookie(event, n, { path: '/' }) } catch { /* ignore */ }
+        try { deleteCookie(event, n, { path: '/' }) } catch {}
       }
       setResponseStatus(event, res.status)
       return json ?? { ok: res.ok }
     }
 
-    // ✅ ضبط status دائماً قبل القراءة
     setResponseStatus(event, res.status)
 
+    const responseCt = String(res.headers.get('content-type') || '').toLowerCase()
+    if (responseCt) setResponseHeader(event, 'content-type', responseCt)
 
-    // ✅ على Vercel بعض الـ routes تشتغل Edge runtime، لذلك نتجنب Buffer و node:zlib
-    // ونعتمد فقط على Web APIs (text/json/arrayBuffer).
-    if (ct.includes("application/json")) {
-      const raw = await res.text().catch(() => "")
+    if (responseCt.includes('application/json') || responseCt.includes('application/problem+json')) {
+      const raw = await res.text().catch(() => '')
       try {
         return raw ? JSON.parse(raw) : null
       } catch {
         return {
-          error: "Upstream returned invalid JSON.",
+          error: 'Upstream returned invalid JSON.',
           status: res.status,
-          contentType: ct,
+          contentType: responseCt,
           preview: raw.slice(0, 400),
         }
       }
     }
 
-    // non-JSON: رجّعه كباينري (uploads/images)
-    if (ct) setResponseHeader(event, "content-type", ct)
+    if (responseCt.startsWith('text/')) {
+      return await res.text().catch(() => '')
+    }
+
     const buf = new Uint8Array(await res.arrayBuffer())
     return buf
-
   } catch (err: any) {
     console.error('BFF error:', err)
     setResponseStatus(event, 500)

@@ -289,7 +289,7 @@ async function loadBrands() {
   try {
     brands.value = await listBrands<any>()
   } catch (e: any) {
-    toast.error(t('common.errorGeneric'))
+    toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
   }
 }
 
@@ -381,7 +381,7 @@ async function onSave() {
     toast.success(t('common.saved'))
     await loadProduct()
   } catch (e: any) {
-    toast.error(t('common.errorGeneric'))
+    toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
   } finally {
     saving.value = false
   }
@@ -423,7 +423,7 @@ async function uploadSelected() {
     await loadImages()
     imgVer.value++
   } catch (e: any) {
-    toast.error(t('admin.uploadImagesFailed'))
+    toast.error(e?.data?.message || t('admin.uploadImagesFailed'))
   } finally {
     uploading.value = false
   }
@@ -438,7 +438,7 @@ async function deleteImage(imageId: string) {
     await loadImages()
     imgVer.value++
   } catch (e: any) {
-    toast.error(t('common.errorGeneric'))
+    toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
   }
 }
 

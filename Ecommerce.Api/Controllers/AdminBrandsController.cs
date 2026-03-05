@@ -132,10 +132,14 @@ public class AdminBrandsController : ControllerBase
     // Upload square logo
     [HttpPost("{id:guid}/logo")]
     [RequestSizeLimit(10_000_000)]
-    public async Task<IActionResult> UploadLogo([FromRoute] Guid id, [FromForm] IFormFile file)
+    public async Task<IActionResult> UploadLogo([FromRoute] Guid id, [FromForm] IFormFile? file)
     {
         var b = await _db.Brands.FirstOrDefaultAsync(x => x.Id == id);
         if (b == null) return NotFound(new { message = "Brand not found" });
+
+        // Some clients send the field as "logo" or any other name.
+        if ((file == null || file.Length == 0) && Request.HasFormContentType && Request.Form.Files.Count > 0)
+            file = Request.Form.Files[0];
 
         if (file == null || file.Length == 0)
             return BadRequest(new { message = "No file uploaded" });
@@ -147,11 +151,13 @@ public class AdminBrandsController : ControllerBase
         if (string.IsNullOrWhiteSpace(ext) || !allowed.Contains(ext))
             return BadRequest(new { message = $"File type not allowed: {ext}" });
 
-        var webRoot = _env.WebRootPath;
-        if (string.IsNullOrWhiteSpace(webRoot))
-            webRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+        // IMPORTANT: Program.cs serves files from ContentRootPath/uploads, not wwwroot/uploads.
+        // If we write into wwwroot هنا راح ينرفع الملف لكن يطلع 404 عند العرض.
+        var root = _env.ContentRootPath;
+        if (string.IsNullOrWhiteSpace(root))
+            root = AppContext.BaseDirectory;
 
-        var dir = Path.Combine(webRoot, "uploads", "brands", id.ToString());
+        var dir = Path.Combine(root, "uploads", "brands", id.ToString());
         Directory.CreateDirectory(dir);
 
         var fileName = $"logo{ext.ToLowerInvariant()}";

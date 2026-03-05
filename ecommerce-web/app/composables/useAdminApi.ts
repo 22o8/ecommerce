@@ -94,8 +94,8 @@ export function useAdminApi() {
     deleteBrand: <T>(id: string) => api.del<T>(`/admin/brands/${id}`),
     uploadBrandLogo: async <T>(id: string, file: File) => {
       const fd = new FormData()
-      // Swagger: field name "logo"
-      fd.append('logo', file)
+      // Backend accepts both "file" and fallback first form file; keep canonical field name "file"
+      fd.append('file', file)
       return await api.postForm<T>(`/admin/brands/${id}/logo`, fd)
     },
   }
