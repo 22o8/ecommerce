@@ -190,11 +190,11 @@ public class AdminBrandsController : ControllerBase
 
     private static string NormalizeSlug(string? s)
     {
-        s = (s ?? "").Trim().ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(s)) return "";
+        s = (s ?? string.Empty).Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(s)) return string.Empty;
 
-        s = System.Text.RegularExpressions.Regex.Replace(s, @"\s+", "-");
-        s = System.Text.RegularExpressions.Regex.Replace(s, @"[^a-z0-9\-]", "");
+        s = System.Text.RegularExpressions.Regex.Replace(s, "[`'\"]+", string.Empty);
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"[^a-z0-9\u0600-\u06FF]+", "-");
         s = System.Text.RegularExpressions.Regex.Replace(s, @"-+", "-").Trim('-');
 
         return s;

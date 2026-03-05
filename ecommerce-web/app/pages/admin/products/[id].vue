@@ -247,7 +247,8 @@ function resetForm() {
   // we store brand slug/name in the same field; API expects "brand"
   form.brandSlug = product.value.brand || product.value.brandSlug || ''
   // If API returns brand NAME, map it to slug so the dropdown selects correctly.
-  const match = brands.value.find((b: any) => b.slug === form.brandSlug || b.name === form.brandSlug)
+  const brandList = Array.isArray(brands.value) ? brands.value : []
+  const match = brandList.find((b: any) => b.slug === form.brandSlug || b.name === form.brandSlug)
   if (match) form.brandSlug = match.slug
   form.isActive = Boolean(product.value.isPublished ?? product.value.isActive ?? true)
   form.isFeatured = Boolean((product.value as any).isFeatured ?? false)
@@ -287,7 +288,8 @@ function resolveUploadUrl(path?: string) {
 
 async function loadBrands() {
   try {
-    brands.value = await listBrands<any>()
+    const res: any = await listBrands<any>()
+    brands.value = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : (Array.isArray(res?.data) ? res.data : []))
   } catch (e: any) {
     toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
   }
@@ -365,7 +367,8 @@ async function onSave() {
 
   saving.value = true
   try {
-    const match = brands.value.find((b: any) => b.slug === form.brandSlug || b.name === form.brandSlug)
+    const brandList = Array.isArray(brands.value) ? brands.value : []
+    const match = brandList.find((b: any) => b.slug === form.brandSlug || b.name === form.brandSlug)
     await updateAdminProduct<any>(id.value, {
       // ✅ match backend DTO (UpsertProductRequest)
       title: form.name.trim(),
@@ -373,8 +376,8 @@ async function onSave() {
       description: form.description?.trim() || '',
       priceIqd: Number(form.price),
       discountPercent: Math.max(0, Math.min(100, Number(form.discountPercent || 0))),
-      // Backend validates brand by NAME; UI selects by slug.
-      brand: match?.name || form.brandSlug,
+      // Backend validates brand by SLUG; if list not loaded keep current slug.
+      brand: match?.slug || form.brandSlug,
       isPublished: Boolean(form.isActive),
       isFeatured: Boolean(form.isFeatured),
     })

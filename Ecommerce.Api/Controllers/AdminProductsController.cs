@@ -320,9 +320,9 @@ public class AdminProductsController : ControllerBase
 
     private static string Slugify(string s)
     {
-        s = s.Trim().ToLowerInvariant();
-        s = Regex.Replace(s, @"\s+", "-");
-        s = Regex.Replace(s, @"[^a-z0-9\-]", "");
+        s = (s ?? string.Empty).Trim().ToLowerInvariant();
+        s = Regex.Replace(s, "[`'\"]+", string.Empty);
+        s = Regex.Replace(s, @"[^a-z0-9\u0600-\u06FF]+", "-");
         s = Regex.Replace(s, @"-+", "-");
         return s.Trim('-');
     }

@@ -1,8 +1,8 @@
 <template>
   <div class="min-h-screen bg-app relative overflow-x-clip">
     <GlobalEffects />
-    <GlobalAds />
     <AppNavbar />
+    <GlobalAds />
 
     <main class="mx-auto max-w-7xl px-4 py-8">
       <slot />
