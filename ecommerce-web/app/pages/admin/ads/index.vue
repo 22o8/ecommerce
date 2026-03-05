@@ -214,7 +214,7 @@ onMounted(load)
             <div v-for="ad in items" :key="ad.id" class="rounded-2xl border border-white/10 bg-white/5 p-3">
               <div class="flex items-start justify-between gap-3">
                 <div class="flex items-center gap-3 min-w-0">
-                  <img :src="api.buildAssetUrl(String(ad.imageUrl || ""))" class="h-12 w-12 rounded-2xl object-cover border border-white/10" />
+                  <img :src="api.buildAssetUrl(String(ad.imageUrl || ''))" class="h-12 w-12 rounded-2xl object-cover border border-white/10" />
                   <div class="min-w-0">
                     <div class="font-extrabold truncate">{{ ad.title }}</div>
                     <div class="text-xs text-white/60 keep-ltr">{{ ad.type }} • {{ ad.placement }} • sort: {{ ad.sortOrder }}</div>
