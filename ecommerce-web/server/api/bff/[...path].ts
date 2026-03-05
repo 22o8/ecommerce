@@ -188,7 +188,6 @@ export default defineEventHandler(async (event) => {
       return json
     }
 
-    const ct = (res.headers.get("content-type") || "").toLowerCase()
     // ✅ logout: امسح cookies
     if (isLogout) {
       const json = await res.json().catch(() => null)
