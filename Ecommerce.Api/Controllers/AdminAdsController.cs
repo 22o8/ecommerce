@@ -175,9 +175,9 @@ public class AdminAdsController : ControllerBase
         var key = $"uploads/ads/{id}{ext}";
 
         await using var stream = file.OpenReadStream();
-        var url = await _storage.UploadAsync(stream, key, file.ContentType);
+        var stored = await _storage.UploadAsync(stream, key, file.ContentType);
 
-        return Ok(new { url });
+        return Ok(new { url = stored.Url, key = stored.Key });
     }
 
     private static AdType ParseType(string? t)

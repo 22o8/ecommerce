@@ -134,7 +134,13 @@ const displayFinalPrice = computed(() => {
 })
 
 const mainImage = computed(() => {
-  const raw = p.value?.images?.[0]?.url || p.value?.images?.[0] || p.value?.imageUrl || p.value?.image || ''
+  const raw =
+    p.value?.images?.[0]?.url ||
+    p.value?.images?.[0] ||
+    p.value?.coverImage ||
+    p.value?.imageUrl ||
+    p.value?.image ||
+    ''
   const resolved = raw ? buildAssetUrl(String(raw)) : ''
   return resolved || '/hero-placeholder.svg'
 })

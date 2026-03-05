@@ -10,6 +10,7 @@ import UiInput from '~/components/ui/UiInput.vue'
 
 const { t } = useI18n()
 const toast = useToast()
+const api = useApi()
 
 const loading = ref(true)
 const items = ref<any[]>([])
@@ -112,7 +113,8 @@ async function onPickFile(e: Event) {
       method: 'POST',
       body: fd,
     })
-    form.imageUrl = (res?.url as string) || ''
+    const uploaded = res?.url?.url || res?.url || res?.imageUrl || ''
+    form.imageUrl = typeof uploaded === 'string' ? uploaded : ''
     if (form.imageUrl) toast.success(t('common.uploaded') || 'تم الرفع')
   } catch {
     toast.error(t('common.requestFailed') || t('common.errorGeneric') || 'حصل خطأ')
@@ -173,7 +175,7 @@ onMounted(load)
                 <span v-if="uploading" class="text-xs text-white/60">{{ t('common.uploading') || 'جاري الرفع...' }}</span>
               </div>
               <UiInput v-model="form.imageUrl" placeholder="https://..." dir="ltr" />
-              <img v-if="form.imageUrl" :src="form.imageUrl" class="mt-1 h-24 w-full object-cover rounded-2xl border border-white/10" />
+              <img v-if="form.imageUrl" :src="api.buildAssetUrl(String(form.imageUrl))" class="mt-1 h-24 w-full object-cover rounded-2xl border border-white/10" />
             </div>
 
             <div class="grid gap-2">
@@ -212,7 +214,7 @@ onMounted(load)
             <div v-for="ad in items" :key="ad.id" class="rounded-2xl border border-white/10 bg-white/5 p-3">
               <div class="flex items-start justify-between gap-3">
                 <div class="flex items-center gap-3 min-w-0">
-                  <img :src="ad.imageUrl" class="h-12 w-12 rounded-2xl object-cover border border-white/10" />
+                  <img :src="api.buildAssetUrl(String(ad.imageUrl || ""))" class="h-12 w-12 rounded-2xl object-cover border border-white/10" />
                   <div class="min-w-0">
                     <div class="font-extrabold truncate">{{ ad.title }}</div>
                     <div class="text-xs text-white/60 keep-ltr">{{ ad.type }} • {{ ad.placement }} • sort: {{ ad.sortOrder }}</div>
