@@ -141,7 +141,10 @@
     "manageServicesHint": "إضافة الخدمات الرقمية وإدارتها.",
     "backToSite": "العودة للموقع",
     "orders": "الطلبات",
-    "appearanceLabel": "الإعلانات والثيمات",
+  "appearanceLabel": "الثيمات والتأثيرات",
+  "adsLabel": "الإعلانات",
+  "discount": "الخصم",
+  "finalPrice": "السعر بعد الخصم",
     "appearance": {
       "title": "الثيمات والتأثيرات",
       "subtitle": "تحكم بالخلفيات والتأثيرات التي تظهر لكل الزبائن.",

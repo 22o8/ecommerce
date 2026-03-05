@@ -138,7 +138,10 @@
     "manageProductsHint": "Create, edit and publish products",
     "manageOrders": "Manage orders",
     "manageOrdersHint": "Track, update and fulfill orders",
-    "appearanceLabel": "Ads & Themes",
+  "appearanceLabel": "Themes & Effects",
+  "adsLabel": "Ads",
+  "discount": "Discount",
+  "finalPrice": "Final price",
     "appearance": {
       "title": "Themes & Effects",
       "subtitle": "Control the backgrounds and effects shown to customers.",

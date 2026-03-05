@@ -1,5 +1,6 @@
 export default defineNuxtPlugin(async () => {
   const store = useAppearanceStore()
+  const route = useRoute()
   if (!store.loaded) await store.refresh()
 
   const apply = () => {
@@ -14,10 +15,14 @@ export default defineNuxtPlugin(async () => {
     store.data.themes.forEach((t) => el.classList.add(`theme-${t}`))
   }
 
-  apply()
+  // لا نطبّق ثيمات/تأثيرات المتجر داخل صفحات الأدمن حتى ما يصير تغيير تلقائي أو تلخبط
+  if (!route.path?.startsWith('/admin')) apply()
   watch(
     () => store.data.themes,
-    () => apply(),
+    () => {
+      if (route.path?.startsWith('/admin')) return
+      apply()
+    },
     { deep: true }
   )
 })

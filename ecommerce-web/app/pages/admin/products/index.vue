@@ -212,8 +212,9 @@ const { formatIqd } = useMoney()
 
 const router = useRouter()
 
-function goDetails(id: string) {
-  router.push(`/admin/products/${id}`)
+function goDetails(id: any) {
+  const pid = typeof id === 'string' ? id : (id?.id ?? id?.value ?? '')
+  router.push(`/admin/products/${encodeURIComponent(String(pid))}`)
 }
 
 const q = ref('')

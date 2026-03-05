@@ -1,4 +1,5 @@
 // ecommerce-web/server/api/bff/[...path].ts
+import { readMultipartFormData, readRawBody } from 'h3'
 export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
@@ -86,9 +87,34 @@ export default defineEventHandler(async (event) => {
     }
 
     // Body
-    const body = method === 'GET' || method === 'HEAD'
-      ? undefined
-      : await readRawBody(event, false)
+    // ✅ رفع الصور (multipart/form-data) لازم يتقرأ ويتعاد إرساله كـ FormData
+    // لأن readRawBody يحول الباينري لنص ويسبب مشاكل مثل: [object Object] + فشل رفع الصور.
+    let body: any = undefined
+    const ct = String(headers['content-type'] || headers['Content-Type'] || '')
+
+    if (method !== 'GET' && method !== 'HEAD') {
+      if (ct.includes('multipart/form-data')) {
+        const parts = await readMultipartFormData(event)
+        const fd = new FormData()
+
+        for (const p of parts || []) {
+          const anyP: any = p as any
+          if (anyP?.type === 'file') {
+            const blob = new Blob([anyP.data], { type: anyP.type || 'application/octet-stream' })
+            fd.append(anyP.name, blob, anyP.filename || 'upload.bin')
+          } else {
+            fd.append(anyP.name, anyP.data?.toString?.() ?? String(anyP.data ?? ''))
+          }
+        }
+
+        body = fd
+        // لا نرسل content-type يدوياً مع FormData حتى fetch يضبط الـ boundary
+        delete headers['content-type']
+        delete headers['Content-Type']
+      } else {
+        body = await readRawBody(event, false)
+      }
+    }
 
     const res = await fetch(targetUrl.toString(), {
       method,
