@@ -191,46 +191,68 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
         </NuxtLink>
       </div>
 
-      <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        <RevealOnScroll
-          v-for="(c, idx) in categoryCards"
+      <div class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <NuxtLink
+          v-for="c in categoryCards"
           :key="c.key"
-          :parity="(idx % 2) as 0 | 1"
-          :delay="35 * idx"
+          :to="`/products?q=${encodeURIComponent(categoryQuery(c))}`"
+          class="group category-clean-card"
         >
-          <NuxtLink
-            :to="`/products?q=${encodeURIComponent(categoryQuery(c))}`"
-            class="group category-simple-card rounded-[22px] border border-app px-4 py-4 transition duration-300 hover:border-[rgb(var(--primary))]/35 hover:bg-surface-2/70"
-          >
-            <div class="flex items-center gap-3">
-              <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgb(var(--primary))]/12 text-xl transition duration-300 group-hover:scale-105">
-                {{ c.icon }}
-              </div>
-              <div class="min-w-0 flex-1">
-                <div class="truncate text-base font-extrabold text-[rgb(var(--text))]">
-                  {{ t(c.labelKey) }}
-                </div>
-                <div class="mt-1 truncate text-xs text-[rgb(var(--muted))]">
-                  {{ t('home.tapToExplore') }}
-                </div>
-              </div>
-              <div class="text-[rgb(var(--muted))] transition duration-300 group-hover:text-[rgb(var(--primary))]">←</div>
-            </div>
-          </NuxtLink>
-        </RevealOnScroll>
+          <div class="category-clean-icon">{{ c.icon }}</div>
+          <div class="mt-4 text-lg font-extrabold text-[rgb(var(--text))]">
+            {{ t(c.labelKey) }}
+          </div>
+          <div class="mt-2 text-sm text-[rgb(var(--muted))]">
+            {{ t('home.tapToExplore') }}
+          </div>
+          <div class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[rgb(var(--primary))]">
+            <span>{{ t('home.viewAll') }}</span>
+            <span aria-hidden="true">←</span>
+          </div>
+        </NuxtLink>
       </div>
     </section>
   </div>
 </template>
 
 <style scoped>
-.category-simple-card{
-  box-shadow: 0 10px 28px rgba(0,0,0,.08);
+.category-clean-card{
+  display:block;
+  border-radius:28px;
+  border:1px solid rgba(var(--border), .9);
+  padding:24px 20px;
+  background: linear-gradient(180deg, rgba(var(--surface-1), .96), rgba(var(--surface-2), .88));
+  box-shadow: 0 14px 32px rgba(0,0,0,.10);
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease, background .22s ease;
 }
-:global(html.theme-light) .category-simple-card{
-  background: rgba(255,255,255,.95);
+.category-clean-card:hover{
+  transform: translateY(-4px);
+  border-color: rgba(var(--primary), .35);
+  box-shadow: 0 18px 38px rgba(0,0,0,.14);
 }
-:global(html.theme-dark) .category-simple-card{
-  background: linear-gradient(180deg, rgba(var(--surface-1), .95), rgba(var(--surface-2), .82));
+.category-clean-icon{
+  display:grid;
+  place-items:center;
+  width:56px;
+  height:56px;
+  border-radius:18px;
+  background: rgba(var(--primary), .12);
+  font-size:28px;
+  line-height:1;
+}
+:global(html.theme-light) .category-clean-card{
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,244,255,.96));
+}
+@media (max-width: 640px){
+  .category-clean-card{
+    padding:18px 16px;
+    border-radius:22px;
+  }
+  .category-clean-icon{
+    width:50px;
+    height:50px;
+    border-radius:16px;
+    font-size:24px;
+  }
 }
 </style>
