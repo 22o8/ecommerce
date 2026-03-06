@@ -379,7 +379,19 @@
     "tapToExplore": "اضغط للاستكشاف",
     "catMoisturizer": "مرطّب",
     "catCleanser": "غسول",
-    "subtitle": "متجر رقمي احترافي"
+    "subtitle": "متجر رقمي احترافي",
+    "quickBadge1": "توصيل سريع داخل العراق",
+    "quickBadge2": "خصومات يومية مختارة",
+    "quickBadge3": "منتجات أصلية موثوقة",
+    "heroCard1Label": "Top Picks",
+    "heroCard1Title": "عناية يومية أنيقة",
+    "heroCard1Desc": "اختيارات مرتبة لتوصلي لأفضل المنتجات بسرعة.",
+    "heroCard2Label": "Best Deals",
+    "heroCard2Title": "خصومات واضحة ومرتبة",
+    "heroCard2Desc": "السعر بعد الخصم ظاهر بوضوح من الصفحة الرئيسية حتى السلة.",
+    "heroCard3Label": "Easy Shopping",
+    "heroCard3Title": "تصفح أسرع وأسهل",
+    "heroCard3Desc": "واجهة أخف وحركة أنعم مع تجربة أفضل على الهاتف."
   },
   "productsPage": {
     "title": "المنتجات",
@@ -572,7 +584,8 @@
     "title": "السلة",
     "checkout": "إكمال الشراء",
     "emptyTitle": "سلتك فارغة",
-    "emptyDesc": "أضف منتجات لتظهر هنا."
+    "emptyDesc": "أضف منتجات لتظهر هنا.",
+    "discountSaved": "إجمالي التوفير"
   },
   "favorites": {
     "title": "مفضلاتي",
@@ -618,5 +631,9 @@
     "title": "التخفيضات",
     "subtitle": "منتجات عليها خصم حقيقي",
     "empty": "حالياً لا توجد منتجات عليها تخفيض."
+  },
+  "seasonal": {
+    "eidAdhaTitle": "عيد الأضحى المبارك",
+    "eidAdhaSubtitle": "عروض مختارة ولمسة عيدية خفيفة في أعلى الصفحة"
   }
 }

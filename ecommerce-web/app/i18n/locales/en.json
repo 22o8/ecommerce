@@ -355,7 +355,19 @@
     "tapToExplore": "Tap to explore",
     "catMoisturizer": "Moisturizer",
     "catCleanser": "Cleanser",
-    "subtitle": "Professional digital store"
+    "subtitle": "Professional digital store",
+    "quickBadge1": "Fast delivery across Iraq",
+    "quickBadge2": "Curated daily discounts",
+    "quickBadge3": "Trusted original products",
+    "heroCard1Label": "Top Picks",
+    "heroCard1Title": "Daily care, styled better",
+    "heroCard1Desc": "Curated picks that help customers reach the right products faster.",
+    "heroCard2Label": "Best Deals",
+    "heroCard2Title": "Clear discount presentation",
+    "heroCard2Desc": "Final discounted prices now stay visible from home to cart.",
+    "heroCard3Label": "Easy Shopping",
+    "heroCard3Title": "Faster smoother browsing",
+    "heroCard3Desc": "A lighter interface and smoother movement, especially on mobile."
   },
   "productsPage": {
     "title": "Products",
@@ -552,7 +564,8 @@
     "title": "Cart",
     "checkout": "Checkout",
     "emptyTitle": "Your cart is empty",
-    "emptyDesc": "Add products to see them here."
+    "emptyDesc": "Add products to see them here.",
+    "discountSaved": "Total savings"
   },
   "favorites": {
     "title": "Favorites",
@@ -598,5 +611,9 @@
     "title": "Discounts",
     "subtitle": "Products with real discounts",
     "empty": "There are no discounted products right now."
+  },
+  "seasonal": {
+    "eidAdhaTitle": "Eid Al-Adha Mubarak",
+    "eidAdhaSubtitle": "A gentle festive touch with selected offers at the top of the home page"
   }
 }

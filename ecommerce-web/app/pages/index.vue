@@ -97,6 +97,12 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
           </p>
 
           
+          <div class="mt-6 flex flex-wrap items-center justify-center gap-2">
+            <span class="rounded-full border border-app bg-surface/80 px-3 py-1 text-xs font-bold text-[rgb(var(--text))]">{{ t('home.quickBadge1') }}</span>
+            <span class="rounded-full border border-app bg-surface/80 px-3 py-1 text-xs font-bold text-[rgb(var(--text))]">{{ t('home.quickBadge2') }}</span>
+            <span class="rounded-full border border-app bg-surface/80 px-3 py-1 text-xs font-bold text-[rgb(var(--text))]">{{ t('home.quickBadge3') }}</span>
+          </div>
+
           <div class="mt-8 flex items-center justify-center gap-3">
             <NuxtLink
               to="/products"
@@ -114,6 +120,23 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
             </a>
           </div>
 
+          <div class="mt-10 grid gap-4 text-start sm:grid-cols-3">
+            <div class="rounded-3xl border border-app bg-surface/78 p-4 shadow-card backdrop-blur">
+              <div class="text-xs font-bold uppercase tracking-[0.2em] text-[rgb(var(--muted))]">{{ t('home.heroCard1Label') }}</div>
+              <div class="mt-2 text-lg font-black text-[rgb(var(--text))]">{{ t('home.heroCard1Title') }}</div>
+              <div class="mt-1 text-sm text-[rgb(var(--muted))]">{{ t('home.heroCard1Desc') }}</div>
+            </div>
+            <div class="rounded-3xl border border-app bg-surface/78 p-4 shadow-card backdrop-blur">
+              <div class="text-xs font-bold uppercase tracking-[0.2em] text-[rgb(var(--muted))]">{{ t('home.heroCard2Label') }}</div>
+              <div class="mt-2 text-lg font-black text-[rgb(var(--text))]">{{ t('home.heroCard2Title') }}</div>
+              <div class="mt-1 text-sm text-[rgb(var(--muted))]">{{ t('home.heroCard2Desc') }}</div>
+            </div>
+            <div class="rounded-3xl border border-app bg-surface/78 p-4 shadow-card backdrop-blur">
+              <div class="text-xs font-bold uppercase tracking-[0.2em] text-[rgb(var(--muted))]">{{ t('home.heroCard3Label') }}</div>
+              <div class="mt-2 text-lg font-black text-[rgb(var(--text))]">{{ t('home.heroCard3Title') }}</div>
+              <div class="mt-1 text-sm text-[rgb(var(--muted))]">{{ t('home.heroCard3Desc') }}</div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

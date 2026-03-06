@@ -4,8 +4,24 @@ export type CartItem = {
   id: string
   title: string
   price: number
+  originalPrice?: number
+  discountPercent?: number
   imageUrl?: string | null
   quantity: number
+}
+
+function normalizeCartProduct(product: any) {
+  const originalPrice = Number(product?.priceIqd ?? product?.price ?? 0)
+  const discountPercent = Number(product?.discountPercent ?? 0)
+  const finalPrice = Number(product?.finalPriceIqd ?? (discountPercent > 0 ? (originalPrice * (100 - discountPercent) / 100) : originalPrice))
+  return {
+    id: String(product?.id ?? ''),
+    title: String(product?.title ?? product?.name ?? ''),
+    imageUrl: product?.imageUrl ?? product?.coverImage ?? product?.images?.[0]?.url ?? product?.images?.[0] ?? null,
+    price: finalPrice,
+    originalPrice,
+    discountPercent,
+  }
 }
 
 export const useCartStore = defineStore('cart', () => {
@@ -14,10 +30,18 @@ export const useCartStore = defineStore('cart', () => {
   const count = computed(() => items.value.reduce((sum, it) => sum + it.quantity, 0))
   const total = computed(() => items.value.reduce((sum, it) => sum + (it.price || 0) * it.quantity, 0))
 
-  function add(product: { id: string; title: string; price: number; imageUrl?: string | null }, qty = 1) {
-    const existing = items.value.find(i => i.id === product.id)
-    if (existing) existing.quantity += qty
-    else items.value.push({ ...product, quantity: qty })
+  function add(product: any, qty = 1) {
+    const normalized = normalizeCartProduct(product)
+    const existing = items.value.find(i => i.id === normalized.id)
+    if (existing) {
+      existing.quantity += qty
+      existing.price = normalized.price
+      existing.originalPrice = normalized.originalPrice
+      existing.discountPercent = normalized.discountPercent
+      existing.imageUrl = normalized.imageUrl
+      existing.title = normalized.title
+    }
+    else items.value.push({ ...normalized, quantity: qty })
   }
 
   function remove(id: string) {
