@@ -11,6 +11,9 @@ export type BrandDto = {
   createdAt?: string
 }
 
+const PUBLIC_CACHE_KEY = 'brands:public:v1'
+const PUBLIC_CACHE_TTL = 1000 * 60 * 10
+
 export const useBrandsStore = defineStore('brands', () => {
   const items = ref<BrandDto[]>([])
   const loading = ref(false)
@@ -46,14 +49,32 @@ export const useBrandsStore = defineStore('brands', () => {
     }
   }
 
-  const fetchPublic = async (take: number = 10) => {
+  const fetchPublic = async (take: number = 10, force = false) => {
     loading.value = true
     try {
+      if (import.meta.client && !force) {
+        try {
+          const raw = sessionStorage.getItem(PUBLIC_CACHE_KEY)
+          if (raw) {
+            const parsed = JSON.parse(raw)
+            if (Date.now() - Number(parsed?.at || 0) < PUBLIC_CACHE_TTL) {
+              const cached = Array.isArray(parsed?.items) ? parsed.items : []
+              if (cached.length) {
+                items.value = cached.map(normalizeBrand).filter(b => b && b.slug)
+                return
+              }
+            }
+          }
+        } catch {}
+      }
       // بعض السيرفرات تدعم take/pageSize وبعضها لا؛ جرّب take أولاً.
       const res: any = await get<any>(`/Brands?take=${encodeURIComponent(String(take))}`)
       // بعض الـ endpoints ترجع {items} وبعضها {page,totalCount,items}
       const list = Array.isArray(res) ? res : (res?.items || [])
       items.value = (list || []).map(normalizeBrand).filter(b => b && b.slug)
+      if (import.meta.client) {
+        try { sessionStorage.setItem(PUBLIC_CACHE_KEY, JSON.stringify({ at: Date.now(), items: items.value })) } catch {}
+      }
     } catch (e) {
       // لا تكسر SSR/الهوم إذا صار خطأ بالـ API
       console.warn('[brands] fetchPublic failed', e)

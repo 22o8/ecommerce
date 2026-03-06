@@ -1,26 +1,26 @@
 <template>
   <div v-if="enabled" class="pointer-events-none fixed inset-0 z-[5]">
-    <SnowEffect v-if="effects.snow || effects.christmas" />
+    <SnowEffect v-if="resolvedEffects.snow || resolvedEffects.christmas" />
 
     <!-- Ramadan: moon for dark, lantern for light -->
-    <div v-if="effects.ramadan" class="absolute inset-0">
+    <div v-if="resolvedEffects.ramadan" class="absolute inset-0">
       <div class="absolute top-10 right-6 hidden dark:block">
         <MoonIcon class="w-24 h-24 opacity-70 animate-float" />
       </div>
       <div class="absolute top-10 right-6 block dark:hidden">
         <LanternIcon class="w-24 h-24 opacity-80 animate-float" />
       </div>
-      <Sparkles class="absolute inset-0" />
+      <Sparkles v-if="!liteMode" class="absolute inset-0" />
     </div>
 
     <!-- Eid: subtle sparkles -->
-    <Sparkles v-if="effects.eid" class="absolute inset-0" />
+    <Sparkles v-if="resolvedEffects.eid" class="absolute inset-0" />
 
     <!-- Valentines: floating hearts -->
-    <HeartsEffect v-if="effects.valentines" />
+    <HeartsEffect v-if="resolvedEffects.valentines" />
 
     <!-- Black Friday: dark glow + neon / light confetti -->
-    <BlackFridayEffect v-if="effects.blackFriday" />
+    <BlackFridayEffect v-if="resolvedEffects.blackFriday" />
   </div>
 </template>
 
@@ -40,7 +40,18 @@ const enabled = computed(() => {
   return !route.path.startsWith('/admin')
 })
 
+const { liteMode, isMobile } = useMobilePerf()
+
 const effects = computed(() => store.data.effects || {})
+const mobileEffects = computed(() => ({
+  snow: false,
+  christmas: false,
+  ramadan: !!effects.value?.ramadan,
+  eid: false,
+  valentines: false,
+  blackFriday: !isMobile.value && !!effects.value?.blackFriday,
+}))
+const resolvedEffects = computed(() => (liteMode.value ? mobileEffects.value : effects.value))
 </script>
 
 <style scoped>

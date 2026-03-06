@@ -4,6 +4,7 @@
 
 <script setup lang="ts">
 const c = ref<HTMLCanvasElement | null>(null)
+const { liteMode } = useMobilePerf()
 
 type Flake = { x: number; y: number; r: number; v: number; d: number }
 let raf = 0
@@ -18,7 +19,9 @@ function resize() {
   canvas.style.width = window.innerWidth + 'px'
   canvas.style.height = window.innerHeight + 'px'
   // كثافة أعلى (لكن مع سقف حتى ما يأثر على الأداء)
-  const count = Math.min(220, Math.floor(window.innerWidth / 8))
+  const count = liteMode.value
+    ? Math.min(48, Math.floor(window.innerWidth / 22))
+    : Math.min(220, Math.floor(window.innerWidth / 8))
   flakes = Array.from({ length: count }).map(() => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,

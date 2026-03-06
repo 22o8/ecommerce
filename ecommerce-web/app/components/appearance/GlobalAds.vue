@@ -34,17 +34,48 @@ const api = useApi()
 const enabled = computed(() => !route.path.startsWith('/admin'))
 const ads = ref<any[]>([])
 const showPopup = ref(false)
+const { liteMode } = useMobilePerf()
+const CACHE_KEY = 'global_active_ads_v2'
+const CACHE_TTL = 1000 * 60 * 5
 
 const bannerAd = computed(() => ads.value.find((a: any) => a?.type === 'banner' && a?.placement === 'home_top'))
 const popupAd = computed(() => ads.value.find((a: any) => a?.type === 'popup'))
 
 const asset = (p?: string) => api.buildAssetUrl(p || '')
 
-async function loadAds() {
+function readCache() {
+  if (!import.meta.client) return null
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (Date.now() - Number(parsed?.at || 0) > CACHE_TTL) return null
+    return Array.isArray(parsed?.items) ? parsed.items : null
+  } catch {
+    return null
+  }
+}
+
+function writeCache(items: any[]) {
+  if (!import.meta.client) return
+  try {
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), items }))
+  } catch {}
+}
+
+async function loadAds(force = false) {
   if (!enabled.value) return
+  const cached = !force ? readCache() : null
+  if (cached) {
+    ads.value = cached
+    syncPopup()
+    return
+  }
   try {
     const res: any = await api.get('/ads/active')
-    ads.value = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : [])
+    const items = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : [])
+    ads.value = items
+    writeCache(items)
   } catch {
     ads.value = []
   }
@@ -56,7 +87,7 @@ function popupKey() {
 }
 
 function syncPopup() {
-  if (!process.client || route.path !== '/' || !popupAd.value) {
+  if (!process.client || liteMode.value || route.path !== '/' || !popupAd.value) {
     showPopup.value = false
     return
   }
@@ -76,6 +107,10 @@ function onAdClick() {
   close()
 }
 
-onMounted(loadAds)
-watch(() => route.path, () => { loadAds() })
+onMounted(() => loadAds())
+watch(() => route.path, (to, from) => {
+  if (to === from) return
+  if (to === '/' || from === '/') loadAds()
+  else syncPopup()
+})
 </script>

@@ -23,10 +23,11 @@
 
 <script setup lang="ts">
 const isDark = useDark()
+const { liteMode } = useMobilePerf()
 
-// رفع “لفل” التأثير (أكثر عناصر + توزيع أجمل)
-const percentCount = computed(() => (isDark.value ? 28 : 0))
-const confettiCount = computed(() => (isDark.value ? 0 : 44))
+// على الهاتف نخلي نسخة أخف حتى يبقى التنقل سلس
+const percentCount = computed(() => (isDark.value ? (liteMode.value ? 8 : 28) : 0))
+const confettiCount = computed(() => (isDark.value ? 0 : (liteMode.value ? 14 : 44)))
 
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n))

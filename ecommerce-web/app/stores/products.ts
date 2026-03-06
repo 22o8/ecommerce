@@ -19,6 +19,7 @@ type FetchParams = {
 
 export const useProductsStore = defineStore('products', () => {
   const api = useApi()
+  const liveCache = new Map<string, any[]>()
 
   function normalizeProduct(p: any){
   if(!p) return p
@@ -134,8 +135,13 @@ export const useProductsStore = defineStore('products', () => {
   }
 
   async function liveSearch(q: string, limit = 8) {
+    const key = `${String(q).trim().toLowerCase()}::${limit}`
+    if (liveCache.has(key)) return liveCache.get(key) || []
     const res = await api.get<any[]>('/Products/search', { q, limit })
-    return (res ?? []).map(normalizeProduct)
+    const normalized = (res ?? []).map(normalizeProduct)
+    if (liveCache.size > 20) liveCache.clear()
+    liveCache.set(key, normalized)
+    return normalized
   }
 
   return {

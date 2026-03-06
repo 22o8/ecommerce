@@ -5,6 +5,7 @@ import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
 
 const { t, locale } = useI18n()
+const { isMobile, liteMode } = useMobilePerf()
 
 const brandsStore = useBrandsStore()
 const productsStore = useProductsStore()
@@ -17,17 +18,13 @@ await useAsyncData(
   'home-prefetch',
   async () => {
     await Promise.allSettled([
-      brandsStore.fetchPublic(),
-      productsStore.fetchFeatured(8),
-      productsStore.fetchDiscounts(8),
-      // fallback list حتى ما تبقى الصفحة فاضية إذا endpoint المميز ما اشتغل
-      productsStore.fetch({ page: 1, pageSize: 8, sort: 'newest' }),
+      brandsStore.fetchPublic(isMobile.value ? 8 : 10),
+      productsStore.fetchFeatured(isMobile.value ? 6 : 8),
     ])
     return true
   },
   {
     server: false,
-    // always run on client after refresh/hydration
     default: () => true,
   }
 )
@@ -48,6 +45,13 @@ const homeFeatured = computed(() => {
 const featuredList = homeFeatured
 
 const tab = ref<'featured' | 'discounts'>('featured')
+watch(tab, async (v) => {
+  if (v !== 'discounts') return
+  if (productsStore.discountItems?.length) return
+  try {
+    await productsStore.fetchDiscounts(isMobile.value ? 6 : 8)
+  } catch {}
+})
 const displayedFeatured = computed(() => tab.value === 'featured'
   ? homeFeatured.value
   : (productsStore.discountItems ?? []).slice(0, 8)
@@ -143,13 +147,14 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
       </div>
 
       <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <RevealOnScroll
+        <component
+          :is="liteMode ? 'div' : 'RevealOnScroll'"
           v-for="(p, idx) in displayedFeatured"
           :key="p.id"
           :parity="idx % 2"
         >
           <ProductCard :p="p" />
-        </RevealOnScroll>
+        </component>
       </div>
 
     </section>
@@ -171,7 +176,7 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
       </div>
 
       <!-- Natural brands showcase -->
-      <BrandMarquee :brands="topBrands" />
+      <BrandMarquee :brands="topBrands" :show-name="!liteMode" />
     </section>
 
     <!-- Spotlight categories -->
@@ -192,7 +197,8 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
       </div>
 
       <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <RevealOnScroll
+        <component
+          :is="liteMode ? 'div' : 'RevealOnScroll'"
           v-for="(c, idx) in categoryCards"
           :key="c.key"
           :parity="(idx % 2) as 0 | 1"
@@ -221,7 +227,7 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
               <div class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[rgb(var(--primary))]/50 to-transparent"></div>
             </div>
           </NuxtLink>
-        </RevealOnScroll>
+        </component>
       </div>
     </section>
   </div>

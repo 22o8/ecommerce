@@ -14,6 +14,7 @@ const props = defineProps<{ brands: (Brand | null | undefined)[]; showName?: boo
 const showName = computed(() => props.showName === true)
 
 const api = useApi()
+const { liteMode } = useMobilePerf()
 
 function buildLogoCandidates(url?: string | null) {
   if (!url) return [] as string[]
@@ -52,7 +53,7 @@ const onLogoError = (b: Brand, idx: number) => {
 
 // نكرر القائمة حتى يصير تمرير مستمر + فلترة العناصر الناقصة (حماية SSR)
 const clean = computed(() => (props.brands ?? []).filter((b): b is Brand => !!b && !!b.slug && !!b.id))
-const loop = computed(() => [...clean.value, ...clean.value])
+const loop = computed(() => (liteMode.value ? [...clean.value] : [...clean.value, ...clean.value]))
 </script>
 
 <template>
@@ -165,6 +166,12 @@ const loop = computed(() => [...clean.value, ...clean.value])
 }
 
 /* احترام تفضيل تقليل الحركة */
+@media (max-width: 767px){
+  .marquee{ --gap: 10px; --speed: 40s; }
+  .marquee__track{ animation-duration: 40s; }
+  .marquee__card{ min-width: 60px; width: 60px; height: 60px; }
+}
+
 @media (prefers-reduced-motion: reduce){
   .marquee__track{ animation: none; }
 }
