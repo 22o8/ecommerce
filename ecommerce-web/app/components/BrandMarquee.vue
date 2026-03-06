@@ -86,43 +86,43 @@ const loop = computed(() => [...clean.value, ...clean.value])
 <style scoped>
 .brand-strip-wrap{
   position: relative;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding: 8px 2px 2px;
+  overflow: hidden;
+  padding: 10px 0 4px;
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
 }
-.brand-strip-wrap::-webkit-scrollbar{ display:none; }
 .brand-strip{
   display:flex;
   align-items:center;
-  gap:14px;
+  gap:16px;
   width:max-content;
-  padding-inline-end: 14px;
+  animation: brand-marquee 28s linear infinite;
+  will-change: transform;
 }
 .brand-pill{
   flex:0 0 auto;
   display:grid;
   place-items:center;
-  width:72px;
-  height:72px;
+  width:74px;
+  height:74px;
   border-radius:9999px;
   border:1px solid rgba(var(--border),.9);
   background: linear-gradient(180deg, rgba(var(--surface-1), .98), rgba(var(--surface-2), .82));
-  box-shadow: 0 12px 34px rgba(0,0,0,.12);
+  box-shadow: 0 10px 28px rgba(0,0,0,.10);
   transition: transform .18s ease, border-color .2s ease, box-shadow .2s ease;
   text-decoration:none;
 }
 .brand-pill:hover{
-  transform: translateY(-2px) scale(1.02);
-  border-color: rgba(var(--primary), .45);
-  box-shadow: 0 16px 40px rgba(0,0,0,.16);
+  transform: translateY(-2px) scale(1.03);
+  border-color: rgba(var(--primary), .5);
+  box-shadow: 0 14px 34px rgba(0,0,0,.14);
 }
 .brand-pill__img-wrap{
-  width:52px;
-  height:52px;
+  width:54px;
+  height:54px;
   overflow:hidden;
   border-radius:16px;
+  background: rgba(255,255,255,.04);
 }
 .brand-pill__img{
   width:100%;
@@ -132,14 +132,23 @@ const loop = computed(() => [...clean.value, ...clean.value])
 .brand-pill__fallback{
   display:grid;
   place-items:center;
-  width:52px;
-  height:52px;
+  width:54px;
+  height:54px;
   border-radius:16px;
   background: rgba(var(--primary), .14);
   color: rgb(var(--text));
   font-weight: 900;
 }
+@keyframes brand-marquee{
+  from{ transform: translateX(0); }
+  to{ transform: translateX(calc(-50% - 8px)); }
+}
 @media (max-width: 640px){
+  .brand-strip-wrap{
+    mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+  }
+  .brand-strip{ gap:12px; animation-duration: 22s; }
   .brand-pill{ width:64px; height:64px; }
   .brand-pill__img-wrap, .brand-pill__fallback{ width:46px; height:46px; }
 }

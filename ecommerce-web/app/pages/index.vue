@@ -191,39 +191,31 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
         </NuxtLink>
       </div>
 
-      <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <RevealOnScroll
           v-for="(c, idx) in categoryCards"
           :key="c.key"
           :parity="(idx % 2) as 0 | 1"
-          :delay="50 * idx"
+          :delay="35 * idx"
         >
           <NuxtLink
             :to="`/products?q=${encodeURIComponent(categoryQuery(c))}`"
-            class="group category-premium-card relative overflow-hidden rounded-[28px] border border-app bg-surface/80 p-5 transition duration-300 hover:-translate-y-1 hover:border-[rgb(var(--primary))]/35"
+            class="group category-simple-card rounded-[22px] border border-app px-4 py-4 transition duration-300 hover:border-[rgb(var(--primary))]/35 hover:bg-surface-2/70"
           >
-            <div class="flex items-center justify-between gap-3">
-              <div class="flex items-center gap-3">
-                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgb(var(--primary))]/12 text-xl shadow-inner shadow-black/10 transition duration-300 group-hover:scale-105 group-hover:bg-[rgb(var(--primary))]/18">
-                  {{ c.icon }}
+            <div class="flex items-center gap-3">
+              <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgb(var(--primary))]/12 text-xl transition duration-300 group-hover:scale-105">
+                {{ c.icon }}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-base font-extrabold text-[rgb(var(--text))]">
+                  {{ t(c.labelKey) }}
                 </div>
-                <div class="min-w-0">
-                  <div class="truncate text-base font-extrabold text-[rgb(var(--text))]">
-                    {{ t(c.labelKey) }}
-                  </div>
-                  <div class="mt-1 truncate text-xs text-[rgb(var(--muted))]">
-                    {{ t('home.tapToExplore') }}
-                  </div>
+                <div class="mt-1 truncate text-xs text-[rgb(var(--muted))]">
+                  {{ t('home.tapToExplore') }}
                 </div>
               </div>
-              <div class="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/5 text-sm text-[rgb(var(--text))] transition duration-300 group-hover:bg-[rgb(var(--primary))] group-hover:text-black">
-                ←
-              </div>
+              <div class="text-[rgb(var(--muted))] transition duration-300 group-hover:text-[rgb(var(--primary))]">←</div>
             </div>
-
-            <div class="mt-5 h-1.5 w-20 rounded-full bg-gradient-to-r from-[rgb(var(--primary))]/75 via-[rgb(var(--primary))]/35 to-transparent transition-all duration-300 group-hover:w-28"></div>
-            <div class="pointer-events-none absolute inset-x-4 bottom-0 h-px bg-gradient-to-r from-transparent via-[rgb(var(--primary))]/35 to-transparent opacity-60"></div>
-            <div class="pointer-events-none absolute -left-8 top-3 h-20 w-20 rounded-full bg-[rgb(var(--primary))]/8 blur-2xl"></div>
           </NuxtLink>
         </RevealOnScroll>
       </div>
@@ -232,13 +224,13 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
 </template>
 
 <style scoped>
-.category-premium-card{
-  box-shadow: 0 14px 40px rgba(0,0,0,.10);
+.category-simple-card{
+  box-shadow: 0 10px 28px rgba(0,0,0,.08);
 }
-:global(html.theme-light) .category-premium-card{
-  background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(249,247,255,.92));
+:global(html.theme-light) .category-simple-card{
+  background: rgba(255,255,255,.95);
 }
-:global(html.theme-dark) .category-premium-card{
-  background: linear-gradient(180deg, rgba(var(--surface-1), .96), rgba(var(--surface-2), .78));
+:global(html.theme-dark) .category-simple-card{
+  background: linear-gradient(180deg, rgba(var(--surface-1), .95), rgba(var(--surface-2), .82));
 }
 </style>
