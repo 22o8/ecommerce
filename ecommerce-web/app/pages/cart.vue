@@ -33,16 +33,7 @@
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                   <div class="font-bold rtl-text truncate">{{ it.title }}</div>
-                  <div class="text-sm text-muted rtl-text">
-                    <template v-if="Number(it.discountPercent || 0) > 0">
-                      <span class="font-bold text-[rgb(var(--danger))] keep-ltr">{{ fmtMoney(it.price) }}</span>
-                      <span class="mx-1">× {{ it.quantity }}</span>
-                      <span class="line-through opacity-70 keep-ltr">{{ fmtMoney(it.originalPrice || it.price) }}</span>
-                    </template>
-                    <template v-else>
-                      {{ fmtMoney(it.price) }} × {{ it.quantity }}
-                    </template>
-                  </div>
+                  <div class="text-sm text-muted rtl-text">{{ fmtMoney(it.price) }} × {{ it.quantity }}</div>
                 </div>
                 <button
                   class="icon-btn bg-surface-2 border border-app text-muted hover:text-[rgb(var(--danger))] hover:border-[rgba(var(--danger),0.35)] hover:bg-[rgba(var(--danger),0.12)]"
@@ -76,10 +67,6 @@
           <span class="rtl-text">{{ t('itemsCount') }}</span>
           <span class="font-bold">{{ cart.count }}</span>
         </div>
-        <div v-if="discountTotal > 0" class="flex items-center justify-between text-[rgb(var(--danger))]">
-          <span class="rtl-text">{{ t('cart.discountSaved') }}</span>
-          <span class="font-bold keep-ltr">-{{ fmtMoney(discountTotal) }}</span>
-        </div>
         <div class="flex items-center justify-between">
           <span class="rtl-text">{{ t('total') }}</span>
           <span class="font-black">{{ fmtMoney(cart.total) }}</span>
@@ -87,6 +74,7 @@
       </div>
 
       <div class="mt-6 grid gap-3">
+        <!-- ✅ Buy Now = WhatsApp checkout -->
         <UiButton :disabled="!cart.items.length" @click="openWhatsApp">
           <Icon name="mdi:whatsapp" class="text-lg" />
           <span class="rtl-text">{{ t('buyNow') }}</span>
@@ -110,11 +98,6 @@ const profile = useProfileStore()
 const config = useRuntimeConfig()
 
 const error = ref('')
-const discountTotal = computed(() => cart.items.reduce((sum, it) => {
-  const original = Number(it.originalPrice || it.price)
-  const current = Number(it.price || 0)
-  return sum + Math.max(0, (original - current) * (it.quantity || 1))
-}, 0))
 
 function fmtMoney(v: any){ return formatIqd(v) }
 
@@ -129,14 +112,8 @@ function whatsappText() {
     `صفحة المتجر: ${window.location.origin}`,
     '',
     'المنتجات:',
-    ...cart.items.map(i => {
-      const original = Number(i.originalPrice || i.price)
-      const hasDiscount = Number(i.discountPercent || 0) > 0 && original > Number(i.price || 0)
-      const line = `${i.title} × ${i.quantity} = ${fmtMoney(i.price * i.quantity)}`
-      return hasDiscount ? `- ${line} (بدل ${fmtMoney(original * i.quantity)} / خصم ${i.discountPercent}%)` : `- ${line}`
-    }),
+    ...cart.items.map(i => `- ${i.title} × ${i.quantity} = ${fmtMoney(i.price * i.quantity)}`),
     '',
-    ...(discountTotal.value > 0 ? [`التوفير: ${fmtMoney(discountTotal.value)}`] : []),
     `الإجمالي: ${fmtMoney(cart.total)}`,
   ]
   return lines.join('\n')
@@ -151,6 +128,8 @@ async function openWhatsApp() {
     ? `https://wa.me/${String(number).replace(/\D/g, '')}?text=${text}`
     : `https://wa.me/?text=${text}`
 
+  // ✅ على الهاتف (خصوصاً iOS) window.open بعد await قد يُحجب، لذلك نفتح النافذة فوراً
+  // ثم نغيّر رابطها بعد إنشاء الطلب.
   const preOpened = typeof window !== 'undefined' ? window.open('about:blank', '_blank') : null
 
   try {
@@ -161,6 +140,7 @@ async function openWhatsApp() {
       }
     })
   } catch (e: any) {
+    // حتى لو فشل إنشاء الطلب، نخلي تحويل واتساب يشتغل
     console.error(e)
   }
 
@@ -169,6 +149,7 @@ async function openWhatsApp() {
     return
   }
 
+  // fallback (إذا المتصفح منع فتح نافذة جديدة)
   window.location.href = url
 }
 

@@ -16,10 +16,8 @@
 </template>
 
 <script setup lang="ts">
-const { liteMode } = useMobilePerf()
-
 const sparkles = computed(() => {
-  const count = liteMode.value ? 12 : 42
+  const count = 42
   return Array.from({ length: count }).map((_, i) => ({
     id: i,
     x: Math.random() * 100,

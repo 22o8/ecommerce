@@ -21,29 +21,6 @@ export type AppearanceState = {
   ads: AppearanceAd[]
 }
 
-const CACHE_KEY = 'appearance:public:v2'
-const CACHE_TTL = 1000 * 60 * 10
-
-function readCache() {
-  if (!import.meta.client) return null
-  try {
-    const raw = sessionStorage.getItem(CACHE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw)
-    if (Date.now() - Number(parsed?.at || 0) > CACHE_TTL) return null
-    return parsed?.data ?? null
-  } catch {
-    return null
-  }
-}
-
-function writeCache(data: any) {
-  if (!import.meta.client) return
-  try {
-    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), data }))
-  } catch {}
-}
-
 const DEFAULT: AppearanceState = {
   version: 1,
   themes: [],
@@ -100,17 +77,10 @@ export const useAppearanceStore = defineStore('appearance', {
       }
     },
 
-    async refresh(force = false) {
-      const cached = !force ? readCache() : null
-      if (cached) {
-        this.mapFromApi(cached)
-        this.loaded = true
-        return
-      }
+    async refresh() {
       try {
-        const res = await $fetch<any>('/api/bff/appearance', { timeout: 5000 })
+        const res = await $fetch<any>('/api/bff/appearance', { timeout: 8000 })
         this.mapFromApi(res)
-        writeCache(res)
         this.loaded = true
       } catch {
         this.data = DEFAULT

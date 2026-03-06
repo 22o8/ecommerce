@@ -6,7 +6,7 @@
         :target="bannerAd.linkUrl ? '_blank' : undefined"
         class="block overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-card"
       >
-        <img :src="asset(bannerAd.imageUrl)" :alt="bannerAd.title || 'banner'" class="h-auto w-full object-cover" />
+        <img :src="asset(bannerAd.imageUrl, bannerAd.updatedAt || bannerAd.id)" :alt="bannerAd.title || 'banner'" class="h-auto w-full object-cover" />
       </a>
     </div>
 
@@ -19,7 +19,7 @@
           aria-label="close"
         >✕</button>
         <a :href="popupAd.linkUrl || '#'" :target="popupAd.linkUrl ? '_blank' : undefined" class="block" @click="onAdClick">
-          <img :src="asset(popupAd.imageUrl)" :alt="popupAd.title || 'ad'" class="h-auto w-full" />
+          <img :src="asset(popupAd.imageUrl, popupAd.updatedAt || popupAd.id)" :alt="popupAd.title || 'ad'" class="h-auto w-full" />
         </a>
         <div v-if="popupAd.title" class="p-4 text-center font-semibold text-zinc-900 dark:text-zinc-100">{{ popupAd.title }}</div>
       </div>
@@ -34,48 +34,29 @@ const api = useApi()
 const enabled = computed(() => !route.path.startsWith('/admin'))
 const ads = ref<any[]>([])
 const showPopup = ref(false)
-const { liteMode } = useMobilePerf()
-const CACHE_KEY = 'global_active_ads_v2'
-const CACHE_TTL = 1000 * 60 * 5
+const loadingKey = ref(0)
 
 const bannerAd = computed(() => ads.value.find((a: any) => a?.type === 'banner' && a?.placement === 'home_top'))
 const popupAd = computed(() => ads.value.find((a: any) => a?.type === 'popup'))
 
-const asset = (p?: string) => api.buildAssetUrl(p || '')
-
-function readCache() {
-  if (!import.meta.client) return null
-  try {
-    const raw = sessionStorage.getItem(CACHE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw)
-    if (Date.now() - Number(parsed?.at || 0) > CACHE_TTL) return null
-    return Array.isArray(parsed?.items) ? parsed.items : null
-  } catch {
-    return null
-  }
+const asset = (p?: string, stamp?: any) => {
+  const url = api.buildAssetUrl(p || '')
+  if (!url) return ''
+  const sep = url.includes('?') ? '&' : '?'
+  const v = encodeURIComponent(String(stamp || loadingKey.value || '1'))
+  return `${url}${sep}v=${v}`
 }
 
-function writeCache(items: any[]) {
-  if (!import.meta.client) return
-  try {
-    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), items }))
-  } catch {}
-}
-
-async function loadAds(force = false) {
+async function loadAds() {
   if (!enabled.value) return
-  const cached = !force ? readCache() : null
-  if (cached) {
-    ads.value = cached
-    syncPopup()
-    return
-  }
+  loadingKey.value = Date.now()
   try {
-    const res: any = await api.get('/ads/active')
-    const items = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : [])
-    ads.value = items
-    writeCache(items)
+    const res: any = await $fetch('/api/bff/ads/active', {
+      method: 'GET',
+      query: { _ts: loadingKey.value },
+      headers: { 'cache-control': 'no-cache, no-store, must-revalidate', pragma: 'no-cache' },
+    })
+    ads.value = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : [])
   } catch {
     ads.value = []
   }
@@ -87,7 +68,7 @@ function popupKey() {
 }
 
 function syncPopup() {
-  if (!process.client || liteMode.value || route.path !== '/' || !popupAd.value) {
+  if (!process.client || route.path !== '/' || !popupAd.value) {
     showPopup.value = false
     return
   }
@@ -107,10 +88,12 @@ function onAdClick() {
   close()
 }
 
-onMounted(() => loadAds())
-watch(() => route.path, (to, from) => {
-  if (to === from) return
-  if (to === '/' || from === '/') loadAds()
-  else syncPopup()
+onMounted(() => {
+  loadAds()
+  if (process.client) window.addEventListener('ads:changed', loadAds)
+})
+watch(() => route.path, () => { loadAds() })
+onBeforeUnmount(() => {
+  if (process.client) window.removeEventListener('ads:changed', loadAds)
 })
 </script>

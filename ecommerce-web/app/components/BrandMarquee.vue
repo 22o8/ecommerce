@@ -14,7 +14,6 @@ const props = defineProps<{ brands: (Brand | null | undefined)[]; showName?: boo
 const showName = computed(() => props.showName === true)
 
 const api = useApi()
-const { liteMode } = useMobilePerf()
 
 function buildLogoCandidates(url?: string | null) {
   if (!url) return [] as string[]
@@ -53,126 +52,95 @@ const onLogoError = (b: Brand, idx: number) => {
 
 // نكرر القائمة حتى يصير تمرير مستمر + فلترة العناصر الناقصة (حماية SSR)
 const clean = computed(() => (props.brands ?? []).filter((b): b is Brand => !!b && !!b.slug && !!b.id))
-const loop = computed(() => (liteMode.value ? [...clean.value] : [...clean.value, ...clean.value]))
+const loop = computed(() => [...clean.value, ...clean.value])
 </script>
 
 <template>
-  <section v-if="clean.length" class="mt-16">
-    <div class="mt-8 overflow-hidden">
-      <div class="marquee">
-        <div class="marquee__track">
-          <NuxtLink
-            v-for="(b, idx) in loop"
-            :key="b.id + '-' + idx"
-            :to="`/brands/${b.slug}`"
-            class="marquee__item"
-          >
-            <div class="marquee__card brand-chip">
-              <div class="marquee__logo">
-                <SmartImage
-                  v-if="b.logoUrl"
-                  :src="logoSrc(b, idx)"
-                  :alt="b.name"
-                  fit="cover"
-                  wrapper-class="h-12 w-12 rounded-2xl"
-                  img-class="h-full w-full object-cover"
-                  loading="lazy"
-                  @error="onLogoError(b, idx)"
-                />
-                <div v-else class="h-10 w-10 rounded-xl bg-black/5" />
-              </div>
-              <span v-if="showName" class="marquee__name">{{ b.name }}</span>
-            </div>
-          </NuxtLink>
-        </div>
+  <section v-if="clean.length" class="mt-14">
+    <div class="brand-strip-wrap">
+      <div class="brand-strip">
+        <NuxtLink
+          v-for="(b, idx) in loop"
+          :key="b.id + '-' + idx"
+          :to="`/brands/${b.slug}`"
+          class="brand-pill"
+          :title="b.name"
+        >
+          <SmartImage
+            v-if="b.logoUrl"
+            :src="logoSrc(b, idx)"
+            :alt="b.name"
+            fit="cover"
+            wrapper-class="brand-pill__img-wrap"
+            img-class="brand-pill__img"
+            loading="lazy"
+            @error="onLogoError(b, idx)"
+          />
+          <div v-else class="brand-pill__fallback">{{ (b.name || '?').slice(0,1) }}</div>
+        </NuxtLink>
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
-.marquee{
-  --gap: 14px;
-  --speed: 28s;
+.brand-strip-wrap{
   position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 8px 2px 2px;
 }
-
-/*
-  حركة لا نهائية بدون "نقطة نهاية".
-  لأننا نكرر العناصر مرتين، حالة البداية والنهاية تكون متطابقة بصرياً.
-*/
-.marquee__track{
-  display: flex;
-  gap: var(--gap);
-  width: max-content;
-  padding: 6px var(--gap);
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-  animation: marquee-loop var(--speed) linear infinite;
-  backface-visibility: hidden;
+.brand-strip-wrap::-webkit-scrollbar{ display:none; }
+.brand-strip{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  width:max-content;
+  padding-inline-end: 14px;
 }
-
-.marquee__item{ text-decoration:none; }
-
-.marquee__card{
-  min-width: 68px;
-  width: 68px;
-  height: 68px;
-  padding: 0;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  border: 1px solid rgb(var(--border));
-  background: rgb(var(--surface-1));
-  box-shadow: var(--shadow-card);
-  transition: transform 160ms ease, box-shadow 220ms ease, border-color 220ms ease, background 220ms ease;
+.brand-pill{
+  flex:0 0 auto;
+  display:grid;
+  place-items:center;
+  width:72px;
+  height:72px;
+  border-radius:9999px;
+  border:1px solid rgba(var(--border),.9);
+  background: linear-gradient(180deg, rgba(var(--surface-1), .98), rgba(var(--surface-2), .82));
+  box-shadow: 0 12px 34px rgba(0,0,0,.12);
+  transition: transform .18s ease, border-color .2s ease, box-shadow .2s ease;
+  text-decoration:none;
 }
-
-/* لايت: نخليها أقرب لستايل الدارك (كونتراست + بريق خفيف) */
-:global(html.theme-light) .brand-chip{
-  background: linear-gradient(180deg,
-    rgba(var(--surface-1), 0.96),
-    rgba(var(--surface-2), 0.78)
-  );
-  border-color: rgba(var(--border), 0.95);
-  box-shadow: 0 16px 50px rgba(0,0,0,.08);
+.brand-pill:hover{
+  transform: translateY(-2px) scale(1.02);
+  border-color: rgba(var(--primary), .45);
+  box-shadow: 0 16px 40px rgba(0,0,0,.16);
 }
-
-:global(html.theme-dark) .brand-chip{
-  background: linear-gradient(180deg,
-    rgba(var(--surface-1), 0.96),
-    rgba(var(--surface-2), 0.72)
-  );
-  border-color: rgba(var(--border), 0.85);
-  box-shadow: 0 18px 60px rgba(0,0,0,.22);
+.brand-pill__img-wrap{
+  width:52px;
+  height:52px;
+  overflow:hidden;
+  border-radius:16px;
 }
-
-.marquee__card:hover{
-  transform: translateY(-2px);
-  box-shadow: 0 18px 55px rgba(0,0,0,.10);
+.brand-pill__img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
 }
-
-.marquee__name{
-  font-weight: 700;
+.brand-pill__fallback{
+  display:grid;
+  place-items:center;
+  width:52px;
+  height:52px;
+  border-radius:16px;
+  background: rgba(var(--primary), .14);
   color: rgb(var(--text));
-  white-space: nowrap;
+  font-weight: 900;
 }
-
-@keyframes marquee-loop{
-  from{ transform: translate3d(0, 0, 0); }
-  to{ transform: translate3d(-50%, 0, 0); }
-}
-
-/* احترام تفضيل تقليل الحركة */
-@media (max-width: 767px){
-  .marquee{ --gap: 10px; --speed: 40s; }
-  .marquee__track{ animation-duration: 40s; }
-  .marquee__card{ min-width: 60px; width: 60px; height: 60px; }
-}
-
-@media (prefers-reduced-motion: reduce){
-  .marquee__track{ animation: none; }
+@media (max-width: 640px){
+  .brand-pill{ width:64px; height:64px; }
+  .brand-pill__img-wrap, .brand-pill__fallback{ width:46px; height:46px; }
 }
 </style>

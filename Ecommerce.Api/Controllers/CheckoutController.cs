@@ -47,26 +47,24 @@ public class CheckoutController : ControllerBase
         var qty = req.Quantity <= 0 ? 1 : req.Quantity;
         if (qty > 50) return BadRequest("Quantity too large");
 
-        var effectivePriceUsd = product.DiscountPercent > 0 ? Math.Round(product.PriceUsd * (100m - product.DiscountPercent) / 100m, 2) : product.PriceUsd;
-        var effectivePriceIqd = product.DiscountPercent > 0 ? Math.Round(product.PriceIqd * (100m - product.DiscountPercent) / 100m, 2) : product.PriceIqd;
-
+        // إنشاء Order
         var order = new Order
         {
             UserId = userId,
             Status = "PendingPayment",
-            TotalUsd = effectivePriceUsd * qty,
-            TotalIqd = effectivePriceIqd * qty
+            TotalUsd = product.PriceUsd * qty,
+            TotalIqd = product.PriceIqd * qty
         };
 
         order.Items.Add(new OrderItem
         {
             ItemType = "DigitalProduct",
             ProductId = product.Id,
-            UnitPriceUsd = effectivePriceUsd,
+            UnitPriceUsd = product.PriceUsd,
             Quantity = qty,
-            LineTotalUsd = effectivePriceUsd * qty,
-            UnitPriceIqd = effectivePriceIqd,
-            LineTotalIqd = effectivePriceIqd * qty
+            LineTotalUsd = product.PriceUsd * qty,
+            UnitPriceIqd = product.PriceIqd,
+            LineTotalIqd = product.PriceIqd * qty
         });
 
         // إنشاء Payment (Mock)
@@ -139,10 +137,8 @@ public class CheckoutController : ControllerBase
         foreach (var i in items)
         {
             var p = products.First(x => x.Id == i.ProductId);
-            var effectivePriceUsd = p.DiscountPercent > 0 ? Math.Round(p.PriceUsd * (100m - p.DiscountPercent) / 100m, 2) : p.PriceUsd;
-            var effectivePriceIqd = p.DiscountPercent > 0 ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2) : p.PriceIqd;
-            var lineTotalUsd = effectivePriceUsd * i.Quantity;
-            var lineTotalIqd = effectivePriceIqd * i.Quantity;
+            var lineTotalUsd = p.PriceUsd * i.Quantity;
+            var lineTotalIqd = p.PriceIqd * i.Quantity;
             order.TotalUsd += lineTotalUsd;
             order.TotalIqd += lineTotalIqd;
 
@@ -150,10 +146,10 @@ public class CheckoutController : ControllerBase
             {
                 ItemType = "DigitalProduct",
                 ProductId = p.Id,
-                UnitPriceUsd = effectivePriceUsd,
+                UnitPriceUsd = p.PriceUsd,
                 Quantity = i.Quantity,
                 LineTotalUsd = lineTotalUsd,
-                UnitPriceIqd = effectivePriceIqd,
+                UnitPriceIqd = p.PriceIqd,
                 LineTotalIqd = lineTotalIqd
             });
         }
@@ -238,10 +234,8 @@ public class CheckoutController : ControllerBase
 			var p = products.FirstOrDefault(x => x.Id == i.ProductId);
 			if (p == null) continue;
 
-			var effectivePriceUsd = p.DiscountPercent > 0 ? Math.Round(p.PriceUsd * (100m - p.DiscountPercent) / 100m, 2) : p.PriceUsd;
-			var effectivePriceIqd = p.DiscountPercent > 0 ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2) : p.PriceIqd;
-			var lineTotalUsd = effectivePriceUsd * i.Quantity;
-			var lineTotalIqd = effectivePriceIqd * i.Quantity;
+			var lineTotalUsd = p.PriceUsd * i.Quantity;
+			var lineTotalIqd = p.PriceIqd * i.Quantity;
 			totalUsd += lineTotalUsd;
 			totalIqd += lineTotalIqd;
 
@@ -251,9 +245,9 @@ public class CheckoutController : ControllerBase
 				ItemType = "Product",
 				ProductId = p.Id,
 				Quantity = i.Quantity,
-				UnitPriceUsd = effectivePriceUsd,
+				UnitPriceUsd = p.PriceUsd,
 				LineTotalUsd = lineTotalUsd,
-				UnitPriceIqd = effectivePriceIqd,
+				UnitPriceIqd = p.PriceIqd,
 				LineTotalIqd = lineTotalIqd
 			});
 		}

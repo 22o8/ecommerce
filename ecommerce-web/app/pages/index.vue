@@ -5,7 +5,6 @@ import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
 
 const { t, locale } = useI18n()
-const { isMobile, liteMode } = useMobilePerf()
 
 const brandsStore = useBrandsStore()
 const productsStore = useProductsStore()
@@ -18,13 +17,17 @@ await useAsyncData(
   'home-prefetch',
   async () => {
     await Promise.allSettled([
-      brandsStore.fetchPublic(isMobile.value ? 8 : 10),
-      productsStore.fetchFeatured(isMobile.value ? 6 : 8),
+      brandsStore.fetchPublic(),
+      productsStore.fetchFeatured(8),
+      productsStore.fetchDiscounts(8),
+      // fallback list حتى ما تبقى الصفحة فاضية إذا endpoint المميز ما اشتغل
+      productsStore.fetch({ page: 1, pageSize: 8, sort: 'newest' }),
     ])
     return true
   },
   {
     server: false,
+    // always run on client after refresh/hydration
     default: () => true,
   }
 )
@@ -45,13 +48,6 @@ const homeFeatured = computed(() => {
 const featuredList = homeFeatured
 
 const tab = ref<'featured' | 'discounts'>('featured')
-watch(tab, async (v) => {
-  if (v !== 'discounts') return
-  if (productsStore.discountItems?.length) return
-  try {
-    await productsStore.fetchDiscounts(isMobile.value ? 6 : 8)
-  } catch {}
-})
 const displayedFeatured = computed(() => tab.value === 'featured'
   ? homeFeatured.value
   : (productsStore.discountItems ?? []).slice(0, 8)
@@ -97,12 +93,6 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
           </p>
 
           
-          <div class="mt-6 flex flex-wrap items-center justify-center gap-2">
-            <span class="rounded-full border border-app bg-surface/80 px-3 py-1 text-xs font-bold text-[rgb(var(--text))]">{{ t('home.quickBadge1') }}</span>
-            <span class="rounded-full border border-app bg-surface/80 px-3 py-1 text-xs font-bold text-[rgb(var(--text))]">{{ t('home.quickBadge2') }}</span>
-            <span class="rounded-full border border-app bg-surface/80 px-3 py-1 text-xs font-bold text-[rgb(var(--text))]">{{ t('home.quickBadge3') }}</span>
-          </div>
-
           <div class="mt-8 flex items-center justify-center gap-3">
             <NuxtLink
               to="/products"
@@ -120,23 +110,6 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
             </a>
           </div>
 
-          <div class="mt-10 grid gap-4 text-start sm:grid-cols-3">
-            <div class="rounded-3xl border border-app bg-surface/78 p-4 shadow-card backdrop-blur">
-              <div class="text-xs font-bold uppercase tracking-[0.2em] text-[rgb(var(--muted))]">{{ t('home.heroCard1Label') }}</div>
-              <div class="mt-2 text-lg font-black text-[rgb(var(--text))]">{{ t('home.heroCard1Title') }}</div>
-              <div class="mt-1 text-sm text-[rgb(var(--muted))]">{{ t('home.heroCard1Desc') }}</div>
-            </div>
-            <div class="rounded-3xl border border-app bg-surface/78 p-4 shadow-card backdrop-blur">
-              <div class="text-xs font-bold uppercase tracking-[0.2em] text-[rgb(var(--muted))]">{{ t('home.heroCard2Label') }}</div>
-              <div class="mt-2 text-lg font-black text-[rgb(var(--text))]">{{ t('home.heroCard2Title') }}</div>
-              <div class="mt-1 text-sm text-[rgb(var(--muted))]">{{ t('home.heroCard2Desc') }}</div>
-            </div>
-            <div class="rounded-3xl border border-app bg-surface/78 p-4 shadow-card backdrop-blur">
-              <div class="text-xs font-bold uppercase tracking-[0.2em] text-[rgb(var(--muted))]">{{ t('home.heroCard3Label') }}</div>
-              <div class="mt-2 text-lg font-black text-[rgb(var(--text))]">{{ t('home.heroCard3Title') }}</div>
-              <div class="mt-1 text-sm text-[rgb(var(--muted))]">{{ t('home.heroCard3Desc') }}</div>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -170,14 +143,13 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
       </div>
 
       <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <component
-          :is="liteMode ? 'div' : 'RevealOnScroll'"
+        <RevealOnScroll
           v-for="(p, idx) in displayedFeatured"
           :key="p.id"
           :parity="idx % 2"
         >
           <ProductCard :p="p" />
-        </component>
+        </RevealOnScroll>
       </div>
 
     </section>
@@ -199,7 +171,7 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
       </div>
 
       <!-- Natural brands showcase -->
-      <BrandMarquee :brands="topBrands" :show-name="!liteMode" />
+      <BrandMarquee :brands="topBrands" />
     </section>
 
     <!-- Spotlight categories -->
@@ -220,8 +192,7 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
       </div>
 
       <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <component
-          :is="liteMode ? 'div' : 'RevealOnScroll'"
+        <RevealOnScroll
           v-for="(c, idx) in categoryCards"
           :key="c.key"
           :parity="(idx % 2) as 0 | 1"
@@ -229,29 +200,45 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
         >
           <NuxtLink
             :to="`/products?q=${encodeURIComponent(categoryQuery(c))}`"
-            class="group relative overflow-hidden rounded-2xl border border-app bg-surface/70 p-4 backdrop-blur transition will-change-transform hover:-translate-y-0.5 hover:bg-surface-2 hover:shadow-lg hover:shadow-[rgb(var(--primary))]/12 home-cat-card"
+            class="group category-premium-card relative overflow-hidden rounded-[28px] border border-app bg-surface/80 p-5 transition duration-300 hover:-translate-y-1 hover:border-[rgb(var(--primary))]/35"
           >
-            <div class="flex items-center gap-3">
-              <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-surface text-lg transition group-hover:scale-105">
-                {{ c.icon }}
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgb(var(--primary))]/12 text-xl shadow-inner shadow-black/10 transition duration-300 group-hover:scale-105 group-hover:bg-[rgb(var(--primary))]/18">
+                  {{ c.icon }}
+                </div>
+                <div class="min-w-0">
+                  <div class="truncate text-base font-extrabold text-[rgb(var(--text))]">
+                    {{ t(c.labelKey) }}
+                  </div>
+                  <div class="mt-1 truncate text-xs text-[rgb(var(--muted))]">
+                    {{ t('home.tapToExplore') }}
+                  </div>
+                </div>
               </div>
-              <div class="min-w-0">
-                <div class="truncate text-sm font-extrabold text-[rgb(var(--text))]">
-                  {{ t(c.labelKey) }}
-                </div>
-                <div class="mt-0.5 truncate text-xs text-[rgb(var(--muted))]">
-                  {{ t('home.tapToExplore') }}
-                </div>
+              <div class="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/5 text-sm text-[rgb(var(--text))] transition duration-300 group-hover:bg-[rgb(var(--primary))] group-hover:text-black">
+                ←
               </div>
             </div>
 
-            <div class="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-gradient-to-br from-[rgb(var(--primary))]/25 to-transparent opacity-0 blur-2xl transition group-hover:opacity-100"></div>
-            <div class="pointer-events-none absolute inset-0 opacity-0 transition group-hover:opacity-100">
-              <div class="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[rgb(var(--primary))]/50 to-transparent"></div>
-            </div>
+            <div class="mt-5 h-1.5 w-20 rounded-full bg-gradient-to-r from-[rgb(var(--primary))]/75 via-[rgb(var(--primary))]/35 to-transparent transition-all duration-300 group-hover:w-28"></div>
+            <div class="pointer-events-none absolute inset-x-4 bottom-0 h-px bg-gradient-to-r from-transparent via-[rgb(var(--primary))]/35 to-transparent opacity-60"></div>
+            <div class="pointer-events-none absolute -left-8 top-3 h-20 w-20 rounded-full bg-[rgb(var(--primary))]/8 blur-2xl"></div>
           </NuxtLink>
-        </component>
+        </RevealOnScroll>
       </div>
     </section>
   </div>
 </template>
+
+<style scoped>
+.category-premium-card{
+  box-shadow: 0 14px 40px rgba(0,0,0,.10);
+}
+:global(html.theme-light) .category-premium-card{
+  background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(249,247,255,.92));
+}
+:global(html.theme-dark) .category-premium-card{
+  background: linear-gradient(180deg, rgba(var(--surface-1), .96), rgba(var(--surface-2), .78));
+}
+</style>

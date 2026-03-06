@@ -12,6 +12,10 @@ const { t } = useI18n()
 const toast = useToast()
 const api = useApi()
 
+function emitAdsChanged() {
+  if (process.client) window.dispatchEvent(new CustomEvent('ads:changed'))
+}
+
 const loading = ref(true)
 const items = ref<any[]>([])
 
@@ -32,7 +36,7 @@ const uploading = ref(false)
 async function load() {
   loading.value = true
   try {
-    const res: any = await $fetch('/api/bff/admin/ads', { timeout: 8000 })
+    const res: any = await $fetch('/api/bff/admin/ads', { timeout: 8000, query: { _ts: Date.now() }, headers: { 'cache-control': 'no-cache, no-store, must-revalidate', pragma: 'no-cache' } })
     items.value = Array.isArray(res) ? res : []
   } catch {
     items.value = []
@@ -62,6 +66,7 @@ async function create() {
     toast.success(t('common.saved') || 'تم الحفظ')
     Object.assign(form, { title: '', subtitle: '', imageUrl: '', linkUrl: '', productId: '', sortOrder: 0, isEnabled: true })
     await load()
+    emitAdsChanged()
   } catch {
     toast.error(t('common.requestFailed') || t('common.errorGeneric') || 'حصل خطأ')
   }
@@ -73,6 +78,7 @@ async function remove(id: string) {
     await $fetch(`/api/bff/admin/ads/${id}`, { method: 'DELETE' })
     toast.success(t('common.deleted') || 'تم الحذف')
     await load()
+    emitAdsChanged()
   } catch {
     toast.error(t('common.requestFailed') || t('common.errorGeneric') || 'حصل خطأ')
   }
@@ -97,6 +103,7 @@ async function toggleEnabled(ad: any) {
       },
     })
     await load()
+    emitAdsChanged()
   } catch {
     toast.error(t('common.requestFailed') || t('common.errorGeneric') || 'حصل خطأ')
   }

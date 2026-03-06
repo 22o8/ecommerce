@@ -6,8 +6,6 @@ export default defineNuxtPlugin(() => {
   const route = useRoute()
 
   const KEY = 'metrics:lastVisit'
-  const conn: any = import.meta.client ? (navigator as any)?.connection : null
-  const isConstrained = !!conn?.saveData || /2g/.test(String(conn?.effectiveType || ''))
 
   async function send(path: string) {
     try {
@@ -26,9 +24,7 @@ export default defineNuxtPlugin(() => {
       const lastAt = Number(prev?.at || 0)
 
       // نفس الصفحة + قريب جداً => لا
-      if (lastPath === path && Date.now() - lastAt < 15000) return false
-      // على الهاتف أو الشبكة الضعيفة نخفف أكثر
-      if (Date.now() - lastAt < 30000 && /\/(products|product|brands|cart|favorites|admin)/.test(path)) return false
+      if (lastPath === path && Date.now() - lastAt < 8000) return false
       return true
     } catch {
       return true
@@ -48,8 +44,6 @@ export default defineNuxtPlugin(() => {
     (p) => {
       const path = String(p || '/')
       if (!import.meta.client) return
-      if (path.startsWith('/admin')) return
-      if (isConstrained) return
       if (!shouldSend(path)) return
       save(path)
       send(path)

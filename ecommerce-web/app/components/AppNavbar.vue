@@ -1,10 +1,10 @@
 <template>
   <header class="sticky top-0 z-50">
-    <div class="bg-app/88 backdrop-blur-[2px] sm:backdrop-blur supports-[backdrop-filter]:bg-app/75 border-b border-app">
+    <div class="bg-app/80 backdrop-blur supports-[backdrop-filter]:bg-app/70 border-b border-app">
       <div class="mx-auto max-w-7xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3">
         <NuxtLink to="/" class="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-[rgb(var(--primary))] sm:animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black">
-            <Icon name="mdi:shopping-outline" class="text-xl sm:animate-floaty" />
+          <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black">
+            <Icon name="mdi:shopping-outline" class="text-xl animate-floaty" />
           </div>
           <div class="leading-tight min-w-0">
             <!-- خلّ الاسم يبين أوضح باللايت بدون ما ينقص بسرعة -->
@@ -219,7 +219,6 @@ const { t } = useI18n()
 
 const route = useRoute()
 const router = useRouter()
-const { isMobile, liteMode } = useMobilePerf()
 const open = ref(false)
 const q = ref(String(route.query.q || ''))
 const openSearch = ref(false)
@@ -240,20 +239,18 @@ function goSearch(){
 watch(q, (val) => {
   const v = String(val || '').trim()
   if (liveTimer) clearTimeout(liveTimer)
-  const minChars = isMobile.value ? 3 : 2
-  if (!v || v.length < minChars) {
+  if (!v || v.length < 2) {
     liveItems.value = []
     return
   }
 
   liveTimer = setTimeout(async () => {
-    if (liteMode.value && !open.value && !openSearch.value) return
     try {
       liveItems.value = await products.liveSearch(v, 8)
     } catch {
       liveItems.value = []
     }
-  }, isMobile.value ? 320 : 180)
+  }, 180)
 })
 
 function openLive(item: any){

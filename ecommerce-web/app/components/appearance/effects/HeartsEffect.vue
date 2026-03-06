@@ -16,10 +16,8 @@
 </template>
 
 <script setup lang="ts">
-const { liteMode } = useMobilePerf()
-
 const hearts = computed(() => {
-  const count = liteMode.value ? 10 : 24
+  const count = 24
   return Array.from({ length: count }).map((_, i) => ({
     id: i,
     x: Math.random() * 100,

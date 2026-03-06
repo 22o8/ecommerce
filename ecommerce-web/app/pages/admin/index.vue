@@ -1,19 +1,21 @@
+
 <template>
   <div class="space-y-6">
-    <div class="admin-box dashboard-hero">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <!-- Header -->
+    <div class="admin-box">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <div class="text-xl font-extrabold rtl-text">{{ t('admin.dashboard') }}</div>
           <div class="text-sm admin-muted rtl-text">{{ t('admin.dashboardHint') }}</div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <div class="inline-flex rounded-full border border-app bg-surface-2 p-1">
+        <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <div class="flex gap-2">
             <button class="admin-chip" :class="range==='daily' ? 'is-active' : ''" type="button" @click="range='daily'">
-              {{ t('admin.rangeDaily') }}
+              يومي
             </button>
             <button class="admin-chip" :class="range==='monthly' ? 'is-active' : ''" type="button" @click="range='monthly'">
-              {{ t('admin.rangeMonthly') }}
+              شهري
             </button>
           </div>
 
@@ -24,7 +26,8 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-2">
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4">
       <div class="kpi-card">
         <div class="kpi-icon">
           <svg viewBox="0 0 24 24" class="kpi-ic" fill="none" stroke="currentColor" stroke-width="2">
@@ -37,6 +40,8 @@
           <div class="kpi-sub rtl-text">{{ $t('admin.lastUpdated') }}: {{ lastUpdatedLabel }}</div>
         </div>
       </div>
+
+      <!-- تم إخفاء (المستخدمين) و(الإيرادات) حسب الطلب -->
 
       <div class="kpi-card">
         <div class="kpi-icon">
@@ -53,17 +58,17 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
+    <!-- Activity + Top lists -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
       <div class="admin-box xl:col-span-2">
-        <div class="mb-4 flex items-center justify-between gap-3">
-          <div class="font-extrabold rtl-text">{{ range==='daily' ? t('admin.activityDaily') : t('admin.activityMonthly') }}</div>
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div class="font-extrabold rtl-text">النشاط {{ range==='daily' ? 'اليومي' : 'الشهري' }}</div>
           <div class="admin-muted text-sm rtl-text">
             {{ range==='daily' ? $t('admin.last30Days') : $t('admin.last12Months') }}
           </div>
         </div>
 
-        <div v-if="loading && activityBars.length===0" class="admin-muted rtl-text">{{ t('common.loading') }}...</div>
-        <div v-else-if="activityBars.length===0" class="admin-muted rtl-text">—</div>
+        <div v-if="activityBars.length===0" class="admin-muted rtl-text">—</div>
         <div v-else class="bars">
           <div v-for="b in activityBars" :key="b.key" class="bar">
             <div class="bar-fill" :style="{ height: b.h + '%' }"></div>
@@ -71,28 +76,28 @@
           </div>
         </div>
 
-        <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
           <div class="mini-stat">
-            <div class="admin-muted text-xs rtl-text">{{ t('admin.ordersLabel') }}</div>
+            <div class="admin-muted text-xs rtl-text">طلبات</div>
             <div class="font-black keep-ltr">{{ activityTotals.orders }}</div>
           </div>
           <div class="mini-stat">
-            <div class="admin-muted text-xs rtl-text">{{ t('admin.newUsersLabel') }}</div>
+            <div class="admin-muted text-xs rtl-text">مستخدمين جدد</div>
             <div class="font-black keep-ltr">{{ activityTotals.users }}</div>
           </div>
           <div class="mini-stat">
-            <div class="admin-muted text-xs rtl-text">{{ t('admin.visitsLabel') }}</div>
+            <div class="admin-muted text-xs rtl-text">زيارات</div>
             <div class="font-black keep-ltr">{{ activityTotals.visits }}</div>
           </div>
         </div>
       </div>
 
       <div class="admin-box">
-        <div class="mb-3 font-extrabold rtl-text">{{ $t('admin.summary.title') }}</div>
+        <div class="font-extrabold rtl-text mb-3">{{ $t('admin.summary.title') }}</div>
 
         <div class="space-y-3">
           <div class="topbox">
-            <div class="topbox-title rtl-text">🔥 {{ $t('admin.summary.mostPurchased') }}</div>
+            <div class="topbox-title rtl-text">🔥 {{ $t('admin.summary.mostPurchased') }}ً</div>
             <div v-if="overview.topPurchased.length===0" class="admin-muted rtl-text">—</div>
             <div v-else class="grid gap-2">
               <div v-for="x in overview.topPurchased.slice(0,5)" :key="x.productId" class="toprow">
@@ -125,15 +130,16 @@
           </div>
 
           <NuxtLink class="admin-link rtl-text" to="/admin/insights">
-            {{ t('admin.viewInsightsDetails') }}
+            عرض التفاصيل في صفحة Insights →
           </NuxtLink>
         </div>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
+    <!-- Latest Orders + Quick actions -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
       <div class="admin-box xl:col-span-2">
-        <div class="mb-4 flex items-center justify-between gap-3">
+        <div class="flex items-center justify-between gap-3 mb-4">
           <div class="font-extrabold rtl-text">{{ $t('admin.latestOrders') }}</div>
           <NuxtLink class="admin-link rtl-text" to="/admin/orders">{{ $t('admin.viewAll') }}</NuxtLink>
         </div>
@@ -144,9 +150,9 @@
             <div class="min-w-0">
               <div class="flex items-center gap-2">
                 <div class="order-badge" :class="badgeClass(o.status)">{{ o.status }}</div>
-                <div class="rtl-text truncate font-extrabold">{{ o.primaryItemTitle || '—' }}</div>
+                <div class="rtl-text font-extrabold truncate">{{ o.primaryItemTitle || '—' }}</div>
               </div>
-              <div class="admin-muted mt-1 truncate text-xs rtl-text">
+              <div class="admin-muted text-xs rtl-text mt-1 truncate">
                 {{ o.userFullName || o.userEmail || '—' }} · {{ formatDate(o.createdAt) }}
               </div>
             </div>
@@ -157,7 +163,7 @@
       </div>
 
       <div class="admin-box">
-        <div class="mb-3 font-extrabold rtl-text">{{ $t('admin.adminShortcuts') }}</div>
+        <div class="font-extrabold rtl-text mb-3">{{ $t('admin.adminShortcuts') }}</div>
         <div class="grid gap-3">
           <NuxtLink class="admin-action" to="/admin/products">
             <div class="font-extrabold rtl-text">{{ t('admin.manageProducts') }}</div>
@@ -175,8 +181,8 @@
           </NuxtLink>
 
           <NuxtLink class="admin-action" to="/admin/insights">
-            <div class="font-extrabold rtl-text">{{ t('admin.insights') }}</div>
-            <div class="admin-muted text-sm rtl-text">{{ t('admin.insightsHint') }}</div>
+            <div class="font-extrabold rtl-text">Insights</div>
+            <div class="admin-muted text-sm rtl-text">تحليلات المفضلة/الزيارة/الشراء</div>
           </NuxtLink>
         </div>
       </div>
@@ -186,10 +192,11 @@
   </div>
 </template>
 
+
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from '~/composables/useI18n'
 import { useAdminApi } from '~/composables/useAdminApi'
 import { useApi } from '~/composables/useApi'
@@ -245,13 +252,6 @@ function formatDate(v: any) {
   } catch { return String(v) }
 }
 
-async function withTimeout<T>(promise: Promise<T>, ms = 6000): Promise<T> {
-  return await Promise.race([
-    promise,
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
-  ])
-}
-
 const lastUpdatedLabel = computed(() => {
   if (!lastUpdatedAt.value) return '—'
   return lastUpdatedAt.value.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })
@@ -293,50 +293,44 @@ async function loadAll() {
   loading.value = true
   error.value = ''
   try {
-    const [dash, ov, act, vis, orders] = await Promise.allSettled([
-      withTimeout(adminApi.getDashboardStats<any>()),
-      withTimeout(adminApi.get<any>('/admin/analytics/overview')),
-      withTimeout(adminApi.get<any>('/admin/analytics/activity')),
-      withTimeout(api.get<any>('/metrics/visits/summary')),
-      withTimeout(adminApi.get<any>('/admin/orders')),
+    const [dash, ov, act, vis, orders] = await Promise.all([
+      adminApi.getDashboardStats<any>(),
+      adminApi.get<any>('/admin/analytics/overview'),
+      adminApi.get<any>('/admin/analytics/activity'),
+      api.get<any>('/metrics/visits/summary'),
+      adminApi.get<any>('/admin/orders'),
     ])
 
-    if (dash.status === 'fulfilled') {
-      stats.value.totalOrders = Number(dash.value?.totalOrders ?? 0)
-      stats.value.totalUsers = Number(dash.value?.totalUsers ?? 0)
-      stats.value.totalRevenueIqd = Number(dash.value?.totalRevenueIqd ?? 0)
-    }
-    if (ov.status === 'fulfilled') {
-      overview.value.topPurchased = Array.isArray(ov.value?.topPurchased) ? ov.value.topPurchased : []
-      overview.value.topFavorites = Array.isArray(ov.value?.topFavorites) ? ov.value.topFavorites : []
-      overview.value.topViews = Array.isArray(ov.value?.topViews) ? ov.value.topViews : []
-      overview.value.neglected = Array.isArray(ov.value?.neglected) ? ov.value.neglected : []
-    }
-    if (act.status === 'fulfilled') {
-      activity.value.daily = Array.isArray(act.value?.daily) ? act.value.daily : []
-      activity.value.monthly = Array.isArray(act.value?.monthly) ? act.value.monthly : []
-    }
-    if (vis.status === 'fulfilled') {
-      visits.value.total = Number(vis.value?.total ?? 0)
-      visits.value.today = Number(vis.value?.today ?? 0)
-      visits.value.month = Number(vis.value?.month ?? 0)
-    }
-    if (orders.status === 'fulfilled') {
-      const list = Array.isArray(orders.value) ? orders.value : (Array.isArray((orders.value as any)?.items) ? (orders.value as any).items : [])
-      latestOrders.value = list
-        .slice()
-        .sort((a: any, b: any) => new Date(b?.createdAt || 0).getTime() - new Date(a?.createdAt || 0).getTime())
-        .slice(0, 6)
-        .map((o: any) => ({
-          id: o?.id || o?.Id,
-          status: o?.status || o?.Status || '—',
-          totalIqd: o?.totalIqd ?? o?.TotalIqd ?? 0,
-          createdAt: o?.createdAt || o?.CreatedAt,
-          userEmail: o?.userEmail || o?.User?.Email,
-          userFullName: o?.userFullName || o?.User?.FullName,
-          primaryItemTitle: o?.primaryItemTitle || '—',
-        }))
-    }
+    stats.value.totalOrders = Number(dash?.totalOrders ?? 0)
+    stats.value.totalUsers = Number(dash?.totalUsers ?? 0)
+    stats.value.totalRevenueIqd = Number(dash?.totalRevenueIqd ?? 0)
+
+    overview.value.topPurchased = Array.isArray(ov?.topPurchased) ? ov.topPurchased : []
+    overview.value.topFavorites = Array.isArray(ov?.topFavorites) ? ov.topFavorites : []
+    overview.value.topViews = Array.isArray(ov?.topViews) ? ov.topViews : []
+    overview.value.neglected = Array.isArray(ov?.neglected) ? ov.neglected : []
+
+    activity.value.daily = Array.isArray(act?.daily) ? act.daily : []
+    activity.value.monthly = Array.isArray(act?.monthly) ? act.monthly : []
+
+    visits.value.total = Number(vis?.total ?? 0)
+    visits.value.today = Number(vis?.today ?? 0)
+    visits.value.month = Number(vis?.month ?? 0)
+
+    const list = Array.isArray(orders) ? orders : (Array.isArray(orders?.items) ? orders.items : [])
+    latestOrders.value = list
+      .slice()
+      .sort((a: any, b: any) => new Date(b?.createdAt || 0).getTime() - new Date(a?.createdAt || 0).getTime())
+      .slice(0, 6)
+      .map((o: any) => ({
+        id: o?.id || o?.Id,
+        status: o?.status || o?.Status || '—',
+        totalIqd: o?.totalIqd ?? o?.TotalIqd ?? 0,
+        createdAt: o?.createdAt || o?.CreatedAt,
+        userEmail: o?.userEmail || o?.User?.Email,
+        userFullName: o?.userFullName || o?.User?.FullName,
+        primaryItemTitle: o?.primaryItemTitle || '—',
+      }))
 
     lastUpdatedAt.value = new Date()
   } catch (e: any) {
@@ -346,20 +340,20 @@ async function loadAll() {
   }
 }
 
-onMounted(() => {
-  loadAll()
+watch(range, () => {
+  // مجرد تحديث UI (البيانات نفسها محمّلة)
 })
+
+loadAll()
 </script>
+
 
 <style scoped>
 .admin-box{
-  border-radius: 24px;
+  border-radius: 20px;
   border: 1px solid rgb(var(--border));
   background: rgb(var(--surface));
   padding: 16px;
-}
-.dashboard-hero{
-  background: linear-gradient(135deg, rgba(124,58,237,.08), rgba(255,255,255,.02));
 }
 .admin-muted{ color: rgb(var(--muted)); }
 .admin-error{
@@ -369,21 +363,22 @@ onMounted(() => {
   padding: 12px 14px;
   border-radius: 16px;
 }
+
 .admin-chip{
   border-radius: 999px;
-  border: 1px solid transparent;
-  padding: 8px 14px;
+  border: 1px solid rgb(var(--border));
+  padding: 8px 12px;
   font-weight: 900;
   font-size: 12px;
-  color: rgb(var(--muted));
+  background: rgba(255,255,255,.02);
 }
 .admin-chip.is-active{
   background: rgba(124,58,237,.18);
   border-color: rgba(124,58,237,.45);
-  color: rgb(var(--fg));
 }
+
 .kpi-card{
-  border-radius: 22px;
+  border-radius: 20px;
   border: 1px solid rgb(var(--border));
   background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
   padding: 14px;
@@ -393,8 +388,8 @@ onMounted(() => {
   box-shadow: 0 10px 30px rgba(0,0,0,.10);
 }
 .kpi-icon{
-  width: 48px; height: 48px;
-  border-radius: 16px;
+  width: 44px; height: 44px;
+  border-radius: 14px;
   display:flex; align-items:center; justify-content:center;
   background: rgba(124,58,237,.18);
   border: 1px solid rgba(124,58,237,.35);
@@ -403,15 +398,14 @@ onMounted(() => {
 .kpi-label{ font-size: 12px; font-weight: 800; color: rgb(var(--muted)); }
 .kpi-value{ font-size: 26px; font-weight: 1000; margin-top: 2px; }
 .kpi-sub{ font-size: 12px; color: rgb(var(--muted)); margin-top: 4px; }
+
 .bars{
   height: 170px;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(20px, 1fr);
+  grid-auto-columns: 1fr;
   gap: 8px;
   align-items: end;
-  overflow-x: auto;
-  padding-bottom: 4px;
 }
 .bar{
   position: relative;
@@ -420,7 +414,6 @@ onMounted(() => {
   border: 1px solid rgb(var(--border));
   background: rgba(255,255,255,.02);
   overflow: hidden;
-  min-width: 22px;
 }
 .bar-fill{
   position: absolute;
@@ -436,34 +429,86 @@ onMounted(() => {
   font-size: 10px;
   color: rgba(255,255,255,.7);
 }
-.mini-stat,.topbox,.order-row,.admin-action{
-  border-radius: 18px;
+
+.mini-stat{
+  border-radius: 16px;
   border: 1px solid rgb(var(--border));
   background: rgba(255,255,255,.02);
+  padding: 10px 12px;
 }
-.mini-stat{ padding: 10px 12px; }
-.topbox{ padding: 10px 12px; }
-.topbox-title{ font-weight: 900; margin-bottom: 8px; }
-.toprow{ display:flex; align-items:center; justify-content: space-between; gap: 10px; }
+
+.topbox{
+  border-radius: 16px;
+  border: 1px solid rgb(var(--border));
+  background: rgba(255,255,255,.02);
+  padding: 10px 12px;
+}
+.topbox-title{
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.toprow{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .orders{ display:grid; gap:10px; }
-.order-row{ padding: 10px 12px; display:flex; align-items:center; justify-content: space-between; gap: 12px; }
+.order-row{
+  border-radius: 16px;
+  border: 1px solid rgb(var(--border));
+  background: rgba(255,255,255,.02);
+  padding: 10px 12px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+}
 .order-badge{
-  font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 999px;
-  border: 1px solid rgb(var(--border)); background: rgba(255,255,255,.02); white-space: nowrap;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgb(var(--border));
+  background: rgba(255,255,255,.02);
+  white-space: nowrap;
 }
 .order-badge.ok{ background: rgba(34,197,94,.14); border-color: rgba(34,197,94,.35); }
 .order-badge.warn{ background: rgba(234,179,8,.14); border-color: rgba(234,179,8,.35); }
 .order-badge.bad{ background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.35); }
 .order-badge.neutral{ background: rgba(148,163,184,.12); border-color: rgba(148,163,184,.25); }
-.admin-link{ display:inline-flex; align-items:center; gap: 6px; font-weight: 900; color: rgba(124,58,237,.95); }
+
+.admin-link{
+  display:inline-flex;
+  align-items:center;
+  gap: 6px;
+  font-weight: 900;
+  color: rgba(124,58,237,.95);
+}
+
 .admin-ghost{
-  padding: 10px 12px; border-radius: 14px; border: 1px solid rgb(var(--border));
-  background: rgb(var(--surface-2)); color: rgb(var(--fg)); font-weight: 900;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface-2));
+  color: rgb(var(--fg));
+  font-weight: 900;
 }
-.admin-action{ display:block; padding: 14px; transition: transform .15s ease, border-color .15s ease, background .15s ease; }
-.admin-action:hover{ transform: translateY(-2px); border-color: rgba(124,58,237,.45); background: rgba(124,58,237,.10); }
-@media (max-width: 768px){
-  .admin-box{ padding: 14px; border-radius: 20px; }
-  .kpi-value{ font-size: 22px; }
+
+.admin-action{
+  display:block;
+  border-radius: 18px;
+  border: 1px solid rgb(var(--border));
+  background: rgba(255,255,255,.02);
+  padding: 14px;
+  transition: transform .15s ease, border-color .15s ease, background .15s ease;
 }
+.admin-action:hover{
+  transform: translateY(-2px);
+  border-color: rgba(124,58,237,.45);
+  background: rgba(124,58,237,.10);
+}
+
 </style>
+
