@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using Ecommerce.Api.Domain.Entities;
 using Ecommerce.Api.Infrastructure.Data;
+using Ecommerce.Api.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,11 +16,13 @@ public class AdminBrandsController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IWebHostEnvironment _env;
+    private readonly IObjectStorage _storage;
 
-    public AdminBrandsController(AppDbContext db, IWebHostEnvironment env)
+    public AdminBrandsController(AppDbContext db, IWebHostEnvironment env, IObjectStorage storage)
     {
         _db = db;
         _env = env;
+        _storage = storage;
     }
 
     [HttpGet]
@@ -151,27 +154,26 @@ public class AdminBrandsController : ControllerBase
         if (string.IsNullOrWhiteSpace(ext) || !allowed.Contains(ext))
             return BadRequest(new { message = $"File type not allowed: {ext}" });
 
-        // IMPORTANT: Program.cs serves files from ContentRootPath/uploads, not wwwroot/uploads.
-        // If we write into wwwroot هنا راح ينرفع الملف لكن يطلع 404 عند العرض.
-        var root = _env.ContentRootPath;
-        if (string.IsNullOrWhiteSpace(root))
-            root = AppContext.BaseDirectory;
+        // Use the same storage pipeline as product images so logos are visible consistently on all devices.
+        // This also keeps brand images compatible with local storage or S3/R2 without extra per-device logic.
+        var oldKey = ExtractStorageKeyFromUrl(b.LogoUrl);
+        var key = $"brands/{id}/logo{ext.ToLowerInvariant()}";
 
-        var dir = Path.Combine(root, "uploads", "brands", id.ToString());
-        Directory.CreateDirectory(dir);
-
-        var fileName = $"logo{ext.ToLowerInvariant()}";
-        var absPath = Path.Combine(dir, fileName);
-
-        await using (var fs = new FileStream(absPath, FileMode.Create))
+        await using (var stream = file.OpenReadStream())
         {
-            await file.CopyToAsync(fs);
+            var contentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType;
+            var upload = await _storage.UploadAsync(stream, key, contentType, HttpContext.RequestAborted);
+            b.LogoUrl = upload.Url;
         }
 
-        b.LogoUrl = $"/uploads/brands/{id}/{fileName}";
+        if (!string.IsNullOrWhiteSpace(oldKey) && !string.Equals(oldKey, key, StringComparison.OrdinalIgnoreCase))
+        {
+            try { await _storage.DeleteAsync(oldKey, HttpContext.RequestAborted); } catch { }
+        }
+
         await _db.SaveChangesAsync();
 
-        return Ok(new { logoUrl = b.LogoUrl });
+        return Ok(new { logoUrl = b.LogoUrl, url = b.LogoUrl, key });
     }
 
     public class UpsertBrandRequest
@@ -186,6 +188,31 @@ public class AdminBrandsController : ControllerBase
         public string? Description { get; set; }
 
         public bool IsActive { get; set; } = true;
+    }
+
+
+    private static string ExtractStorageKeyFromUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return string.Empty;
+
+        try
+        {
+            if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                var u = new Uri(url);
+                var path = u.AbsolutePath ?? string.Empty;
+                if (path.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+                    return path.Substring("/uploads/".Length).Trim('/');
+                return string.Empty;
+            }
+
+            if (url.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+                return url.Substring("/uploads/".Length).Trim('/');
+        }
+        catch { }
+
+        return string.Empty;
     }
 
     private static string NormalizeSlug(string? s)

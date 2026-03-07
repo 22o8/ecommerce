@@ -134,9 +134,9 @@ await useAsyncData(`admin-brand-${id.value}`, async () => {
   slug.value = b?.slug || ''
   description.value = b?.description || ''
   isActive.value = !!b?.isActive
-  logoUrl.value = b?.logoUrl || ''
+  logoUrl.value = b?.logoUrl || b?.url || ''
   return true
-})
+}, { server: false, default: () => true })
 
 const onPick = (e: Event) => {
   logoError.value = ''
@@ -150,7 +150,7 @@ const upload = async () => {
   pendingLogo.value = true
   try {
     const res: any = await brands.uploadLogo(id.value, picked.value)
-    logoUrl.value = res?.logoUrl || logoUrl.value
+    logoUrl.value = res?.logoUrl || res?.url || logoUrl.value
     picked.value = null
     toast.success(t('common.uploaded') || 'تم الرفع')
   } catch (e: any) {
