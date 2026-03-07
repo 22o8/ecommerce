@@ -43,89 +43,6 @@
     "edit": "Edit"
   },
   "admin": {
-    "adsLabel": "Ads",
-    "discount": "Discount (%)",
-    "finalPrice": "Final price",
-    "confirmDeleteAd": "Delete ad?"
-  },
-  "nav": {
-    "logout": "Logout",
-    "login": "Login",
-    "dashboard": "Dashboard",
-    "brands": "Brands",
-    "products": "Products",
-    "cart": "Cart",
-    "orders": "Orders",
-    "users": "Users",
-    "backToSite": "Back to site",
-    "viewSite": "View site",
-    "language": "Language",
-    "home": "Home"
-  },
-  "home": {
-    "brands": "Brands",
-    "brandsSubtitle": "Explore our carefully curated selection of premium beauty brands.",
-    "noBrandsFound": "No brands found",
-    "dashboard": "Dashboard",
-    "hero": {
-      "title": "Discover Your Perfect Beauty Routine",
-      "subtitle": "Explore our curated collection of premium skincare and beauty products from the world's best brands.",
-      "cta": "Shop Now"
-    },
-    "featured": {
-      "title": "Featured Products"
-    },
-    "statsFastShipping": "Fast delivery",
-    "statsOriginal": "Authentic products",
-    "statsSupport": "Customer support",
-    "spotlightTitle": "Shop by category",
-    "spotlightSubtitle": "Quick picks to reach what you want in seconds.",
-    "viewAll": "View all",
-    "catSkincare": "Skincare",
-    "catSerum": "Serums",
-    "catSunscreen": "Sunscreen",
-    "catMakeup": "Makeup",
-    "catPerfume": "Perfumes",
-    "brandShowcaseTitle": "Brand showcase",
-    "brandShowcaseSubtitle": "Explore top brands in an interactive 3D view.",
-    "tapToExplore": "Tap to explore",
-    "catMoisturizer": "Moisturizer",
-    "catCleanser": "Cleanser",
-    "subtitle": "Professional digital store"
-  },
-  "productsPage": {
-    "title": "Products",
-    "subtitle": "Choose what fits you and buy directly.",
-    "searchPlaceholder": "Search products...",
-    "filters": "Filters",
-    "brand": "Brand",
-    "price": "Price",
-    "sort": {
-      "priceDesc": "Price desc",
-      "priceAsc": "Price asc",
-      "new": "New"
-    },
-    "newest": "Newest",
-    "priceLow": "Price: Low to High",
-    "priceHigh": "Price: High to Low",
-    "noResults": "No products found",
-    "next": "Next",
-    "allBrands": "All brands",
-    "prev": "Prev",
-    "addToCart": "Add to cart",
-    "page": "Page",
-    "emptyTitle": "Empty title",
-    "emptyDesc": "Empty desc"
-  },
-  "brandsPage": {
-    "title": "Brands",
-    "subtitle": "Add and manage brands. Each product should belong to a brand.",
-    "searchPlaceholder": "Search brands...",
-    "addBrand": "Add brand",
-    "status": "Status",
-    "actions": "Actions"
-  },
-  "admin": {
     "title": "Admin Panel",
     "featured": "Featured",
     "dashboardHint": "Quick overview and shortcuts",
@@ -138,10 +55,10 @@
     "manageProductsHint": "Create, edit and publish products",
     "manageOrders": "Manage orders",
     "manageOrdersHint": "Track, update and fulfill orders",
-  "appearanceLabel": "Themes & Effects",
-  "adsLabel": "Ads",
-  "discount": "Discount",
-  "finalPrice": "Final price",
+    "appearanceLabel": "Themes & Effects",
+    "adsLabel": "Ads",
+    "discount": "Discount",
+    "finalPrice": "Final price",
     "appearance": {
       "title": "Themes & Effects",
       "subtitle": "Control the backgrounds and effects shown to customers.",
@@ -376,6 +293,83 @@
     "insights": "Insights",
     "insightsHint": "Favorites / visits / purchases analytics"
   },
+  "nav": {
+    "logout": "Logout",
+    "login": "Login",
+    "dashboard": "Dashboard",
+    "brands": "Brands",
+    "products": "Products",
+    "cart": "Cart",
+    "orders": "Orders",
+    "users": "Users",
+    "backToSite": "Back to site",
+    "viewSite": "View site",
+    "language": "Language",
+    "home": "Home"
+  },
+  "home": {
+    "brands": "Brands",
+    "brandsSubtitle": "Explore our carefully curated selection of premium beauty brands.",
+    "noBrandsFound": "No brands found",
+    "dashboard": "Dashboard",
+    "hero": {
+      "title": "Discover Your Perfect Beauty Routine",
+      "subtitle": "Explore our curated collection of premium skincare and beauty products from the world's best brands.",
+      "cta": "Shop Now"
+    },
+    "featured": {
+      "title": "Featured Products"
+    },
+    "statsFastShipping": "Fast delivery",
+    "statsOriginal": "Authentic products",
+    "statsSupport": "Customer support",
+    "spotlightTitle": "Shop by category",
+    "spotlightSubtitle": "Quick picks to reach what you want in seconds.",
+    "viewAll": "View all",
+    "catSkincare": "Skincare",
+    "catSerum": "Serums",
+    "catSunscreen": "Sunscreen",
+    "catMakeup": "Makeup",
+    "catPerfume": "Perfumes",
+    "brandShowcaseTitle": "Brand showcase",
+    "brandShowcaseSubtitle": "Explore top brands in an interactive 3D view.",
+    "tapToExplore": "Tap to explore",
+    "catMoisturizer": "Moisturizer",
+    "catCleanser": "Cleanser",
+    "subtitle": "Professional digital store"
+  },
+  "productsPage": {
+    "title": "Products",
+    "subtitle": "Choose what fits you and buy directly.",
+    "searchPlaceholder": "Search products...",
+    "filters": "Filters",
+    "brand": "Brand",
+    "price": "Price",
+    "sort": {
+      "priceDesc": "Price desc",
+      "priceAsc": "Price asc",
+      "new": "New"
+    },
+    "newest": "Newest",
+    "priceLow": "Price: Low to High",
+    "priceHigh": "Price: High to Low",
+    "noResults": "No products found",
+    "next": "Next",
+    "allBrands": "All brands",
+    "prev": "Prev",
+    "addToCart": "Add to cart",
+    "page": "Page",
+    "emptyTitle": "Empty title",
+    "emptyDesc": "Empty desc"
+  },
+  "brandsPage": {
+    "title": "Brands",
+    "subtitle": "Add and manage brands. Each product should belong to a brand.",
+    "searchPlaceholder": "Search brands...",
+    "addBrand": "Add brand",
+    "status": "Status",
+    "actions": "Actions"
+  },
   "errors": {
     "required": "This field is required",
     "invalid": "Invalid value",
@@ -571,5 +565,9 @@
     "valentinesEffect": "Hearts",
     "blackFridayTheme": "Dark: red glow + neon / Light: confetti",
     "blackFridayEffect": "Discount % particles + neon lines"
+  },
+  "seasonal": {
+    "eidAdhaTitle": "Eid al-Adha",
+    "eidAdhaSubtitle": "A light festive touch at the top of the homepage"
   }
 }

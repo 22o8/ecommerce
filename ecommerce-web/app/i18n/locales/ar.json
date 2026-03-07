@@ -28,11 +28,8 @@
     "reset": "إعادة ضبط",
     "refresh": "تحديث",
     "saved": "تم الحفظ",
-    "uploaded": "تم الرفع",
-    "deleted": "تم الحذف",
     "requestFailed": "فشل الطلب",
     "remove": "إزالة",
-    "requestFailed": "فشل الطلب",
     "chooseFiles": "اختر الملفات",
     "buy": "شراء",
     "uploading": "جارِ الرفع...",
@@ -44,85 +41,6 @@
     "prev": "السابق",
     "next": "التالي",
     "edit": "تعديل"
-  },
-  "admin": {
-    "adsLabel": "الإعلانات",
-    "discount": "نسبة الخصم (%)",
-    "finalPrice": "السعر النهائي",
-    "confirmDeleteAd": "حذف الإعلان؟"
-  },
-  "nav": {
-    "brands": "البراندات",
-    "products": "المنتجات",
-    "cart": "السلة",
-    "dashboard": "لوحة التحكم",
-    "viewSite": "عرض الموقع",
-    "logout": "تسجيل الخروج",
-    "login": "تسجيل الدخول",
-    "language": "اللغة",
-    "home": "الرئيسية"
-  },
-  "home": {
-    "brands": "البراندات",
-    "brandsSubtitle": "استكشف مجموعتنا المختارة بعناية من أفضل البراندات.",
-    "noBrandsFound": "لا توجد براندات",
-    "dashboard": "لوحة التحكم",
-    "hero": {
-      "title": "اكتشف روتين جمالك المثالي",
-      "subtitle": "استكشف مجموعتنا المختارة من أفضل منتجات العناية بالبشرة والجمال من أشهر العلامات.",
-      "cta": "تسوّق الآن"
-    },
-    "featured": {
-      "title": "المنتجات المميزة"
-    },
-    "statsFastShipping": "توصيل سريع",
-    "statsOriginal": "منتجات أصلية",
-    "statsSupport": "دعم العملاء",
-    "spotlightTitle": "تسوّق حسب التصنيف",
-    "spotlightSubtitle": "اختصارات سريعة توصلك للي تريده بثواني.",
-    "viewAll": "عرض الكل",
-    "catSkincare": "العناية بالبشرة",
-    "catSerum": "السيروم",
-    "catSunscreen": "واقي الشمس",
-    "catMakeup": "المكياج",
-    "catPerfume": "العطور",
-    "brandShowcaseTitle": "عرض البراندات",
-    "brandShowcaseSubtitle": "استكشف أفضل البراندات بطريقة تفاعلية ثلاثية الأبعاد.",
-    "tapToExplore": "اضغط للاستكشاف",
-    "catMoisturizer": "مرطّب",
-    "catCleanser": "غسول",
-    "subtitle": "متجر رقمي احترافي"
-  },
-  "productsPage": {
-    "title": "المنتجات",
-    "subtitle": "اختر ما يناسبك وقم بالشراء مباشرة.",
-    "searchPlaceholder": "ابحث عن منتج...",
-    "chooseBrand": "اختر براند",
-    "chooseCategory": "اختر تصنيف",
-    "priceFrom": "السعر من",
-    "priceTo": "السعر إلى",
-    "sort": {
-      "priceDesc": "السعر: من الأعلى إلى الأقل",
-      "priceAsc": "السعر: من الأقل إلى الأعلى",
-      "new": "الأحدث"
-    },
-    "sortNewest": "الأحدث",
-    "sortPriceAsc": "الأقل سعرًا",
-    "sortPriceDesc": "الأعلى سعرًا",
-    "emptyTitle": "لا توجد منتجات",
-    "emptyHint": "جرّب تغيير الفلاتر أو البحث بكلمات مختلفة.",
-    "emptyDesc": "جرّب تغيير الفلاتر أو البحث بكلمات مختلفة.",
-    "next": "التالي",
-    "prev": "السابق",
-    "allBrands": "كل البراندات",
-    "addToCart": "أضف إلى السلة",
-    "page": "صفحة"
-  },
-  "brandsPage": {
-    "title": "البراندات",
-    "searchPlaceholder": "بحث عن براند...",
-    "emptyTitle": "لا توجد براندات",
-    "emptyHint": "أضف براند جديد من لوحة التحكم."
   },
   "admin": {
     "title": "لوحة الإدارة",
@@ -141,10 +59,10 @@
     "manageServicesHint": "إضافة الخدمات الرقمية وإدارتها.",
     "backToSite": "العودة للموقع",
     "orders": "الطلبات",
-  "appearanceLabel": "الثيمات والتأثيرات",
-  "adsLabel": "الإعلانات",
-  "discount": "الخصم",
-  "finalPrice": "السعر بعد الخصم",
+    "appearanceLabel": "الثيمات والتأثيرات",
+    "adsLabel": "الإعلانات",
+    "discount": "الخصم",
+    "finalPrice": "السعر بعد الخصم",
     "appearance": {
       "title": "الثيمات والتأثيرات",
       "subtitle": "تحكم بالخلفيات والتأثيرات التي تظهر لكل الزبائن.",
@@ -403,6 +321,79 @@
     "insights": "الإحصائيات",
     "insightsHint": "تحليلات المفضلة/الزيارة/الشراء"
   },
+  "nav": {
+    "brands": "البراندات",
+    "products": "المنتجات",
+    "cart": "السلة",
+    "dashboard": "لوحة التحكم",
+    "viewSite": "عرض الموقع",
+    "logout": "تسجيل الخروج",
+    "login": "تسجيل الدخول",
+    "language": "اللغة",
+    "home": "الرئيسية"
+  },
+  "home": {
+    "brands": "البراندات",
+    "brandsSubtitle": "استكشف مجموعتنا المختارة بعناية من أفضل البراندات.",
+    "noBrandsFound": "لا توجد براندات",
+    "dashboard": "لوحة التحكم",
+    "hero": {
+      "title": "اكتشف روتين جمالك المثالي",
+      "subtitle": "استكشف مجموعتنا المختارة من أفضل منتجات العناية بالبشرة والجمال من أشهر العلامات.",
+      "cta": "تسوّق الآن"
+    },
+    "featured": {
+      "title": "المنتجات المميزة"
+    },
+    "statsFastShipping": "توصيل سريع",
+    "statsOriginal": "منتجات أصلية",
+    "statsSupport": "دعم العملاء",
+    "spotlightTitle": "تسوّق حسب التصنيف",
+    "spotlightSubtitle": "اختصارات سريعة توصلك للي تريده بثواني.",
+    "viewAll": "عرض الكل",
+    "catSkincare": "العناية بالبشرة",
+    "catSerum": "السيروم",
+    "catSunscreen": "واقي الشمس",
+    "catMakeup": "المكياج",
+    "catPerfume": "العطور",
+    "brandShowcaseTitle": "عرض البراندات",
+    "brandShowcaseSubtitle": "استكشف أفضل البراندات بطريقة تفاعلية ثلاثية الأبعاد.",
+    "tapToExplore": "اضغط للاستكشاف",
+    "catMoisturizer": "مرطّب",
+    "catCleanser": "غسول",
+    "subtitle": "متجر رقمي احترافي"
+  },
+  "productsPage": {
+    "title": "المنتجات",
+    "subtitle": "اختر ما يناسبك وقم بالشراء مباشرة.",
+    "searchPlaceholder": "ابحث عن منتج...",
+    "chooseBrand": "اختر براند",
+    "chooseCategory": "اختر تصنيف",
+    "priceFrom": "السعر من",
+    "priceTo": "السعر إلى",
+    "sort": {
+      "priceDesc": "السعر: من الأعلى إلى الأقل",
+      "priceAsc": "السعر: من الأقل إلى الأعلى",
+      "new": "الأحدث"
+    },
+    "sortNewest": "الأحدث",
+    "sortPriceAsc": "الأقل سعرًا",
+    "sortPriceDesc": "الأعلى سعرًا",
+    "emptyTitle": "لا توجد منتجات",
+    "emptyHint": "جرّب تغيير الفلاتر أو البحث بكلمات مختلفة.",
+    "emptyDesc": "جرّب تغيير الفلاتر أو البحث بكلمات مختلفة.",
+    "next": "التالي",
+    "prev": "السابق",
+    "allBrands": "كل البراندات",
+    "addToCart": "أضف إلى السلة",
+    "page": "صفحة"
+  },
+  "brandsPage": {
+    "title": "البراندات",
+    "searchPlaceholder": "بحث عن براند...",
+    "emptyTitle": "لا توجد براندات",
+    "emptyHint": "أضف براند جديد من لوحة التحكم."
+  },
   "auth": {
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
@@ -598,5 +589,9 @@
     "valentinesEffect": "قلوب",
     "blackFridayTheme": "داكن: glow أحمر + neon / فاتح: confetti",
     "blackFridayEffect": "discount particles % + neon lines"
+  },
+  "seasonal": {
+    "eidAdhaTitle": "عيد الأضحى",
+    "eidAdhaSubtitle": "أجواء خفيفة واحتفالية في أعلى الصفحة الرئيسية"
   }
 }
