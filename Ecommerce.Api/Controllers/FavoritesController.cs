@@ -37,6 +37,7 @@ public class FavoritesController : ControllerBase
         var userId = GetUserId();
 
         var items = await _db.Favorites
+            .AsNoTracking()
             .Where(f => f.UserId == userId)
             .OrderByDescending(f => f.CreatedAt)
             .Join(_db.Products,
@@ -48,8 +49,18 @@ public class FavoritesController : ControllerBase
                     p.Title,
                     p.Slug,
                     p.Brand,
+                    p.Description,
                     p.PriceIqd,
                     p.PriceUsd,
+                    p.DiscountPercent,
+                    finalPriceIqd = p.DiscountPercent > 0
+                        ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2)
+                        : p.PriceIqd,
+                    coverImage = _db.ProductImages
+                        .Where(i => i.ProductId == p.Id)
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => i.Url)
+                        .FirstOrDefault(),
                     favoritedAt = f.CreatedAt
                 })
             .ToListAsync();

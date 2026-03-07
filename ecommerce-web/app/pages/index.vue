@@ -191,7 +191,7 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
         </NuxtLink>
       </div>
 
-      <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <RevealOnScroll
           v-for="(c, idx) in categoryCards"
           :key="c.key"
@@ -200,15 +200,19 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
         >
           <NuxtLink
             :to="`/products?q=${encodeURIComponent(categoryQuery(c))}`"
-            class="group category-clean-card"
+            class="group category-simple-card"
           >
-            <div class="category-clean-card__icon">{{ c.icon }}</div>
-            <div class="category-clean-card__body">
-              <div class="category-clean-card__title">{{ t(c.labelKey) }}</div>
-              <div class="category-clean-card__hint">{{ t('home.tapToExplore') }}</div>
-            </div>
-            <div class="category-clean-card__arrow">
-              <span aria-hidden="true">{{ locale === 'ar' ? '←' : '→' }}</span>
+            <div class="category-simple-card__inner">
+              <div class="category-simple-card__icon">{{ c.icon }}</div>
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-base font-black text-[rgb(var(--text))]">
+                  {{ t(c.labelKey) }}
+                </div>
+                <div class="mt-1 truncate text-xs text-[rgb(var(--muted))]">
+                  {{ t('home.tapToExplore') }}
+                </div>
+              </div>
+              <div class="category-simple-card__arrow">→</div>
             </div>
           </NuxtLink>
         </RevealOnScroll>
@@ -218,73 +222,66 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
 </template>
 
 <style scoped>
-.category-clean-card{
+.category-simple-card{
+  display:block;
+  border-radius: 24px;
+  border: 1px solid rgba(var(--border), .95);
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease, background-color .22s ease;
+}
+.category-simple-card__inner{
   display:flex;
   align-items:center;
   gap:14px;
-  min-height:108px;
-  padding:18px 16px;
-  border-radius:24px;
-  border:1px solid rgba(var(--border), .92);
-  background: linear-gradient(180deg, rgba(var(--surface-1), .98), rgba(var(--surface-2), .86));
-  box-shadow: 0 14px 34px rgba(0,0,0,.10);
-  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;
+  min-height: 104px;
+  padding: 18px;
 }
-.category-clean-card:hover{
+.category-simple-card__icon{
+  display:grid;
+  place-items:center;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(var(--primary), .16), rgba(var(--primary), .08));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.45);
+  font-size: 24px;
+  flex: 0 0 auto;
+}
+.category-simple-card__arrow{
+  display:grid;
+  place-items:center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--border), .95);
+  color: rgb(var(--muted));
+  background: rgba(var(--surface-rgb), .7);
+  transition: transform .22s ease, color .22s ease, border-color .22s ease, background-color .22s ease;
+}
+.category-simple-card:hover{
   transform: translateY(-3px);
-  border-color: rgba(var(--primary), .38);
-  box-shadow: 0 20px 40px rgba(0,0,0,.14);
-  background: linear-gradient(180deg, rgba(var(--surface-1), 1), rgba(var(--surface-2), .94));
+  border-color: rgba(var(--primary), .34);
 }
-.category-clean-card__icon{
-  flex:0 0 auto;
-  width:54px;
-  height:54px;
-  display:grid;
-  place-items:center;
-  border-radius:18px;
-  background: rgba(var(--primary), .13);
-  font-size:1.55rem;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
-}
-.category-clean-card__body{
-  min-width:0;
-  flex:1 1 auto;
-}
-.category-clean-card__title{
-  font-size:1.02rem;
-  font-weight:800;
-  color: rgb(var(--text));
-}
-.category-clean-card__hint{
-  margin-top:6px;
-  font-size:.86rem;
-  color: rgb(var(--muted));
-}
-.category-clean-card__arrow{
-  flex:0 0 auto;
-  width:40px;
-  height:40px;
-  display:grid;
-  place-items:center;
-  border-radius:9999px;
-  border:1px solid rgba(var(--border), .9);
-  color: rgb(var(--muted));
-  transition: color .2s ease, border-color .2s ease, transform .2s ease;
-}
-.category-clean-card:hover .category-clean-card__arrow{
+.category-simple-card:hover .category-simple-card__arrow{
   color: rgb(var(--primary));
-  border-color: rgba(var(--primary), .35);
-  transform: translateX(-2px);
-}
-:global(html[dir='ltr']) .category-clean-card:hover .category-clean-card__arrow{
+  border-color: rgba(var(--primary), .28);
+  background: rgba(var(--primary), .08);
   transform: translateX(2px);
 }
+:global(html.theme-light) .category-simple-card{
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,247,252,.94));
+  box-shadow: 0 18px 44px rgba(232, 91, 154, .08), 0 10px 26px rgba(24,24,24,.05);
+}
+:global(html.theme-light) .category-simple-card:hover{
+  background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,244,250,.98));
+  box-shadow: 0 24px 56px rgba(232, 91, 154, .12), 0 12px 28px rgba(24,24,24,.06);
+}
+:global(html.theme-dark) .category-simple-card{
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .86));
+  box-shadow: 0 16px 40px rgba(0,0,0,.24);
+}
 @media (max-width: 640px){
-  .category-clean-card{ min-height:92px; padding:14px; border-radius:20px; }
-  .category-clean-card__icon{ width:46px; height:46px; font-size:1.32rem; border-radius:15px; }
-  .category-clean-card__title{ font-size:.96rem; }
-  .category-clean-card__hint{ font-size:.8rem; }
-  .category-clean-card__arrow{ width:34px; height:34px; }
+  .category-simple-card__inner{ min-height: 94px; padding: 16px; }
+  .category-simple-card__icon{ width: 46px; height: 46px; border-radius: 16px; font-size: 22px; }
+  .category-simple-card__arrow{ width: 32px; height: 32px; }
 }
 </style>

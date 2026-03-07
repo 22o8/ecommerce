@@ -1,12 +1,12 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
+  <div class="container mx-auto px-4 py-10 brands-page">
     <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
       <div>
         <h1 class="text-3xl sm:text-4xl font-extrabold rtl-text">{{ t('home.brands') }}</h1>
         <p class="mt-2 text-muted rtl-text">{{ t('home.brandsSubtitle') }}</p>
       </div>
 
-      <div class="control-box control-box-strong glass-panel glow-border rounded-2xl p-2 w-full sm:w-[360px]">
+      <div class="brands-search-box rounded-[28px] p-2 w-full sm:w-[380px]">
         <div class="relative">
           <input
             v-model="q"
@@ -17,7 +17,7 @@
             v-if="q"
             class="absolute left-3 top-1/2 -translate-y-1/2 icon-btn"
             @click="q = ''"
-            aria-label="clear"
+            :aria-label="t('common.clear')"
           >
             ✕
           </button>
@@ -41,7 +41,7 @@
         >
           <NuxtLink
             :to="`/brands/${b.slug}`"
-            class="group card-soft glass-panel glow-border rounded-2xl p-4 hover:-translate-y-0.5 transition duration-300 will-change-transform hover:shadow-xl hover:shadow-[rgb(var(--primary))]/10"
+            class="group brand-grid-card rounded-[28px] p-4"
           >
           <div class="flex items-start gap-3">
             <div
@@ -53,7 +53,7 @@
                 :alt="b.name"
                 class="w-full h-full object-cover transition duration-500 group-hover:scale-110"
               />
-              <div v-else class="text-xs text-muted">Logo</div>
+              <div v-else class="text-xs text-muted">{{ t('brandPage.logoFallback') }}</div>
             </div>
 
             <div class="min-w-0">
@@ -97,3 +97,36 @@ const filtered = computed(() => {
   })
 })
 </script>
+
+
+<style scoped>
+.brands-search-box{
+  border: 1px solid rgba(var(--border), .95);
+  background: rgb(var(--surface));
+}
+.brand-grid-card{
+  display:block;
+  border: 1px solid rgba(var(--border), .95);
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease, background-color .22s ease;
+}
+.brand-grid-card:hover{
+  transform: translateY(-4px);
+  border-color: rgba(var(--primary), .30);
+}
+:global(html.theme-light) .brands-search-box{
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,247,252,.96));
+  box-shadow: 0 24px 56px rgba(232, 91, 154, .10), 0 10px 28px rgba(24,24,24,.05);
+}
+:global(html.theme-light) .brand-grid-card{
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,247,252,.94));
+  box-shadow: 0 22px 54px rgba(232, 91, 154, .08), 0 10px 24px rgba(24,24,24,.05);
+}
+:global(html.theme-light) .brand-grid-card:hover{
+  box-shadow: 0 28px 64px rgba(232, 91, 154, .12), 0 12px 28px rgba(24,24,24,.06);
+}
+:global(html.theme-dark) .brands-search-box,
+:global(html.theme-dark) .brand-grid-card{
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .88));
+  box-shadow: 0 18px 46px rgba(0,0,0,.26);
+}
+</style>

@@ -41,9 +41,10 @@
     "prev": "السابق",
     "next": "التالي",
     "edit": "تعديل",
+    "clear": "مسح",
     "confirmDelete": "هل أنت متأكد من الحذف؟",
     "disable": "تعطيل",
-    "notFound": "غير موجود",
+    "notFound": "العنصر غير موجود",
     "retry": "إعادة المحاولة",
     "selectAll": "تحديد الكل",
     "selected": "المحدد",
@@ -131,9 +132,9 @@
       "name": "البراند",
       "slug": "Slug",
       "description": "الوصف",
+      "new": "براند جديد",
       "emptyTitle": "لا توجد براندات بعد",
-      "emptyHint": "ابدأ بإضافة براند جديد ليظهر هنا.",
-      "new": "براند جديد"
+      "emptyHint": "ابدأ بإضافة أول براند للمتجر."
     },
     "products": {
       "title": "المنتجات",
@@ -399,7 +400,7 @@
     "allBrands": "كل البراندات",
     "addToCart": "أضف إلى السلة",
     "page": "صفحة",
-    "viewAll": "عرض الكل"
+    "viewAll": "عرض كل النتائج"
   },
   "brandsPage": {
     "title": "البراندات",
@@ -430,7 +431,8 @@
     "addToCart": "أضف إلى السلة",
     "buy": "شراء",
     "searchPlaceholder": "ابحث عن منتج...",
-    "sortNewest": "الأحدث"
+    "sortNewest": "الأحدث",
+    "youMayAlsoLike": "قد يعجبك أيضًا"
   },
   "termsPlaceholder": "سيتم إضافة الشروط والأحكام قريبًا.",
   "benefit": {
@@ -496,7 +498,8 @@
   "brandPage": {
     "defaultDesc": "تعرّف على منتجات هذا البراند",
     "empty": "لا توجد منتجات لهذا البراند",
-    "search": "بحث"
+    "search": "بحث",
+    "logoFallback": "شعار"
   },
   "ordersEmpty": "لا توجد طلبات",
   "orderFailed": "فشل إنشاء الطلب",
@@ -603,14 +606,10 @@
     "blackFridayTheme": "داكن: glow أحمر + neon / فاتح: confetti",
     "blackFridayEffect": "discount particles % + neon lines"
   },
-  "seasonal": {
-    "eidAdhaTitle": "عيد الأضحى",
-    "eidAdhaSubtitle": "أجواء خفيفة واحتفالية في أعلى الصفحة الرئيسية"
-  },
+  "adminPanel": "لوحة التحكم",
   "discounts": {
     "title": "التخفيضات",
-    "subtitle": "منتجات عليها خصومات واضحة ومحدثة.",
-    "empty": "لا توجد منتجات مخفضة حاليًا."
-  },
-  "adminPanel": "لوحة الإدارة"
+    "subtitle": "منتجات عليها خصم حقيقي",
+    "empty": "حاليًا لا توجد منتجات عليها تخفيض."
+  }
 }

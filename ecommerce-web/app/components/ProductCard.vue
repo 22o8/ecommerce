@@ -3,13 +3,13 @@
   <div
     role="button"
     tabindex="0"
-    class="group relative card-soft overflow-hidden transition duration-300 will-change-transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-[rgb(var(--primary))]/18"
+    class="group relative product-card-shell overflow-hidden transition duration-300 will-change-transform hover:-translate-y-1"
     @click="goProduct"
     @keydown.enter.prevent="goProduct"
     @keydown.space.prevent="goProduct"
   >
     <div class="relative">
-      <div class="relative aspect-[4/3] bg-black/20">
+      <div class="relative aspect-[4/3] product-card-media">
         <SmartImage
           :src="mainImage || ''"
           :alt="displayName"
@@ -84,7 +84,7 @@
         <div class="flex flex-row items-center gap-2">
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-app bg-surface hover:bg-surface-2 transition text-xs"
+            class="product-card-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-app transition text-xs"
             @click.stop.prevent="addToCart"
           >
             <Icon name="mdi:cart-plus" class="text-base" />
@@ -93,7 +93,7 @@
 
           <button
             type="button"
-            class="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-app bg-surface hover:bg-surface-2 transition text-xs"
+            class="product-card-btn inline-flex items-center px-2.5 py-1.5 rounded-xl border border-app transition text-xs"
             @click.stop.prevent="buyNow"
           >
             <span class="rtl-text">{{ t('common.buy') }}</span>
@@ -189,3 +189,33 @@ function goProduct() {
   navigateTo(`/product/${id}`)
 }
 </script>
+
+
+<style scoped>
+.product-card-shell{
+  border: 1px solid rgba(var(--border), .95);
+  background: rgb(var(--surface));
+}
+.product-card-media{ background: rgba(0,0,0,.08); }
+.product-card-btn{
+  background: rgb(var(--surface));
+}
+:global(html.theme-light) .product-card-shell{
+  background: linear-gradient(180deg, rgba(255,255,255,.99), rgba(255,247,252,.95));
+  box-shadow: 0 22px 54px rgba(232, 91, 154, .08), 0 10px 24px rgba(24,24,24,.05);
+}
+:global(html.theme-light) .product-card-shell:hover{
+  box-shadow: 0 28px 64px rgba(232, 91, 154, .12), 0 12px 28px rgba(24,24,24,.06);
+}
+:global(html.theme-light) .product-card-media{
+  background: linear-gradient(180deg, rgba(252,248,251,.95), rgba(245,239,245,.9));
+}
+:global(html.theme-light) .product-card-btn{
+  background: rgba(255,255,255,.92);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+}
+:global(html.theme-dark) .product-card-shell{
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .88));
+  box-shadow: 0 18px 50px rgba(0,0,0,.28);
+}
+</style>

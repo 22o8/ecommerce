@@ -41,9 +41,10 @@
     "prev": "Prev",
     "next": "Next",
     "edit": "Edit",
-    "confirmDelete": "Are you sure you want to delete this?",
+    "clear": "Clear",
+    "confirmDelete": "Are you sure you want to delete?",
     "disable": "Disable",
-    "notFound": "Not found",
+    "notFound": "Item not found",
     "retry": "Retry",
     "selectAll": "Select all",
     "selected": "Selected",
@@ -152,10 +153,10 @@
       "uploadLogo": "Upload logo",
       "successCreated": "Brand created",
       "successUpdated": "Brand updated",
+      "hint": "Create and manage brands. Every product should be linked to a brand.",
+      "searchPlaceholder": "Search brands...",
       "emptyTitle": "No brands yet",
-      "emptyHint": "Start by adding a new brand and it will appear here.",
-      "hint": "Add and manage brands in a clean, organized view.",
-      "searchPlaceholder": "Search by name, slug, or description"
+      "emptyHint": "Start by adding your first brand."
     },
     "currentImages": "Current images",
     "editProduct": "Edit product",
@@ -374,7 +375,7 @@
     "page": "Page",
     "emptyTitle": "Empty title",
     "emptyDesc": "Empty desc",
-    "viewAll": "View all",
+    "viewAll": "View all results",
     "sortNewest": "Newest",
     "sortPriceAsc": "Price: Low to high",
     "sortPriceDesc": "Price: High to low"
@@ -403,7 +404,8 @@
     "addToCart": "Add to cart",
     "buy": "Buy",
     "searchPlaceholder": "Search for a product...",
-    "sortNewest": "Newest"
+    "sortNewest": "Newest",
+    "youMayAlsoLike": "You may also like"
   },
   "termsPlaceholder": "Terms placeholder",
   "benefit": {
@@ -476,7 +478,8 @@
   "brandPage": {
     "defaultDesc": "Default desc",
     "empty": "Empty",
-    "search": "Search"
+    "search": "Search",
+    "logoFallback": "Logo"
   },
   "ordersEmpty": "Orders empty",
   "orderFailed": "Order failed",
@@ -583,14 +586,10 @@
     "blackFridayTheme": "Dark: red glow + neon / Light: confetti",
     "blackFridayEffect": "Discount % particles + neon lines"
   },
-  "seasonal": {
-    "eidAdhaTitle": "Eid al-Adha",
-    "eidAdhaSubtitle": "A light festive touch at the top of the homepage"
-  },
+  "adminPanel": "Dashboard",
   "discounts": {
     "title": "Discounts",
-    "subtitle": "Products with clear, updated discounts.",
+    "subtitle": "Products with real discounts",
     "empty": "No discounted products right now."
-  },
-  "adminPanel": "Admin panel"
+  }
 }

@@ -52,7 +52,7 @@ const onLogoError = (b: Brand, idx: number) => {
 
 // نكرر القائمة حتى يصير تمرير مستمر + فلترة العناصر الناقصة (حماية SSR)
 const clean = computed(() => (props.brands ?? []).filter((b): b is Brand => !!b && !!b.slug && !!b.id))
-const loop = computed(() => [...clean.value, ...clean.value, ...clean.value])
+const loop = computed(() => [...clean.value, ...clean.value])
 </script>
 
 <template>
@@ -96,7 +96,7 @@ const loop = computed(() => [...clean.value, ...clean.value, ...clean.value])
   align-items:center;
   gap:16px;
   width:max-content;
-  animation: brand-marquee 24s linear infinite;
+  animation: brand-marquee 28s linear infinite;
   will-change: transform;
 }
 .brand-pill{
@@ -140,15 +140,15 @@ const loop = computed(() => [...clean.value, ...clean.value, ...clean.value])
   font-weight: 900;
 }
 @keyframes brand-marquee{
-  from{ transform: translateX(calc(-33.333% - 10px)); }
-  to{ transform: translateX(0); }
+  from{ transform: translateX(0); }
+  to{ transform: translateX(calc(-50% - 8px)); }
 }
 @media (max-width: 640px){
   .brand-strip-wrap{
     mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
     -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
   }
-  .brand-strip{ gap:12px; animation-duration: 18s; }
+  .brand-strip{ gap:12px; animation-duration: 22s; }
   .brand-pill{ width:64px; height:64px; }
   .brand-pill__img-wrap, .brand-pill__fallback{ width:46px; height:46px; }
 }
