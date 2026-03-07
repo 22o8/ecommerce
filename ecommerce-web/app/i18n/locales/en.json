@@ -40,7 +40,14 @@
     "errorGeneric": "Something went wrong",
     "prev": "Prev",
     "next": "Next",
-    "edit": "Edit"
+    "edit": "Edit",
+    "confirmDelete": "Are you sure you want to delete this?",
+    "disable": "Disable",
+    "notFound": "Not found",
+    "retry": "Retry",
+    "selectAll": "Select all",
+    "selected": "Selected",
+    "total": "Total"
   },
   "admin": {
     "title": "Admin Panel",
@@ -144,7 +151,11 @@
       "logo": "Logo",
       "uploadLogo": "Upload logo",
       "successCreated": "Brand created",
-      "successUpdated": "Brand updated"
+      "successUpdated": "Brand updated",
+      "emptyTitle": "No brands yet",
+      "emptyHint": "Start by adding a new brand and it will appear here.",
+      "hint": "Add and manage brands in a clean, organized view.",
+      "searchPlaceholder": "Search by name, slug, or description"
     },
     "currentImages": "Current images",
     "editProduct": "Edit product",
@@ -336,7 +347,9 @@
     "tapToExplore": "Tap to explore",
     "catMoisturizer": "Moisturizer",
     "catCleanser": "Cleanser",
-    "subtitle": "Professional digital store"
+    "subtitle": "Professional digital store",
+    "featuredTab": "Featured",
+    "discountsTab": "Discounts"
   },
   "productsPage": {
     "title": "Products",
@@ -360,7 +373,11 @@
     "addToCart": "Add to cart",
     "page": "Page",
     "emptyTitle": "Empty title",
-    "emptyDesc": "Empty desc"
+    "emptyDesc": "Empty desc",
+    "viewAll": "View all",
+    "sortNewest": "Newest",
+    "sortPriceAsc": "Price: Low to high",
+    "sortPriceDesc": "Price: High to low"
   },
   "brandsPage": {
     "title": "Brands",
@@ -569,5 +586,11 @@
   "seasonal": {
     "eidAdhaTitle": "Eid al-Adha",
     "eidAdhaSubtitle": "A light festive touch at the top of the homepage"
-  }
+  },
+  "discounts": {
+    "title": "Discounts",
+    "subtitle": "Products with clear, updated discounts.",
+    "empty": "No discounted products right now."
+  },
+  "adminPanel": "Admin panel"
 }

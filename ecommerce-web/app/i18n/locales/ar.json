@@ -40,7 +40,14 @@
     "errorGeneric": "حدث خطأ",
     "prev": "السابق",
     "next": "التالي",
-    "edit": "تعديل"
+    "edit": "تعديل",
+    "confirmDelete": "هل أنت متأكد من الحذف؟",
+    "disable": "تعطيل",
+    "notFound": "غير موجود",
+    "retry": "إعادة المحاولة",
+    "selectAll": "تحديد الكل",
+    "selected": "المحدد",
+    "total": "الإجمالي"
   },
   "admin": {
     "title": "لوحة الإدارة",
@@ -123,7 +130,10 @@
       "actions": "الإجراءات",
       "name": "البراند",
       "slug": "Slug",
-      "description": "الوصف"
+      "description": "الوصف",
+      "emptyTitle": "لا توجد براندات بعد",
+      "emptyHint": "ابدأ بإضافة براند جديد ليظهر هنا.",
+      "new": "براند جديد"
     },
     "products": {
       "title": "المنتجات",
@@ -361,7 +371,9 @@
     "tapToExplore": "اضغط للاستكشاف",
     "catMoisturizer": "مرطّب",
     "catCleanser": "غسول",
-    "subtitle": "متجر رقمي احترافي"
+    "subtitle": "متجر رقمي احترافي",
+    "featuredTab": "المميزة",
+    "discountsTab": "التخفيضات"
   },
   "productsPage": {
     "title": "المنتجات",
@@ -386,7 +398,8 @@
     "prev": "السابق",
     "allBrands": "كل البراندات",
     "addToCart": "أضف إلى السلة",
-    "page": "صفحة"
+    "page": "صفحة",
+    "viewAll": "عرض الكل"
   },
   "brandsPage": {
     "title": "البراندات",
@@ -593,5 +606,11 @@
   "seasonal": {
     "eidAdhaTitle": "عيد الأضحى",
     "eidAdhaSubtitle": "أجواء خفيفة واحتفالية في أعلى الصفحة الرئيسية"
-  }
+  },
+  "discounts": {
+    "title": "التخفيضات",
+    "subtitle": "منتجات عليها خصومات واضحة ومحدثة.",
+    "empty": "لا توجد منتجات مخفضة حاليًا."
+  },
+  "adminPanel": "لوحة الإدارة"
 }
