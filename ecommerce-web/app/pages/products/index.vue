@@ -1,13 +1,13 @@
 <template>
-  <div class="products-page container mx-auto px-4 py-8">
+  <div class="container mx-auto px-4 py-8">
     <!-- Header + Filters (no page search; only Navbar search remains) -->
-    <div class="products-hero flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+    <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
       <div>
         <h1 class="text-3xl sm:text-4xl font-extrabold rtl-text">{{ t('productsPage.title') }}</h1>
         <p class="mt-2 text-muted rtl-text">{{ t('productsPage.subtitle') }}</p>
       </div>
 
-      <div class="products-filters control-box glass-panel glow-border rounded-3xl p-3 w-full lg:w-[560px] grid grid-cols-1 sm:grid-cols-2 gap-3 lg:sticky lg:top-24">
+      <div class="control-box glass-panel glow-border rounded-2xl p-3 w-full lg:w-[560px] grid grid-cols-1 sm:grid-cols-2 gap-3 lg:sticky lg:top-24">
         <select v-model="sort" class="input" @change="applyFilters" aria-label="Sort">
           <option value="priceAsc">{{ t('productsPage.sortPriceAsc') }}</option>
           <option value="priceDesc">{{ t('productsPage.sortPriceDesc') }}</option>
@@ -34,7 +34,7 @@
       </div>
     </div>
 
-    <div v-else class="mt-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+    <div v-else class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <RevealOnScroll
         v-for="(p, idx) in products.items"
         :key="p.id"
@@ -146,47 +146,3 @@ watch(
   { deep: true }
 )
 </script>
-<style scoped>
-.products-page{ min-height: calc(100vh - 120px); }
-.products-hero{
-  border-radius: 32px;
-  padding: 28px;
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .85), rgba(var(--surface-2-rgb), .78));
-  border: 1px solid rgba(var(--border), .95);
-  box-shadow: 0 20px 50px rgba(0,0,0,.10);
-}
-.products-filters{
-  border-radius: 28px;
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .95), rgba(var(--surface-2-rgb), .92));
-  border: 1px solid rgba(var(--border), .95);
-  box-shadow: 0 20px 44px rgba(15,23,42,.08);
-}
-.products-filters .input{
-  min-height: 52px;
-  border-radius: 18px;
-  border: 1px solid rgba(var(--border), .95);
-  background: rgba(var(--surface-rgb), .92);
-  padding: 0 16px;
-}
-.skeleton-card{
-  height: 360px;
-  border-radius: 28px;
-  border: 1px solid rgba(var(--border), .95);
-  background: linear-gradient(90deg, rgba(var(--surface-2-rgb), .9), rgba(var(--surface-rgb), 1), rgba(var(--surface-2-rgb), .9));
-  background-size: 220% 100%;
-  animation: shimmer 1.4s linear infinite;
-}
-@keyframes shimmer { 0%{background-position:200% 0}100%{background-position:-20% 0} }
-:global(html.theme-light) .products-hero{
-  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(251,244,248,.95));
-  border-color: rgba(230, 214, 224, .95);
-  box-shadow: 0 24px 56px rgba(17,24,39,.05), 0 12px 30px rgba(236,72,153,.08);
-}
-:global(html.theme-light) .products-filters{
-  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,244,248,.95));
-  box-shadow: 0 18px 40px rgba(236,72,153,.08);
-}
-:global(html.theme-dark) .products-hero, :global(html.theme-dark) .products-filters{
-  box-shadow: 0 22px 54px rgba(0,0,0,.28);
-}
-</style>

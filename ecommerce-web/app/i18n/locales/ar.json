@@ -330,8 +330,7 @@
     "manageBrands": "إدارة البراندات",
     "manageBrandsHint": "عرض / إضافة / تعديل",
     "insights": "الإحصائيات",
-    "insightsHint": "تحليلات المفضلة/الزيارة/الشراء",
-    "viewInsightsDetails": "عرض التفاصيل في صفحة التحليلات →"
+    "insightsHint": "تحليلات المفضلة/الزيارة/الشراء"
   },
   "nav": {
     "brands": "البراندات",

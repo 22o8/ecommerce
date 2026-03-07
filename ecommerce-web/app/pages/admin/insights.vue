@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-5 admin-insights-page">
+  <div class="space-y-4">
     <div class="admin-box flex items-center justify-between gap-3">
       <div>
         <div class="text-xl font-extrabold rtl-text">{{ $t('admin.insightsTitle') }}</div>
@@ -12,8 +12,8 @@
 
     <div v-if="loading" class="admin-box admin-muted rtl-text">{{ t('common.loading') }}</div>
     <div v-else class="grid gap-4 lg:grid-cols-2">
-      <div class="admin-box insights-card">
-        <div class="font-extrabold rtl-text mb-3">{{ $t('admin.topPurchased') }}</div>
+      <div class="admin-box">
+        <div class="font-extrabold rtl-text mb-3">{{ $t('admin.topPurchased') }}ً</div>
         <div v-if="topPurchased.length===0" class="admin-muted rtl-text">—</div>
         <div v-else class="grid gap-2">
           <div v-for="x in topPurchased" :key="x.productId" class="flex items-center justify-between gap-3">
@@ -23,8 +23,8 @@
         </div>
       </div>
 
-      <div class="admin-box insights-card">
-        <div class="font-extrabold rtl-text mb-3">❤️ {{ $t('admin.topFavorited') }}</div>
+      <div class="admin-box">
+        <div class="font-extrabold rtl-text mb-3">❤️ الأكثر مفضلة</div>
         <div v-if="topFavorites.length===0" class="admin-muted rtl-text">—</div>
         <div v-else class="grid gap-2">
           <div v-for="x in topFavorites" :key="x.productId" class="flex items-center justify-between gap-3">
@@ -34,7 +34,7 @@
         </div>
       </div>
 
-      <div class="admin-box insights-card">
+      <div class="admin-box">
         <div class="font-extrabold rtl-text mb-3">{{ $t('admin.topViewed') }}</div>
         <div v-if="topViews.length===0" class="admin-muted rtl-text">—</div>
         <div v-else class="grid gap-2">
@@ -45,8 +45,8 @@
         </div>
       </div>
 
-      <div class="admin-box insights-card">
-        <div class="font-extrabold rtl-text mb-3">💤 {{ $t('admin.neglectedProducts') }}</div>
+      <div class="admin-box">
+        <div class="font-extrabold rtl-text mb-3">💤 المنتجات المهملة</div>
         <div v-if="neglected.length===0" class="admin-muted rtl-text">—</div>
         <div v-else class="grid gap-2">
           <div v-for="x in neglected" :key="x.productId" class="flex items-center justify-between gap-3">
@@ -57,7 +57,7 @@
       </div>
     </div>
 
-    <div class="admin-box insights-activity-box">
+    <div class="admin-box">
       <div class="font-extrabold rtl-text mb-3">{{ $t('admin.activityTitle') }}</div>
 
       <div class="grid gap-4 md:grid-cols-2">
@@ -156,33 +156,32 @@ loadAll()
 </script>
 
 <style scoped>
-.admin-insights-page :deep(.admin-box){
-  border-radius: 28px;
-  border: 1px solid rgba(var(--border), .95);
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .94));
-  padding: 18px;
-  box-shadow: 0 22px 56px rgba(17,24,39,.08);
+.admin-box{
+  border-radius: 20px;
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface));
+  padding: 16px;
 }
-.admin-insights-page :deep(.sub-box){
-  border-radius: 22px;
-  background: rgba(var(--surface-rgb), .76);
+.sub-box{
+  border-radius: 18px;
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface-2));
+  padding: 14px;
 }
-.admin-insights-page :deep(.admin-ghost){
-  min-height: 46px;
-  border-radius: 16px;
-}
-.insights-card{ min-height: 240px; }
-:global(html.theme-light) .admin-insights-page :deep(.admin-box){
-  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(251,245,249,.95));
-  border-color: rgba(229,213,223,.95);
-  box-shadow: 0 24px 56px rgba(17,24,39,.04), 0 12px 28px rgba(236,72,153,.06);
-}
-:global(html.theme-light) .admin-insights-page :deep(.sub-box){
-  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(249,242,247,.94));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.75);
-}
+.label{ font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: rgb(var(--muted)); }
 .admin-muted{ color: rgb(var(--muted)); }
+.admin-ghost{
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface-2));
+  color: rgb(var(--fg));
+  font-weight: 800;
+}
 .admin-error{
-  border-radius: 18px; border:1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.10); padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(239,68,68,.35);
+  background: rgba(239,68,68,.10);
+  padding: 12px 14px;
 }
 </style>
