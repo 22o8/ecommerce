@@ -303,7 +303,8 @@
     "manageBrands": "Manage brands",
     "manageBrandsHint": "View / add / edit",
     "insights": "Insights",
-    "insightsHint": "Favorites / visits / purchases analytics"
+    "insightsHint": "Favorites / visits / purchases analytics",
+    "viewInsightsDetails": "View details in Insights →"
   },
   "nav": {
     "logout": "Logout",

@@ -1,6 +1,6 @@
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 admin-overview-page">
     <!-- Header -->
     <div class="admin-box">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -130,7 +130,7 @@
           </div>
 
           <NuxtLink class="admin-link rtl-text" to="/admin/insights">
-            عرض التفاصيل في صفحة Insights →
+            {{ $t('admin.viewInsightsDetails') }}
           </NuxtLink>
         </div>
       </div>
@@ -181,8 +181,8 @@
           </NuxtLink>
 
           <NuxtLink class="admin-action" to="/admin/insights">
-            <div class="font-extrabold rtl-text">Insights</div>
-            <div class="admin-muted text-sm rtl-text">تحليلات المفضلة/الزيارة/الشراء</div>
+            <div class="font-extrabold rtl-text">{{ $t('admin.insights') }}</div>
+            <div class="admin-muted text-sm rtl-text">{{ $t('admin.insightsSubtitle') }}</div>
           </NuxtLink>
         </div>
       </div>
@@ -512,3 +512,40 @@ loadAll()
 
 </style>
 
+
+<style scoped>
+.admin-overview-page :deep(.admin-box){
+  border-radius: 28px;
+  border: 1px solid rgba(var(--border), .95);
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .94));
+  box-shadow: 0 22px 56px rgba(17,24,39,.08);
+}
+.admin-overview-page :deep(.kpi-card),
+.admin-overview-page :deep(.topbox),
+.admin-overview-page :deep(.mini-stat),
+.admin-overview-page :deep(.order-row),
+.admin-overview-page :deep(.admin-action){
+  background: rgba(var(--surface-rgb), .76);
+  border: 1px solid rgba(var(--border), .95);
+}
+.admin-overview-page :deep(.kpi-card){ border-radius: 24px; padding: 18px; }
+.admin-overview-page :deep(.kpi-icon){ width:52px; height:52px; border-radius:18px; }
+.admin-overview-page :deep(.kpi-value){ font-size: 30px; }
+.admin-overview-page :deep(.topbox){ border-radius: 20px; padding: 14px; }
+.admin-overview-page :deep(.admin-chip){ min-height: 42px; display:inline-flex; align-items:center; }
+.admin-overview-page :deep(.bar){ border-radius: 20px; }
+.admin-overview-page :deep(.admin-action){ border-radius: 20px; }
+:global(html.theme-light) .admin-overview-page :deep(.admin-box){
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(251,245,249,.95));
+  border-color: rgba(229,213,223,.95);
+  box-shadow: 0 24px 56px rgba(17,24,39,.04), 0 12px 28px rgba(236,72,153,.06);
+}
+:global(html.theme-light) .admin-overview-page :deep(.kpi-card),
+:global(html.theme-light) .admin-overview-page :deep(.topbox),
+:global(html.theme-light) .admin-overview-page :deep(.mini-stat),
+:global(html.theme-light) .admin-overview-page :deep(.order-row),
+:global(html.theme-light) .admin-overview-page :deep(.admin-action){
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(249,242,247,.94));
+  box-shadow: 0 16px 38px rgba(236,72,153,.05);
+}
+</style>

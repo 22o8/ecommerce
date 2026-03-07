@@ -1,7 +1,7 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-5 admin-products-page">
     <!-- Header -->
-    <div class="admin-box">
+    <div class="admin-box admin-hero-box">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <div class="text-xl font-extrabold">{{ t('admin.products.title') }}</div>
@@ -428,4 +428,50 @@ onMounted(() => fetchList(1))
 .thumb{ width: 46px; height: 46px; border-radius: 14px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); flex: 0 0 auto; overflow: hidden; }
 .thumb-inner{ width: 100%; height: 100%; display:flex; align-items:center; justify-content:center; }
 .thumb-dot{ width: 10px; height: 10px; border-radius: 999px; background: rgba(var(--primary), 0.35); box-shadow: 0 0 0 6px rgba(var(--primary), 0.12); }
+</style>
+<style scoped>
+.admin-products-page :deep(.admin-box){
+  border-radius: 28px;
+  border: 1px solid rgba(var(--border), .95);
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .94));
+  box-shadow: 0 22px 56px rgba(17,24,39,.08);
+}
+.admin-products-page :deep(.admin-hero-box){ padding: 18px; }
+.admin-products-page :deep(.admin-input){
+  min-height: 50px;
+  border-radius: 18px;
+  border: 1px solid rgba(var(--border), .95);
+  background: rgba(var(--surface-rgb), .88);
+  padding: 0 14px;
+}
+.admin-products-page :deep(.admin-primary),
+.admin-products-page :deep(.admin-ghost),
+.admin-products-page :deep(.admin-pill),
+.admin-products-page :deep(.admin-icon-btn){
+  min-height: 46px;
+  border-radius: 16px;
+}
+.admin-products-page :deep(.admin-table){ border-radius: 24px; overflow: hidden; }
+.admin-products-page :deep(.admin-tr){
+  padding: 18px 16px;
+  border-bottom: 1px solid rgba(var(--border), .75);
+  transition: background .18s ease, transform .18s ease;
+}
+.admin-products-page :deep(.products-tr:not(.admin-th):hover){ background: rgba(var(--primary), .05); }
+.admin-products-page :deep(.thumb){
+  width: 52px; height: 52px; border-radius: 18px;
+  background: linear-gradient(180deg, rgba(var(--surface-2-rgb), .95), rgba(var(--surface-rgb), .88));
+  border: 1px solid rgba(var(--border), .95);
+}
+.admin-products-page :deep(.thumb-inner){ display:grid; place-items:center; width:100%; height:100%; }
+.admin-products-page :deep(.thumb-dot){ width: 12px; height: 12px; border-radius: 999px; background: rgba(var(--primary), .8); box-shadow: 0 0 0 6px rgba(var(--primary), .12); }
+.admin-products-page :deep(.actions-wrap){ display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
+.admin-products-page :deep(.admin-icon-btn){ background: rgba(var(--surface-rgb), .9); border:1px solid rgba(var(--border), .95); padding: 0 12px; display:inline-flex; align-items:center; gap:8px; }
+.admin-products-page :deep(.badge-on){ background: rgba(16,185,129,.12); color: rgb(5,150,105); border:1px solid rgba(16,185,129,.24); }
+.admin-products-page :deep(.badge-off){ background: rgba(148,163,184,.14); color: rgb(71,85,105); border:1px solid rgba(148,163,184,.2); }
+:global(html.theme-light) .admin-products-page :deep(.admin-box){
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(251,245,249,.95));
+  border-color: rgba(229, 213, 223, .95);
+  box-shadow: 0 24px 56px rgba(17,24,39,.04), 0 12px 28px rgba(236,72,153,.06);
+}
 </style>

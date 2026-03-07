@@ -96,7 +96,7 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
           <div class="mt-8 flex items-center justify-center gap-3">
             <NuxtLink
               to="/products"
-              class="btn-cta-animated inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
+              class="hero-action hero-action-primary inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
             >
               {{ t('homeHero.products') }}
             </NuxtLink>
@@ -104,7 +104,7 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
             <!-- نفس لون/هوية زر المنتجات (باللايت والدراك) -->
             <a
               href="#categories"
-              class="btn-cta-animated btn-cta-secondary inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
+              class="hero-action hero-action-secondary inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold hover:opacity-95"
             >
               {{ t('homeHero.categories') }}
             </a>
@@ -119,11 +119,11 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
       <div class="flex flex-col items-center justify-center gap-4">
         <h2 class="text-2xl font-extrabold text-[rgb(var(--text))] sm:text-4xl">{{ t('homeHero.featuredProducts') }}</h2>
 
-        <div class="inline-flex items-center rounded-full border border-app bg-surface p-1">
+        <div class="home-switcher inline-flex items-center rounded-full border border-app bg-surface p-1">
           <button
             type="button"
             class="px-4 py-2 rounded-full text-sm font-bold transition"
-            :class="tab === 'featured' ? 'bg-[rgb(var(--primary))] text-black' : 'text-[rgb(var(--text))] hover:bg-surface-2'"
+            :class="tab === 'featured' ? 'active-tab bg-[rgb(var(--primary))] text-black' : 'text-[rgb(var(--text))] hover:bg-surface-2'"
             @click="tab = 'featured'"
           >
             {{ t('home.featuredTab') }}
@@ -131,7 +131,7 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
           <button
             type="button"
             class="px-4 py-2 rounded-full text-sm font-bold transition"
-            :class="tab === 'discounts' ? 'bg-[rgb(var(--primary))] text-black' : 'text-[rgb(var(--text))] hover:bg-surface-2'"
+            :class="tab === 'discounts' ? 'active-tab bg-[rgb(var(--primary))] text-black' : 'text-[rgb(var(--text))] hover:bg-surface-2'"
             @click="tab = 'discounts'"
           >
             {{ t('home.discountsTab') }}
@@ -200,7 +200,7 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
         >
           <NuxtLink
             :to="`/products?q=${encodeURIComponent(categoryQuery(c))}`"
-            class="group category-simple-card"
+            class="group category-simple-card category-simple-card--elevated"
           >
             <div class="category-simple-card__inner">
               <div class="category-simple-card__icon">{{ c.icon }}</div>
@@ -218,70 +218,93 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
         </RevealOnScroll>
       </div>
     </section>
-  </div>
-</template>
-
 <style scoped>
+.hero-action{
+  position: relative;
+  border: 1px solid rgba(var(--border), .95);
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease, color .22s ease;
+}
+.hero-action:hover{ transform: translateY(-1px); }
+.hero-action-primary{
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-2-rgb), .92));
+  color: rgb(var(--text));
+  box-shadow: 0 18px 40px rgba(0,0,0,.12);
+}
+.hero-action-secondary{
+  background: rgba(var(--surface-rgb), .72);
+  color: rgb(var(--text));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+}
+.home-switcher{
+  padding: 6px;
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-2-rgb), .94));
+  box-shadow: 0 16px 36px rgba(0,0,0,.08);
+}
+.home-switcher :deep(button),
+.home-switcher :deep(a){
+  min-width: 112px;
+  text-align: center;
+}
 .category-simple-card{
   display:block;
-  border-radius: 24px;
+  border-radius: 28px;
   border: 1px solid rgba(var(--border), .95);
   transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease, background-color .22s ease;
+}
+.category-simple-card--elevated{
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-2-rgb), .92));
+  box-shadow: 0 18px 40px rgba(16,24,40,.08);
 }
 .category-simple-card__inner{
   display:flex;
   align-items:center;
   gap:14px;
-  min-height: 104px;
+  min-height: 112px;
   padding: 18px;
 }
 .category-simple-card__icon{
-  display:grid;
-  place-items:center;
-  width: 52px;
-  height: 52px;
-  border-radius: 18px;
-  background: linear-gradient(180deg, rgba(var(--primary), .16), rgba(var(--primary), .08));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.45);
-  font-size: 24px;
-  flex: 0 0 auto;
+  display:grid; place-items:center; width:52px; height:52px; border-radius:18px;
+  background: linear-gradient(180deg, rgba(var(--primary), .14), rgba(var(--primary), .06));
+  border: 1px solid rgba(var(--primary), .18);
+  font-size: 24px; flex: 0 0 auto;
 }
 .category-simple-card__arrow{
-  display:grid;
-  place-items:center;
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
+  display:grid; place-items:center; width:40px; height:40px; border-radius:999px; flex: 0 0 auto;
   border: 1px solid rgba(var(--border), .95);
-  color: rgb(var(--muted));
-  background: rgba(var(--surface-rgb), .7);
-  transition: transform .22s ease, color .22s ease, border-color .22s ease, background-color .22s ease;
+  background: rgba(var(--surface-rgb), .82);
+  color: rgb(var(--text)); font-weight: 900;
 }
 .category-simple-card:hover{
-  transform: translateY(-3px);
-  border-color: rgba(var(--primary), .34);
-}
-.category-simple-card:hover .category-simple-card__arrow{
-  color: rgb(var(--primary));
+  transform: translateY(-4px);
   border-color: rgba(var(--primary), .28);
-  background: rgba(var(--primary), .08);
-  transform: translateX(2px);
+  box-shadow: 0 24px 50px rgba(236,72,153,.12);
 }
-:global(html.theme-light) .category-simple-card{
-  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,247,252,.94));
-  box-shadow: 0 18px 44px rgba(232, 91, 154, .08), 0 10px 26px rgba(24,24,24,.05);
+:global(html.theme-light) .hero-action-primary{
+  background: linear-gradient(180deg, rgba(26, 28, 40, .98), rgba(35, 37, 52, .94));
+  color: white;
+  border-color: rgba(24,24,40,.12);
+  box-shadow: 0 18px 44px rgba(17,24,39,.16);
 }
-:global(html.theme-light) .category-simple-card:hover{
-  background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,244,250,.98));
-  box-shadow: 0 24px 56px rgba(232, 91, 154, .12), 0 12px 28px rgba(24,24,24,.06);
+:global(html.theme-light) .hero-action-secondary{
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,244,248,.94));
+  color: rgb(var(--text));
+  box-shadow: 0 14px 30px rgba(236,72,153,.10);
 }
-:global(html.theme-dark) .category-simple-card{
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .86));
-  box-shadow: 0 16px 40px rgba(0,0,0,.24);
+:global(html.theme-light) .home-switcher{
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,244,248,.94));
+  box-shadow: 0 16px 38px rgba(236,72,153,.08);
 }
-@media (max-width: 640px){
-  .category-simple-card__inner{ min-height: 94px; padding: 16px; }
-  .category-simple-card__icon{ width: 46px; height: 46px; border-radius: 16px; font-size: 22px; }
-  .category-simple-card__arrow{ width: 32px; height: 32px; }
+:global(html.theme-light) .home-switcher :deep(button.active-tab),
+:global(html.theme-light) .home-switcher :deep(a.active-tab){
+  color:white;
+}
+:global(html.theme-light) .category-simple-card--elevated{
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(251,245,249,.94));
+  border-color: rgba(228, 208, 221, .95);
+  box-shadow: 0 20px 44px rgba(17,24,39,.05), 0 8px 24px rgba(236,72,153,.08);
+}
+:global(html.theme-dark) .category-simple-card--elevated{
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-2-rgb), .92));
+  box-shadow: 0 18px 40px rgba(0,0,0,.28);
 }
 </style>
