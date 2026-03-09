@@ -81,7 +81,7 @@
           <NuxtLink v-if="auth.isAuthed" to="/favorites" class="hidden sm:block">
             <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0">
               <Icon name="mdi:heart-outline" class="text-lg" />
-              <span class="hidden md:inline rtl-text">{{ $t('favorites') }}</span>
+              <span class="hidden md:inline rtl-text">{{ t('nav.favorites') }}</span>
               <span
                 v-if="fav.count"
                 class="absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full bg-[rgb(var(--primary))] text-black text-xs font-black grid place-items-center"
@@ -168,7 +168,7 @@
             <NuxtLink v-if="auth.isAuthed" to="/favorites" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
               <div class="flex items-center gap-2">
                 <Icon name="mdi:heart-outline" class="text-lg" />
-                <span class="rtl-text">{{ $t('favorites') }}</span>
+                <span class="rtl-text">{{ t('nav.favorites') }}</span>
                 <span v-if="fav.count" class="keep-ltr text-xs text-muted">({{ fav.count }})</span>
               </div>
             </NuxtLink>

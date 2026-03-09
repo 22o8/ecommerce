@@ -303,7 +303,11 @@
     "manageBrands": "Manage brands",
     "manageBrandsHint": "View / add / edit",
     "insights": "Insights",
-    "insightsHint": "Favorites / visits / purchases analytics"
+    "insightsHint": "Favorites / visits / purchases analytics",
+    "tableRank": "Rank",
+    "tableProduct": "Product",
+    "tableMetric": "Value",
+    "summaryTables": "Structured summary"
   },
   "nav": {
     "logout": "Logout",
@@ -317,7 +321,8 @@
     "backToSite": "Back to site",
     "viewSite": "View site",
     "language": "Language",
-    "home": "Home"
+    "home": "Home",
+    "favorites": "Favorites"
   },
   "home": {
     "brands": "Brands",

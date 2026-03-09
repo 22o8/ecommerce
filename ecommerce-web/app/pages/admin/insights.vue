@@ -13,45 +13,63 @@
     <div v-if="loading" class="admin-box admin-muted rtl-text">{{ t('common.loading') }}</div>
     <div v-else class="grid gap-4 lg:grid-cols-2">
       <div class="admin-box">
-        <div class="font-extrabold rtl-text mb-3">{{ $t('admin.topPurchased') }}ً</div>
+        <div class="table-card__title rtl-text">{{ $t('admin.topPurchased') }}</div>
         <div v-if="topPurchased.length===0" class="admin-muted rtl-text">—</div>
-        <div v-else class="grid gap-2">
-          <div v-for="x in topPurchased" :key="x.productId" class="insight-row">
+        <div v-else class="table-card">
+          <div class="table-card__head">
+            <div>#</div><div class="rtl-text">{{ $t('admin.tableProduct') }}</div><div class="text-right rtl-text">{{ $t('admin.tableMetric') }}</div>
+          </div>
+          <div v-for="(x, idx) in topPurchased" :key="x.productId" class="table-card__row">
+            <div class="rank-badge">{{ idx + 1 }}</div>
             <div class="rtl-text font-bold truncate">{{ x.title }}</div>
-            <div class="keep-ltr font-black">{{ x.purchases }}</div>
+            <div class="keep-ltr font-black text-right">{{ x.purchases }}</div>
           </div>
         </div>
       </div>
 
       <div class="admin-box">
-        <div class="font-extrabold rtl-text mb-3">❤️ الأكثر مفضلة</div>
+        <div class="table-card__title rtl-text">❤️ {{ $t('admin.topFavorited') || 'الأكثر مفضلة' }}</div>
         <div v-if="topFavorites.length===0" class="admin-muted rtl-text">—</div>
-        <div v-else class="grid gap-2">
-          <div v-for="x in topFavorites" :key="x.productId" class="insight-row">
+        <div v-else class="table-card">
+          <div class="table-card__head">
+            <div>#</div><div class="rtl-text">{{ $t('admin.tableProduct') }}</div><div class="text-right rtl-text">{{ $t('admin.tableMetric') }}</div>
+          </div>
+          <div v-for="(x, idx) in topFavorites" :key="x.productId" class="table-card__row">
+            <div class="rank-badge">{{ idx + 1 }}</div>
             <div class="rtl-text font-bold truncate">{{ x.title }}</div>
-            <div class="keep-ltr font-black">{{ x.favorites }}</div>
+            <div class="keep-ltr font-black text-right">{{ x.favorites }}</div>
           </div>
         </div>
       </div>
 
       <div class="admin-box">
-        <div class="font-extrabold rtl-text mb-3">{{ $t('admin.topViewed') }}</div>
+        <div class="table-card__title rtl-text">{{ $t('admin.topViewed') }}</div>
         <div v-if="topViews.length===0" class="admin-muted rtl-text">—</div>
-        <div v-else class="grid gap-2">
-          <div v-for="x in topViews" :key="x.productId" class="insight-row">
+        <div v-else class="table-card">
+          <div class="table-card__head">
+            <div>#</div><div class="rtl-text">{{ $t('admin.tableProduct') }}</div><div class="text-right rtl-text">{{ $t('admin.tableMetric') }}</div>
+          </div>
+          <div v-for="(x, idx) in topViews" :key="x.productId" class="table-card__row">
+            <div class="rank-badge">{{ idx + 1 }}</div>
             <div class="rtl-text font-bold truncate">{{ x.title }}</div>
-            <div class="keep-ltr font-black">{{ x.views }}</div>
+            <div class="keep-ltr font-black text-right">{{ x.views }}</div>
           </div>
         </div>
       </div>
 
       <div class="admin-box">
-        <div class="font-extrabold rtl-text mb-3">💤 المنتجات المهملة</div>
+        <div class="table-card__title rtl-text">💤 {{ $t('admin.neglectedProducts') || 'المنتجات المهملة' }}</div>
         <div v-if="neglected.length===0" class="admin-muted rtl-text">—</div>
-        <div v-else class="grid gap-2">
-          <div v-for="x in neglected" :key="x.productId" class="insight-row">
+        <div v-else class="table-card table-card--wide">
+          <div class="table-card__head table-card__head--wide">
+            <div>#</div><div class="rtl-text">{{ $t('admin.tableProduct') }}</div><div class="text-right rtl-text">{{ $t('admin.colViews') }}</div><div class="text-right rtl-text">{{ $t('admin.colFavorites') }}</div><div class="text-right rtl-text">{{ $t('admin.colOrders') }}</div>
+          </div>
+          <div v-for="(x, idx) in neglected" :key="x.productId" class="table-card__row table-card__row--wide">
+            <div class="rank-badge">{{ idx + 1 }}</div>
             <div class="rtl-text font-bold truncate">{{ x.title }}</div>
-            <div class="keep-ltr text-xs text-muted">views: {{ x.views }} · fav: {{ x.favorites }} · buy: {{ x.purchases }}</div>
+            <div class="keep-ltr font-black text-right">{{ x.views }}</div>
+            <div class="keep-ltr font-black text-right">{{ x.favorites }}</div>
+            <div class="keep-ltr font-black text-right">{{ x.purchases }}</div>
           </div>
         </div>
       </div>
@@ -156,12 +174,43 @@ loadAll()
 </script>
 
 <style scoped>
-.admin-box{ border-radius: 24px; border: 1px solid rgba(var(--border), .95); background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .93)); padding: 18px; box-shadow: 0 20px 50px rgba(0,0,0,.10); }
-.sub-box{ border-radius: 18px; border: 1px solid rgba(var(--border), .92); background: linear-gradient(180deg, rgba(var(--surface-rgb), .84), rgba(var(--surface-2-rgb), .72)); padding: 14px; }
+.admin-box{
+  border-radius: 20px;
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface));
+  padding: 16px;
+}
+.sub-box{
+  border-radius: 18px;
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface-2));
+  padding: 14px;
+}
 .label{ font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: rgb(var(--muted)); }
 .admin-muted{ color: rgb(var(--muted)); }
-.admin-ghost{ padding: 10px 12px; border-radius: 14px; border: 1px solid rgba(var(--border), .95); background: rgba(var(--surface-rgb), .9); color: rgb(var(--fg)); font-weight: 800; }
-.insight-row{ display:grid; grid-template-columns: minmax(0,1fr) auto; align-items:center; gap: 12px; padding: 10px 0; border-top: 1px dashed rgba(var(--border), .72); }
-.insight-row:first-child{ border-top:none; padding-top:0; }
-.admin-error{ border-radius: 16px; border: 1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.10); padding: 12px 14px; }
+.admin-ghost{
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgb(var(--border));
+  background: rgb(var(--surface-2));
+  color: rgb(var(--fg));
+  font-weight: 800;
+}
+.admin-error{
+  border-radius: 16px;
+  border: 1px solid rgba(239,68,68,.35);
+  background: rgba(239,68,68,.10);
+  padding: 12px 14px;
+}
+
+.table-card{display:grid;gap:8px;}
+.table-card__title{font-weight:900;margin-bottom:12px;}
+.table-card__head,.table-card__row{display:grid;grid-template-columns:40px minmax(0,1fr) 76px;gap:10px;align-items:center;}
+.table-card__head{padding-bottom:8px;border-bottom:1px dashed rgb(var(--border));font-size:11px;color:rgb(var(--muted));text-transform:uppercase;letter-spacing:.06em;}
+.table-card__row{padding:10px 0;border-top:1px solid rgba(var(--border),.7);}
+.table-card__row:first-of-type{border-top:none;}
+.table-card--wide .table-card__head--wide,.table-card--wide .table-card__row--wide{grid-template-columns:40px minmax(0,1.5fr) 64px 64px 64px;}
+.rank-badge{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;background:rgba(124,58,237,.16);border:1px solid rgba(124,58,237,.34);font-weight:900;}
+@media (max-width: 768px){.table-card__head,.table-card__row{grid-template-columns:32px minmax(0,1fr) 52px;gap:8px;}.table-card--wide .table-card__head--wide,.table-card--wide .table-card__row--wide{grid-template-columns:28px minmax(0,1fr) 48px 48px 48px;}.sub-box{overflow-x:auto;}}
+
 </style>

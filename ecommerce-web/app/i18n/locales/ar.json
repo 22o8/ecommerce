@@ -330,7 +330,11 @@
     "manageBrands": "إدارة البراندات",
     "manageBrandsHint": "عرض / إضافة / تعديل",
     "insights": "الإحصائيات",
-    "insightsHint": "تحليلات المفضلة/الزيارة/الشراء"
+    "insightsHint": "تحليلات المفضلة/الزيارة/الشراء",
+    "tableRank": "الترتيب",
+    "tableProduct": "المنتج",
+    "tableMetric": "القيمة",
+    "summaryTables": "ملخص مرتب"
   },
   "nav": {
     "brands": "البراندات",
@@ -341,7 +345,8 @@
     "logout": "تسجيل الخروج",
     "login": "تسجيل الدخول",
     "language": "اللغة",
-    "home": "الرئيسية"
+    "home": "الرئيسية",
+    "favorites": "المفضلة"
   },
   "home": {
     "brands": "البراندات",
