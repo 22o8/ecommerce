@@ -16,7 +16,7 @@
         <div class="font-extrabold rtl-text mb-3">{{ $t('admin.topPurchased') }}ً</div>
         <div v-if="topPurchased.length===0" class="admin-muted rtl-text">—</div>
         <div v-else class="grid gap-2">
-          <div v-for="x in topPurchased" :key="x.productId" class="flex items-center justify-between gap-3">
+          <div v-for="x in topPurchased" :key="x.productId" class="insight-row">
             <div class="rtl-text font-bold truncate">{{ x.title }}</div>
             <div class="keep-ltr font-black">{{ x.purchases }}</div>
           </div>
@@ -27,7 +27,7 @@
         <div class="font-extrabold rtl-text mb-3">❤️ الأكثر مفضلة</div>
         <div v-if="topFavorites.length===0" class="admin-muted rtl-text">—</div>
         <div v-else class="grid gap-2">
-          <div v-for="x in topFavorites" :key="x.productId" class="flex items-center justify-between gap-3">
+          <div v-for="x in topFavorites" :key="x.productId" class="insight-row">
             <div class="rtl-text font-bold truncate">{{ x.title }}</div>
             <div class="keep-ltr font-black">{{ x.favorites }}</div>
           </div>
@@ -38,7 +38,7 @@
         <div class="font-extrabold rtl-text mb-3">{{ $t('admin.topViewed') }}</div>
         <div v-if="topViews.length===0" class="admin-muted rtl-text">—</div>
         <div v-else class="grid gap-2">
-          <div v-for="x in topViews" :key="x.productId" class="flex items-center justify-between gap-3">
+          <div v-for="x in topViews" :key="x.productId" class="insight-row">
             <div class="rtl-text font-bold truncate">{{ x.title }}</div>
             <div class="keep-ltr font-black">{{ x.views }}</div>
           </div>
@@ -49,7 +49,7 @@
         <div class="font-extrabold rtl-text mb-3">💤 المنتجات المهملة</div>
         <div v-if="neglected.length===0" class="admin-muted rtl-text">—</div>
         <div v-else class="grid gap-2">
-          <div v-for="x in neglected" :key="x.productId" class="flex items-center justify-between gap-3">
+          <div v-for="x in neglected" :key="x.productId" class="insight-row">
             <div class="rtl-text font-bold truncate">{{ x.title }}</div>
             <div class="keep-ltr text-xs text-muted">views: {{ x.views }} · fav: {{ x.favorites }} · buy: {{ x.purchases }}</div>
           </div>
@@ -156,32 +156,12 @@ loadAll()
 </script>
 
 <style scoped>
-.admin-box{
-  border-radius: 20px;
-  border: 1px solid rgb(var(--border));
-  background: rgb(var(--surface));
-  padding: 16px;
-}
-.sub-box{
-  border-radius: 18px;
-  border: 1px solid rgb(var(--border));
-  background: rgb(var(--surface-2));
-  padding: 14px;
-}
+.admin-box{ border-radius: 24px; border: 1px solid rgba(var(--border), .95); background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .93)); padding: 18px; box-shadow: 0 20px 50px rgba(0,0,0,.10); }
+.sub-box{ border-radius: 18px; border: 1px solid rgba(var(--border), .92); background: linear-gradient(180deg, rgba(var(--surface-rgb), .84), rgba(var(--surface-2-rgb), .72)); padding: 14px; }
 .label{ font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: rgb(var(--muted)); }
 .admin-muted{ color: rgb(var(--muted)); }
-.admin-ghost{
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgb(var(--border));
-  background: rgb(var(--surface-2));
-  color: rgb(var(--fg));
-  font-weight: 800;
-}
-.admin-error{
-  border-radius: 16px;
-  border: 1px solid rgba(239,68,68,.35);
-  background: rgba(239,68,68,.10);
-  padding: 12px 14px;
-}
+.admin-ghost{ padding: 10px 12px; border-radius: 14px; border: 1px solid rgba(var(--border), .95); background: rgba(var(--surface-rgb), .9); color: rgb(var(--fg)); font-weight: 800; }
+.insight-row{ display:grid; grid-template-columns: minmax(0,1fr) auto; align-items:center; gap: 12px; padding: 10px 0; border-top: 1px dashed rgba(var(--border), .72); }
+.insight-row:first-child{ border-top:none; padding-top:0; }
+.admin-error{ border-radius: 16px; border: 1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.10); padding: 12px 14px; }
 </style>

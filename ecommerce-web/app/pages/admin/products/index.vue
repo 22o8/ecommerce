@@ -66,13 +66,13 @@
 
       <div v-else class="admin-table">
         <div class="admin-tr products-tr admin-th">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 cell-product">
             <input type="checkbox" :checked="allChecked" @change="toggleAll(($event.target as HTMLInputElement).checked)" />
             <span class="rtl-text">{{ t('admin.product') }}</span>
           </div>
-          <div class="rtl-text">{{ t('common.price') }}</div>
-          <div class="rtl-text">{{ t('admin.status') }}</div>
-          <div class="text-right rtl-text">{{ t('common.actions') }}</div>
+          <div class="rtl-text cell-price">{{ t('common.price') }}</div>
+          <div class="rtl-text cell-status">{{ t('admin.status') }}</div>
+          <div class="text-right rtl-text cell-actions">{{ t('common.actions') }}</div>
         </div>
 
         <div
@@ -84,7 +84,7 @@
           @click="goDetails(p.id)"
           @keydown.enter="goDetails(p.id)"
         >
-          <div class="flex items-center gap-3 min-w-0">
+          <div class="flex items-center gap-3 min-w-0 cell-product" data-label="المنتج">
             <input
               type="checkbox"
               :checked="selectedIds.includes(p.id)"
@@ -105,12 +105,12 @@
             </div>
           </div>
 
-          <div class="font-bold leading-tight">
+          <div class="font-bold leading-tight cell-price" data-label="السعر">
             {{ formatIqd(p.priceIqd || 0) }}
             <div v-if="p.priceUsd" class="text-xs opacity-70">${{ Number(p.priceUsd).toFixed(0) }}</div>
           </div>
 
-          <div>
+          <div class="cell-status" data-label="الحالة">
             <span :class="p.isPublished ? 'badge-on' : 'badge-off'">
               {{ p.isPublished ? t('admin.published') : t('admin.draft') }}
             </span>
@@ -121,7 +121,7 @@
             </span>
           </div>
 
-          <div class="actions-wrap" @click.stop>
+          <div class="actions-wrap cell-actions" data-label="الإجراءات" @click.stop>
             <NuxtLink
               class="admin-icon-btn"
               :to="`/admin/products/${p.id}`"
@@ -403,29 +403,39 @@ onMounted(() => fetchList(1))
 </script>
 
 <style scoped>
-.admin-box{ border-radius: 20px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); padding: 16px; }
+.admin-box{ border-radius: 24px; border: 1px solid rgba(var(--border),.95); background: linear-gradient(180deg, rgba(var(--surface-rgb),.98), rgba(var(--surface-2-rgb),.92)); padding: 18px; box-shadow: 0 20px 50px rgba(0,0,0,.08); }
 .admin-muted{ color: rgb(var(--muted)); }
-
-.admin-input{ width: 100%; border-radius: 14px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface-2)); padding: 10px 12px; color: rgb(var(--fg)); outline: none; }
+.admin-input{ width: 100%; border-radius: 16px; border: 1px solid rgba(var(--border),1); background: rgba(var(--surface-rgb),.92); padding: 11px 13px; color: rgb(var(--fg)); outline: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.05); }
 .admin-input:focus{ border-color: rgba(99,102,241,.45); box-shadow: 0 0 0 3px rgba(99,102,241,.14); }
-
-.admin-primary{ padding: 10px 12px; border-radius: 14px; background: rgba(99,102,241,.18); border: 1px solid rgba(99,102,241,.38); color: rgb(var(--fg)); font-weight: 900; }
-.admin-ghost{ padding: 10px 12px; border-radius: 14px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); color: rgb(var(--fg)); font-weight: 800; }
-.admin-pill{ padding: 8px 10px; border-radius: 14px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface-2)); color: rgb(var(--fg)); font-weight: 800; }
-.admin-btn-danger{ padding: 8px 10px; border-radius: 14px; border: 1px solid rgba(239,68,68,.45); background: rgba(239,68,68,.14); color: rgb(var(--fg)); font-weight: 900; }
-
-.admin-table{ display: grid; }
-.admin-tr{ display: grid; grid-template-columns: 2fr 1fr 1fr 2fr; gap: 12px; padding: 12px 16px; border-top: 1px solid rgb(var(--border)); }
-.admin-th{ border-top: none; background: rgb(var(--surface-2)); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: rgb(var(--muted)); }
-
+.admin-primary{ padding: 11px 14px; border-radius: 16px; background: linear-gradient(180deg, rgba(99,102,241,.18), rgba(99,102,241,.12)); border: 1px solid rgba(99,102,241,.38); color: rgb(var(--fg)); font-weight: 900; }
+.admin-ghost{ padding: 11px 14px; border-radius: 16px; border: 1px solid rgba(var(--border),1); background: rgba(var(--surface-rgb),.88); color: rgb(var(--fg)); font-weight: 800; }
+.admin-pill{ padding: 9px 11px; border-radius: 14px; border: 1px solid rgba(var(--border),1); background: rgba(var(--surface-rgb),.88); color: rgb(var(--fg)); font-weight: 800; }
+.admin-btn-danger{ padding: 9px 11px; border-radius: 14px; border: 1px solid rgba(239,68,68,.45); background: rgba(239,68,68,.14); color: rgb(var(--fg)); font-weight: 900; }
+.admin-table{ display: grid; gap: 10px; }
+.admin-tr{ display: grid; grid-template-columns: minmax(0,2.1fr) .9fr .9fr 1.7fr; gap: 14px; padding: 14px 16px; border: 1px solid rgba(var(--border),.92); border-radius: 18px; background: rgba(var(--surface-rgb),.76); }
+.admin-th{ border: 1px solid rgba(var(--border),.85); background: rgba(var(--surface-2-rgb),.96); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: rgb(var(--muted)); position: sticky; top: 0; z-index: 1; }
+.products-tr:not(.admin-th):hover{ border-color: rgba(var(--primary),.26); box-shadow: 0 16px 34px rgba(0,0,0,.08); }
 .badge-on{ padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(16,185,129,.40); background: rgba(16,185,129,.12); font-weight: 800; display: inline-flex; }
 .badge-off{ padding: 6px 10px; border-radius: 999px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); color: rgb(var(--muted)); font-weight: 800; display: inline-flex; }
 .badge-featured{ padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(99,102,241,.45); background: rgba(99,102,241,.12); font-weight: 800; display: inline-flex; }
-
 .admin-error{ border-radius: 16px; border: 1px solid rgba(239,68,68,.45); background: rgba(239,68,68,.10); padding: 12px 14px; }
 .admin-success{ border-radius: 16px; border: 1px solid rgba(16,185,129,.40); background: rgba(16,185,129,.10); padding: 12px 14px; }
-
-.thumb{ width: 46px; height: 46px; border-radius: 14px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); flex: 0 0 auto; overflow: hidden; }
+.thumb{ width: 48px; height: 48px; border-radius: 16px; border: 1px solid rgb(var(--border)); background: linear-gradient(180deg, rgba(var(--surface-rgb),.96), rgba(var(--surface-2-rgb),.9)); flex: 0 0 auto; overflow: hidden; }
 .thumb-inner{ width: 100%; height: 100%; display:flex; align-items:center; justify-content:center; }
 .thumb-dot{ width: 10px; height: 10px; border-radius: 999px; background: rgba(var(--primary), 0.35); box-shadow: 0 0 0 6px rgba(var(--primary), 0.12); }
+.actions-wrap{ display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
+.admin-icon-btn{ display:inline-flex; align-items:center; gap:8px; border:1px solid rgba(var(--border),.95); border-radius:14px; background: rgba(var(--surface-rgb),.82); padding:8px 10px; }
+.admin-icon-btn.danger{ border-color: rgba(239,68,68,.32); background: rgba(239,68,68,.08); }
+.btn-label{ font-size:12px; font-weight:800; }
+@media (max-width: 767px){
+  .admin-th{ display:none; }
+  .admin-tr{ grid-template-columns: 1fr; gap: 10px; padding: 14px; }
+  .products-tr:not(.admin-th){ position: relative; }
+  .cell-price, .cell-status, .cell-actions{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .cell-price::before, .cell-status::before, .cell-actions::before{ content: attr(data-label); font-size: 12px; font-weight: 800; color: rgb(var(--muted)); }
+  .cell-product{ padding-bottom: 10px; border-bottom: 1px dashed rgba(var(--border),.85); }
+  .actions-wrap{ justify-content:flex-start; }
+  .admin-icon-btn{ flex: 1 1 calc(50% - 6px); justify-content:center; }
+  .btn-label{ display:inline; }
+}
 </style>

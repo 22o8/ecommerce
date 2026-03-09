@@ -920,3 +920,42 @@ html.theme-dark .control-box-strong{
   border: 1px solid rgba(var(--border), .92) !important;
   box-shadow: 0 14px 36px rgba(0,0,0,.18);
 }
+
+
+/* Global select/option visibility fix */
+select,
+select.admin-input,
+select.input,
+select.select {
+  color: rgb(var(--text));
+  background-color: rgb(var(--surface));
+}
+select option,
+select optgroup {
+  color: rgb(var(--text)) !important;
+  background: rgb(var(--surface)) !important;
+}
+html.theme-light select,
+html.theme-light select.admin-input,
+html.theme-light select.input,
+html.theme-light select.select{
+  color: #12131a;
+  background-color: #fff7fb;
+}
+html.theme-light select option,
+html.theme-light select optgroup{
+  color: #16181f !important;
+  background: #ffffff !important;
+}
+html.theme-dark select,
+html.theme-dark select.admin-input,
+html.theme-dark select.input,
+html.theme-dark select.select{
+  color: #f7f8ff;
+  background-color: #0d1020;
+}
+html.theme-dark select option,
+html.theme-dark select optgroup{
+  color: #f7f8ff !important;
+  background: #0d1020 !important;
+}
