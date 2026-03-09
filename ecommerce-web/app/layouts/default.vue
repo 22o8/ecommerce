@@ -1,8 +1,8 @@
 <template>
   <div class="min-h-screen bg-app relative overflow-x-clip">
-    <GlobalEffects v-if="route.path === '/'" />
+    <GlobalEffects />
     <AppNavbar />
-    <GlobalAds v-if="showAds" />
+    <GlobalAds />
 
     <main class="mx-auto max-w-7xl px-4 py-8">
       <slot />
@@ -34,13 +34,10 @@ import ProductQuickPreviewModal from '~/components/ProductQuickPreviewModal.vue'
 import GlobalEffects from '~/components/appearance/GlobalEffects.vue'
 import GlobalAds from '~/components/appearance/GlobalAds.vue'
 const { t } = useI18n()
-const route = useRoute()
-const { liteMode } = useMobilePerf()
 const config = useRuntimeConfig()
 const whats = String((config.public as any).whatsappNumber || '').trim()
 const waLink = computed(() => {
   const n = whats.replace(/[^0-9]/g, '')
   return n ? `https://wa.me/${n}` : '#'
 })
-const showAds = computed(() => route.path === '/' || !liteMode.value)
 </script>

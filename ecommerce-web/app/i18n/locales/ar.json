@@ -294,11 +294,7 @@
       "orders": "إجمالي الطلبات",
       "users": "إجمالي المستخدمين",
       "revenue": "إجمالي الإيرادات",
-      "visitsToday": "زيارات اليوم",
-      "featuredProducts": "منتجات تحت المراقبة",
-      "quickSummary": "لقطة سريعة من المنتجات المهمة",
-      "activityWindow": "نافذة النشاط",
-      "liveSnapshot": "تحديث مباشر حسب الفترة"
+      "visitsToday": "زيارات اليوم"
     },
     "lastUpdated": "آخر تحديث",
     "registeredUsers": "المسجلين في النظام",
@@ -334,11 +330,7 @@
     "manageBrands": "إدارة البراندات",
     "manageBrandsHint": "عرض / إضافة / تعديل",
     "insights": "الإحصائيات",
-    "insightsHint": "تحليلات المفضلة/الزيارة/الشراء",
-    "viewInsightsDetails": "عرض التفاصيل في صفحة التحليلات",
-    "insightsHeadline": "تحليلات المتجر",
-    "activitySubtitle": "ملخص الشراء والمفضلة والمشاهدات خلال الفترات الأخيرة.",
-    "newUsers": "مستخدمين جدد"
+    "insightsHint": "تحليلات المفضلة/الزيارة/الشراء"
   },
   "nav": {
     "brands": "البراندات",
@@ -408,22 +400,7 @@
     "allBrands": "كل البراندات",
     "addToCart": "أضف إلى السلة",
     "page": "صفحة",
-    "viewAll": "عرض كل النتائج",
-    "kicker": "مجموعة مختارة بعناية",
-    "resultsCount": "عدد النتائج",
-    "activeSort": "نوع الترتيب",
-    "selectedBrand": "البراند المختار",
-    "filtersTitle": "فلترة سريعة",
-    "filtersHint": "رتّب النتائج بالطريقة الأنسب لك.",
-    "sortTitle": "الترتيب",
-    "brandTitle": "البراند",
-    "quickTipTitle": "نصيحة سريعة",
-    "quickTip": "استخدم الفلاتر لتقريب النتائج والوصول للمنتجات المناسبة أسرع.",
-    "collectionTitle": "كل المنتجات",
-    "collectionHint": "استعرض المنتجات بسهولة مع تصميم أوضح وتجربة أخف.",
-    "filteredByBrand": "الفلترة حسب البراند",
-    "readyToShop": "جاهز للتسوق",
-    "clearFilters": "مسح الفلاتر"
+    "viewAll": "عرض كل النتائج"
   },
   "brandsPage": {
     "title": "البراندات",
