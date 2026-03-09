@@ -39,7 +39,7 @@
         v-for="(p, idx) in products.items"
         :key="p.id"
         :parity="(idx % 2) as 0 | 1"
-        :delay="liteMode ? 0 : 35 * (idx % 8)"
+        :delay="35 * (idx % 8)"
       >
         <ProductCard :p="p" />
       </RevealOnScroll>
@@ -75,7 +75,6 @@ const router = useRouter()
 const brandsStore = useBrandsStore()
 const products = useProductsStore()
 
-const { isMobile, liteMode } = useMobilePerf()
 const q = ref(String(route.query.q || ''))
 const sort = ref(String(route.query.sort || 'new'))
 const brand = ref(String(route.query.brand || ''))
@@ -90,17 +89,16 @@ await useAsyncData('products_page_boot', async () => {
 
 const brandOptions = computed(() => (brandsStore.publicItems || []).map((b: any) => ({ name: b.name, slug: b.slug })))
 
-const pageSize = computed(() => isMobile.value ? 8 : 12)
 const hasNext = computed(() => {
   const total = Number(products.totalCount || 0)
-  const size = pageSize.value
-  return page.value * size < total
+  const pageSize = 12
+  return page.value * pageSize < total
 })
 
 async function fetchProducts() {
   await products.fetch({
     page: page.value,
-    pageSize: pageSize.value,
+    pageSize: 12,
     q: q.value || undefined,
     sort: sort.value as any,
     brand: brand.value || undefined,

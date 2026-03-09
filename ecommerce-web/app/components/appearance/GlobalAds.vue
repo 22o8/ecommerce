@@ -6,16 +6,20 @@
         :target="bannerAd.linkUrl ? '_blank' : undefined"
         class="block overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-card"
       >
-        <img :src="asset(bannerAd.imageUrl, bannerAd.updatedAt || bannerAd.id)" :alt="bannerAd.title || 'banner'" class="h-auto w-full object-cover" loading="lazy" />
+        <img :src="asset(bannerAd.imageUrl, bannerAd.updatedAt || bannerAd.id)" :alt="bannerAd.title || 'banner'" class="h-auto w-full object-cover" />
       </a>
     </div>
 
     <div v-if="popupAd && showPopup" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-black/55" @click="close" />
       <div class="relative w-full max-w-[560px] overflow-hidden rounded-3xl border border-white/10 bg-white shadow-2xl dark:bg-zinc-950">
-        <button class="absolute left-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-black/40 text-white transition hover:bg-black/55" @click="close" aria-label="close">✕</button>
+        <button
+          class="absolute left-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-black/40 text-white transition hover:bg-black/55"
+          @click="close"
+          aria-label="close"
+        >✕</button>
         <a :href="popupAd.linkUrl || '#'" :target="popupAd.linkUrl ? '_blank' : undefined" class="block" @click="onAdClick">
-          <img :src="asset(popupAd.imageUrl, popupAd.updatedAt || popupAd.id)" :alt="popupAd.title || 'ad'" class="h-auto w-full" loading="lazy" />
+          <img :src="asset(popupAd.imageUrl, popupAd.updatedAt || popupAd.id)" :alt="popupAd.title || 'ad'" class="h-auto w-full" />
         </a>
         <div v-if="popupAd.title" class="p-4 text-center font-semibold text-zinc-900 dark:text-zinc-100">{{ popupAd.title }}</div>
       </div>
@@ -31,8 +35,6 @@ const enabled = computed(() => !route.path.startsWith('/admin'))
 const ads = ref<any[]>([])
 const showPopup = ref(false)
 const loadingKey = ref(0)
-const loadedAt = ref(0)
-const inFlight = ref(false)
 
 const bannerAd = computed(() => ads.value.find((a: any) => a?.type === 'banner' && a?.placement === 'home_top'))
 const popupAd = computed(() => ads.value.find((a: any) => a?.type === 'popup'))
@@ -45,14 +47,8 @@ const asset = (p?: string, stamp?: any) => {
   return `${url}${sep}v=${v}`
 }
 
-async function loadAds(force = false) {
+async function loadAds() {
   if (!enabled.value) return
-  if (inFlight.value) return
-  if (!force && ads.value.length && Date.now() - loadedAt.value < 60_000) {
-    syncPopup()
-    return
-  }
-  inFlight.value = true
   loadingKey.value = Date.now()
   try {
     const res: any = await $fetch('/api/bff/ads/active', {
@@ -61,11 +57,8 @@ async function loadAds(force = false) {
       headers: { 'cache-control': 'no-cache, no-store, must-revalidate', pragma: 'no-cache' },
     })
     ads.value = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : [])
-    loadedAt.value = Date.now()
   } catch {
     ads.value = []
-  } finally {
-    inFlight.value = false
   }
   syncPopup()
 }
@@ -91,17 +84,16 @@ function close() {
   }
 }
 
-function onAdClick() { close() }
+function onAdClick() {
+  close()
+}
 
 onMounted(() => {
   loadAds()
-  if (process.client) window.addEventListener('ads:changed', () => loadAds(true))
+  if (process.client) window.addEventListener('ads:changed', loadAds)
 })
-watch(() => route.path, () => {
-  if (route.path === '/') loadAds()
-  else syncPopup()
-})
+watch(() => route.path, () => { loadAds() })
 onBeforeUnmount(() => {
-  if (process.client) window.removeEventListener('ads:changed', () => loadAds(true))
+  if (process.client) window.removeEventListener('ads:changed', loadAds)
 })
 </script>

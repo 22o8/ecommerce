@@ -224,7 +224,6 @@ const q = ref(String(route.query.q || ''))
 const openSearch = ref(false)
 const liveItems = ref<any[]>([])
 let liveTimer: any = null
-const { liteMode } = useMobilePerf()
 
 const isAdmin = computed(() => auth.isAdmin)
 
