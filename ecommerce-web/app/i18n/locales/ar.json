@@ -400,7 +400,16 @@
     "allBrands": "كل البراندات",
     "addToCart": "أضف إلى السلة",
     "page": "صفحة",
-    "viewAll": "عرض كل النتائج"
+    "viewAll": "عرض كل النتائج",
+    "resultsLabel": "النتائج",
+    "activeSortLabel": "الترتيب",
+    "brandFilterLabel": "البراند",
+    "filtersTitle": "الفلاتر",
+    "filtersHint": "رتّب النتائج بسرعة حسب البراند أو السعر.",
+    "resultsTitle": "كل المنتجات",
+    "resultsCount": "عدد المنتجات: {count}",
+    "toolbarAll": "عرض {count} منتج بترتيب واضح وسهل التصفح.",
+    "toolbarBrand": "عرض {count} منتج من براند {brand}."
   },
   "brandsPage": {
     "title": "البراندات",
