@@ -294,7 +294,11 @@
       "orders": "إجمالي الطلبات",
       "users": "إجمالي المستخدمين",
       "revenue": "إجمالي الإيرادات",
-      "visitsToday": "زيارات اليوم"
+      "visitsToday": "زيارات اليوم",
+      "featuredProducts": "منتجات تحت المراقبة",
+      "quickSummary": "لقطة سريعة من المنتجات المهمة",
+      "activityWindow": "نافذة النشاط",
+      "liveSnapshot": "تحديث مباشر حسب الفترة"
     },
     "lastUpdated": "آخر تحديث",
     "registeredUsers": "المسجلين في النظام",
@@ -330,7 +334,11 @@
     "manageBrands": "إدارة البراندات",
     "manageBrandsHint": "عرض / إضافة / تعديل",
     "insights": "الإحصائيات",
-    "insightsHint": "تحليلات المفضلة/الزيارة/الشراء"
+    "insightsHint": "تحليلات المفضلة/الزيارة/الشراء",
+    "viewInsightsDetails": "عرض التفاصيل في صفحة التحليلات",
+    "insightsHeadline": "تحليلات المتجر",
+    "activitySubtitle": "ملخص الشراء والمفضلة والمشاهدات خلال الفترات الأخيرة.",
+    "newUsers": "مستخدمين جدد"
   },
   "nav": {
     "brands": "البراندات",
@@ -400,7 +408,22 @@
     "allBrands": "كل البراندات",
     "addToCart": "أضف إلى السلة",
     "page": "صفحة",
-    "viewAll": "عرض كل النتائج"
+    "viewAll": "عرض كل النتائج",
+    "kicker": "مجموعة مختارة بعناية",
+    "resultsCount": "عدد النتائج",
+    "activeSort": "نوع الترتيب",
+    "selectedBrand": "البراند المختار",
+    "filtersTitle": "فلترة سريعة",
+    "filtersHint": "رتّب النتائج بالطريقة الأنسب لك.",
+    "sortTitle": "الترتيب",
+    "brandTitle": "البراند",
+    "quickTipTitle": "نصيحة سريعة",
+    "quickTip": "استخدم الفلاتر لتقريب النتائج والوصول للمنتجات المناسبة أسرع.",
+    "collectionTitle": "كل المنتجات",
+    "collectionHint": "استعرض المنتجات بسهولة مع تصميم أوضح وتجربة أخف.",
+    "filteredByBrand": "الفلترة حسب البراند",
+    "readyToShop": "جاهز للتسوق",
+    "clearFilters": "مسح الفلاتر"
   },
   "brandsPage": {
     "title": "البراندات",
@@ -469,26 +492,6 @@
   },
   "accuracyWarning": "تنويه",
   "terms": "الشروط والأحكام",
-  "productPage": {
-    "readyToShip": "جاهز للطلب",
-    "finalPrice": "السعر النهائي",
-    "youSave": "وفرت",
-    "deliveryLabel": "التوصيل",
-    "deliveryValue": "متاح حسب منطقتك",
-    "paymentLabel": "الدفع",
-    "paymentValue": "مرن وآمن",
-    "authenticityLabel": "الأصالة",
-    "authenticityValue": "منتج موثوق",
-    "detailsBadge": "تفاصيل المنتج",
-    "noDescription": "لا يوجد وصف متاح حالياً لهذا المنتج.",
-    "reviewsSubtitle": "شاركي رأيك وساعدي غيرك في اختيار المنتج المناسب.",
-    "reviewsCountSuffix": "تقييم",
-    "moreFromBrand": "منتجات مشابهة من نفس البراند.",
-    "brandLabel": "البراند",
-    "discountLabel": "الخصم",
-    "ratedBy": "عدد التقييمات",
-    "noReviewsShort": "بدون تقييمات"
-  },
   "reviews": {
     "addTitle": "إضافة تقييم",
     "submit": "إرسال",

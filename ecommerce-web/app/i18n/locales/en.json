@@ -267,7 +267,11 @@
       "orders": "Orders",
       "users": "Users",
       "revenue": "Revenue",
-      "visitsToday": "Visits today"
+      "visitsToday": "Visits today",
+      "featuredProducts": "Tracked products",
+      "quickSummary": "Quick summary of key products",
+      "activityWindow": "Activity window",
+      "liveSnapshot": "Live snapshot"
     },
     "lastUpdated": "Last updated",
     "registeredUsers": "Registered users",
@@ -285,7 +289,7 @@
     "insightsTitle": "Analytics / Insights",
     "insightsSubtitle": "Top products (purchase/favorite/view) + daily/monthly activity",
     "topPurchased": "Top purchased",
-    "topFavorited": "Top favorited",
+    "topFavorited": "Most favorited",
     "topViewed": "Top viewed",
     "neglectedProducts": "Neglected products",
     "activityTitle": "Activity (daily / monthly)",
@@ -303,7 +307,11 @@
     "manageBrands": "Manage brands",
     "manageBrandsHint": "View / add / edit",
     "insights": "Insights",
-    "insightsHint": "Favorites / visits / purchases analytics"
+    "insightsHint": "Favorites / visits / purchases analytics",
+    "viewInsightsDetails": "View details in Insights",
+    "insightsHeadline": "Store insights",
+    "activitySubtitle": "A compact look at purchases, favorites, views and visits.",
+    "newUsers": "New users"
   },
   "nav": {
     "logout": "Logout",
@@ -378,7 +386,22 @@
     "viewAll": "View all results",
     "sortNewest": "Newest",
     "sortPriceAsc": "Price: Low to high",
-    "sortPriceDesc": "Price: High to low"
+    "sortPriceDesc": "Price: High to low",
+    "kicker": "Curated selection",
+    "resultsCount": "Results count",
+    "activeSort": "Active sort",
+    "selectedBrand": "Selected brand",
+    "filtersTitle": "Quick filters",
+    "filtersHint": "Refine the collection in a cleaner way.",
+    "sortTitle": "Sort",
+    "brandTitle": "Brand",
+    "quickTipTitle": "Quick tip",
+    "quickTip": "Use filters to narrow results and reach the right products faster.",
+    "collectionTitle": "All products",
+    "collectionHint": "Browse the collection with a cleaner layout and lighter experience.",
+    "filteredByBrand": "Filtered by brand",
+    "readyToShop": "Ready to shop",
+    "clearFilters": "Clear filters"
   },
   "brandsPage": {
     "title": "Brands",
@@ -448,26 +471,6 @@
     "phone": "Phone",
     "password": "Password",
     "noAccount": "No account"
-  },
-  "productPage": {
-    "readyToShip": "Ready to order",
-    "finalPrice": "Final price",
-    "youSave": "You save",
-    "deliveryLabel": "Delivery",
-    "deliveryValue": "Available by area",
-    "paymentLabel": "Payment",
-    "paymentValue": "Flexible & secure",
-    "authenticityLabel": "Authenticity",
-    "authenticityValue": "Trusted product",
-    "detailsBadge": "Product details",
-    "noDescription": "No description is available for this product yet.",
-    "reviewsSubtitle": "Share your opinion and help others choose the right product.",
-    "reviewsCountSuffix": "reviews",
-    "moreFromBrand": "More picks from the same brand.",
-    "brandLabel": "Brand",
-    "discountLabel": "Discount",
-    "ratedBy": "Rated by",
-    "noReviewsShort": "No reviews"
   },
   "reviews": {
     "addTitle": "Add title",
