@@ -1,11 +1,12 @@
 // عدّاد الزيارات العام
-// يرسل POST /api/metrics/visit عند التنقل بين الصفحات
+// يرسل POST /api/metrics/visit بشكل محدود حتى ما يسبب 429
 
 export default defineNuxtPlugin(() => {
   const api = useApi()
   const route = useRoute()
 
-  const KEY = 'metrics:lastVisit'
+  const KEY = 'metrics:visits:v2'
+  const TTL_MS = 60 * 1000
 
   async function send(path: string) {
     try {
@@ -15,17 +16,20 @@ export default defineNuxtPlugin(() => {
     }
   }
 
-  function shouldSend(path: string) {
+  function readMap(): Record<string, number> {
     try {
       const raw = sessionStorage.getItem(KEY)
-      if (!raw) return true
-      const prev = JSON.parse(raw)
-      const lastPath = String(prev?.path || '')
-      const lastAt = Number(prev?.at || 0)
+      return raw ? JSON.parse(raw) : {}
+    } catch {
+      return {}
+    }
+  }
 
-      // نفس الصفحة + قريب جداً => لا
-      if (lastPath === path && Date.now() - lastAt < 8000) return false
-      return true
+  function shouldSend(path: string) {
+    try {
+      const m = readMap()
+      const lastAt = Number(m[path] || 0)
+      return !lastAt || (Date.now() - lastAt > TTL_MS)
     } catch {
       return true
     }
@@ -33,20 +37,31 @@ export default defineNuxtPlugin(() => {
 
   function save(path: string) {
     try {
-      sessionStorage.setItem(KEY, JSON.stringify({ path, at: Date.now() }))
+      const m = readMap()
+      m[path] = Date.now()
+      sessionStorage.setItem(KEY, JSON.stringify(m))
     } catch {
       // ignore
     }
   }
 
+  let inFlight = false
+
   watch(
     () => route.fullPath,
-    (p) => {
+    async (p) => {
       const path = String(p || '/')
       if (!import.meta.client) return
+      if (path.startsWith('/admin')) return
       if (!shouldSend(path)) return
+      if (inFlight) return
+      inFlight = true
       save(path)
-      send(path)
+      try {
+        await send(path)
+      } finally {
+        inFlight = false
+      }
     },
     { immediate: true }
   )

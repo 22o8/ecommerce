@@ -269,6 +269,10 @@ const activityTotals = computed(() => {
   }
 })
 
+
+const CACHE_KEY = 'admin:dashboard:v1'
+const CACHE_TTL = 45_000
+
 const activityBars = computed(() => {
   const s = activitySeries.value || []
   if (s.length === 0) return []
@@ -289,7 +293,7 @@ function badgeClass(status: string) {
   return 'neutral'
 }
 
-async function loadAll() {
+async function onMounted(loadAll) {
   loading.value = true
   error.value = ''
   try {
@@ -333,6 +337,20 @@ async function loadAll() {
       }))
 
     lastUpdatedAt.value = new Date()
+    if (import.meta.client) {
+      try {
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+          at: Date.now(),
+          data: {
+            stats: stats.value,
+            overview: overview.value,
+            activity: activity.value,
+            visits: visits.value,
+            latestOrders: latestOrders.value,
+          },
+        }))
+      } catch {}
+    }
   } catch (e: any) {
     error.value = extractErr(e)
   } finally {
@@ -344,7 +362,7 @@ watch(range, () => {
   // مجرد تحديث UI (البيانات نفسها محمّلة)
 })
 
-loadAll()
+onMounted(loadAll)
 </script>
 
 

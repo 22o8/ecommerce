@@ -132,7 +132,7 @@ function extractErr(e: any) {
   return e?.data?.message || e?.message || t('common.requestFailed')
 }
 
-async function loadAll() {
+async function onMounted(loadAll) {
   loading.value = true
   error.value = ''
   try {
@@ -145,6 +145,11 @@ async function loadAll() {
     const act: any = await adminApi.get('/admin/analytics/activity')
     daily.value = act?.daily || []
     monthly.value = act?.monthly || []
+    if (import.meta.client) {
+      try {
+        sessionStorage.setItem('admin:insights:v1', JSON.stringify({ at: Date.now(), topPurchased: topPurchased.value, topFavorites: topFavorites.value, topViews: topViews.value, neglected: neglected.value, daily: daily.value, monthly: monthly.value }))
+      } catch {}
+    }
   } catch (e: any) {
     error.value = extractErr(e)
   } finally {
@@ -152,7 +157,7 @@ async function loadAll() {
   }
 }
 
-loadAll()
+onMounted(loadAll)
 </script>
 
 <style scoped>

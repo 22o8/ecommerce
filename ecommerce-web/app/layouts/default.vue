@@ -1,19 +1,17 @@
 <template>
   <div class="min-h-screen bg-app relative overflow-x-clip">
-    <GlobalEffects />
+    <GlobalEffects v-if="route.path === '/'" />
     <AppNavbar />
-    <GlobalAds />
+    <GlobalAds v-if="!route.path.startsWith('/admin')" />
 
     <main class="mx-auto max-w-7xl px-4 py-8">
       <slot />
     </main>
 
-    <!-- Global product quick preview (so pop-up works on Home + any page) -->
     <ProductQuickPreviewModal />
 
     <AppFooter />
 
-    <!-- Floating WhatsApp -->
     <a
       v-if="whats"
       class="fixed bottom-5 right-5 z-40 rounded-full border border-app bg-surface p-4 shadow-card hover:opacity-95 transition"
@@ -34,6 +32,7 @@ import ProductQuickPreviewModal from '~/components/ProductQuickPreviewModal.vue'
 import GlobalEffects from '~/components/appearance/GlobalEffects.vue'
 import GlobalAds from '~/components/appearance/GlobalAds.vue'
 const { t } = useI18n()
+const route = useRoute()
 const config = useRuntimeConfig()
 const whats = String((config.public as any).whatsappNumber || '').trim()
 const waLink = computed(() => {
