@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-app relative overflow-x-clip">
-    <GlobalEffects v-if="route.path === "/"" />
+    <GlobalEffects v-if="route.path === '/'" />
     <AppNavbar />
     <GlobalAds v-if="showAds" />
 
