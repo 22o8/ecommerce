@@ -1,6 +1,10 @@
 <template>
   <header class="sticky top-0 z-50">
-    <div :class="liteMode ? "bg-app/95 border-b border-app" : "bg-app/80 backdrop-blur supports-[backdrop-filter]:bg-app/70 border-b border-app"">
+    <div
+  :class="liteMode
+    ? 'bg-app/95 border-b border-app'
+    : 'bg-app/80 backdrop-blur supports-[backdrop-filter]:bg-app/70 border-b border-app'"
+>
       <div class="mx-auto max-w-7xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3">
         <NuxtLink to="/" class="flex items-center gap-2 sm:gap-3 min-w-0">
           <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black">
