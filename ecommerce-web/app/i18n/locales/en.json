@@ -449,6 +449,26 @@
     "password": "Password",
     "noAccount": "No account"
   },
+  "productPage": {
+    "readyToShip": "Ready to order",
+    "finalPrice": "Final price",
+    "youSave": "You save",
+    "deliveryLabel": "Delivery",
+    "deliveryValue": "Available by area",
+    "paymentLabel": "Payment",
+    "paymentValue": "Flexible & secure",
+    "authenticityLabel": "Authenticity",
+    "authenticityValue": "Trusted product",
+    "detailsBadge": "Product details",
+    "noDescription": "No description is available for this product yet.",
+    "reviewsSubtitle": "Share your opinion and help others choose the right product.",
+    "reviewsCountSuffix": "reviews",
+    "moreFromBrand": "More picks from the same brand.",
+    "brandLabel": "Brand",
+    "discountLabel": "Discount",
+    "ratedBy": "Rated by",
+    "noReviewsShort": "No reviews"
+  },
   "reviews": {
     "addTitle": "Add title",
     "submit": "Submit",
