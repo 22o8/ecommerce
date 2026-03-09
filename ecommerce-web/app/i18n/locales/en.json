@@ -378,16 +378,7 @@
     "viewAll": "View all results",
     "sortNewest": "Newest",
     "sortPriceAsc": "Price: Low to high",
-    "sortPriceDesc": "Price: High to low",
-    "resultsLabel": "Results",
-    "activeSortLabel": "Sort",
-    "brandFilterLabel": "Brand",
-    "filtersTitle": "Filters",
-    "filtersHint": "Refine results quickly by brand or price order.",
-    "resultsTitle": "All products",
-    "resultsCount": "Products count: {count}",
-    "toolbarAll": "Showing {count} products in a clean, easy-to-browse layout.",
-    "toolbarBrand": "Showing {count} products from {brand}."
+    "sortPriceDesc": "Price: High to low"
   },
   "brandsPage": {
     "title": "Brands",
@@ -457,6 +448,26 @@
     "phone": "Phone",
     "password": "Password",
     "noAccount": "No account"
+  },
+  "productPage": {
+    "readyToShip": "Ready to order",
+    "finalPrice": "Final price",
+    "youSave": "You save",
+    "deliveryLabel": "Delivery",
+    "deliveryValue": "Available by area",
+    "paymentLabel": "Payment",
+    "paymentValue": "Flexible & secure",
+    "authenticityLabel": "Authenticity",
+    "authenticityValue": "Trusted product",
+    "detailsBadge": "Product details",
+    "noDescription": "No description is available for this product yet.",
+    "reviewsSubtitle": "Share your opinion and help others choose the right product.",
+    "reviewsCountSuffix": "reviews",
+    "moreFromBrand": "More picks from the same brand.",
+    "brandLabel": "Brand",
+    "discountLabel": "Discount",
+    "ratedBy": "Rated by",
+    "noReviewsShort": "No reviews"
   },
   "reviews": {
     "addTitle": "Add title",
