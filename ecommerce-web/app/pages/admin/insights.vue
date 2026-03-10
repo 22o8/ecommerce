@@ -19,10 +19,10 @@
           <div class="table-card__head">
             <div>#</div><div class="rtl-text">{{ $t('admin.tableProduct') }}</div><div class="text-right rtl-text">{{ $t('admin.tableMetric') }}</div>
           </div>
-          <div v-for="(x, idx) in topPurchased" :key="x.productId" class="table-card__row">
+          <div v-for="(x, idx) in topPurchased" :key="x.productId || x.id || idx" class="table-card__row">
             <div class="rank-badge">{{ idx + 1 }}</div>
-            <div class="rtl-text font-bold truncate">{{ x.title }}</div>
-            <div class="keep-ltr font-black text-right">{{ x.purchases }}</div>
+            <div class="rtl-text font-bold truncate">{{ x.title || x.name || x.productTitle || '—' }}</div>
+            <div class="keep-ltr font-black text-right">{{ x.purchases ?? x.count ?? x.quantity ?? x.total ?? 0 }}</div>
           </div>
         </div>
       </div>
@@ -150,15 +150,26 @@ function extractErr(e: any) {
   return e?.data?.message || e?.message || t('common.requestFailed')
 }
 
+function normalizeRows(list: any) {
+  const rows = Array.isArray(list) ? list : []
+  return rows.map((x: any, idx: number) => ({
+    productId: x?.productId ?? x?.id ?? idx,
+    title: x?.title ?? x?.name ?? x?.productTitle ?? x?.productName ?? '',
+    purchases: Number(x?.purchases ?? x?.count ?? x?.quantity ?? x?.total ?? 0),
+    favorites: Number(x?.favorites ?? x?.count ?? x?.total ?? 0),
+    views: Number(x?.views ?? x?.count ?? x?.total ?? 0),
+  }))
+}
+
 async function loadAll() {
   loading.value = true
   error.value = ''
   try {
     const ov: any = await adminApi.get('/admin/analytics/overview')
-    topPurchased.value = ov?.topPurchased || []
-    topFavorites.value = ov?.topFavorites || []
-    topViews.value = ov?.topViews || []
-    neglected.value = ov?.neglected || []
+    topPurchased.value = normalizeRows(ov?.topPurchased ?? ov?.mostPurchased ?? ov?.topPurchasedProducts)
+    topFavorites.value = normalizeRows(ov?.topFavorites ?? ov?.mostFavorited ?? ov?.topFavorited)
+    topViews.value = normalizeRows(ov?.topViews ?? ov?.mostViewed ?? ov?.topViewedProducts)
+    neglected.value = normalizeRows(ov?.neglected ?? ov?.neglectedProducts)
 
     const act: any = await adminApi.get('/admin/analytics/activity')
     daily.value = act?.daily || []

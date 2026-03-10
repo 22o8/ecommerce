@@ -136,7 +136,7 @@ const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === "
           >
             {{ t('home.discountsTab') }}
           </button>
-          <NuxtLink to="/discounts" class="px-4 py-2 rounded-full text-sm font-bold text-[rgb(var(--text))] hover:bg-surface-2 transition">
+          <NuxtLink to="/products" class="px-4 py-2 rounded-full text-sm font-bold text-[rgb(var(--text))] hover:bg-surface-2 transition">
             {{ t('home.viewAll') }}
           </NuxtLink>
         </div>

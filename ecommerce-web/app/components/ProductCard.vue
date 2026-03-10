@@ -146,10 +146,11 @@ const mainImage = computed(() => {
 })
 
 const isNew = computed(() => {
-  const created = p.value?.createdAt ? new Date(p.value.createdAt).getTime() : 0
-  if (!created) return false
+  const raw = p.value?.createdAt ?? p.value?.CreatedAt ?? p.value?.created_on ?? p.value?.createdOn
+  const created = raw ? new Date(raw).getTime() : 0
+  if (!created || Number.isNaN(created)) return false
   const days = (Date.now() - created) / (1000 * 60 * 60 * 24)
-  return days <= 14
+  return days >= 0 && days < 30
 })
 
 const wishlistKey = computed(() => String((p.value as any)?.id ?? (p.value as any)?.productId ?? p.value?.slug ?? ''))
