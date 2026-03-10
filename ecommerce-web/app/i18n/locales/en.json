@@ -383,7 +383,16 @@
     "viewAll": "View all results",
     "sortNewest": "Newest",
     "sortPriceAsc": "Price: Low to high",
-    "sortPriceDesc": "Price: High to low"
+    "sortPriceDesc": "Price: High to low",
+    "resultsLabel": "Results",
+    "activeSortLabel": "Sort",
+    "brandFilterLabel": "Brand",
+    "filtersTitle": "Filters",
+    "filtersHint": "Refine results quickly by brand or price order.",
+    "resultsTitle": "All products",
+    "resultsCount": "Products count: {count}",
+    "toolbarAll": "Showing {count} products in a clean, easy-to-browse layout.",
+    "toolbarBrand": "Showing {count} products from {brand}."
   },
   "brandsPage": {
     "title": "Brands",

@@ -173,7 +173,7 @@ function whatsappText() {
     '',
     'المنتجات:',
     ...cart.items.map(i =>
-      `- ${i.title} × ${i.quantity} = ${fmtMoney(i.price * i.quantity)}`
+      `- ${i.title} × ${i.quantity} = ${fmtMoney(i.price * i.quantity)}${i.discountPercent ? ` (خصم ${i.discountPercent}% من ${fmtMoney(i.originalPrice || i.price)})` : ''}`
     ),
     '',
     `الإجمالي: ${fmtMoney(cart.total)}`
