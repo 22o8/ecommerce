@@ -1,15 +1,13 @@
 <template>
   <div v-if="enabled" class="pointer-events-none absolute inset-x-0 top-0 z-[5] h-[340px] overflow-hidden sm:h-[420px] lg:h-[500px]">
-    <div class="absolute inset-0 bg-gradient-to-b from-black/6 via-transparent to-transparent dark:from-white/4"></div>
+    <div class="absolute inset-0 bg-gradient-to-b via-transparent to-transparent" :class="topFadeClass"></div>
 
     <SnowEffect v-if="resolvedEffects.snow || resolvedEffects.christmas" />
 
     <div v-if="resolvedEffects.ramadan" class="absolute inset-0">
-      <div class="absolute top-8 right-5 hidden dark:block sm:right-8">
-        <MoonIcon class="h-16 w-16 opacity-65 animate-float sm:h-20 sm:w-20" />
-      </div>
-      <div class="absolute top-8 right-5 block dark:hidden sm:right-8">
-        <LanternIcon class="h-16 w-16 opacity-75 animate-float sm:h-20 sm:w-20" />
+      <div class="absolute top-8 right-5 sm:right-8">
+        <MoonIcon v-if="isDarkTheme" class="h-16 w-16 opacity-65 animate-float sm:h-20 sm:w-20" />
+        <LanternIcon v-else class="h-16 w-16 opacity-75 animate-float sm:h-20 sm:w-20" />
       </div>
       <Sparkles v-if="!liteMode" class="absolute inset-0" />
     </div>
@@ -56,11 +54,14 @@ import LanternIcon from '~/components/appearance/icons/LanternIcon.vue'
 const route = useRoute()
 const store = useAppearanceStore()
 const { t } = useI18n()
+const ui = useUiStore()
 const { liteMode } = useMobilePerf()
 
 const enabled = computed(() => route.path === '/')
 const effects = computed(() => store.data.effects || {})
 const resolvedEffects = computed(() => effects.value)
+const isDarkTheme = computed(() => ui.theme === 'dark')
+const topFadeClass = computed(() => isDarkTheme.value ? 'from-black/6' : 'from-white/35')
 </script>
 
 <style scoped>

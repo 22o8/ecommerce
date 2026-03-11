@@ -1,121 +1,98 @@
 <template>
-  <div class="absolute inset-0">
-    <!-- Dark mode: neon + red glow -->
-    <div class="hidden dark:block absolute inset-0">
-      <div class="bf-neon absolute inset-0"></div>
-      <div class="bf-glow absolute inset-0"></div>
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="bf-soft-glow absolute inset-0" :class="themeClass"></div>
 
-      <!-- % particles -->
-      <div class="absolute inset-0 overflow-hidden">
-        <span v-for="n in percentCount" :key="n" class="bf-percent" :style="percentStyle(n)">%</span>
-      </div>
-    </div>
-
-    <!-- Light mode: confetti + soft gradients -->
-    <div class="block dark:hidden absolute inset-0">
-      <div class="bf-light-grad absolute inset-0"></div>
-      <div class="absolute inset-0 overflow-hidden">
-        <span v-for="n in confettiCount" :key="n" class="bf-confetti" :style="confettiStyle(n)"></span>
-      </div>
+    <div class="absolute inset-0 overflow-hidden">
+      <span
+        v-for="n in percentCount"
+        :key="n"
+        class="bf-percent"
+        :class="themeClass"
+        :style="percentStyle(n)"
+      >%</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const isDark = useDark()
+const ui = useUiStore()
 const { liteMode } = useMobilePerf()
 
-// على الهاتف نخلي نسخة أخف حتى يبقى التنقل سلس
-const percentCount = computed(() => (isDark.value ? (liteMode.value ? 8 : 28) : 0))
-const confettiCount = computed(() => (isDark.value ? 0 : (liteMode.value ? 14 : 44)))
-
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n))
-}
+const isDarkTheme = computed(() => ui.theme === 'dark')
+const themeClass = computed(() => (isDarkTheme.value ? 'is-dark' : 'is-light'))
+const percentCount = computed(() => {
+  if (isDarkTheme.value) return liteMode.value ? 10 : 26
+  return liteMode.value ? 8 : 18
+})
 
 function percentStyle(n: number) {
   const x = (n * 37) % 100
-  const s = 1 + ((n * 13) % 11) // 1..11
+  const s = 2 + ((n * 13) % 10)
   const d = (n * 7) % 20
-  return { '--x': String(x), '--s': String(s), '--d': String(d) } as any
-}
-
-function confettiStyle(n: number) {
-  const x = (n * 23) % 100
-  const w = 1 + ((n * 11) % 5)
-  const h = 4 + ((n * 17) % 6)
-  const r = (n * 29) % 180
-  const d = (n * 5) % 30
-  // خليه متوازن حتى ما يصير ازدحام
-  return { '--x': String(x), '--w': String(clamp(w, 1, 5)), '--h': String(clamp(h, 4, 10)), '--r': String(r), '--d': String(d) } as any
+  const drift = ((n * 9) % 18) - 9
+  const delay = ((n * 3) % 12) * -0.55
+  return {
+    '--x': String(x),
+    '--s': String(s),
+    '--d': String(d),
+    '--drift': String(drift),
+    '--delay': `${delay}s`,
+  } as any
 }
 </script>
 
 <style scoped>
-.bf-neon{
-  background:
-    repeating-linear-gradient(135deg, rgba(255,0,70,.10) 0 2px, transparent 2px 18px),
-    radial-gradient(900px 500px at 10% 20%, rgba(255,0,70,.16), transparent 60%),
-    radial-gradient(700px 420px at 80% 70%, rgba(255,0,70,.12), transparent 60%);
+.bf-soft-glow{
   opacity: .95;
-  animation: bf-neon-move 8s ease-in-out infinite;
 }
-.bf-glow{
-  box-shadow: inset 0 0 160px rgba(255,0,70,.20);
+.bf-soft-glow.is-dark{
+  background:
+    radial-gradient(900px 460px at 12% 18%, rgba(255, 0, 70, .14), transparent 62%),
+    radial-gradient(760px 380px at 86% 26%, rgba(126, 34, 206, .12), transparent 64%),
+    radial-gradient(820px 420px at 50% 100%, rgba(255, 0, 70, .08), transparent 66%);
 }
-
-@keyframes bf-neon-move{
-  0%{ transform: translate3d(0,0,0) scale(1); }
-  50%{ transform: translate3d(-8px,6px,0) scale(1.02); }
-  100%{ transform: translate3d(0,0,0) scale(1); }
+.bf-soft-glow.is-light{
+  background:
+    radial-gradient(820px 420px at 12% 18%, rgba(255, 64, 129, .10), transparent 62%),
+    radial-gradient(760px 380px at 86% 26%, rgba(244, 114, 182, .08), transparent 64%),
+    radial-gradient(760px 380px at 50% 100%, rgba(251, 113, 133, .06), transparent 66%);
 }
 
 .bf-percent{
-  position:absolute;
-  top: -20px;
+  position: absolute;
+  top: -28px;
   left: calc(var(--x) * 1%);
   font-weight: 900;
-  font-size: calc(14px + var(--s) * 1px);
-  color: rgba(255,0,70,.55);
-  text-shadow: 0 0 12px rgba(255,0,70,.45);
-  animation: bf-fall calc(7s + var(--d) * 0.2s) linear infinite;
-  transform: translateY(-40px);
+  font-size: calc(12px + var(--s) * 1px);
+  animation: bf-fall calc(7s + var(--d) * 0.24s) linear infinite;
+  animation-delay: var(--delay);
+  transform: translate3d(0, -40px, 0);
+  user-select: none;
 }
 
-/* توزيع ثابت عبر nth-child */
-/* التوزيع صار عبر style vars */
-
-@keyframes bf-fall{
-  0%{ transform: translateY(-60px) rotate(0deg); opacity: .1; }
-  10%{ opacity: .8; }
-  100%{ transform: translateY(120vh) rotate(90deg); opacity: .0; }
+.bf-percent.is-dark{
+  color: rgba(255, 36, 98, .52);
+  text-shadow:
+    0 0 10px rgba(255, 0, 70, .34),
+    0 0 24px rgba(168, 85, 247, .12);
 }
 
-.bf-light-grad{
-  background:
-    radial-gradient(800px 450px at 20% 10%, rgba(255,100,120,.18), transparent 60%),
-    radial-gradient(700px 420px at 80% 70%, rgba(255,200,80,.14), transparent 60%),
-    linear-gradient(180deg, rgba(255,255,255,.0), rgba(255,255,255,.0));
+.bf-percent.is-light{
+  color: rgba(236, 72, 153, .28);
+  text-shadow: 0 0 8px rgba(244, 114, 182, .16);
 }
 
-.bf-confetti{
-  position:absolute;
-  top:-10px;
-  left: calc(var(--x) * 1%);
-  width: calc(4px + var(--w) * 1px);
-  height: calc(8px + var(--h) * 1px);
-  background: rgba(255,0,70,.35);
-  border-radius: 2px;
-  transform: rotate(calc(var(--r) * 1deg));
-  animation: confetti-fall calc(6s + var(--d) * .25s) linear infinite;
-  opacity:.85;
-}
-
-/* التوزيع صار عبر style vars */
-
-@keyframes confetti-fall{
-  0%{ transform: translateY(-20px) rotate(0deg); opacity: .0; }
-  10%{ opacity: .9; }
-  100%{ transform: translateY(120vh) rotate(180deg); opacity: .0; }
+@keyframes bf-fall {
+  0% {
+    transform: translate3d(0, -60px, 0) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: .85;
+  }
+  100% {
+    transform: translate3d(calc(var(--drift) * 1px), 120vh, 0) rotate(90deg);
+    opacity: 0;
+  }
 }
 </style>
