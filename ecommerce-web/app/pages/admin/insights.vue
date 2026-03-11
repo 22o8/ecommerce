@@ -142,7 +142,6 @@ const topPurchased = ref<any[]>([])
 const topFavorites = ref<any[]>([])
 const topViews = ref<any[]>([])
 const neglected = ref<any[]>([])
-const topOrdersFallback = ref<any[]>([])
 
 const daily = ref<any[]>([])
 const monthly = ref<any[]>([])
@@ -153,47 +152,28 @@ function extractErr(e: any) {
 
 function normalizeRows(list: any) {
   const rows = Array.isArray(list) ? list : []
-  return rows.map((x: any, idx: number) => ({
-    productId: x?.productId ?? x?.id ?? idx,
-    title: x?.title ?? x?.name ?? x?.productTitle ?? x?.productName ?? '',
-    purchases: Number(x?.purchases ?? x?.count ?? x?.quantity ?? x?.total ?? 0),
-    favorites: Number(x?.favorites ?? x?.count ?? x?.total ?? 0),
-    views: Number(x?.views ?? x?.count ?? x?.total ?? 0),
-  }))
+  return rows
+    .map((x: any, idx: number) => ({
+      productId: x?.productId ?? x?.id ?? idx,
+      title: String(x?.title ?? x?.name ?? x?.productTitle ?? x?.productName ?? '').trim(),
+      purchases: Number(x?.purchases ?? x?.count ?? x?.quantity ?? x?.total ?? 0),
+      favorites: Number(x?.favorites ?? x?.count ?? x?.total ?? 0),
+      views: Number(x?.views ?? x?.count ?? x?.total ?? 0),
+    }))
+    .filter((x: any) => x.title || x.purchases > 0 || x.favorites > 0 || x.views > 0)
 }
 
 async function loadAll() {
   loading.value = true
   error.value = ''
   try {
-    const [ov, orders, act]: any = await Promise.all([
-      adminApi.get('/admin/analytics/overview?days=3650'),
-      adminApi.get('/admin/orders'),
-      adminApi.get('/admin/analytics/activity')
-    ])
-
-    const orderList = Array.isArray(orders) ? orders : (Array.isArray(orders?.items) ? orders.items : [])
-    topOrdersFallback.value = orderList
-      .flatMap((o: any) => Array.isArray(o?.Items) ? o.Items : Array.isArray(o?.items) ? o.items : [])
-      .filter((i: any) => !!(i?.productTitle || i?.ProductTitle))
-      .reduce((acc: any[], i: any) => {
-        const productId = i?.ProductId || i?.productId || i?.productTitle || i?.ProductTitle
-        const title = i?.productTitle || i?.ProductTitle || '—'
-        const qty = Number(i?.Quantity ?? i?.quantity ?? 1)
-        const ex = acc.find((x: any) => x.productId === productId)
-        if (ex) ex.purchases += qty
-        else acc.push({ productId, title, purchases: qty })
-        return acc
-      }, [])
-      .sort((a: any, b: any) => b.purchases - a.purchases)
-      .slice(0, 10)
-
-    const normalizedPurchased = normalizeRows(ov?.topPurchased ?? ov?.mostPurchased ?? ov?.topPurchasedProducts)
-    topPurchased.value = normalizedPurchased.length ? normalizedPurchased : topOrdersFallback.value
+    const ov: any = await adminApi.get('/admin/analytics/overview', { days: 3650 })
+    topPurchased.value = normalizeRows(ov?.topPurchased ?? ov?.mostPurchased ?? ov?.topPurchasedProducts)
     topFavorites.value = normalizeRows(ov?.topFavorites ?? ov?.mostFavorited ?? ov?.topFavorited)
     topViews.value = normalizeRows(ov?.topViews ?? ov?.mostViewed ?? ov?.topViewedProducts)
     neglected.value = normalizeRows(ov?.neglected ?? ov?.neglectedProducts)
 
+    const act: any = await adminApi.get('/admin/analytics/activity')
     daily.value = act?.daily || []
     monthly.value = act?.monthly || []
   } catch (e: any) {

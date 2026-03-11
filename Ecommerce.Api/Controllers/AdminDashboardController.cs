@@ -23,16 +23,21 @@ public class AdminDashboardController : ControllerBase
         var totalOrders = await _db.Orders.CountAsync();
         var totalUsers = await _db.Users.CountAsync();
 
-        // Revenue: sum of successful payments in USD.
+        // Revenue
         var totalRevenueUsd = await _db.Payments
             .Where(p => p.Status == "Succeeded")
             .SumAsync(p => (decimal?)p.AmountUsd) ?? 0m;
+
+        var totalRevenueIqd = await _db.Payments
+            .Where(p => p.Status == "Succeeded")
+            .SumAsync(p => (decimal?)p.AmountIqd) ?? 0m;
 
         return Ok(new
         {
             totalOrders,
             totalUsers,
-            totalRevenueUsd
+            totalRevenueUsd,
+            totalRevenueIqd
         });
     }
 }

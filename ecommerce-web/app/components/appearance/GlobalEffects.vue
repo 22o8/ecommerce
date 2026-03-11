@@ -14,7 +14,7 @@
       <Sparkles v-if="!liteMode" class="absolute inset-0" />
     </div>
 
-    <div v-if="resolvedEffects.eid" class="absolute inset-x-0 top-5 flex justify-center px-4 sm:top-8">
+    <div v-if="resolvedEffects.eid" class="absolute inset-x-0 top-16 flex justify-center px-4 sm:top-20">
       <div class="eid-banner rounded-[28px] border border-app px-5 py-4 backdrop-blur-sm shadow-xl sm:px-7">
         <div class="flex items-center gap-4">
           <div class="eid-sheep" aria-hidden="true">

@@ -313,38 +313,30 @@ async function loadAll() {
   try {
     const [dash, ov, act, vis, orders] = await Promise.all([
       adminApi.getDashboardStats<any>(),
-      adminApi.get<any>('/admin/analytics/overview'),
+      adminApi.get<any>('/admin/analytics/overview', { days: 3650 }),
       adminApi.get<any>('/admin/analytics/activity'),
       api.get<any>('/metrics/visits/summary'),
       adminApi.get<any>('/admin/orders'),
     ])
 
-    const list = Array.isArray(orders) ? orders : (Array.isArray(orders?.items) ? orders.items : [])
-
-    stats.value.totalOrders = Number(dash?.totalOrders ?? 0) || list.length
+    stats.value.totalOrders = Number(dash?.totalOrders ?? 0)
     stats.value.totalUsers = Number(dash?.totalUsers ?? 0)
-    stats.value.totalRevenueIqd = Number(dash?.totalRevenueIqd ?? dash?.totalRevenueUsd ?? 0)
+    stats.value.totalRevenueIqd = Number(dash?.totalRevenueIqd ?? 0)
 
-    const normalizedPurchased = Array.isArray(ov?.topPurchased) ? ov.topPurchased : []
-    const purchasedFallback = list
-      .flatMap((o: any) => Array.isArray(o?.Items) ? o.Items : Array.isArray(o?.items) ? o.items : [])
-      .filter((i: any) => !!(i?.productTitle || i?.ProductTitle))
-      .reduce((acc: any[], i: any) => {
-        const productId = i?.ProductId || i?.productId || i?.productTitle || i?.ProductTitle
-        const title = i?.productTitle || i?.ProductTitle || '—'
-        const qty = Number(i?.Quantity ?? i?.quantity ?? 1)
-        const ex = acc.find((x: any) => x.productId === productId)
-        if (ex) ex.purchases += qty
-        else acc.push({ productId, title, purchases: qty })
-        return acc
-      }, [])
-      .sort((a: any, b: any) => b.purchases - a.purchases)
-      .slice(0, 10)
+    const normalizeMetricRows = (rows: any[] = [], metricKeys: string[] = []) =>
+      rows
+        .map((x: any, idx: number) => ({
+          ...x,
+          productId: x?.productId ?? x?.id ?? idx,
+          title: String(x?.title ?? x?.name ?? x?.productTitle ?? '').trim(),
+          metric: metricKeys.reduce((acc, k) => acc || Number(x?.[k] ?? 0), 0),
+        }))
+        .filter((x: any) => x.title || x.metric > 0)
 
-    overview.value.topPurchased = normalizedPurchased.length ? normalizedPurchased : purchasedFallback
-    overview.value.topFavorites = Array.isArray(ov?.topFavorites) ? ov.topFavorites : []
-    overview.value.topViews = Array.isArray(ov?.topViews) ? ov.topViews : []
-    overview.value.neglected = Array.isArray(ov?.neglected) ? ov.neglected : []
+    overview.value.topPurchased = normalizeMetricRows(Array.isArray(ov?.topPurchased) ? ov.topPurchased : [], ['purchases','count','quantity','total'])
+    overview.value.topFavorites = normalizeMetricRows(Array.isArray(ov?.topFavorites) ? ov.topFavorites : [], ['favorites','count','total'])
+    overview.value.topViews = normalizeMetricRows(Array.isArray(ov?.topViews) ? ov.topViews : [], ['views','count','total'])
+    overview.value.neglected = normalizeMetricRows(Array.isArray(ov?.neglected) ? ov.neglected : [], ['views','favorites','purchases'])
 
     activity.value.daily = Array.isArray(act?.daily) ? act.daily : []
     activity.value.monthly = Array.isArray(act?.monthly) ? act.monthly : []
@@ -353,6 +345,7 @@ async function loadAll() {
     visits.value.today = Number(vis?.today ?? 0)
     visits.value.month = Number(vis?.month ?? 0)
 
+    const list = Array.isArray(orders) ? orders : (Array.isArray(orders?.items) ? orders.items : [])
     latestOrders.value = list
       .slice()
       .sort((a: any, b: any) => new Date(b?.createdAt || 0).getTime() - new Date(a?.createdAt || 0).getTime())

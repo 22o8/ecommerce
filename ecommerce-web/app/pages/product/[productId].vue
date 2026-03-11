@@ -59,9 +59,16 @@ function addToCart() {
   cart.add(product.value)
 }
 
-function buyNow() {
-  addToCart()
-  navigateTo('/cart')
+const { checkoutSingleProduct } = useWhatsappCheckout()
+
+async function buyNow() {
+  if (!product.value) return
+  try {
+    await checkoutSingleProduct(product.value, 1)
+  } catch (e) {
+    addToCart()
+    navigateTo('/cart')
+  }
 }
 
 function fmt(v: any) {

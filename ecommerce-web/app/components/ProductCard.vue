@@ -164,9 +164,15 @@ function addToCart() {
   cart.add(p.value)
 }
 
-function buyNow() {
-  cart.add(p.value)
-  navigateTo('/cart')
+const { checkoutSingleProduct } = useWhatsappCheckout()
+
+async function buyNow() {
+  try {
+    await checkoutSingleProduct(p.value, 1)
+  } catch (e) {
+    cart.add(p.value)
+    navigateTo('/cart')
+  }
 }
 
 function toggleFav() {

@@ -155,43 +155,24 @@ const { t } = useI18n()
 const cart = useCartStore()
 const auth = useAuthStore()
 const profile = useProfileStore()
-const config = useRuntimeConfig()
 
 const error = ref('')
+const { openWhatsappForCart } = useWhatsappCheckout()
 
 function fmtMoney(v:any){
   return formatIqd(v)
 }
 
-function whatsappText() {
-
-  const when = new Date().toLocaleString('ar-IQ')
-
-  const lines = [
-    `طلب جديد من المتجر`,
-    `الوقت: ${when}`,
-    '',
-    'المنتجات:',
-    ...cart.items.map(i =>
-      `- ${i.title} × ${i.quantity} = ${fmtMoney(i.price * i.quantity)}${i.discountPercent ? ` (خصم ${i.discountPercent}% من ${fmtMoney(i.originalPrice || i.price)})` : ''}`
-    ),
-    '',
-    `الإجمالي: ${fmtMoney(cart.total)}`
-  ]
-
-  return lines.join('\n')
-}
-
 async function openWhatsApp() {
-
-  const number = (config.public as any).whatsappNumber || ''
-  const text = encodeURIComponent(whatsappText())
-
-  const url = number
-    ? `https://wa.me/${String(number).replace(/\D/g,'')}?text=${text}`
-    : `https://wa.me/?text=${text}`
-
-  window.open(url,'_blank')
+  error.value = ''
+  try {
+    await openWhatsappForCart()
+    cart.clear()
+  } catch (e: any) {
+    const msg = String(e?.data?.message || e?.message || '')
+    if (/unauthor/i.test(msg)) error.value = 'يرجى تسجيل الدخول أولاً لإكمال الطلب.'
+    else error.value = msg || 'تعذر إنشاء الطلب حالياً.'
+  }
 }
 
 onMounted(() => profile.hydrateFromAuth(auth.token || ''))

@@ -605,5 +605,9 @@
     "title": "Discounts",
     "subtitle": "Products with real discounts",
     "empty": "No discounted products right now."
+  },
+  "seasonal": {
+    "eidAdhaTitle": "Eid al-Adha Mubarak",
+    "eidAdhaSubtitle": "A light festive touch for your storefront"
   }
 }

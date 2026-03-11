@@ -21,45 +21,20 @@ public class AdminAnalyticsController : ControllerBase
     [HttpGet("overview")]
     public async Task<IActionResult> Overview([FromQuery] int days = 30)
     {
-        if (days < 1) days = 30;
+        if (days < 1) days = 3650;
         var since = DateTime.UtcNow.AddDays(-days);
 
-        async Task<List<(Guid productId, int count)>> BuildFavorites(DateTime? window)
+        async Task<List<(Guid productId, int count)>> GetPurchased(DateTime? from)
         {
-            var query = _db.Favorites.AsQueryable();
-            if (window.HasValue) query = query.Where(f => f.CreatedAt >= window.Value);
-            var list = await query
-                .GroupBy(f => f.ProductId)
-                .Select(g => new { productId = g.Key, count = g.Count() })
-                .OrderByDescending(x => x.count)
-                .Take(10)
-                .ToListAsync();
-            return list.Select(x => (x.productId, x.count)).ToList();
-        }
+            var q = _db.Orders.AsQueryable();
+            if (from.HasValue) q = q.Where(o => o.CreatedAt >= from.Value);
 
-        async Task<List<(Guid productId, int count)>> BuildViews(DateTime? window)
-        {
-            var query = _db.ProductViews.AsQueryable();
-            if (window.HasValue) query = query.Where(v => v.CreatedAt >= window.Value);
-            var list = await query
-                .GroupBy(v => v.ProductId)
-                .Select(g => new { productId = g.Key, count = g.Count() })
-                .OrderByDescending(x => x.count)
-                .Take(10)
-                .ToListAsync();
-            return list.Select(x => (x.productId, x.count)).ToList();
-        }
-
-        async Task<List<(Guid productId, int count)>> BuildPurchases(DateTime? window)
-        {
-            var query = _db.Orders.AsQueryable();
-            if (window.HasValue) query = query.Where(o => o.CreatedAt >= window.Value);
-            var purchased = await query
+            var purchasedRows = await q
                 .SelectMany(o => o.Items.Where(i => i.ProductId != null)
                     .Select(i => new { productId = i.ProductId!.Value, qty = i.Quantity }))
                 .ToListAsync();
 
-            return purchased
+            return purchasedRows
                 .GroupBy(x => x.productId)
                 .Select(g => (productId: g.Key, count: g.Sum(z => z.qty)))
                 .OrderByDescending(x => x.count)
@@ -67,95 +42,95 @@ public class AdminAnalyticsController : ControllerBase
                 .ToList();
         }
 
-        var topFavorited = await BuildFavorites(since);
-        if (topFavorited.Count == 0) topFavorited = await BuildFavorites(null);
-
-        var topViewed = await BuildViews(since);
-        if (topViewed.Count == 0) topViewed = await BuildViews(null);
-
-        var topPurchasedAgg = await BuildPurchases(since);
-        if (topPurchasedAgg.Count == 0) topPurchasedAgg = await BuildPurchases(null);
-
-        // neglected: products with lowest engagement in selected range; if no range data, fallback to all-time
-        var viewAgg = await _db.ProductViews
-            .Where(v => v.CreatedAt >= since)
-            .GroupBy(v => v.ProductId)
-            .Select(g => new { productId = g.Key, views = g.Count() })
-            .ToDictionaryAsync(x => x.productId, x => x.views);
-
-        var favAgg = await _db.Favorites
-            .Where(f => f.CreatedAt >= since)
-            .GroupBy(f => f.ProductId)
-            .Select(g => new { productId = g.Key, favorites = g.Count() })
-            .ToDictionaryAsync(x => x.productId, x => x.favorites);
-
-        var purchaseAgg = (await _db.Orders
-            .Where(o => o.CreatedAt >= since)
-            .SelectMany(o => o.Items.Where(i => i.ProductId != null)
-                .Select(i => new { productId = i.ProductId!.Value, qty = i.Quantity }))
-            .ToListAsync())
-            .GroupBy(x => x.productId)
-            .ToDictionary(g => g.Key, g => g.Sum(z => z.qty));
-
-        var publishedProducts = await _db.Products
-            .Where(p => p.IsPublished)
-            .Select(p => new { p.Id, p.Title, p.Slug, p.Brand, p.PriceIqd, p.CreatedAt })
-            .ToListAsync();
-
-        var neglectedRows = publishedProducts
-            .Select(p => new
-            {
-                productId = p.Id,
-                title = p.Title,
-                views = viewAgg.TryGetValue(p.Id, out var vv) ? vv : 0,
-                favorites = favAgg.TryGetValue(p.Id, out var ff) ? ff : 0,
-                purchases = purchaseAgg.TryGetValue(p.Id, out var pp) ? pp : 0,
-                createdAt = p.CreatedAt
-            })
-            .OrderBy(x => x.views + x.favorites + x.purchases)
-            .ThenByDescending(x => x.createdAt)
-            .Take(10)
-            .ToList();
-
-        if (neglectedRows.All(x => (x.views + x.favorites + x.purchases) == 0))
+        async Task<List<(Guid productId, int count)>> GetFavorited(DateTime? from)
         {
-            // all rows zero in current window: fallback to all-time least engaged
-            var allViewAgg = await _db.ProductViews
-                .GroupBy(v => v.ProductId)
-                .Select(g => new { productId = g.Key, views = g.Count() })
-                .ToDictionaryAsync(x => x.productId, x => x.views);
+            var q = _db.Favorites.AsQueryable();
+            if (from.HasValue) q = q.Where(f => f.CreatedAt >= from.Value);
 
-            var allFavAgg = await _db.Favorites
+            return (await q
                 .GroupBy(f => f.ProductId)
-                .Select(g => new { productId = g.Key, favorites = g.Count() })
-                .ToDictionaryAsync(x => x.productId, x => x.favorites);
+                .Select(g => new { productId = g.Key, count = g.Count() })
+                .OrderByDescending(x => x.count)
+                .Take(10)
+                .ToListAsync())
+                .Select(x => (x.productId, x.count))
+                .ToList();
+        }
 
-            var allPurchaseAgg = (await _db.Orders
-                .SelectMany(o => o.Items.Where(i => i.ProductId != null)
-                    .Select(i => new { productId = i.ProductId!.Value, qty = i.Quantity }))
+        async Task<List<(Guid productId, int count)>> GetViewed(DateTime? from)
+        {
+            var q = _db.ProductViews.AsQueryable();
+            if (from.HasValue) q = q.Where(v => v.CreatedAt >= from.Value);
+
+            return (await q
+                .GroupBy(v => v.ProductId)
+                .Select(g => new { productId = g.Key, count = g.Count() })
+                .OrderByDescending(x => x.count)
+                .Take(10)
+                .ToListAsync())
+                .Select(x => (x.productId, x.count))
+                .ToList();
+        }
+
+        var topPurchasedAgg = await GetPurchased(since);
+        var topFavoritedAgg = await GetFavorited(since);
+        var topViewedAgg = await GetViewed(since);
+
+        // fallback إلى كل التاريخ إذا المدة الحالية ما رجعت نتائج
+        if (topPurchasedAgg.Count == 0) topPurchasedAgg = await GetPurchased(null);
+        if (topFavoritedAgg.Count == 0) topFavoritedAgg = await GetFavorited(null);
+        if (topViewedAgg.Count == 0) topViewedAgg = await GetViewed(null);
+
+        // neglected: أقل المنتجات تفاعلاً (مشاهدة + مفضلة + شراء) مع fallback لكل التاريخ
+        async Task<List<dynamic>> BuildNeglected(DateTime? from)
+        {
+            var productsBase = await _db.Products
+                .Where(p => p.IsPublished)
+                .Select(p => new { p.Id, p.Title, p.Slug, p.Brand, p.PriceIqd })
+                .ToListAsync();
+
+            var viewsQ = _db.ProductViews.AsQueryable();
+            var favsQ = _db.Favorites.AsQueryable();
+            var ordersQ = _db.Orders.AsQueryable();
+            if (from.HasValue)
+            {
+                viewsQ = viewsQ.Where(v => v.CreatedAt >= from.Value);
+                favsQ = favsQ.Where(f => f.CreatedAt >= from.Value);
+                ordersQ = ordersQ.Where(o => o.CreatedAt >= from.Value);
+            }
+
+            var viewsMap = await viewsQ.GroupBy(v => v.ProductId).Select(g => new { g.Key, Count = g.Count() }).ToDictionaryAsync(x => x.Key, x => x.Count);
+            var favsMap = await favsQ.GroupBy(v => v.ProductId).Select(g => new { g.Key, Count = g.Count() }).ToDictionaryAsync(x => x.Key, x => x.Count);
+            var purchasesMap = (await ordersQ
+                .SelectMany(o => o.Items.Where(i => i.ProductId != null).Select(i => new { productId = i.ProductId!.Value, qty = i.Quantity }))
                 .ToListAsync())
                 .GroupBy(x => x.productId)
                 .ToDictionary(g => g.Key, g => g.Sum(z => z.qty));
 
-            neglectedRows = publishedProducts
+            return productsBase
                 .Select(p => new
                 {
                     productId = p.Id,
                     title = p.Title,
-                    views = allViewAgg.TryGetValue(p.Id, out var vv) ? vv : 0,
-                    favorites = allFavAgg.TryGetValue(p.Id, out var ff) ? ff : 0,
-                    purchases = allPurchaseAgg.TryGetValue(p.Id, out var pp) ? pp : 0,
-                    createdAt = p.CreatedAt
+                    views = viewsMap.TryGetValue(p.Id, out var vv) ? vv : 0,
+                    favorites = favsMap.TryGetValue(p.Id, out var ff) ? ff : 0,
+                    purchases = purchasesMap.TryGetValue(p.Id, out var pp) ? pp : 0,
+                    score = (viewsMap.TryGetValue(p.Id, out vv) ? vv : 0) + (favsMap.TryGetValue(p.Id, out ff) ? ff : 0) + (purchasesMap.TryGetValue(p.Id, out pp) ? pp : 0)
                 })
-                .OrderBy(x => x.views + x.favorites + x.purchases)
-                .ThenByDescending(x => x.createdAt)
+                .OrderBy(x => x.score)
+                .ThenBy(x => x.views)
+                .ThenBy(x => x.favorites)
+                .ThenBy(x => x.purchases)
                 .Take(10)
+                .Cast<dynamic>()
                 .ToList();
         }
 
-        // attach product titles for top lists
-        var ids = topFavorited.Select(x => x.productId)
-            .Concat(topViewed.Select(x => x.productId))
+        var neglected = await BuildNeglected(since);
+        if (neglected.Count == 0) neglected = await BuildNeglected(null);
+
+        var ids = topFavoritedAgg.Select(x => x.productId)
+            .Concat(topViewedAgg.Select(x => x.productId))
             .Concat(topPurchasedAgg.Select(x => x.productId))
             .Distinct()
             .ToList();
@@ -174,19 +149,19 @@ public class AdminAnalyticsController : ControllerBase
                 title = products.FirstOrDefault(p => p.Id == x.productId)?.Title,
                 purchases = x.count
             }),
-            topFavorites = topFavorited.Select(x => new
+            topFavorites = topFavoritedAgg.Select(x => new
             {
                 productId = x.productId,
                 title = products.FirstOrDefault(p => p.Id == x.productId)?.Title,
                 favorites = x.count
             }),
-            topViews = topViewed.Select(x => new
+            topViews = topViewedAgg.Select(x => new
             {
                 productId = x.productId,
                 title = products.FirstOrDefault(p => p.Id == x.productId)?.Title,
                 views = x.count
             }),
-            neglected = neglectedRows
+            neglected
         });
     }
 
@@ -236,8 +211,7 @@ public class AdminAnalyticsController : ControllerBase
                 views = viewsSeries.TryGetValue(k, out var v) ? v : 0,
                 favorites = favsSeries.TryGetValue(k, out var f) ? f : 0,
                 visits = visitsSeries.TryGetValue(k, out var s) ? s : 0,
-                users = usersSeries.TryGetValue(k, out var u) ? u : 0,
-                label = mode == "monthly" ? k.ToString("MM") : k.Day.ToString()
+                users = usersSeries.TryGetValue(k, out var u) ? u : 0
             }).ToList();
         }
 
