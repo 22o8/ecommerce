@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRuntimeConfig } from '#imports'
-const { t } = useI18n()
 
 const cfg = useRuntimeConfig()
 const phone = computed(() => String(cfg.public.whatsappNumber || '').replace(/\D/g, ''))
@@ -18,7 +17,7 @@ function toTop() {
 const waLink = computed(() => {
   const p = phone.value
   if (!p) return '#'
-  const text = encodeURIComponent(t('whatsapp.floatingInquiry'))
+  const text = encodeURIComponent('مرحبا، أريد الاستفسار عن المنتجات/الخدمات')
   return `https://wa.me/${p}?text=${text}`
 })
 
@@ -37,11 +36,11 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
       target="_blank"
       rel="noopener"
       class="fab fab-wa"
-       :aria-label="t('common.whatsapp')"
-      :title="t('common.whatsapp')"
+      aria-label="WhatsApp"
+      title="WhatsApp"
     >
       <span class="icon">💬</span>
-      <span class="label">{{ t('whatsapp.floatingLabel') }}</span>
+      <span class="label">واتساب</span>
     </a>
 
     <button
@@ -49,8 +48,8 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
       type="button"
       class="fab fab-top"
       @click="toTop"
-       :aria-label="t('common.backToTop')"
-      :title="t('common.backToTop')"
+      aria-label="Back to top"
+      title="للأعلى"
     >
       <span class="icon">↑</span>
     </button>

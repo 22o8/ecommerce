@@ -14,17 +14,17 @@
           class="img"
           :class="{ zooming: zoomed }"
           :src="current"
-          :alt="title || t('productGallery.product')"
+          :alt="title || 'Product'"
           fit="contain"
           :img-style="imgStyle"
           wrapper-class="w-full h-full"
           img-class="w-full h-full"
           @click="openFullscreen"
         />
-        <button v-if="images.length>1" class="nav left" type="button" @click.stop="prev" :aria-label="t('productGallery.prev')">
+        <button v-if="images.length>1" class="nav left" type="button" @click.stop="prev" aria-label="Prev">
           <Icon name="mdi:chevron-left" class="text-2xl" />
         </button>
-        <button v-if="images.length>1" class="nav right" type="button" @click.stop="next" :aria-label="t('productGallery.next')">
+        <button v-if="images.length>1" class="nav right" type="button" @click.stop="next" aria-label="Next">
           <Icon name="mdi:chevron-right" class="text-2xl" />
         </button>
 
@@ -45,7 +45,7 @@
         :class="{ active: i===index }"
         @click="setIndex(i)"
       >
-        <SmartImage class="thumbImg" :src="src" :alt="title || t('productGallery.thumb')" fit="cover" wrapper-class="w-full h-full" img-class="w-full h-full" />
+        <SmartImage class="thumbImg" :src="src" :alt="title || 'thumb'" fit="cover" wrapper-class="w-full h-full" img-class="w-full h-full" />
       </button>
     </div>
 
@@ -56,7 +56,7 @@
         <div class="fsBody">
           <div class="fsTop">
             <div class="fsTitle rtl-text truncate">{{ title }}</div>
-            <button type="button" class="fsBtn" @click="fsClose" :aria-label="t('productGallery.close')">
+            <button type="button" class="fsBtn" @click="fsClose" aria-label="Close">
               <Icon name="mdi:close" class="text-2xl" />
             </button>
           </div>
@@ -67,12 +67,12 @@
             @touchmove.passive="onFsTouchMove"
             @touchend.passive="onFsTouchEnd"
           >
-            <SmartImage class="fsImg" :src="current" :alt="title || t('productGallery.product')" />
+            <SmartImage class="fsImg" :src="current" :alt="title || 'Product'" />
 
-            <button v-if="images.length>1" class="fsNav left" type="button" @click.stop="prev" :aria-label="t('productGallery.prev')">
+            <button v-if="images.length>1" class="fsNav left" type="button" @click.stop="prev" aria-label="Prev">
               <Icon name="mdi:chevron-left" class="text-3xl" />
             </button>
-            <button v-if="images.length>1" class="fsNav right" type="button" @click.stop="next" :aria-label="t('productGallery.next')">
+            <button v-if="images.length>1" class="fsNav right" type="button" @click.stop="next" aria-label="Next">
               <Icon name="mdi:chevron-right" class="text-3xl" />
             </button>
           </div>

@@ -48,15 +48,7 @@
     "retry": "Retry",
     "selectAll": "Select all",
     "selected": "Selected",
-    "total": "Total",
-    "close": "Close",
-    "copy": "Copy",
-    "whatsapp": "WhatsApp",
-    "backToTop": "Back to top",
-    "viewAll": "View all",
-    "clearField": "Clear",
-    "local": "Local",
-    "server": "Server"
+    "total": "Total"
   },
   "admin": {
     "title": "Admin Panel",
@@ -315,86 +307,7 @@
     "tableRank": "Rank",
     "tableProduct": "Product",
     "tableMetric": "Value",
-    "summaryTables": "Structured summary",
-    "activityRangeDaily": "Daily",
-    "activityRangeMonthly": "Monthly",
-    "activityTitleDynamic": "{range} activity",
-    "miniOrders": "Orders",
-    "miniUsers": "New users",
-    "miniVisits": "Visits",
-    "insightsLink": "View details in Insights →",
-    "usersRoleAdmin": "Admin",
-    "usersRoleUser": "User",
-    "ordersTableId": "ID",
-    "ordersTableProduct": "Product",
-    "ordersTableDate": "Date",
-    "quickInsightsTitle": "Insights",
-    "quickInsightsHint": "Favorites, visits, and purchases analytics",
-    "orderDetailsPage": {
-      "status": "Status",
-      "accountInfo": "Account information",
-      "accountId": "Account ID",
-      "date": "Date",
-      "total": "Total",
-      "products": "Products",
-      "item": "Item",
-      "quantity": "Quantity",
-      "price": "Price",
-      "lineTotal": "Line total",
-      "payments": "Payments"
-    },
-    "productsPage": {
-      "subtitle": "Create, publish, and manage products",
-      "newProduct": "New product",
-      "searchPlaceholder": "Search by title or slug...",
-      "sortDefault": "Default",
-      "sortNewest": "Newest",
-      "sortOldest": "Oldest",
-      "sortPriceHigh": "Price: High",
-      "sortPriceLow": "Price: Low",
-      "searchButton": "Search",
-      "tableTitle": "Title",
-      "tableSlug": "Slug",
-      "tableCreated": "Created",
-      "published": "Published",
-      "draft": "Draft",
-      "edit": "Edit",
-      "unpublish": "Unpublish",
-      "publish": "Publish",
-      "loading": "Loading...",
-      "empty": "No products yet.",
-      "total": "Total",
-      "page": "Page",
-      "modalEdit": "Edit product",
-      "modalNew": "New product",
-      "modalHint": "Fill in the details, then save.",
-      "titlePlaceholder": "Example: Skincare Cream",
-      "slugPlaceholder": "example-product",
-      "descriptionPlaceholder": "Describe the product...",
-      "priceUsd": "Price (USD)",
-      "saveFailed": "Save failed",
-      "updateFailed": "Update failed",
-      "deleteConfirm": "Delete product \"{title}\"?",
-      "deleteFailed": "Delete failed",
-      "loadFailed": "Failed to load products",
-      "titleSlugRequired": "Title and slug are required."
-    },
-    "editProductPage": {
-      "title": "Edit product",
-      "loading": "Loading...",
-      "name": "Name",
-      "namePlaceholder": "Product name",
-      "price": "Price",
-      "description": "Description",
-      "descriptionPlaceholder": "Product description",
-      "images": "Images",
-      "note": "Final rendering depends on the backend serving static image files. If images do not appear and the client shows 404, the issue is on the server, not the frontend.",
-      "saving": "Saving...",
-      "save": "Save",
-      "loadFailed": "Failed to load product.",
-      "saved": "Saved successfully.",
-      "saveFailed": "Save failed."
-    }
+    "summaryTables": "Structured summary"
   },
   "nav": {
     "logout": "Logout",
@@ -451,7 +364,11 @@
     "filters": "Filters",
     "brand": "Brand",
     "price": "Price",
-    "sort": "Sort",
+    "sort": {
+      "priceDesc": "Price desc",
+      "priceAsc": "Price asc",
+      "new": "New"
+    },
     "newest": "Newest",
     "priceLow": "Price: Low to High",
     "priceHigh": "Price: High to Low",
@@ -475,8 +392,7 @@
     "resultsTitle": "All products",
     "resultsCount": "Products count: {count}",
     "toolbarAll": "Showing {count} products in a clean, easy-to-browse layout.",
-    "toolbarBrand": "Showing {count} products from {brand}.",
-    "chooseBrand": "Choose brand"
+    "toolbarBrand": "Showing {count} products from {brand}."
   },
   "brandsPage": {
     "title": "Brands",
@@ -503,8 +419,7 @@
     "buy": "Buy",
     "searchPlaceholder": "Search for a product...",
     "sortNewest": "Newest",
-    "youMayAlsoLike": "You may also like",
-    "featured": "Featured"
+    "youMayAlsoLike": "You may also like"
   },
   "termsPlaceholder": "Terms placeholder",
   "benefit": {
@@ -537,9 +452,7 @@
   "whatsapp": {
     "messagePrefix": "Message prefix",
     "title": "Title",
-    "cta": "Cta",
-    "floatingLabel": "WhatsApp",
-    "floatingInquiry": "Hello, I would like to ask about the products and services"
+    "cta": "Cta"
   },
   "accuracyWarning": "Accuracy warning",
   "terms": "Terms",
@@ -696,48 +609,5 @@
   "seasonal": {
     "eidAdhaTitle": "Eid al-Adha Mubarak",
     "eidAdhaSubtitle": "A light festive touch for your storefront"
-  },
-  "debug": {
-    "title": "API debug",
-    "mode": "debug",
-    "url": "URL",
-    "method": "Method",
-    "status": "Status",
-    "at": "At",
-    "message": "Message",
-    "noErrors": "No errors right now. If API connectivity fails on a specific device, the reason will appear here.",
-    "disable": "Disable",
-    "copyDetails": "Copy details",
-    "copied": "Copied",
-    "clear": "Clear"
-  },
-  "uploadImages": {
-    "chooseImages": "Choose images",
-    "uploadImages": "Upload images",
-    "deleteAll": "Delete all",
-    "previewHintLine1": "A preview appears immediately after selection.",
-    "previewHintLine2": "After upload, the links become server links and appear on the frontend.",
-    "delete": "Delete",
-    "copyLink": "Copy link",
-    "remove": "Remove",
-    "selectFirst": "Choose images first.",
-    "notImage": "File is not an image: {name}",
-    "serverDidNotReturn": "Upload succeeded, but the server did not return displayable image links. It should return urls, images, files, url, or path.",
-    "server": "Server",
-    "local": "Local"
-  },
-  "brandOrbit": {
-    "viewAll": "View all",
-    "back": "Back",
-    "hint": "Drag to rotate",
-    "sliderLabel": "Brands",
-    "logo": "Logo"
-  },
-  "productGallery": {
-    "prev": "Previous",
-    "next": "Next",
-    "close": "Close",
-    "product": "Product",
-    "thumb": "Thumbnail"
   }
 }

@@ -5,7 +5,7 @@
       <div class="p-6 sm:p-8 flex flex-col sm:flex-row gap-6 sm:items-center">
         <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-black/20 border border-[rgba(var(--border),1)] overflow-hidden flex items-center justify-center">
           <SmartImage v-if="brandLogo" :src="brandLogo" :alt="brand?.name" class="w-full h-full object-cover" />
-          <div v-else class="text-xs text-[rgba(var(--muted),0.85)]">{{ t('brandPage.logoFallback') }}</div>
+          <div v-else class="text-xs text-[rgba(var(--muted),0.85)]">Logo</div>
         </div>
 
         <div class="min-w-0">
@@ -28,7 +28,7 @@
               v-if="q"
               class="absolute right-2 top-1/2 -translate-y-1/2 icon-btn"
               @click="q = ''"
-              :aria-label="t('common.clearField')"
+              aria-label="clear"
             >
               ✕
             </button>

@@ -3,26 +3,30 @@
   <div>
     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
       <div>
-        <h1 class="text-2xl md:text-3xl font-extrabold">{{ t('admin.products.title') }}</h1>
-        <p class="admin-muted mt-1">{{ t('admin.productsPage.subtitle') }}</p>
+        <h1 class="text-2xl md:text-3xl font-extrabold">Products</h1>
+        <p class="admin-muted mt-1">Create, publish and manage products</p>
       </div>
 
       <div class="flex items-center gap-2">
-        <button class="btn-soft" type="button" @click="refresh" :disabled="loading">{{ t('common.refresh') }}</button>
-        <button class="btn-primary" type="button" @click="openCreate">+ {{ t('admin.productsPage.newProduct') }}</button>
+        <button class="btn-soft" type="button" @click="refresh" :disabled="loading">
+          Refresh
+        </button>
+        <button class="btn-primary" type="button" @click="openCreate">
+          + New Product
+        </button>
       </div>
     </div>
 
     <div class="mt-5 grid grid-cols-1 lg:grid-cols-[1fr_240px_140px] gap-3">
-      <input v-model="q" class="inpt" :placeholder="t('admin.productsPage.searchPlaceholder')" />
+      <input v-model="q" class="inpt" placeholder="Search by title or slug..." />
       <select v-model="sort" class="inpt">
-        <option value="">{{ t('admin.productsPage.sortDefault') }}</option>
-        <option value="newest">{{ t('admin.productsPage.sortNewest') }}</option>
-        <option value="oldest">{{ t('admin.productsPage.sortOldest') }}</option>
-        <option value="price_desc">{{ t('admin.productsPage.sortPriceHigh') }}</option>
-        <option value="price_asc">{{ t('admin.productsPage.sortPriceLow') }}</option>
+        <option value="">Default</option>
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+        <option value="price_desc">Price: High</option>
+        <option value="price_asc">Price: Low</option>
       </select>
-      <button class="btn-soft" @click="refresh">{{ t('admin.productsPage.searchButton') }}</button>
+      <button class="btn-soft" @click="refresh">Search</button>
     </div>
 
     <div class="mt-5 admin-divider" />
@@ -35,12 +39,12 @@
       <table class="tbl min-w-[880px] w-full">
         <thead>
           <tr>
-            <th>{{ t('admin.productsPage.tableTitle') }}</th>
-            <th>{{ t('admin.productsPage.tableSlug') }}</th>
-            <th class="text-right">{{ t('admin.products.price') }}</th>
-            <th>{{ t('admin.status') }}</th>
-            <th class="text-right">{{ t('admin.productsPage.tableCreated') }}</th>
-            <th class="text-right">{{ t('common.actions') }}</th>
+            <th>Title</th>
+            <th>Slug</th>
+            <th class="text-right">Price</th>
+            <th>Status</th>
+            <th class="text-right">Created</th>
+            <th class="text-right">Actions</th>
           </tr>
         </thead>
 
@@ -51,94 +55,94 @@
             <td class="text-right font-semibold">${{ fmtMoney(p.priceUsd) }}</td>
             <td>
               <span :class="p.isPublished ? 'badge-success' : 'badge-muted'">
-                {{ p.isPublished ? t('admin.productsPage.published') : t('admin.productsPage.draft') }}
+                {{ p.isPublished ? 'Published' : 'Draft' }}
               </span>
             </td>
             <td class="text-right admin-muted">{{ fmtDate(p.createdAt) }}</td>
             <td class="text-right">
               <div class="flex items-center justify-end gap-2">
-                <button class="btn-mini" @click="openEdit(p)">{{ t('admin.productsPage.edit') }}</button>
+                <button class="btn-mini" @click="openEdit(p)">Edit</button>
                 <button class="btn-mini" @click="togglePublish(p)">
-                  {{ p.isPublished ? t('admin.productsPage.unpublish') : t('admin.productsPage.publish') }}
+                  {{ p.isPublished ? 'Unpublish' : 'Publish' }}
                 </button>
-                <button class="btn-mini-danger" @click="remove(p)">{{ t('common.delete') }}</button>
+                <button class="btn-mini-danger" @click="remove(p)">Delete</button>
               </div>
             </td>
           </tr>
         </tbody>
 
         <tbody v-else-if="loading">
-          <tr><td colspan="6" class="py-10 text-center admin-muted">{{ t('admin.productsPage.loading') }}</td></tr>
+          <tr><td colspan="6" class="py-10 text-center admin-muted">Loading...</td></tr>
         </tbody>
         <tbody v-else>
-          <tr><td colspan="6" class="py-10 text-center admin-muted">{{ t('admin.productsPage.empty') }}</td></tr>
+          <tr><td colspan="6" class="py-10 text-center admin-muted">No products yet.</td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="mt-5 flex items-center justify-between">
-      <div class="admin-muted text-sm">{{ t('admin.productsPage.total') }}: {{ totalCount }}</div>
+      <div class="admin-muted text-sm">Total: {{ totalCount }}</div>
       <div class="flex items-center gap-2">
-        <button class="btn-soft" :disabled="page <= 1 || loading" @click="page--, refresh()">{{ t('common.prev') }}</button>
-        <div class="admin-pill text-sm">{{ t('admin.productsPage.page') }} {{ page }}</div>
-        <button class="btn-soft" :disabled="items.length < pageSize || loading" @click="page++, refresh()">{{ t('common.next') }}</button>
+        <button class="btn-soft" :disabled="page <= 1 || loading" @click="page--, refresh()">← Prev</button>
+        <div class="admin-pill text-sm">Page {{ page }}</div>
+        <button class="btn-soft" :disabled="items.length < pageSize || loading" @click="page++, refresh()">Next →</button>
       </div>
     </div>
 
+    <!-- Modal -->
     <div v-if="modalOpen" class="modal">
       <div class="modal-card">
         <div class="flex items-start justify-between gap-3">
           <div>
-            <div class="text-xl font-extrabold">{{ editing ? t('admin.productsPage.modalEdit') : t('admin.productsPage.modalNew') }}</div>
-            <div class="admin-muted text-sm mt-1">{{ t('admin.productsPage.modalHint') }}</div>
+            <div class="text-xl font-extrabold">{{ editing ? 'Edit Product' : 'New Product' }}</div>
+            <div class="admin-muted text-sm mt-1">Fill the details then save.</div>
           </div>
           <button class="icon-btn" @click="closeModal">✕</button>
         </div>
 
         <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label class="lbl">{{ t('admin.productsPage.tableTitle') }}</label>
-            <input v-model="form.title" class="inpt" :placeholder="t('admin.productsPage.titlePlaceholder')" />
+            <label class="lbl">Title</label>
+            <input v-model="form.title" class="inpt" placeholder="Website Development" />
           </div>
           <div>
-            <label class="lbl">{{ t('admin.productsPage.tableSlug') }}</label>
-            <input v-model="form.slug" class="inpt" :placeholder="t('admin.productsPage.slugPlaceholder')" />
+            <label class="lbl">Slug</label>
+            <input v-model="form.slug" class="inpt" placeholder="website-development" />
           </div>
 
           <div class="md:col-span-2">
-            <label class="lbl">{{ t('admin.description') }}</label>
-            <textarea v-model="form.description" class="inpt" rows="4" :placeholder="t('admin.productsPage.descriptionPlaceholder')" />
+            <label class="lbl">Description</label>
+            <textarea v-model="form.description" class="inpt" rows="4" placeholder="Describe the product..." />
           </div>
 
           <div>
-            <label class="lbl">{{ t('admin.productsPage.priceUsd') }}</label>
+            <label class="lbl">Price (USD)</label>
             <input v-model.number="form.priceUsd" type="number" class="inpt" min="0" step="1" />
           </div>
 
           <div class="flex items-center gap-3 pt-7">
             <input id="pub" type="checkbox" v-model="form.isPublished" class="h-4 w-4" />
-            <label for="pub" class="text-sm font-semibold">{{ t('admin.productsPage.published') }}</label>
+            <label for="pub" class="text-sm font-semibold">Published</label>
           </div>
         </div>
 
         <div v-if="modalError" class="mt-4 alert-danger">{{ modalError }}</div>
 
         <div class="mt-6 flex items-center justify-end gap-2">
-          <button class="btn-soft" @click="closeModal">{{ t('cancel') }}</button>
+          <button class="btn-soft" @click="closeModal">Cancel</button>
           <button class="btn-primary" :disabled="saving" @click="save">
-            {{ saving ? t('common.saving') : t('common.save') }}
+            {{ saving ? 'Saving...' : 'Save' }}
           </button>
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { useApi } from '~/composables/useApi'
-
-const { t } = useI18n()
 
 definePageMeta({
   layout: 'admin',
@@ -195,10 +199,11 @@ async function fetchList() {
     const res: any = await api.get('/admin/products', {
       query: { Page: page.value, PageSize: pageSize.value, Q: q.value || undefined, Sort: sort.value || undefined },
     })
+    // دعم أكثر من شكل للباك
     items.value = res?.items || res || []
     totalCount.value = res?.totalCount ?? items.value.length
   } catch (e: any) {
-    error.value = e?.data?.message || e?.message || t('admin.productsPage.loadFailed')
+    error.value = e?.data?.message || e?.message || 'Failed to load products'
   } finally {
     loading.value = false
   }
@@ -238,7 +243,7 @@ function closeModal() {
 async function save() {
   modalError.value = ''
   if (!form.title.trim() || !form.slug.trim()) {
-    modalError.value = t('admin.productsPage.titleSlugRequired')
+    modalError.value = 'Title and Slug are required.'
     return
   }
 
@@ -252,7 +257,7 @@ async function save() {
     modalOpen.value = false
     await fetchList()
   } catch (e: any) {
-    modalError.value = e?.data?.message || e?.message || t('admin.productsPage.saveFailed')
+    modalError.value = e?.data?.message || e?.message || 'Save failed'
   } finally {
     saving.value = false
   }
@@ -269,17 +274,17 @@ async function togglePublish(p: Product) {
     })
     await fetchList()
   } catch (e: any) {
-    error.value = e?.data?.message || e?.message || t('admin.productsPage.updateFailed')
+    error.value = e?.data?.message || e?.message || 'Update failed'
   }
 }
 
 async function remove(p: Product) {
-  if (!confirm(t('admin.productsPage.deleteConfirm', { title: p.title }))) return
+  if (!confirm(`Delete "${p.title}"?`)) return
   try {
     await api.del(`/api/admin/products/${p.id}`)
     await fetchList()
   } catch (e: any) {
-    error.value = e?.data?.message || e?.message || t('admin.productsPage.deleteFailed')
+    error.value = e?.data?.message || e?.message || 'Delete failed'
   }
 }
 

@@ -10,21 +10,21 @@
           class="hidden"
           @change="onPick"
         />
-        {{ t('uploadImages.chooseImages') }}
+        اختيار صور
       </label>
 
       <button class="btn ghost" :disabled="isUploading || !files.length" @click="uploadNow">
-        {{ isUploading ? t('common.uploading') : t('uploadImages.uploadImages') }}
+        {{ isUploading ? 'جاري الرفع...' : 'رفع الصور' }}
       </button>
 
       <button class="btn danger" :disabled="isUploading || (!files.length && !modelValue.length)" @click="clearAll">
-        {{ t('uploadImages.deleteAll') }}
+        حذف الكل
       </button>
     </div>
 
     <p class="hint">
-      - {{ t('uploadImages.previewHintLine1') }} <br />
-      - {{ t('uploadImages.previewHintLine2') }}
+      - تظهر معاينة مباشرة بعد الاختيار. <br />
+      - بعد الرفع، تتحول الروابط إلى روابط من السيرفر وتظهر بالفرونت.
     </p>
 
     <div v-if="errors.length" class="errors">
@@ -36,11 +36,11 @@
       <div v-for="(img, idx) in modelValue" :key="'server-'+idx" class="card">
         <img :src="assetUrl(img)" class="img" />
         <div class="actions">
-          <button class="mini danger" :disabled="isUploading" @click="removeServer(idx)">{{ t('uploadImages.delete') }}</button>
-          <button class="mini" @click="copy(img)">{{ t('uploadImages.copyLink') }}</button>
+          <button class="mini danger" :disabled="isUploading" @click="removeServer(idx)">حذف</button>
+          <button class="mini" @click="copy(img)">نسخ الرابط</button>
         </div>
         <div class="meta">
-          <span class="tag">{{ t('uploadImages.server') }}</span>
+          <span class="tag">Server</span>
           <span class="path">{{ img }}</span>
         </div>
       </div>
@@ -49,10 +49,10 @@
       <div v-for="(f, idx) in files" :key="'local-'+idx" class="card">
         <img :src="f.preview" class="img" />
         <div class="actions">
-          <button class="mini danger" :disabled="isUploading" @click="removeLocal(idx)">{{ t('uploadImages.remove') }}</button>
+          <button class="mini danger" :disabled="isUploading" @click="removeLocal(idx)">إزالة</button>
         </div>
         <div class="meta">
-          <span class="tag">{{ t('uploadImages.local') }}</span>
+          <span class="tag">Local</span>
           <span class="path">{{ f.file.name }}</span>
         </div>
       </div>
@@ -77,7 +77,6 @@ const emit = defineEmits<{
   (e: 'update:modelValue', v: string[]): void;
 }>();
 
-const { t } = useI18n();
 const { upload, buildAssetUrl } = useApi();
 
 const errors = ref<string[]>([]);
@@ -133,7 +132,7 @@ const onPick = (e: Event) => {
 
   for (const f of Array.from(input.files)) {
     if (!f.type.startsWith('image/')) {
-      errors.value.push(t('uploadImages.notImage', { name: f.name }));
+      errors.value.push(`الملف ليس صورة: ${f.name}`);
       continue;
     }
     const preview = URL.createObjectURL(f);
@@ -179,7 +178,7 @@ const uploadNow = async () => {
   errors.value = [];
 
   if (!files.value.length) {
-    errors.value.push(t('uploadImages.selectFirst'));
+    errors.value.push('اختر صور أولاً.');
     return;
   }
 
@@ -206,7 +205,7 @@ const uploadNow = async () => {
     const urls = normalizeResponseToUrls(res);
 
     if (!urls.length) {
-      errors.value.push(t('uploadImages.serverDidNotReturn'));
+      errors.value.push('الرفع تم لكن السيرفر لم يرجّع روابط صور قابلة للعرض. لازم يرجّع urls/images/files/url/path.');
       return;
     }
 

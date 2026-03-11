@@ -11,7 +11,7 @@
           class="md:hidden inline-flex h-10 w-10 shrink-0 items-center justify-center
                  rounded-2xl border border-app bg-surface active:scale-[0.98] transition"
           @click="toggle()"
-          :aria-label="t('admin.menu')"
+          aria-label="Menu"
         >
           <Icon name="mdi:menu" class="text-xl" />
         </button>
@@ -52,7 +52,7 @@
             to="/"
             class="sm:hidden inline-flex h-10 w-10 items-center justify-center
                    rounded-2xl border border-app bg-surface"
-            :aria-label="t('admin.viewSite')"
+            aria-label="View site"
           >
             <Icon name="mdi:open-in-new" class="text-xl" />
           </NuxtLink>
@@ -86,7 +86,7 @@
             <button
               class="h-9 w-9 rounded-2xl border border-app bg-surface grid place-items-center"
               @click="close()"
-              :aria-label="t('common.close')"
+              aria-label="Close"
             >
               <Icon name="mdi:close" class="text-xl" />
             </button>

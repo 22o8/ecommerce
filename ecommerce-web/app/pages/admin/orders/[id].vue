@@ -15,36 +15,36 @@
     <div v-else class="admin-box space-y-4">
       <div class="grid gap-3 md:grid-cols-4">
         <div class="sub-box">
-          <div class="label rtl-text">{{ t('admin.orderDetailsPage.status') }}</div>
+          <div class="label rtl-text">الحالة</div>
           <div class="font-extrabold">{{ order.status || '—' }}</div>
         </div>
         <div class="sub-box">
-          <div class="label rtl-text">{{ t('admin.orderDetailsPage.accountInfo') }}</div>
+          <div class="label rtl-text">معلومات الحساب</div>
           <div class="font-extrabold">{{ accountDisplay.fullName }}</div>
           <div class="text-sm text-muted keep-ltr">{{ accountDisplay.email }}</div>
           <div class="text-sm text-muted keep-ltr">{{ accountDisplay.phone }}</div>
-          <div class="mt-2 text-xs admin-muted rtl-text">{{ t('admin.orderDetailsPage.accountId') }}</div>
+          <div class="mt-2 text-xs admin-muted rtl-text">معرّف الحساب</div>
           <div class="text-sm keep-ltr">{{ accountDisplay.id }}</div>
         </div>
         <div class="sub-box">
-          <div class="label rtl-text">{{ t('admin.orderDetailsPage.date') }}</div>
+          <div class="label rtl-text">التاريخ</div>
           <div class="font-extrabold keep-ltr">{{ formatDate(order.createdAt) }}</div>
         </div>
         <div class="sub-box">
-          <div class="label rtl-text">{{ t('admin.orderDetailsPage.total') }}</div>
+          <div class="label rtl-text">الإجمالي</div>
           <div class="font-extrabold keep-ltr">{{ formatIqd(order.totalIqd) }}</div>
         </div>
       </div>
 
       <div class="sub-box overflow-hidden">
-        <div class="label rtl-text mb-2">{{ t('admin.orderDetailsPage.products') }}</div>
+        <div class="label rtl-text mb-2">المنتجات</div>
 
         <div class="grid gap-2">
           <div class="grid grid-cols-[1fr_80px_120px_120px] gap-2 text-xs admin-muted">
-            <div class="rtl-text">{{ t('admin.orderDetailsPage.item') }}</div>
-            <div class="text-center rtl-text">{{ t('admin.orderDetailsPage.quantity') }}</div>
-            <div class="text-right rtl-text">{{ t('admin.orderDetailsPage.price') }}</div>
-            <div class="text-right rtl-text">{{ t('admin.orderDetailsPage.lineTotal') }}</div>
+            <div class="rtl-text">العنصر</div>
+            <div class="text-center rtl-text">الكمية</div>
+            <div class="text-right rtl-text">السعر</div>
+            <div class="text-right rtl-text">المجموع</div>
           </div>
 
           <div v-for="(it, idx) in order.items || []" :key="idx" class="grid grid-cols-[1fr_80px_120px_120px] gap-2 items-center py-2 border-t border-app">
@@ -62,7 +62,7 @@
       </div>
 
       <div v-if="(order.payments || []).length" class="sub-box">
-        <div class="label rtl-text">{{ t('admin.orderDetailsPage.payments') }}</div>
+        <div class="label rtl-text">المدفوعات</div>
         <div class="grid gap-2 mt-2">
           <div v-for="p in order.payments" :key="p.id" class="flex items-center justify-between gap-3">
             <div class="min-w-0">

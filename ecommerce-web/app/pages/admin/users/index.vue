@@ -16,8 +16,8 @@
 
         <select v-model="role" class="admin-input w-[170px]">
           <option value="">{{ t('admin.users.allRoles') }}</option>
-          <option value="Admin">{{ t('admin.usersRoleAdmin') }}</option>
-          <option value="User">{{ t('admin.usersRoleUser') }}</option>
+          <option value="Admin">Admin</option>
+          <option value="User">User</option>
         </select>
 
         <UiButton variant="secondary" @click="load(1)">
@@ -143,8 +143,8 @@
               <div>
                 <div class="text-xs admin-muted rtl-text">{{ t('admin.users.role') }}</div>
                 <select v-model="form.role" class="admin-input">
-                  <option value="Admin">{{ t('admin.usersRoleAdmin') }}</option>
-                  <option value="User">{{ t('admin.usersRoleUser') }}</option>
+                  <option value="Admin">Admin</option>
+                  <option value="User">User</option>
                 </select>
               </div>
               <div>
@@ -197,8 +197,8 @@
               <div>
                 <div class="text-xs admin-muted rtl-text">{{ t('admin.users.role') }}</div>
                 <select v-model="createForm.role" class="admin-input">
-                  <option value="Admin">{{ t('admin.usersRoleAdmin') }}</option>
-                  <option value="User">{{ t('admin.usersRoleUser') }}</option>
+                  <option value="Admin">Admin</option>
+                  <option value="User">User</option>
                 </select>
               </div>
               <div>

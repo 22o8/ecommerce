@@ -7,7 +7,7 @@
           <div class="flex items-center justify-between gap-3 border-b border-app px-4 py-3">
             <div class="font-extrabold rtl-text truncate">{{ displayName }}</div>
 
-            <button class="btn-soft" type="button" @click="close" :aria-label="t('common.close')">
+            <button class="btn-soft" type="button" @click="close" aria-label="Close">
               <Icon name="mdi:close" class="text-xl" />
             </button>
           </div>
@@ -19,7 +19,7 @@
             <div class="grid gap-4">
               <div class="flex items-center justify-between gap-3">
 	                <div class="text-xl md:text-2xl font-black keep-ltr">{{ priceText }}</div>
-                <UiBadge v-if="p?.isFeatured" class="keep-ltr">{{ t('products.featured') }}</UiBadge>
+                <UiBadge v-if="p?.isFeatured" class="keep-ltr">Featured</UiBadge>
               </div>
 
               <div class="text-sm text-muted rtl-text" v-if="p?.description">{{ p.description }}</div>
