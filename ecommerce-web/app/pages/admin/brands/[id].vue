@@ -19,7 +19,7 @@
 
           <div class="mt-4 w-full aspect-square rounded-2xl overflow-hidden border border-[rgba(var(--border),0.9)] bg-[rgba(var(--surface-2),0.65)] flex items-center justify-center">
             <SmartImage v-if="logoPreview" :src="logoPreview" :alt="name" class="w-full h-full object-cover" />
-            <div v-else class="text-xs admin-muted">LOGO</div>
+            <div v-else class="text-xs admin-muted">{{ t('brandPage.logoFallback') }}</div>
           </div>
 
           <input class="mt-4 block w-full text-sm" type="file" accept="image/*" @change="onPick" />

@@ -1,27 +1,27 @@
 <!-- pages/admin/products/edit.vue -->
 <template>
   <div class="wrap">
-    <h1 class="title">تعديل منتج</h1>
+    <h1 class="title">{{ t('admin.editProductPage.title') }}</h1>
 
-    <div v-if="loading" class="box">جاري التحميل...</div>
+    <div v-if="loading" class="box">{{ t('admin.editProductPage.loading') }}</div>
     <div v-else class="box">
       <div class="row">
-        <label class="lbl">الاسم</label>
-        <input v-model="product.name" class="inp" placeholder="اسم المنتج" />
+        <label class="lbl">{{ t('admin.editProductPage.name') }}</label>
+        <input v-model="product.name" class="inp" :placeholder="t('admin.editProductPage.namePlaceholder')" />
       </div>
 
       <div class="row">
-        <label class="lbl">السعر</label>
+        <label class="lbl">{{ t('admin.editProductPage.price') }}</label>
         <input v-model.number="product.price" class="inp" type="number" placeholder="0" />
       </div>
 
       <div class="row">
-        <label class="lbl">الوصف</label>
-        <textarea v-model="product.description" class="inp" rows="4" placeholder="وصف المنتج"></textarea>
+        <label class="lbl">{{ t('admin.editProductPage.description') }}</label>
+        <textarea v-model="product.description" class="inp" rows="4" :placeholder="t('admin.editProductPage.descriptionPlaceholder')"></textarea>
       </div>
 
       <div class="row">
-        <label class="lbl">الصور</label>
+        <label class="lbl">{{ t('admin.editProductPage.images') }}</label>
 
         <UploadImages
           v-model="product.images"
@@ -29,14 +29,13 @@
         />
 
         <p class="note">
-          العرض النهائي يعتمد على أن الباك يوفّر static للصور.
-          إذا الصور ما تظهر وبالكلاينت تطلع 404، المشكلة من السيرفر مو من الفرونت.
+          {{ t('admin.editProductPage.note') }}
         </p>
       </div>
 
       <div class="actions">
         <button class="btn" :disabled="saving" @click="save">
-          {{ saving ? 'جاري الحفظ...' : 'حفظ' }}
+          {{ saving ? t('admin.editProductPage.saving') : t('admin.editProductPage.save') }}
         </button>
       </div>
 
@@ -46,24 +45,25 @@
 </template>
 
 <script setup lang="ts">
-import UploadImages from '~/components/UploadImages.vue';
+import UploadImages from '~/components/UploadImages.vue'
+const { t } = useI18n()
 
 type ProductDto = {
-  id: number;
-  name: string;
-  price: number;
-  description: string;
-  images: string[]; // مهم
-};
+  id: number
+  name: string
+  price: number
+  description: string
+  images: string[]
+}
 
-const route = useRoute();
-const id = Number(route.query.id || route.params.id || 0);
+const route = useRoute()
+const id = Number(route.query.id || route.params.id || 0)
 
-const { get, put } = useApi();
+const { get, put } = useApi()
 
-const loading = ref(true);
-const saving = ref(false);
-const msg = ref('');
+const loading = ref(true)
+const saving = ref(false)
+const msg = ref('')
 
 const product = reactive<ProductDto>({
   id: id || 0,
@@ -71,47 +71,45 @@ const product = reactive<ProductDto>({
   price: 0,
   description: '',
   images: [],
-});
+})
 
 const load = async () => {
-  loading.value = true;
-  msg.value = '';
+  loading.value = true
+  msg.value = ''
   try {
-    // ✅ عدّل المسار حسب API عندك
-    const data = await get<ProductDto>(`/Products/${product.id}`);
-    product.id = data.id;
-    product.name = data.name || '';
-    product.price = Number(data.price || 0);
-    product.description = data.description || '';
-    product.images = Array.isArray((data as any).images) ? (data as any).images : [];
+    const data = await get<ProductDto>(`/Products/${product.id}`)
+    product.id = data.id
+    product.name = data.name || ''
+    product.price = Number(data.price || 0)
+    product.description = data.description || ''
+    product.images = Array.isArray((data as any).images) ? (data as any).images : []
   } catch (e: any) {
-    msg.value = e?.message || 'فشل تحميل المنتج.';
+    msg.value = e?.message || t('admin.editProductPage.loadFailed')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const save = async () => {
-  saving.value = true;
-  msg.value = '';
+  saving.value = true
+  msg.value = ''
   try {
-    // ✅ لازم الباك يقبل images كـ array (مسارات أو روابط)
     await put(`/Products/${product.id}`, {
       id: product.id,
       name: product.name,
       price: product.price,
       description: product.description,
       images: product.images,
-    });
-    msg.value = 'تم الحفظ بنجاح.';
+    })
+    msg.value = t('admin.editProductPage.saved')
   } catch (e: any) {
-    msg.value = e?.message || 'فشل الحفظ.';
+    msg.value = e?.message || t('admin.editProductPage.saveFailed')
   } finally {
-    saving.value = false;
+    saving.value = false
   }
-};
+}
 
-onMounted(load);
+onMounted(load)
 </script>
 
 <style scoped>

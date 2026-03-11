@@ -10,6 +10,7 @@ const enabled = computed(() => ui.apiDebug)
 const err = computed(() => ui.lastApiError)
 
 const copied = ref(false)
+const { t } = useI18n()
 
 function toggle() {
   ui.setApiDebugEnabled(!ui.apiDebug)
@@ -39,28 +40,28 @@ onMounted(() => {
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
           <div class="flex items-center gap-2">
-            <span class="text-sm font-semibold">تشخيص الربط</span>
-            <span class="text-xs opacity-70">(debug)</span>
+            <span class="text-sm font-semibold">{{ t('debug.title') }}</span>
+            <span class="text-xs opacity-70">({{ t('debug.mode') }})</span>
           </div>
 
           <div v-if="err" class="mt-1 text-xs leading-5 opacity-90 break-words">
             <div>
-              <span class="opacity-70">URL:</span>
+              <span class="opacity-70">{{ t('debug.url') }}:</span>
               <span class="font-mono"> {{ err.url }} </span>
             </div>
             <div class="flex flex-wrap gap-x-3">
-              <div><span class="opacity-70">Method:</span> <span class="font-mono">{{ err.method }}</span></div>
-              <div v-if="err.status != null"><span class="opacity-70">Status:</span> <span class="font-mono">{{ err.status }}</span></div>
-              <div><span class="opacity-70">At:</span> <span class="font-mono">{{ err.at }}</span></div>
+              <div><span class="opacity-70">{{ t('debug.method') }}:</span> <span class="font-mono">{{ err.method }}</span></div>
+              <div v-if="err.status != null"><span class="opacity-70">{{ t('debug.status') }}:</span> <span class="font-mono">{{ err.status }}</span></div>
+              <div><span class="opacity-70">{{ t('debug.at') }}:</span> <span class="font-mono">{{ err.at }}</span></div>
             </div>
             <div class="mt-1">
-              <span class="opacity-70">Message:</span>
+              <span class="opacity-70">{{ t('debug.message') }}:</span>
               <span class="font-mono"> {{ err.message }} </span>
             </div>
           </div>
 
           <div v-else class="mt-1 text-xs opacity-70">
-            لا توجد أخطاء حالياً. إذا فشل الربط على جهاز معيّن راح يظهر هنا السبب.
+            {{ t('debug.noErrors') }}
           </div>
         </div>
 
@@ -70,7 +71,7 @@ onMounted(() => {
             class="rounded-xl px-3 py-1.5 text-xs border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/10"
             @click="toggle"
           >
-            إيقاف
+            {{ t('debug.disable') }}
           </button>
 
           <button
@@ -79,7 +80,7 @@ onMounted(() => {
             class="rounded-xl px-3 py-1.5 text-xs border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/10"
             @click="copyDetails"
           >
-            {{ copied ? 'تم النسخ' : 'نسخ التفاصيل' }}
+            {{ copied ? t('debug.copied') : t('debug.copyDetails') }}
           </button>
 
           <button
@@ -88,7 +89,7 @@ onMounted(() => {
             class="rounded-xl px-3 py-1.5 text-xs border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/10"
             @click="ui.clearLastApiError()"
           >
-            مسح
+            {{ t('debug.clear') }}
           </button>
         </div>
       </div>

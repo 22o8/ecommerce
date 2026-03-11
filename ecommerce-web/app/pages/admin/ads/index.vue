@@ -181,7 +181,7 @@ onMounted(load)
                 <input type="file" accept="image/*" class="text-xs" @change="onPickFile" />
                 <span v-if="uploading" class="text-xs text-white/60">{{ t('common.uploading') || 'جاري الرفع...' }}</span>
               </div>
-              <UiInput v-model="form.imageUrl" placeholder="https://..." dir="ltr" />
+              <UiInput v-model="form.imageUrl" :placeholder="t('admin.adLinkPlaceholder')" dir="ltr" />
               <img v-if="form.imageUrl" :src="api.buildAssetUrl(String(form.imageUrl))" class="mt-1 h-24 w-full object-cover rounded-2xl border border-white/10" />
             </div>
 

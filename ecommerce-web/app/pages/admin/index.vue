@@ -11,12 +11,8 @@
 
         <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
           <div class="flex gap-2">
-            <button class="admin-chip" :class="range==='daily' ? 'is-active' : ''" type="button" @click="range='daily'">
-              يومي
-            </button>
-            <button class="admin-chip" :class="range==='monthly' ? 'is-active' : ''" type="button" @click="range='monthly'">
-              شهري
-            </button>
+            <button class="admin-chip" :class="range==='daily' ? 'is-active' : ''" type="button" @click="range='daily'">{{ t('admin.activityRangeDaily') }}</button>
+            <button class="admin-chip" :class="range==='monthly' ? 'is-active' : ''" type="button" @click="range='monthly'">{{ t('admin.activityRangeMonthly') }}</button>
           </div>
 
           <button class="admin-ghost" type="button" @click="loadAll" :disabled="loading">
@@ -62,7 +58,7 @@
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
       <div class="admin-box xl:col-span-2">
         <div class="flex items-center justify-between gap-3 mb-4">
-          <div class="font-extrabold rtl-text">النشاط {{ range==='daily' ? 'اليومي' : 'الشهري' }}</div>
+          <div class="font-extrabold rtl-text">{{ t('admin.activityTitleDynamic', { range: range==='daily' ? t('admin.activityRangeDaily') : t('admin.activityRangeMonthly') }) }}</div>
           <div class="admin-muted text-sm rtl-text">
             {{ range==='daily' ? $t('admin.last30Days') : $t('admin.last12Months') }}
           </div>
@@ -78,15 +74,15 @@
 
         <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
           <div class="mini-stat">
-            <div class="admin-muted text-xs rtl-text">طلبات</div>
+            <div class="admin-muted text-xs rtl-text">{{ t('admin.miniOrders') }}</div>
             <div class="font-black keep-ltr">{{ activityTotals.orders }}</div>
           </div>
           <div class="mini-stat">
-            <div class="admin-muted text-xs rtl-text">مستخدمين جدد</div>
+            <div class="admin-muted text-xs rtl-text">{{ t('admin.miniUsers') }}</div>
             <div class="font-black keep-ltr">{{ activityTotals.users }}</div>
           </div>
           <div class="mini-stat">
-            <div class="admin-muted text-xs rtl-text">زيارات</div>
+            <div class="admin-muted text-xs rtl-text">{{ t('admin.miniVisits') }}</div>
             <div class="font-black keep-ltr">{{ activityTotals.visits }}</div>
           </div>
         </div>
@@ -148,7 +144,7 @@
           </div>
 
           <NuxtLink class="admin-link rtl-text" to="/admin/insights">
-            عرض التفاصيل في صفحة Insights →
+            {{ t('admin.insightsLink') }}
           </NuxtLink>
         </div>
       </div>
@@ -199,8 +195,8 @@
           </NuxtLink>
 
           <NuxtLink class="admin-action" to="/admin/insights">
-            <div class="font-extrabold rtl-text">Insights</div>
-            <div class="admin-muted text-sm rtl-text">تحليلات المفضلة/الزيارة/الشراء</div>
+            <div class="font-extrabold rtl-text">{{ t('admin.quickInsightsTitle') }}</div>
+            <div class="admin-muted text-sm rtl-text">{{ t('admin.quickInsightsHint') }}</div>
           </NuxtLink>
         </div>
       </div>

@@ -32,12 +32,12 @@
               :checked="allSelected"
               @change="toggleAll"
             />
-            <span class="hidden md:inline">ID</span>
+            <span class="hidden md:inline">{{ t('admin.ordersTableId') }}</span>
           </div>
           <div class="rtl-text">{{ t('admin.status') }}</div>
-          <div class="rtl-text">المنتج</div>
+          <div class="rtl-text">{{ t('admin.ordersTableProduct') }}</div>
           <div class="rtl-text hidden md:block">{{ t('admin.user') }}</div>
-          <div class="rtl-text">التاريخ</div>
+          <div class="rtl-text">{{ t('admin.ordersTableDate') }}</div>
           <div class="text-right rtl-text">{{ t('common.actions') }}</div>
         </div>
 

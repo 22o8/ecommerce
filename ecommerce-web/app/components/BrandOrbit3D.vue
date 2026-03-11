@@ -17,7 +17,7 @@ const props = defineProps<{
 }>()
 
 const api = useApi()
-const { locale } = useI18n()
+const { t } = useI18n()
 
 const clean = computed(() => (props.brands ?? []).filter((b): b is Brand => !!b && !!b.slug && !!b.id))
 
@@ -60,14 +60,11 @@ let dragStartX = 0
 let dragStartRY = 0
 let activePointerId: number | null = null
 
-const labels = computed(() => {
-  const isAr = String(locale.value || '').startsWith('ar')
-  return {
-    viewAll: isAr ? 'عرض الكل' : 'View all',
-    back: isAr ? 'رجوع' : 'Back',
-    hint: isAr ? 'اسحب للتحكم' : 'Drag to rotate',
-  }
-})
+const labels = computed(() => ({
+  viewAll: t('brandOrbit.viewAll'),
+  back: t('brandOrbit.back'),
+  hint: t('brandOrbit.hint'),
+}))
 
 function toggleMode() {
   mode.value = mode.value === 'orbit' ? 'slider' : 'orbit'
@@ -161,7 +158,7 @@ onBeforeUnmount(() => {
                 loading="lazy"
                 class="orbit-img"
               />
-              <div v-else class="orbit-fallback">Logo</div>
+              <div v-else class="orbit-fallback">{{ t('brandOrbit.logo') }}</div>
             </div>
           </NuxtLink>
         </div>
@@ -169,7 +166,7 @@ onBeforeUnmount(() => {
 
       <!-- SLIDER MODE -->
       <div v-else class="brand-slider">
-        <div class="brand-slider-track" aria-label="Brands">
+        <div class="brand-slider-track" :aria-label="t('brandOrbit.sliderLabel')">
           <NuxtLink
             v-for="b in clean"
             :key="b.id"
@@ -186,7 +183,7 @@ onBeforeUnmount(() => {
                 loading="lazy"
                 class="orbit-img"
               />
-              <div v-else class="orbit-fallback">Logo</div>
+              <div v-else class="orbit-fallback">{{ t('brandOrbit.logo') }}</div>
             </div>
             <div class="brand-name">{{ b.name }}</div>
           </NuxtLink>

@@ -48,7 +48,15 @@
     "retry": "إعادة المحاولة",
     "selectAll": "تحديد الكل",
     "selected": "المحدد",
-    "total": "الإجمالي"
+    "total": "الإجمالي",
+    "close": "إغلاق",
+    "copy": "نسخ",
+    "whatsapp": "واتساب",
+    "backToTop": "للأعلى",
+    "viewAll": "عرض الكل",
+    "clearField": "مسح",
+    "local": "محلي",
+    "server": "السيرفر"
   },
   "admin": {
     "title": "لوحة الإدارة",
@@ -334,7 +342,86 @@
     "tableRank": "الترتيب",
     "tableProduct": "المنتج",
     "tableMetric": "القيمة",
-    "summaryTables": "ملخص مرتب"
+    "summaryTables": "ملخص مرتب",
+    "activityRangeDaily": "يومي",
+    "activityRangeMonthly": "شهري",
+    "activityTitleDynamic": "النشاط {range}",
+    "miniOrders": "طلبات",
+    "miniUsers": "مستخدمون جدد",
+    "miniVisits": "زيارات",
+    "insightsLink": "عرض التفاصيل في صفحة التحليلات →",
+    "usersRoleAdmin": "مدير",
+    "usersRoleUser": "مستخدم",
+    "ordersTableId": "المعرّف",
+    "ordersTableProduct": "المنتج",
+    "ordersTableDate": "التاريخ",
+    "quickInsightsTitle": "التحليلات",
+    "quickInsightsHint": "تحليلات المفضلة والزيارات والشراء",
+    "orderDetailsPage": {
+      "status": "الحالة",
+      "accountInfo": "معلومات الحساب",
+      "accountId": "معرّف الحساب",
+      "date": "التاريخ",
+      "total": "الإجمالي",
+      "products": "المنتجات",
+      "item": "العنصر",
+      "quantity": "الكمية",
+      "price": "السعر",
+      "lineTotal": "المجموع",
+      "payments": "المدفوعات"
+    },
+    "productsPage": {
+      "subtitle": "إنشاء ونشر وإدارة المنتجات",
+      "newProduct": "منتج جديد",
+      "searchPlaceholder": "ابحث بالعنوان أو الـ slug...",
+      "sortDefault": "الافتراضي",
+      "sortNewest": "الأحدث",
+      "sortOldest": "الأقدم",
+      "sortPriceHigh": "السعر: الأعلى",
+      "sortPriceLow": "السعر: الأقل",
+      "searchButton": "بحث",
+      "tableTitle": "العنوان",
+      "tableSlug": "المعرّف النصي",
+      "tableCreated": "تاريخ الإنشاء",
+      "published": "منشور",
+      "draft": "مسودة",
+      "edit": "تعديل",
+      "unpublish": "إلغاء النشر",
+      "publish": "نشر",
+      "loading": "جارٍ التحميل...",
+      "empty": "لا توجد منتجات بعد.",
+      "total": "الإجمالي",
+      "page": "صفحة",
+      "modalEdit": "تعديل المنتج",
+      "modalNew": "منتج جديد",
+      "modalHint": "أدخل التفاصيل ثم احفظ.",
+      "titlePlaceholder": "مثال: كريم العناية",
+      "slugPlaceholder": "example-product",
+      "descriptionPlaceholder": "اكتب وصف المنتج...",
+      "priceUsd": "السعر (USD)",
+      "saveFailed": "فشل الحفظ",
+      "updateFailed": "فشل التحديث",
+      "deleteConfirm": "حذف المنتج \"{title}\"؟",
+      "deleteFailed": "فشل الحذف",
+      "loadFailed": "فشل تحميل المنتجات",
+      "titleSlugRequired": "العنوان وSlug مطلوبان."
+    },
+    "editProductPage": {
+      "title": "تعديل المنتج",
+      "loading": "جارٍ التحميل...",
+      "name": "الاسم",
+      "namePlaceholder": "اسم المنتج",
+      "price": "السعر",
+      "description": "الوصف",
+      "descriptionPlaceholder": "وصف المنتج",
+      "images": "الصور",
+      "note": "العرض النهائي يعتمد على أن الباك يوفّر ملفات static للصور. إذا الصور لا تظهر والواجهة تعرض 404 فالمشكلة من السيرفر وليست من الفرونت.",
+      "saving": "جارٍ الحفظ...",
+      "save": "حفظ",
+      "loadFailed": "فشل تحميل المنتج.",
+      "saved": "تم الحفظ بنجاح.",
+      "saveFailed": "فشل الحفظ."
+    }
   },
   "nav": {
     "brands": "البراندات",
@@ -385,15 +472,11 @@
     "title": "المنتجات",
     "subtitle": "اختر ما يناسبك وقم بالشراء مباشرة.",
     "searchPlaceholder": "ابحث عن منتج...",
-    "chooseBrand": "اختر براند",
+    "chooseBrand": "اختر البراند",
     "chooseCategory": "اختر تصنيف",
     "priceFrom": "السعر من",
     "priceTo": "السعر إلى",
-    "sort": {
-      "priceDesc": "السعر: من الأعلى إلى الأقل",
-      "priceAsc": "السعر: من الأقل إلى الأعلى",
-      "new": "الأحدث"
-    },
+    "sort": "الترتيب",
     "sortNewest": "الأحدث",
     "sortPriceAsc": "الأقل سعرًا",
     "sortPriceDesc": "الأعلى سعرًا",
@@ -446,7 +529,8 @@
     "buy": "شراء",
     "searchPlaceholder": "ابحث عن منتج...",
     "sortNewest": "الأحدث",
-    "youMayAlsoLike": "قد يعجبك أيضًا"
+    "youMayAlsoLike": "قد يعجبك أيضًا",
+    "featured": "مميز"
   },
   "termsPlaceholder": "سيتم إضافة الشروط والأحكام قريبًا.",
   "benefit": {
@@ -479,7 +563,9 @@
   "whatsapp": {
     "messagePrefix": "مرحبا، أريد الاستفسار عن:",
     "title": "العنوان",
-    "cta": "تواصل عبر واتساب"
+    "cta": "تواصل عبر واتساب",
+    "floatingLabel": "واتساب",
+    "floatingInquiry": "مرحبا، أريد الاستفسار عن المنتجات والخدمات"
   },
   "accuracyWarning": "تنويه",
   "terms": "الشروط والأحكام",
@@ -629,5 +715,48 @@
   "seasonal": {
     "eidAdhaTitle": "عيد الأضحى مبارك",
     "eidAdhaSubtitle": "أجواء خفيفة ومبهجة لواجهة المتجر"
+  },
+  "debug": {
+    "title": "تشخيص الربط",
+    "mode": "تصحيح",
+    "url": "الرابط",
+    "method": "الطريقة",
+    "status": "الحالة",
+    "at": "الوقت",
+    "message": "الرسالة",
+    "noErrors": "لا توجد أخطاء حالياً. إذا فشل الربط على جهاز معيّن سيظهر السبب هنا.",
+    "disable": "إيقاف",
+    "copyDetails": "نسخ التفاصيل",
+    "copied": "تم النسخ",
+    "clear": "مسح"
+  },
+  "uploadImages": {
+    "chooseImages": "اختيار صور",
+    "uploadImages": "رفع الصور",
+    "deleteAll": "حذف الكل",
+    "previewHintLine1": "تظهر معاينة مباشرة بعد الاختيار.",
+    "previewHintLine2": "بعد الرفع تتحول الروابط إلى روابط من السيرفر وتظهر في الواجهة.",
+    "delete": "حذف",
+    "copyLink": "نسخ الرابط",
+    "remove": "إزالة",
+    "selectFirst": "اختر صور أولاً.",
+    "notImage": "الملف ليس صورة: {name}",
+    "serverDidNotReturn": "تم الرفع لكن السيرفر لم يرجّع روابط صور قابلة للعرض. يجب أن يرجّع urls أو images أو files أو url أو path.",
+    "server": "سيرفر",
+    "local": "محلي"
+  },
+  "brandOrbit": {
+    "viewAll": "عرض الكل",
+    "back": "رجوع",
+    "hint": "اسحب للتحكم",
+    "sliderLabel": "البراندات",
+    "logo": "شعار"
+  },
+  "productGallery": {
+    "prev": "السابق",
+    "next": "التالي",
+    "close": "إغلاق",
+    "product": "منتج",
+    "thumb": "صورة مصغرة"
   }
 }

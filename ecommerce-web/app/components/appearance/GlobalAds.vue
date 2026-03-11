@@ -16,7 +16,7 @@
         <button
           class="absolute left-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-black/40 text-white transition hover:bg-black/55"
           @click="close"
-          aria-label="close"
+          :aria-label="t('common.close')"
         >✕</button>
         <a :href="popupAd.linkUrl || '#'" :target="popupAd.linkUrl ? '_blank' : undefined" class="block" @click="onAdClick">
           <img :src="asset(popupAd.imageUrl, popupAd.updatedAt || popupAd.id)" :alt="popupAd.title || 'ad'" class="h-auto w-full" />
@@ -28,6 +28,7 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
 const route = useRoute()
 const api = useApi()
 

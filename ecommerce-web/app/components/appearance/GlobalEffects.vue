@@ -32,9 +32,7 @@
             <span class="leg leg-4"></span>
           </div>
           <div class="min-w-0 text-center sm:text-start">
-            <div class="text-xs font-semibold tracking-[0.2em] text-[rgb(var(--muted))] uppercase">Eid</div>
             <div class="text-base font-black text-[rgb(var(--text))] sm:text-lg">{{ t('seasonal.eidAdhaTitle') }}</div>
-            <div class="text-xs text-[rgb(var(--muted))] sm:text-sm">{{ t('seasonal.eidAdhaSubtitle') }}</div>
           </div>
         </div>
       </div>
