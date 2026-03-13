@@ -69,6 +69,26 @@
             </select>
           </div>
 
+          <div class="filter-field">
+            <label class="filter-label rtl-text">{{ t('productsPage.chooseCategory') }}</label>
+            <select v-model="category" class="input products-select" @change="subCategory=''; applyFilters()" :aria-label="t('productsPage.chooseCategory')">
+              <option value="">{{ t('productsPage.allCategories') }}</option>
+              <option v-for="c in categoryOptions" :key="c.key" :value="c.key">
+                {{ c.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label rtl-text">{{ t('productsPage.chooseSubCategory') }}</label>
+            <select v-model="subCategory" class="input products-select" @change="applyFilters" :aria-label="t('productsPage.chooseSubCategory')">
+              <option value="">{{ t('productsPage.allSubCategories') }}</option>
+              <option v-for="s in subCategoryOptions(category)" :key="s.key" :value="s.key">
+                {{ s.name }}
+              </option>
+            </select>
+          </div>
+
           <div class="results-pill rtl-text">
             {{ t('productsPage.resultsCount', { count: products.totalCount || products.items.length || 0 }) }}
           </div>
@@ -147,10 +167,13 @@ const router = useRouter()
 
 const brandsStore = useBrandsStore()
 const products = useProductsStore()
+const { categoryOptions, subCategoryOptions } = useProductTaxonomy()
 
 const q = ref(String(route.query.q || ''))
 const sort = ref(String(route.query.sort || 'new'))
 const brand = ref(String(route.query.brand || ''))
+const category = ref(String(route.query.category || ''))
+const subCategory = ref(String(route.query.subCategory || ''))
 const page = ref(Number(route.query.page || 1) || 1)
 
 await useAsyncData('products_page_boot', async () => {
@@ -179,11 +202,23 @@ const activeBrandLabel = computed(() => {
   return match?.name || t('productsPage.allBrands')
 })
 
+const activeCategoryLabel = computed(() => {
+  if (!category.value) return t('productsPage.allCategories')
+  const match = categoryOptions.value.find((c: any) => c.key === category.value)
+  return match?.name || t('productsPage.allCategories')
+})
+
+const activeSubCategoryLabel = computed(() => {
+  if (!subCategory.value) return t('productsPage.allSubCategories')
+  const match = subCategoryOptions(category.value).find((s: any) => s.key === subCategory.value)
+  return match?.name || t('productsPage.allSubCategories')
+})
+
 const toolbarText = computed(() => {
   const count = products.totalCount || products.items.length || 0
-  if (brand.value) {
-    return t('productsPage.toolbarBrand', { count, brand: activeBrandLabel.value })
-  }
+  if (subCategory.value) return t('productsPage.toolbarSubCategory', { count, subCategory: activeSubCategoryLabel.value })
+  if (category.value) return t('productsPage.toolbarCategory', { count, category: activeCategoryLabel.value })
+  if (brand.value) return t('productsPage.toolbarBrand', { count, brand: activeBrandLabel.value })
   return t('productsPage.toolbarAll', { count })
 })
 
@@ -194,6 +229,8 @@ async function fetchProducts() {
     q: q.value || undefined,
     sort: sort.value as any,
     brand: brand.value || undefined,
+    category: category.value || undefined,
+    subCategory: subCategory.value || undefined,
   })
 }
 
@@ -205,6 +242,8 @@ function applyFilters() {
       ...(q.value ? { q: q.value } : {}),
       ...(sort.value && sort.value !== 'new' ? { sort: sort.value } : {}),
       ...(brand.value ? { brand: brand.value } : {}),
+      ...(category.value ? { category: category.value } : {}),
+      ...(subCategory.value ? { subCategory: subCategory.value } : {}),
       page: '1',
     },
   })
@@ -213,6 +252,8 @@ function applyFilters() {
 function clearFilters() {
   sort.value = 'new'
   brand.value = ''
+  category.value = ''
+  subCategory.value = ''
   q.value = ''
   page.value = 1
   router.push({ path: '/products', query: { page: '1' } })
@@ -235,6 +276,8 @@ watch(
     q.value = String(qv.q || '')
     sort.value = String(qv.sort || 'new')
     brand.value = String(qv.brand || '')
+    category.value = String(qv.category || '')
+    subCategory.value = String(qv.subCategory || '')
     page.value = Number(qv.page || 1) || 1
     await fetchProducts()
   },

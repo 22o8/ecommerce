@@ -15,6 +15,8 @@ type FetchParams = {
   sort?: 'new' | 'priceAsc' | 'priceDesc' | string
   isFeatured?: boolean
   brand?: string
+  category?: string
+  subCategory?: string
 }
 
 export const useProductsStore = defineStore('products', () => {
@@ -32,6 +34,8 @@ export const useProductsStore = defineStore('products', () => {
   const slug = p.slug ?? p.Slug ?? null
   const images = p.images ?? p.Images ?? null
   const description = p.description ?? p.Description ?? null
+  const category = p.category ?? p.Category ?? ''
+  const subCategory = p.subCategory ?? p.SubCategory ?? ''
 
   const imageUrl = cover ? api.buildAssetUrl(String(cover)) : ''
   const normImages = Array.isArray(images)
@@ -43,7 +47,7 @@ export const useProductsStore = defineStore('products', () => {
         .filter(Boolean)
     : []
 
-    return { ...p, name, priceIqd, priceUsd, price: priceIqd, discountPercent, finalPriceIqd, imageUrl, slug, images: normImages, description }
+    return { ...p, name, priceIqd, priceUsd, price: priceIqd, discountPercent, finalPriceIqd, imageUrl, slug, images: normImages, description, category, subCategory }
 }
 
 
@@ -82,6 +86,8 @@ export const useProductsStore = defineStore('products', () => {
 					q: params.q || undefined,
 					sort: params.sort || 'new',
 					brand: params.brand || undefined,
+					category: params.category || undefined,
+					subCategory: params.subCategory || undefined,
 				}
 			)
 

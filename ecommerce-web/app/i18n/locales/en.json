@@ -307,7 +307,10 @@
     "tableRank": "Rank",
     "tableProduct": "Product",
     "tableMetric": "Value",
-    "summaryTables": "Structured summary"
+    "summaryTables": "Structured summary",
+    "category": "Category",
+    "subCategory": "Subcategory",
+    "noSubCategory": "No subcategory"
   },
   "nav": {
     "logout": "Logout",
@@ -355,7 +358,8 @@
     "catCleanser": "Cleanser",
     "subtitle": "Professional digital store",
     "featuredTab": "Featured",
-    "discountsTab": "Discounts"
+    "discountsTab": "Discounts",
+    "catEyeCare": "Eye Care"
   },
   "productsPage": {
     "title": "Products",
@@ -392,7 +396,14 @@
     "resultsTitle": "All products",
     "resultsCount": "Products count: {count}",
     "toolbarAll": "Showing {count} products in a clean, easy-to-browse layout.",
-    "toolbarBrand": "Showing {count} products from {brand}."
+    "toolbarBrand": "Showing {count} products from {brand}.",
+    "chooseBrand": "Choose brand",
+    "chooseCategory": "Choose category",
+    "allCategories": "All categories",
+    "allSubCategories": "All subcategories",
+    "chooseSubCategory": "Choose subcategory",
+    "toolbarCategory": "Showing {count} products in {category}",
+    "toolbarSubCategory": "Showing {count} products in {subCategory}"
   },
   "brandsPage": {
     "title": "Brands",

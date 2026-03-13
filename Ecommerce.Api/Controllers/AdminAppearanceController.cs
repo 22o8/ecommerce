@@ -100,7 +100,7 @@ public class AdminAppearanceController : ControllerBase
     }
 
     [HttpPost("upload")]
-    [DisableRequestSizeLimit]
+    [RequestSizeLimit(20_000_000)]
     public async Task<ActionResult<object>> Upload([FromForm] IFormFile file)
     {
         if (file is null || file.Length == 0)

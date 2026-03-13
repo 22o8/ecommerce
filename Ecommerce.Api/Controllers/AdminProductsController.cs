@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using Ecommerce.Api.Domain.Entities;
+using Ecommerce.Api.Infrastructure;
 using Ecommerce.Api.Infrastructure.Data;
 using Ecommerce.Api.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authorization;
@@ -46,6 +47,8 @@ public class AdminProductsController : ControllerBase
                     p.IsPublished,
                     p.IsFeatured,
                     p.Brand,
+                    p.Category,
+                    p.SubCategory,
                     p.CreatedAt,
                     imagesCount = p.Images.Count()
                 })
@@ -77,6 +80,8 @@ public class AdminProductsController : ControllerBase
                 x.IsPublished,
                 x.IsFeatured,
                 x.Brand,
+                x.Category,
+                x.SubCategory,
                 x.CreatedAt,
                 x.RatingAvg,
                 x.RatingCount,
@@ -112,6 +117,14 @@ public class AdminProductsController : ControllerBase
         var exists = await _db.Products.AnyAsync(x => x.Slug.ToLower() == slug);
         if (exists) return BadRequest(new { message = "Slug already exists" });
 
+        var category = ProductTaxonomy.Normalize(req.Category);
+        if (!ProductTaxonomy.IsValidCategory(category))
+            return BadRequest(new { message = "Invalid category" });
+
+        var subCategory = ProductTaxonomy.Normalize(req.SubCategory);
+        if (!ProductTaxonomy.IsValidSubCategory(subCategory))
+            return BadRequest(new { message = "Invalid subcategory" });
+
         var p = new Product
         {
             Id = Guid.NewGuid(),
@@ -124,6 +137,8 @@ public class AdminProductsController : ControllerBase
             IsPublished = req.IsPublished,
             IsFeatured = req.IsFeatured,
             Brand = brandSlug,
+            Category = category,
+            SubCategory = subCategory,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -162,9 +177,19 @@ public class AdminProductsController : ControllerBase
         p.PriceIqd = (req.PriceIqd > 0 ? req.PriceIqd : req.PriceUsd);
         p.DiscountPercent = ClampDiscount(req.DiscountPercent);
         p.PriceUsd = req.PriceUsd;
+        var category = ProductTaxonomy.Normalize(req.Category);
+        if (!ProductTaxonomy.IsValidCategory(category))
+            return BadRequest(new { message = "Invalid category" });
+
+        var subCategory = ProductTaxonomy.Normalize(req.SubCategory);
+        if (!ProductTaxonomy.IsValidSubCategory(subCategory))
+            return BadRequest(new { message = "Invalid subcategory" });
+
         p.IsPublished = req.IsPublished;
         p.IsFeatured = req.IsFeatured;
         p.Brand = brandSlug;
+        p.Category = category;
+        p.SubCategory = subCategory;
 
         await _db.SaveChangesAsync();
         return Ok(new { message = "Updated" });
@@ -231,7 +256,7 @@ public class AdminProductsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/images")]
-    [DisableRequestSizeLimit]
+    [RequestSizeLimit(30_000_000)]
     public async Task<IActionResult> UploadImages([FromRoute] Guid id, [FromForm] List<IFormFile>? files, [FromForm] string? alt = null)
     {
         // Some clients send field name "images" instead of "files".
@@ -370,6 +395,12 @@ public class UpsertProductRequest
     [Required]
     [MinLength(1)]
     public string Brand { get; set; } = "Unspecified";
+
+    [Required]
+    [MinLength(1)]
+    public string Category { get; set; } = "serum";
+
+    public string? SubCategory { get; set; }
 
     public bool IsPublished { get; set; }
     public bool IsFeatured { get; set; }

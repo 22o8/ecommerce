@@ -7,4 +7,6 @@ public class PublicProductQuery
     public string? Q { get; set; }
     public string? Sort { get; set; } = "new";
     public string? Brand { get; set; }
+    public string? Category { get; set; }
+    public string? SubCategory { get; set; }
 }

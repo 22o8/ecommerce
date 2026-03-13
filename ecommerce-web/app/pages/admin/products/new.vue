@@ -64,6 +64,21 @@
             </div>
 
             <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.category') }}</label>
+              <select v-model="form.category" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
+                <option v-for="c in categoryOptions" :key="c.key" :value="c.key">{{ c.name }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.subCategory') }}</label>
+              <select v-model="form.subCategory" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
+                <option value="">{{ t('admin.noSubCategory') }}</option>
+                <option v-for="s in subCategoryOptions(form.category)" :key="s.key" :value="s.key">{{ s.name }}</option>
+              </select>
+            </div>
+
+            <div>
               <label class="mb-1 block text-sm text-white/80">{{ t('admin.price') }}</label>
               <UiInput v-model.number="form.priceIqd" type="number" min="0" step="0.01" />
             </div>
@@ -152,6 +167,7 @@ definePageMeta({ layout: 'admin', middleware: 'admin' })
 const { t } = useI18n()
 const toast = useToast()
 const { listBrands, createProduct, uploadProductImages } = useAdminApi()
+const { categoryOptions, subCategoryOptions } = useProductTaxonomy()
 
 type BrandItem = { id: string; slug: string; name: string }
 
@@ -167,6 +183,8 @@ const form = reactive({
   priceIqd: 0,
   // slug الخاص بالبراند (نرسله للباك ضمن الحقل brand)
   brand: '',
+  category: 'serum',
+  subCategory: '',
   isPublished: true,
   isFeatured: false,
 })
@@ -190,6 +208,14 @@ watch(
     if (!slugTouched.value || !form.slug) {
       form.slug = slugify(v)
     }
+  }
+)
+
+watch(
+  () => form.category,
+  () => {
+    const allowed = subCategoryOptions(form.category).map((x: any) => x.key)
+    if (form.subCategory && !allowed.includes(form.subCategory)) form.subCategory = ''
   }
 )
 
@@ -248,6 +274,8 @@ async function onCreate() {
       priceIqd: Number(form.priceIqd ?? 0),
       // ✅ Backend يتحقق من البراند عبر الـ slug
       brand: form.brand,
+      category: form.category,
+      subCategory: form.subCategory || undefined,
       isPublished: !!form.isPublished,
       isFeatured: !!form.isFeatured,
     })

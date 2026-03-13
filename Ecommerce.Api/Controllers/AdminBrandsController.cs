@@ -134,7 +134,7 @@ public class AdminBrandsController : ControllerBase
 
     // Upload square logo
     [HttpPost("{id:guid}/logo")]
-    [DisableRequestSizeLimit]
+    [RequestSizeLimit(10_000_000)]
     public async Task<IActionResult> UploadLogo([FromRoute] Guid id, [FromForm] IFormFile? file)
     {
         var b = await _db.Brands.FirstOrDefaultAsync(x => x.Id == id);

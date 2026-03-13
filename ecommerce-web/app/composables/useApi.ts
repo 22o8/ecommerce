@@ -236,43 +236,11 @@ export function useApi() {
     })) as unknown as T
   }
 
-  // ✅ رفع مباشر إلى الباك (بدون المرور عبر Vercel BFF)
-  // مهم لملفات الصور الكبيرة حتى لا تصطدم بحد Payload الخاص بوظائف Vercel.
-  const postFormDirect = async <T>(
-    path: string,
-    formData: FormData,
-    query?: any,
-    headers?: Record<string, string>
-  ): Promise<T> => {
-    const directBase = publicApiBase.startsWith('http')
-      ? publicApiBase
-      : `${apiOrigin}/api`
-
-    const url = `${directBase.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`
-
-    const mergedHeaders: Record<string, string> = {
-      ...(headers || {}),
-    }
-
-    if (!mergedHeaders.Authorization && !mergedHeaders.authorization) {
-      const t = (access.value || '').trim()
-      if (t) mergedHeaders.Authorization = `Bearer ${t}`
-    }
-
-    return (await $fetch(url, {
-      method: 'POST',
-      query,
-      headers: mergedHeaders,
-      credentials: 'include',
-      body: formData,
-    })) as unknown as T
-  }
-
   // ✅ نفس الدالة لكن متاحة أيضاً كـ named export بالأعلى
   // حتى لا ينكسر build عند الاستيراد المباشر.
   const buildAssetUrlLocal = buildAssetUrl
 
   const upload = postForm
 
-  return { request, get, post, put, patch, del, postForm, postFormDirect, upload, buildAssetUrl: buildAssetUrlLocal }
+  return { request, get, post, put, patch, del, postForm, upload, buildAssetUrl: buildAssetUrlLocal }
 }

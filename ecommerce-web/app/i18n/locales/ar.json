@@ -334,7 +334,10 @@
     "tableRank": "الترتيب",
     "tableProduct": "المنتج",
     "tableMetric": "القيمة",
-    "summaryTables": "ملخص مرتب"
+    "summaryTables": "ملخص مرتب",
+    "category": "التصنيف",
+    "subCategory": "النوع الفرعي",
+    "noSubCategory": "بدون نوع فرعي"
   },
   "nav": {
     "brands": "البراندات",
@@ -379,7 +382,8 @@
     "catCleanser": "غسول",
     "subtitle": "متجر رقمي احترافي",
     "featuredTab": "المميزة",
-    "discountsTab": "التخفيضات"
+    "discountsTab": "التخفيضات",
+    "catEyeCare": "العناية بالعين"
   },
   "productsPage": {
     "title": "المنتجات",
@@ -414,7 +418,12 @@
     "resultsTitle": "كل المنتجات",
     "resultsCount": "عدد المنتجات: {count}",
     "toolbarAll": "عرض {count} منتج بترتيب واضح وسهل التصفح.",
-    "toolbarBrand": "عرض {count} منتج من براند {brand}."
+    "toolbarBrand": "عرض {count} منتج من براند {brand}.",
+    "allCategories": "كل التصنيفات",
+    "allSubCategories": "كل الأنواع الفرعية",
+    "chooseSubCategory": "اختر النوع الفرعي",
+    "toolbarCategory": "عرض {count} منتج ضمن {category}",
+    "toolbarSubCategory": "عرض {count} منتج ضمن {subCategory}"
   },
   "brandsPage": {
     "title": "البراندات",

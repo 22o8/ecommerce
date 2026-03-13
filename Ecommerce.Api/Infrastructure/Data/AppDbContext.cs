@@ -69,6 +69,16 @@ public class AppDbContext : DbContext
             .HasDefaultValue("Unspecified");
 
         modelBuilder.Entity<Product>()
+            .Property(p => p.Category)
+            .HasMaxLength(120)
+            .HasDefaultValue("serum");
+
+        modelBuilder.Entity<Product>()
+            .Property(p => p.SubCategory)
+            .HasMaxLength(120)
+            .HasDefaultValue("");
+
+        modelBuilder.Entity<Product>()
             .Property(x => x.RatingAvg)
             .HasPrecision(3, 2); // مثل 4.50
 

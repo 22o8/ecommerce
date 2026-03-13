@@ -1,4 +1,5 @@
 using System;
+using Ecommerce.Api.Infrastructure;
 using Ecommerce.Api.Infrastructure.Data;
 using Ecommerce.Api.Models.Products;
 using Microsoft.AspNetCore.Mvc;
@@ -29,12 +30,39 @@ public class ProductsController : ControllerBase
             .AsNoTracking()
             .Where(p => p.IsPublished);
 
-        if (!string.IsNullOrWhiteSpace(q))
+        var category = ProductTaxonomy.Normalize(query.Category);
+        var subCategory = ProductTaxonomy.Normalize(query.SubCategory);
+
+        var detectedSubCategory = ProductTaxonomy.DetectSubCategoryFromQuery(q);
+        var detectedCategory = ProductTaxonomy.DetectCategoryFromQuery(q);
+
+        if (string.IsNullOrWhiteSpace(subCategory) && !string.IsNullOrWhiteSpace(detectedSubCategory))
+            subCategory = detectedSubCategory;
+
+        if (string.IsNullOrWhiteSpace(category) && !string.IsNullOrWhiteSpace(detectedCategory))
+            category = detectedCategory;
+
+        if (!string.IsNullOrWhiteSpace(subCategory))
         {
+            baseQuery = baseQuery.Where(p => p.SubCategory != null && p.SubCategory.ToLower() == subCategory);
+        }
+
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            baseQuery = baseQuery.Where(p => p.Category != null && p.Category.ToLower() == category);
+        }
+
+        var matchedTaxonomy = !string.IsNullOrWhiteSpace(subCategory) || !string.IsNullOrWhiteSpace(category);
+        if (!string.IsNullOrWhiteSpace(q) && !matchedTaxonomy)
+        {
+            var searchText = q.Replace('-', ' ').Trim();
             baseQuery = baseQuery.Where(p =>
                 p.Title.ToLower().Contains(q) ||
-                (p.Description != null && p.Description.ToLower().Contains(q)) ||
-                p.Slug.ToLower().Contains(q)
+                p.Title.ToLower().Contains(searchText) ||
+                (p.Description != null && (p.Description.ToLower().Contains(q) || p.Description.ToLower().Contains(searchText))) ||
+                p.Slug.ToLower().Contains(q) ||
+                (p.Category != null && p.Category.ToLower().Contains(q)) ||
+                (p.SubCategory != null && p.SubCategory.ToLower().Contains(q))
             );
         }
 
@@ -71,6 +99,8 @@ public class ProductsController : ControllerBase
                 p.PriceUsd,
                 p.RatingAvg,
                 p.Brand,
+                p.Category,
+                p.SubCategory,
                 p.RatingCount,
                 p.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == p.Id),
@@ -120,6 +150,8 @@ public class ProductsController : ControllerBase
                 p.PriceUsd,
                 p.RatingAvg,
                 p.Brand,
+                p.Category,
+                p.SubCategory,
                 p.RatingCount,
                 p.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == p.Id),
@@ -154,6 +186,8 @@ public class ProductsController : ControllerBase
                 p.PriceUsd,
                     p.RatingAvg,
                     p.Brand,
+                    p.Category,
+                    p.SubCategory,
                     p.RatingCount,
                     p.CreatedAt,
                     viewCount = _db.ProductViews.Count(v => v.ProductId == p.Id),
@@ -195,6 +229,8 @@ public class ProductsController : ControllerBase
                 x.PriceUsd,
                 x.RatingAvg,
                 x.Brand,
+                x.Category,
+                x.SubCategory,
                 x.RatingCount,
                 x.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
@@ -252,6 +288,8 @@ public class ProductsController : ControllerBase
                 x.PriceUsd,
                 x.RatingAvg,
                 x.Brand,
+                x.Category,
+                x.SubCategory,
                 x.RatingCount,
                 x.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
@@ -290,6 +328,8 @@ public class ProductsController : ControllerBase
                 finalPriceIqd = Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2),
                 p.RatingAvg,
                 p.Brand,
+                p.Category,
+                p.SubCategory,
                 p.RatingCount,
                 p.CreatedAt,
                 coverImage = p.Images
@@ -309,10 +349,19 @@ public class ProductsController : ControllerBase
         var qq = (q ?? "").Trim().ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(qq)) return Ok(Array.Empty<object>());
         var safeLimit = limit is < 1 or > 20 ? 8 : limit;
+        var detectedSubCategory = ProductTaxonomy.DetectSubCategoryFromQuery(qq);
+        var detectedCategory = ProductTaxonomy.DetectCategoryFromQuery(qq);
+        var matchedTaxonomy = !string.IsNullOrWhiteSpace(detectedSubCategory) || !string.IsNullOrWhiteSpace(detectedCategory);
 
-        var items = await _db.Products
-            .AsNoTracking()
-            .Where(p => p.IsPublished && (p.Title.ToLower().Contains(qq) || p.Slug.ToLower().Contains(qq)))
+        var searchQuery = _db.Products.AsNoTracking().Where(p => p.IsPublished);
+        if (!string.IsNullOrWhiteSpace(detectedSubCategory))
+            searchQuery = searchQuery.Where(p => p.SubCategory == detectedSubCategory);
+        if (!string.IsNullOrWhiteSpace(detectedCategory))
+            searchQuery = searchQuery.Where(p => p.Category == detectedCategory);
+        if (!matchedTaxonomy)
+            searchQuery = searchQuery.Where(p => p.Title.ToLower().Contains(qq) || p.Slug.ToLower().Contains(qq));
+
+        var items = await searchQuery
             .OrderByDescending(p => p.CreatedAt)
             .Take(safeLimit)
             .Select(p => new

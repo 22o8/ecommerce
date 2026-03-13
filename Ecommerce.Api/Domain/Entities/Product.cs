@@ -25,6 +25,8 @@ public class Product
 
     // Brand / فهرسة
     public string Brand { get; set; } = "Unspecified";
+    public string Category { get; set; } = "serum";
+    public string SubCategory { get; set; } = "";
     public bool IsPublished { get; set; } = true;
 
     // Admin-controlled flag to show this product on home page (Featured Products)
