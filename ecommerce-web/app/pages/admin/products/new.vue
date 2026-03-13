@@ -259,11 +259,7 @@ async function onCreate() {
     }
 
     toast.success(t('common.saved'))
-    if (productId) {
-      await navigateTo(`/admin/products/${productId}`)
-    } else {
-      await navigateTo('/admin/products')
-    }
+    await navigateTo('/admin/products')
   } catch (e: any) {
     toast.error(e?.message || t('common.error'))
   } finally {

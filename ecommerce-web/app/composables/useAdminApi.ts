@@ -3,6 +3,7 @@ import { useApi } from '~/composables/useApi'
 
 export function useAdminApi() {
   const api = useApi()
+  const uploadForm = api.postFormDirect || api.postForm
 
   return {
     getDashboardStats: <T>() => api.get<T>('/admin/dashboard/stats'),
@@ -38,7 +39,7 @@ export function useAdminApi() {
       // Swagger: field name "images" (array). نرسل ملف واحد ضمنها.
       fd.append('files', file)
       if (alt) fd.append('alt', alt)
-      return await api.postForm<T>(`/admin/products/${productId}/images`, fd)
+      return await uploadForm<T>(`/admin/products/${productId}/images`, fd)
     },
 
     /**
@@ -50,7 +51,7 @@ export function useAdminApi() {
         const f = files[i]
         const alt = altPrefix ? `${altPrefix} ${i + 1}` : ''
         // reuse single-upload endpoint
-        const r = await (api.postForm<T>(`/admin/products/${productId}/images`, (() => {
+        const r = await (uploadForm<T>(`/admin/products/${productId}/images`, (() => {
           const fd = new FormData()
           fd.append('files', f)
           if (alt) fd.append('alt', alt)
@@ -72,7 +73,7 @@ export function useAdminApi() {
       const fd = new FormData()
       fd.append('files', file)
       if (alt) fd.append('alt', alt)
-      return await api.postForm<T>(`/admin/products/${productId}/images`, fd)
+      return await uploadForm<T>(`/admin/products/${productId}/images`, fd)
     },
     removeProductImage: <T>(productId: string, imageId: string) =>
       api.del<T>(`/admin/products/${productId}/images/${imageId}`),
@@ -96,7 +97,7 @@ export function useAdminApi() {
       const fd = new FormData()
       // Backend accepts both "file" and fallback first form file; keep canonical field name "file"
       fd.append('file', file)
-      return await api.postForm<T>(`/admin/brands/${id}/logo`, fd)
+      return await uploadForm<T>(`/admin/brands/${id}/logo`, fd)
     },
   }
 }

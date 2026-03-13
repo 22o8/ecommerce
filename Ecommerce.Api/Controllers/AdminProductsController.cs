@@ -231,7 +231,7 @@ public class AdminProductsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/images")]
-    [RequestSizeLimit(30_000_000)]
+    [DisableRequestSizeLimit]
     public async Task<IActionResult> UploadImages([FromRoute] Guid id, [FromForm] List<IFormFile>? files, [FromForm] string? alt = null)
     {
         // Some clients send field name "images" instead of "files".

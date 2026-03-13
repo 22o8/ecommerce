@@ -159,7 +159,7 @@ public class AdminAdsController : ControllerBase
     }
 
     [HttpPost("upload")]
-    [RequestSizeLimit(20_000_000)]
+    [DisableRequestSizeLimit]
     public async Task<ActionResult<object>> Upload([FromForm] IFormFile? file)
     {
         if ((file is null || file.Length == 0) && Request.HasFormContentType && Request.Form.Files.Count > 0)
