@@ -93,7 +93,7 @@ public class CheckoutController : ControllerBase
 
         var subtotalUsd = product.PriceUsd * qty;
         var subtotalIqd = product.PriceIqd * qty;
-        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, products);
+        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, new[] { product });
         if (couponResult.error != null) return couponResult.error;
 
         var order = new Order

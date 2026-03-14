@@ -21,14 +21,41 @@ public class ProductsController : ControllerBase
 
     private static string N(string? value) => (value ?? string.Empty).Trim().ToLowerInvariant();
 
+    private static readonly Dictionary<string, string[]> CategoryKeywords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["moisturizer"] = new[] { "مرطب", "مرطب الوجه", "كريم مرطب", "جل مرطب", "moisturizer", "moisturiser", "hydrating cream", "hydrating gel", "lotion", "cream" },
+        ["eye-care"] = new[] { "eye", "عين", "under eye", "undereye", "eye cream", "eye serum", "eye gel" },
+        ["cleanser"] = new[] { "cleanser", "cleanse", "غسول", "foam wash", "face wash", "منظف" },
+        ["serum"] = new[] { "serum", "سيروم", "ampoule" },
+        ["sunscreen"] = new[] { "sunscreen", "sun screen", "spf", "واقي", "واقي شمس" },
+        ["toner"] = new[] { "toner", "تونر" },
+        ["mask"] = new[] { "mask", "ماسك" },
+    };
+
+    private static readonly Dictionary<string, string[]> SubCategoryKeywords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["eye-serum"] = new[] { "eye serum", "serum eye", "سيروم العين", "سيروم للعين" },
+        ["eye-cream"] = new[] { "eye cream", "cream eye", "كريم العين", "كريم للعين" },
+        ["eye-gel"] = new[] { "eye gel", "جل العين", "جل للعين" },
+        ["face-cream"] = new[] { "face cream", "cream", "كريم", "moisturizing cream" },
+        ["face-gel"] = new[] { "gel", "جل", "moisturizing gel" },
+        ["foam-cleanser"] = new[] { "foam", "رغوي", "foam cleanser" },
+        ["oil-cleanser"] = new[] { "oil cleanser", "cleansing oil", "زيتي" },
+    };
+
+    private static bool ContainsAny(string haystack, IEnumerable<string> needles)
+        => needles.Any(n => haystack.Contains(n, StringComparison.OrdinalIgnoreCase));
+
     private static bool MatchesCategory(dynamic p, string? category, string? subCategory, string? q)
     {
-        var searchableText = string.Join(" ", new[]
+        var text = string.Join(" ", new[]
         {
             (string?)p.Title,
             (string?)p.Description,
             (string?)p.Slug,
             (string?)p.Brand,
+            (string?)p.Category,
+            (string?)p.SubCategory,
         }.Where(x => !string.IsNullOrWhiteSpace(x))).ToLowerInvariant();
 
         var normalizedCategory = N(category);
@@ -38,19 +65,53 @@ public class ProductsController : ControllerBase
         if (!string.IsNullOrWhiteSpace(normalizedCategory))
         {
             var storedCat = N((string?)p.Category);
-            if (storedCat != normalizedCategory)
+            if (storedCat == normalizedCategory)
+            {
+                // ok
+            }
+            else if (CategoryKeywords.TryGetValue(normalizedCategory, out var catWords) && ContainsAny(text, catWords))
+            {
+                // inferred match
+            }
+            else
+            {
                 return false;
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(normalizedSub))
         {
             var storedSub = N((string?)p.SubCategory);
-            if (storedSub != normalizedSub)
+            if (storedSub == normalizedSub)
+            {
+                // ok
+            }
+            else if (SubCategoryKeywords.TryGetValue(normalizedSub, out var subWords) && ContainsAny(text, subWords))
+            {
+                // inferred
+            }
+            else
+            {
                 return false;
+            }
         }
 
-        if (!string.IsNullOrWhiteSpace(normalizedQ) && !searchableText.Contains(normalizedQ))
-            return false;
+        if (!string.IsNullOrWhiteSpace(normalizedQ))
+        {
+            if (!text.Contains(normalizedQ))
+            {
+                if (SubCategoryKeywords.TryGetValue(normalizedQ, out var exactSubWords) && ContainsAny(text, exactSubWords))
+                {
+                }
+                else if (CategoryKeywords.TryGetValue(normalizedQ, out var exactCatWords) && ContainsAny(text, exactCatWords))
+                {
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
 
         return true;
     }
