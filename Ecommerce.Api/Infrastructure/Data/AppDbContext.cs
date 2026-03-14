@@ -36,6 +36,7 @@ public class AppDbContext : DbContext
     // ✅ Ads (منفصلة عن Appearance)
     public DbSet<Ad> Ads => Set<Ad>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
+    public DbSet<CouponUsage> CouponUsages => Set<CouponUsage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -86,6 +87,10 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Product>()
             .Property(p => p.LowStockThreshold)
             .HasDefaultValue(5);
+
+        modelBuilder.Entity<Product>()
+            .Property(p => p.IsCouponAllowed)
+            .HasDefaultValue(true);
 
         modelBuilder.Entity<Product>()
             .HasIndex(p => new { p.Category, p.SubCategory, p.IsPublished });
@@ -191,6 +196,17 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Order>()
             .Property(x => x.CouponCode)
             .HasMaxLength(80);
+
+        modelBuilder.Entity<CouponUsage>()
+            .Property(x => x.DeviceKeyHash)
+            .HasMaxLength(128);
+
+        modelBuilder.Entity<CouponUsage>()
+            .HasIndex(x => new { x.CouponId, x.DeviceKeyHash })
+            .IsUnique();
+
+        modelBuilder.Entity<CouponUsage>()
+            .HasIndex(x => new { x.CouponId, x.UserId });
 
     }
 }

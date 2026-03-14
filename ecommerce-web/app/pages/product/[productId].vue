@@ -55,14 +55,14 @@ const { data: similar } = await useAsyncData(
 )
 
 function addToCart() {
-  if (!product.value) return
+  if (!product.value || isOutOfStock.value) return
   cart.add(product.value)
 }
 
 const { checkoutSingleProduct } = useWhatsappCheckout()
 
 async function buyNow() {
-  if (!product.value) return
+  if (!product.value || isOutOfStock.value) return
   try {
     await checkoutSingleProduct(product.value, 1)
   } catch (e) {
@@ -131,6 +131,7 @@ function fmt(v: any) {
         </div>
 
         <div class="product-sheet rounded-3xl p-5">
+          <div v-if="isOutOfStock" class="mb-4 inline-flex rounded-full bg-[rgb(var(--danger))]/15 px-4 py-2 text-sm font-bold text-[rgb(var(--danger))] rtl-text">{{ t('common.unavailable') }}</div>
           <div class="flex items-end justify-between gap-3">
             <div>
               <div class="text-2xl font-black keep-ltr">{{ fmt(finalPriceIqd) }}</div>
@@ -140,11 +141,11 @@ function fmt(v: any) {
             </div>
 
             <div class="flex items-center gap-2">
-              <button class="btn-cta-animated inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold" @click="addToCart">
+              <button class="btn-cta-animated inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold" @click="addToCart" :disabled="isOutOfStock">
                 <Icon name="mdi:cart-plus" class="text-lg" />
                 <span class="rtl-text">{{ t('common.addToCart') }}</span>
               </button>
-              <button class="btn-cta-animated btn-cta-secondary inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold" @click="buyNow">
+              <button class="btn-cta-animated btn-cta-secondary inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold" @click="buyNow" :disabled="isOutOfStock">
                 <span class="rtl-text">{{ t('common.buy') }}</span>
               </button>
             </div>

@@ -136,6 +136,7 @@ public class ProductsController : ControllerBase
                 p.Category,
                 p.SubCategory,
                 p.StockQuantity,
+                p.IsCouponAllowed,
                 p.RatingCount,
                 p.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == p.Id),
@@ -195,7 +196,7 @@ public class ProductsController : ControllerBase
             {
                 x.Id, x.Title, x.Slug, x.Description, x.PriceIqd, x.DiscountPercent,
                 finalPriceIqd = x.DiscountPercent > 0 ? Math.Round(x.PriceIqd * (100m - x.DiscountPercent) / 100m, 2) : x.PriceIqd,
-                x.PriceUsd, x.RatingAvg, x.Brand, x.Category, x.SubCategory, x.StockQuantity, x.RatingCount, x.CreatedAt,
+                x.PriceUsd, x.RatingAvg, x.Brand, x.Category, x.SubCategory, x.StockQuantity, x.IsCouponAllowed, x.RatingCount, x.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
                 favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
                 images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList()
@@ -222,7 +223,7 @@ public class ProductsController : ControllerBase
             {
                 x.Id, x.Title, x.Slug, x.Description, x.PriceIqd, x.DiscountPercent,
                 finalPriceIqd = x.DiscountPercent > 0 ? Math.Round(x.PriceIqd * (100m - x.DiscountPercent) / 100m, 2) : x.PriceIqd,
-                x.PriceUsd, x.RatingAvg, x.Brand, x.Category, x.SubCategory, x.StockQuantity, x.RatingCount, x.CreatedAt,
+                x.PriceUsd, x.RatingAvg, x.Brand, x.Category, x.SubCategory, x.StockQuantity, x.IsCouponAllowed, x.RatingCount, x.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
                 favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
                 images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList()

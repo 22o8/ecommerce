@@ -145,11 +145,20 @@ function fmtMoney(v: any) {
   return formatIqd(v)
 }
 
+function getDeviceKey() {
+  const key = 'coupon_device_key'
+  const existing = localStorage.getItem(key)
+  if (existing) return existing
+  const value = `${Date.now()}-${Math.random().toString(36).slice(2)}-${navigator.userAgent}`
+  localStorage.setItem(key, value)
+  return value
+}
+
 async function applyCoupon() {
   couponError.value = ''
   couponLoading.value = true
   try {
-    const res: any = await api.get('/Coupons/validate', { code: couponCode.value.trim(), subtotalIqd: Number(cart.total || 0) })
+    const res: any = await api.get('/Coupons/validate', { code: couponCode.value.trim(), subtotalIqd: Number(cart.total || 0), deviceKey: process.client ? getDeviceKey() : '', productIds: cart.items.map((x:any) => x.id).join(',') })
     appliedCoupon.value = res
   } catch (e: any) {
     appliedCoupon.value = null
@@ -185,7 +194,7 @@ watch(() => cart.total, async (v) => {
     return
   }
   try {
-    const res: any = await api.get('/Coupons/validate', { code: appliedCoupon.value.code, subtotalIqd: Number(v || 0) })
+    const res: any = await api.get('/Coupons/validate', { code: appliedCoupon.value.code, subtotalIqd: Number(v || 0), deviceKey: process.client ? getDeviceKey() : '', productIds: cart.items.map((x:any) => x.id).join(',') })
     appliedCoupon.value = res
   } catch {
     appliedCoupon.value = null

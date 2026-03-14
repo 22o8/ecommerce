@@ -13,6 +13,16 @@ export function useWhatsappCheckout() {
   const cart = useCartStore()
   const appliedCoupon = useState<any | null>('cart_coupon_applied', () => null)
 
+  const getDeviceKey = () => {
+    if (!process.client) return ''
+    const key = 'coupon_device_key'
+    const existing = localStorage.getItem(key)
+    if (existing) return existing
+    const value = `${Date.now()}-${Math.random().toString(36).slice(2)}-${navigator.userAgent}`
+    localStorage.setItem(key, value)
+    return value
+  }
+
   const buildCartMessage = (items: Array<{ title: string; quantity: number; price: number; originalPrice?: number | null; discountPercent?: number }>) => {
     const when = new Date().toLocaleString('ar-IQ')
     const format = (v: any) => formatIqd(v)
@@ -38,7 +48,8 @@ export function useWhatsappCheckout() {
         productId: i.id,
         quantity: Math.max(1, Number(i.quantity) || 1),
       })),
-      couponCode: appliedCoupon.value?.code || undefined
+      couponCode: appliedCoupon.value?.code || undefined,
+      deviceKey: getDeviceKey() || undefined
     }
 
     const result = await api.post('/Checkout/cart/whatsapp', payload)
@@ -68,7 +79,8 @@ export function useWhatsappCheckout() {
 
     const result = await api.post('/Checkout/cart/whatsapp', {
       items: [{ productId: id, quantity: Math.max(1, Number(quantity) || 1) }],
-      couponCode: appliedCoupon.value?.code || undefined
+      couponCode: appliedCoupon.value?.code || undefined,
+      deviceKey: getDeviceKey() || undefined
     })
     if (!(result as any)?.orderId) {
       throw new Error('تعذر حفظ الطلب في النظام.')

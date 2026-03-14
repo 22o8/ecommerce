@@ -50,6 +50,7 @@ public class AdminProductsController : ControllerBase
                     p.SubCategory,
                     p.StockQuantity,
                     p.LowStockThreshold,
+                    p.IsCouponAllowed,
                     p.CreatedAt,
                     imagesCount = p.Images.Count()
                 })
@@ -85,6 +86,7 @@ public class AdminProductsController : ControllerBase
                 x.SubCategory,
                 x.StockQuantity,
                 x.LowStockThreshold,
+                x.IsCouponAllowed,
                 x.CreatedAt,
                 x.RatingAvg,
                 x.RatingCount,
@@ -136,6 +138,7 @@ public class AdminProductsController : ControllerBase
             SubCategory = NormalizeSubCategory(req.SubCategory),
             StockQuantity = Math.Max(0, req.StockQuantity),
             LowStockThreshold = Math.Max(0, req.LowStockThreshold),
+            IsCouponAllowed = req.IsCouponAllowed,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -181,6 +184,7 @@ public class AdminProductsController : ControllerBase
         p.SubCategory = NormalizeSubCategory(req.SubCategory);
         p.StockQuantity = Math.Max(0, req.StockQuantity);
         p.LowStockThreshold = Math.Max(0, req.LowStockThreshold);
+        p.IsCouponAllowed = req.IsCouponAllowed;
 
         await _db.SaveChangesAsync();
         return Ok(new { message = "Updated" });
@@ -406,6 +410,7 @@ public class UpsertProductRequest
     public int StockQuantity { get; set; } = 100;
     [Range(0, 999999)]
     public int LowStockThreshold { get; set; } = 5;
+    public bool IsCouponAllowed { get; set; } = true;
 }
 
 public class SetFeaturedRequest

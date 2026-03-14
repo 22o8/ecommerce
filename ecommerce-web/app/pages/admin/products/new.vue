@@ -97,6 +97,13 @@
               <UiInput v-model.number="form.lowStockThreshold" type="number" min="0" step="1" />
             </div>
 
+            <div class="md:col-span-2 flex flex-wrap items-end gap-6">
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-[rgb(var(--muted-2))]">
+                <input v-model="form.isCouponAllowed" type="checkbox" class="h-4 w-4" />
+                {{ t('admin.couponAllowed') || 'يسمح بالكوبون' }}
+              </label>
+            </div>
+
             <div class="flex flex-wrap items-end gap-6">
               <label class="flex cursor-pointer items-center gap-2 text-sm text-[rgb(var(--muted-2))]">
                 <input v-model="form.isPublished" type="checkbox" class="h-4 w-4" />
@@ -200,6 +207,7 @@ const form = reactive({
   subCategory: '',
   stockQuantity: 100,
   lowStockThreshold: 5,
+  isCouponAllowed: true,
   isPublished: true,
   isFeatured: false,
 })

@@ -36,7 +36,7 @@ public class CheckoutController : ControllerBase
         return Guid.TryParse(idStr, out userId);
     }
 
-    private async Task<(Coupon? coupon, decimal discountIqd, decimal discountUsd, IActionResult? error)> ResolveCouponAsync(string? code, decimal subtotalIqd, decimal subtotalUsd)
+    private async Task<(Coupon? coupon, decimal discountIqd, decimal discountUsd, IActionResult? error)> ResolveCouponAsync(string? code, decimal subtotalIqd, decimal subtotalUsd, Guid? userId = null, string? deviceKey = null, IEnumerable<Product>? products = null)
     {
         var normalized = (code ?? string.Empty).Trim().ToUpperInvariant();
         if (string.IsNullOrWhiteSpace(normalized)) return (null, 0m, 0m, null);
@@ -54,6 +54,23 @@ public class CheckoutController : ControllerBase
             return (null, 0m, 0m, BadRequest(new { message = "Coupon usage limit reached" }));
         if (subtotalIqd < coupon.MinimumOrderIqd)
             return (null, 0m, 0m, BadRequest(new { message = "Minimum order not reached", minimumOrderIqd = coupon.MinimumOrderIqd }));
+
+        if (products != null && products.Any(p => !p.IsCouponAllowed))
+            return (null, 0m, 0m, BadRequest(new { message = "Coupon cannot be applied to one or more products" }));
+
+        var deviceHash = CouponsController.HashDeviceKey(deviceKey);
+        if (!string.IsNullOrWhiteSpace(deviceHash))
+        {
+            var usedByDevice = await _db.CouponUsages.AnyAsync(x => x.CouponId == coupon.Id && x.DeviceKeyHash == deviceHash);
+            if (usedByDevice)
+                return (null, 0m, 0m, BadRequest(new { message = "Coupon already used on this device" }));
+        }
+        if (userId.HasValue)
+        {
+            var usedByUser = await _db.CouponUsages.AnyAsync(x => x.CouponId == coupon.Id && x.UserId == userId.Value);
+            if (usedByUser)
+                return (null, 0m, 0m, BadRequest(new { message = "Coupon already used by this account" }));
+        }
 
         var percentDiscountIqd = coupon.DiscountPercent > 0 ? Math.Round(subtotalIqd * coupon.DiscountPercent / 100m, 2) : 0m;
         var fixedDiscountIqd = coupon.FixedDiscountIqd > 0 ? coupon.FixedDiscountIqd : 0m;
@@ -76,7 +93,7 @@ public class CheckoutController : ControllerBase
 
         var subtotalUsd = product.PriceUsd * qty;
         var subtotalIqd = product.PriceIqd * qty;
-        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd);
+        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, products);
         if (couponResult.error != null) return couponResult.error;
 
         var order = new Order
@@ -115,7 +132,11 @@ public class CheckoutController : ControllerBase
 
         order.Payments.Add(payment);
         product.StockQuantity = Math.Max(0, product.StockQuantity - qty);
-        if (couponResult.coupon != null) couponResult.coupon.UsedCount += 1;
+        if (couponResult.coupon != null)
+        {
+            couponResult.coupon.UsedCount += 1;
+            _db.CouponUsages.Add(new CouponUsage { CouponId = couponResult.coupon.Id, UserId = userId, OrderId = order.Id, DeviceKeyHash = CouponsController.HashDeviceKey(req.DeviceKey) });
+        }
 
         _db.Orders.Add(order);
         await _db.SaveChangesAsync();
@@ -175,7 +196,7 @@ public class CheckoutController : ControllerBase
             });
         }
 
-        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd);
+        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, products);
         if (couponResult.error != null) return couponResult.error;
 
         order.SubtotalUsd = subtotalUsd;
@@ -203,7 +224,11 @@ public class CheckoutController : ControllerBase
         };
 
         order.Payments.Add(payment);
-        if (couponResult.coupon != null) couponResult.coupon.UsedCount += 1;
+        if (couponResult.coupon != null)
+        {
+            couponResult.coupon.UsedCount += 1;
+            _db.CouponUsages.Add(new CouponUsage { CouponId = couponResult.coupon.Id, UserId = userId, OrderId = order.Id, DeviceKeyHash = CouponsController.HashDeviceKey(req.DeviceKey) });
+        }
         _db.Orders.Add(order);
         await _db.SaveChangesAsync();
 
@@ -275,7 +300,7 @@ public class CheckoutController : ControllerBase
             p.StockQuantity = Math.Max(0, p.StockQuantity - i.Quantity);
         }
 
-        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd);
+        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, products);
         if (couponResult.error != null) return couponResult.error;
 
         order.SubtotalUsd = subtotalUsd;
@@ -297,7 +322,11 @@ public class CheckoutController : ControllerBase
         };
 
         order.Payments.Add(payment);
-        if (couponResult.coupon != null) couponResult.coupon.UsedCount += 1;
+        if (couponResult.coupon != null)
+        {
+            couponResult.coupon.UsedCount += 1;
+            _db.CouponUsages.Add(new CouponUsage { CouponId = couponResult.coupon.Id, UserId = userId, OrderId = order.Id, DeviceKeyHash = CouponsController.HashDeviceKey(req.DeviceKey) });
+        }
         _db.Orders.Add(order);
         await _db.SaveChangesAsync();
 
@@ -362,12 +391,14 @@ public class CheckoutProductRequest
     public Guid ProductId { get; set; }
     public int Quantity { get; set; } = 1;
     public string? CouponCode { get; set; }
+    public string? DeviceKey { get; set; }
 }
 
 public class CheckoutCartRequest
 {
     public List<CheckoutCartItem> Items { get; set; } = new();
     public string? CouponCode { get; set; }
+    public string? DeviceKey { get; set; }
 }
 
 public class CheckoutCartItem

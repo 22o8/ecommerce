@@ -41,7 +41,7 @@ export const useCartStore = defineStore('cart', () => {
     if (!normalized.id || Number(normalized.stockQuantity ?? 0) <= 0) return
     const existing = items.value.find(i => i.id === normalized.id)
     if (existing) {
-      existing.quantity += qty
+      existing.quantity = Math.min(Math.max(1, Number(existing.stockQuantity ?? 99) || 99), existing.quantity + qty)
       existing.price = normalized.price || existing.price
       existing.originalPrice = normalized.originalPrice ?? existing.originalPrice ?? null
       existing.discountPercent = normalized.discountPercent ?? existing.discountPercent ?? 0
@@ -49,7 +49,7 @@ export const useCartStore = defineStore('cart', () => {
       existing.title = normalized.title || existing.title
       existing.stockQuantity = normalized.stockQuantity ?? existing.stockQuantity ?? 0
     } else {
-      items.value.push({ ...normalized, quantity: Math.max(1, qty) })
+      items.value.push({ ...normalized, quantity: Math.min(Math.max(1, Number(normalized.stockQuantity ?? 99) || 99), Math.max(1, qty)) })
     }
   }
 

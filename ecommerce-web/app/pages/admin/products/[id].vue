@@ -108,6 +108,11 @@
             </div>
 
             <label class="flex items-center gap-2 text-sm">
+              <input type="checkbox" v-model="form.isCouponAllowed" class="h-4 w-4" />
+              {{ t('admin.couponAllowed') || 'يسمح بالكوبون' }}
+            </label>
+
+            <label class="flex items-center gap-2 text-sm">
               <input type="checkbox" v-model="form.isActive" class="h-4 w-4" />
               {{ t('admin.isActive') }}
             </label>
@@ -241,6 +246,7 @@ const form = reactive({
   subCategory: '',
   stockQuantity: 0,
   lowStockThreshold: 5,
+  isCouponAllowed: true,
 })
 
 const finalPrice = computed(() => {
@@ -283,6 +289,7 @@ function resetForm() {
   form.subCategory = product.value.subCategory || ''
   form.stockQuantity = Number(product.value.stockQuantity ?? 0)
   form.lowStockThreshold = Number(product.value.lowStockThreshold ?? 5)
+  form.isCouponAllowed = Boolean(product.value.isCouponAllowed ?? true)
   // If API returns brand NAME, map it to slug so the dropdown selects correctly.
   const brandList = Array.isArray(brands.value) ? brands.value : []
   const match = brandList.find((b: any) => b.slug === form.brandSlug || b.name === form.brandSlug)
@@ -419,6 +426,7 @@ async function onSave() {
       subCategory: form.subCategory,
       stockQuantity: Number(form.stockQuantity ?? 0),
       lowStockThreshold: Number(form.lowStockThreshold ?? 0),
+      isCouponAllowed: Boolean(form.isCouponAllowed),
       isPublished: Boolean(form.isActive),
       isFeatured: Boolean(form.isFeatured),
     })

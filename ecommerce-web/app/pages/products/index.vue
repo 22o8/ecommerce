@@ -154,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import ProductCard from '~/components/ProductCard.vue'
 
 const { t } = useI18n()
@@ -171,11 +171,12 @@ const category = ref(String(route.query.category || ''))
 const subCategory = ref(String(route.query.subCategory || ''))
 const page = ref(Number(route.query.page || 1) || 1)
 
-await useAsyncData('products_page_boot', async () => {
+const productsPageKey = computed(() => `products_page_boot:${JSON.stringify(route.query)}`)
+await useAsyncData(productsPageKey, async () => {
   await brandsStore.fetchPublic()
   await fetchProducts()
   return true
-})
+}, { watch: [() => route.fullPath] })
 
 const brandOptions = computed(() => (brandsStore.publicItems || []).map((b: any) => ({ name: b.name, slug: b.slug })))
 const categoryOptions = computed(() => [
@@ -285,6 +286,10 @@ function goPage(p: number) {
     },
   })
 }
+
+onMounted(async () => {
+  if (!products.items.length) await fetchProducts()
+})
 
 watch(
   () => route.query,

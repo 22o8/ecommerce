@@ -29,6 +29,7 @@ public class Product
     public string SubCategory { get; set; } = "";
     public int StockQuantity { get; set; } = 100;
     public int LowStockThreshold { get; set; } = 5;
+    public bool IsCouponAllowed { get; set; } = true;
 
     public bool IsPublished { get; set; } = true;
 
