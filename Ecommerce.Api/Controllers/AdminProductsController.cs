@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using Ecommerce.Api.Domain.Entities;
-using Ecommerce.Api.Infrastructure;
 using Ecommerce.Api.Infrastructure.Data;
 using Ecommerce.Api.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authorization;
@@ -49,6 +48,8 @@ public class AdminProductsController : ControllerBase
                     p.Brand,
                     p.Category,
                     p.SubCategory,
+                    p.StockQuantity,
+                    p.LowStockThreshold,
                     p.CreatedAt,
                     imagesCount = p.Images.Count()
                 })
@@ -82,6 +83,8 @@ public class AdminProductsController : ControllerBase
                 x.Brand,
                 x.Category,
                 x.SubCategory,
+                x.StockQuantity,
+                x.LowStockThreshold,
                 x.CreatedAt,
                 x.RatingAvg,
                 x.RatingCount,
@@ -117,14 +120,6 @@ public class AdminProductsController : ControllerBase
         var exists = await _db.Products.AnyAsync(x => x.Slug.ToLower() == slug);
         if (exists) return BadRequest(new { message = "Slug already exists" });
 
-        var category = ProductTaxonomy.Normalize(req.Category);
-        if (!ProductTaxonomy.IsValidCategory(category))
-            return BadRequest(new { message = "Invalid category" });
-
-        var subCategory = ProductTaxonomy.Normalize(req.SubCategory);
-        if (!ProductTaxonomy.IsValidSubCategory(subCategory))
-            return BadRequest(new { message = "Invalid subcategory" });
-
         var p = new Product
         {
             Id = Guid.NewGuid(),
@@ -137,8 +132,10 @@ public class AdminProductsController : ControllerBase
             IsPublished = req.IsPublished,
             IsFeatured = req.IsFeatured,
             Brand = brandSlug,
-            Category = category,
-            SubCategory = subCategory,
+            Category = NormalizeCategory(req.Category),
+            SubCategory = NormalizeSubCategory(req.SubCategory),
+            StockQuantity = Math.Max(0, req.StockQuantity),
+            LowStockThreshold = Math.Max(0, req.LowStockThreshold),
             CreatedAt = DateTime.UtcNow
         };
 
@@ -177,19 +174,13 @@ public class AdminProductsController : ControllerBase
         p.PriceIqd = (req.PriceIqd > 0 ? req.PriceIqd : req.PriceUsd);
         p.DiscountPercent = ClampDiscount(req.DiscountPercent);
         p.PriceUsd = req.PriceUsd;
-        var category = ProductTaxonomy.Normalize(req.Category);
-        if (!ProductTaxonomy.IsValidCategory(category))
-            return BadRequest(new { message = "Invalid category" });
-
-        var subCategory = ProductTaxonomy.Normalize(req.SubCategory);
-        if (!ProductTaxonomy.IsValidSubCategory(subCategory))
-            return BadRequest(new { message = "Invalid subcategory" });
-
         p.IsPublished = req.IsPublished;
         p.IsFeatured = req.IsFeatured;
         p.Brand = brandSlug;
-        p.Category = category;
-        p.SubCategory = subCategory;
+        p.Category = NormalizeCategory(req.Category);
+        p.SubCategory = NormalizeSubCategory(req.SubCategory);
+        p.StockQuantity = Math.Max(0, req.StockQuantity);
+        p.LowStockThreshold = Math.Max(0, req.LowStockThreshold);
 
         await _db.SaveChangesAsync();
         return Ok(new { message = "Updated" });
@@ -359,6 +350,17 @@ public class AdminProductsController : ControllerBase
         return value;
     }
 
+    private static string NormalizeCategory(string? value)
+    {
+        var v = (value ?? string.Empty).Trim().ToLowerInvariant();
+        return string.IsNullOrWhiteSpace(v) ? "general" : v;
+    }
+
+    private static string NormalizeSubCategory(string? value)
+    {
+        return (value ?? string.Empty).Trim().ToLowerInvariant();
+    }
+
     private static string ExtractStorageKeyFromUrl(string? url)
     {
         if (string.IsNullOrWhiteSpace(url)) return "";
@@ -396,14 +398,14 @@ public class UpsertProductRequest
     [MinLength(1)]
     public string Brand { get; set; } = "Unspecified";
 
-    [Required]
-    [MinLength(1)]
-    public string Category { get; set; } = "serum";
-
-    public string? SubCategory { get; set; }
-
     public bool IsPublished { get; set; }
     public bool IsFeatured { get; set; }
+    public string? Category { get; set; }
+    public string? SubCategory { get; set; }
+    [Range(0, 999999)]
+    public int StockQuantity { get; set; } = 100;
+    [Range(0, 999999)]
+    public int LowStockThreshold { get; set; } = 5;
 }
 
 public class SetFeaturedRequest

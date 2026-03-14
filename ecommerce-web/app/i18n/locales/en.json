@@ -309,8 +309,18 @@
     "tableMetric": "Value",
     "summaryTables": "Structured summary",
     "category": "Category",
-    "subCategory": "Subcategory",
-    "noSubCategory": "No subcategory"
+    "subCategory": "Precise type",
+    "subCategoryPlaceholder": "Example: eye-serum",
+    "stockQuantity": "Stock quantity",
+    "lowStockThreshold": "Low stock threshold",
+    "categoryGeneral": "General",
+    "categoryMoisturizer": "Moisturizer",
+    "categoryEyeCare": "Eye Care",
+    "categoryCleanser": "Cleanser",
+    "categorySerum": "Serum",
+    "categorySunscreen": "Sunscreen",
+    "categoryToner": "Toner",
+    "categoryMask": "Mask"
   },
   "nav": {
     "logout": "Logout",
@@ -358,8 +368,7 @@
     "catCleanser": "Cleanser",
     "subtitle": "Professional digital store",
     "featuredTab": "Featured",
-    "discountsTab": "Discounts",
-    "catEyeCare": "Eye Care"
+    "discountsTab": "Discounts"
   },
   "productsPage": {
     "title": "Products",
@@ -368,11 +377,7 @@
     "filters": "Filters",
     "brand": "Brand",
     "price": "Price",
-    "sort": {
-      "priceDesc": "Price desc",
-      "priceAsc": "Price asc",
-      "new": "New"
-    },
+    "sort": "Sort",
     "newest": "Newest",
     "priceLow": "Price: Low to High",
     "priceHigh": "Price: High to Low",
@@ -400,10 +405,23 @@
     "chooseBrand": "Choose brand",
     "chooseCategory": "Choose category",
     "allCategories": "All categories",
-    "allSubCategories": "All subcategories",
-    "chooseSubCategory": "Choose subcategory",
-    "toolbarCategory": "Showing {count} products in {category}",
-    "toolbarSubCategory": "Showing {count} products in {subCategory}"
+    "chooseSubCategory": "Choose precise type",
+    "allSubCategories": "All types",
+    "categoryMoisturizer": "Moisturizer",
+    "categoryEyeCare": "Eye Care",
+    "categoryCleanser": "Cleanser",
+    "categorySerum": "Serum",
+    "categorySunscreen": "Sunscreen",
+    "categoryToner": "Toner",
+    "categoryMask": "Mask",
+    "subEyeSerum": "Eye Serum",
+    "subEyeCream": "Eye Cream",
+    "subEyeGel": "Eye Gel",
+    "subFaceCream": "Face Cream",
+    "subFaceGel": "Face Gel",
+    "subFoamCleanser": "Foam Cleanser",
+    "subOilCleanser": "Oil Cleanser",
+    "toolbarCategory": "Showing {count} products in {category}"
   },
   "brandsPage": {
     "title": "Brands",

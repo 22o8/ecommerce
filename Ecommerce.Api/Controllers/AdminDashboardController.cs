@@ -22,20 +22,20 @@ public class AdminDashboardController : ControllerBase
     {
         var totalOrders = await _db.Orders.CountAsync();
         var totalUsers = await _db.Users.CountAsync();
+        var totalProducts = await _db.Products.CountAsync();
+        var outOfStockCount = await _db.Products.CountAsync(p => p.IsPublished && p.StockQuantity <= 0);
+        var lowStockCount = await _db.Products.CountAsync(p => p.IsPublished && p.StockQuantity > 0 && p.StockQuantity <= p.LowStockThreshold);
 
-        // Revenue
-        var totalRevenueUsd = await _db.Payments
-            .Where(p => p.Status == "Succeeded")
-            .SumAsync(p => (decimal?)p.AmountUsd) ?? 0m;
-
-        var totalRevenueIqd = await _db.Payments
-            .Where(p => p.Status == "Succeeded")
-            .SumAsync(p => (decimal?)p.AmountIqd) ?? 0m;
+        var totalRevenueUsd = await _db.Payments.Where(p => p.Status == "Succeeded").SumAsync(p => (decimal?)p.AmountUsd) ?? 0m;
+        var totalRevenueIqd = await _db.Payments.Where(p => p.Status == "Succeeded").SumAsync(p => (decimal?)p.AmountIqd) ?? 0m;
 
         return Ok(new
         {
             totalOrders,
             totalUsers,
+            totalProducts,
+            outOfStockCount,
+            lowStockCount,
             totalRevenueUsd,
             totalRevenueIqd
         });

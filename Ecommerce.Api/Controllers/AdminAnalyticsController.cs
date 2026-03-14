@@ -140,6 +140,21 @@ public class AdminAnalyticsController : ControllerBase
             .Select(p => new { p.Id, p.Title, p.Slug, p.Brand, p.PriceIqd })
             .ToListAsync();
 
+        var lowStock = await _db.Products
+            .Where(p => p.IsPublished && p.StockQuantity > 0 && p.StockQuantity <= p.LowStockThreshold)
+            .OrderBy(p => p.StockQuantity)
+            .ThenBy(p => p.Title)
+            .Take(10)
+            .Select(p => new { productId = p.Id, title = p.Title, stockQuantity = p.StockQuantity, lowStockThreshold = p.LowStockThreshold })
+            .ToListAsync();
+
+        var outOfStock = await _db.Products
+            .Where(p => p.IsPublished && p.StockQuantity <= 0)
+            .OrderBy(p => p.Title)
+            .Take(10)
+            .Select(p => new { productId = p.Id, title = p.Title, stockQuantity = p.StockQuantity, lowStockThreshold = p.LowStockThreshold })
+            .ToListAsync();
+
         return Ok(new
         {
             since,
@@ -161,7 +176,9 @@ public class AdminAnalyticsController : ControllerBase
                 title = products.FirstOrDefault(p => p.Id == x.productId)?.Title,
                 views = x.count
             }),
-            neglected
+            neglected,
+            lowStock,
+            outOfStock
         });
     }
 

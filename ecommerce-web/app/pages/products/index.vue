@@ -71,11 +71,9 @@
 
           <div class="filter-field">
             <label class="filter-label rtl-text">{{ t('productsPage.chooseCategory') }}</label>
-            <select v-model="category" class="input products-select" @change="subCategory=''; applyFilters()" :aria-label="t('productsPage.chooseCategory')">
+            <select v-model="category" class="input products-select" @change="onCategoryChange" :aria-label="t('productsPage.chooseCategory')">
               <option value="">{{ t('productsPage.allCategories') }}</option>
-              <option v-for="c in categoryOptions" :key="c.key" :value="c.key">
-                {{ c.name }}
-              </option>
+              <option v-for="c in categoryOptions" :key="c.value" :value="c.value">{{ c.label }}</option>
             </select>
           </div>
 
@@ -83,9 +81,7 @@
             <label class="filter-label rtl-text">{{ t('productsPage.chooseSubCategory') }}</label>
             <select v-model="subCategory" class="input products-select" @change="applyFilters" :aria-label="t('productsPage.chooseSubCategory')">
               <option value="">{{ t('productsPage.allSubCategories') }}</option>
-              <option v-for="s in subCategoryOptions(category)" :key="s.key" :value="s.key">
-                {{ s.name }}
-              </option>
+              <option v-for="c in subCategoryOptions" :key="c.value" :value="c.value">{{ c.label }}</option>
             </select>
           </div>
 
@@ -167,7 +163,6 @@ const router = useRouter()
 
 const brandsStore = useBrandsStore()
 const products = useProductsStore()
-const { categoryOptions, subCategoryOptions } = useProductTaxonomy()
 
 const q = ref(String(route.query.q || ''))
 const sort = ref(String(route.query.sort || 'new'))
@@ -183,6 +178,31 @@ await useAsyncData('products_page_boot', async () => {
 })
 
 const brandOptions = computed(() => (brandsStore.publicItems || []).map((b: any) => ({ name: b.name, slug: b.slug })))
+const categoryOptions = computed(() => [
+  { value: 'moisturizer', label: t('productsPage.categoryMoisturizer') },
+  { value: 'eye-care', label: t('productsPage.categoryEyeCare') },
+  { value: 'cleanser', label: t('productsPage.categoryCleanser') },
+  { value: 'serum', label: t('productsPage.categorySerum') },
+  { value: 'sunscreen', label: t('productsPage.categorySunscreen') },
+  { value: 'toner', label: t('productsPage.categoryToner') },
+  { value: 'mask', label: t('productsPage.categoryMask') },
+])
+const subCategoryMap: Record<string, Array<{value:string,label:string}>> = {
+  'eye-care': [
+    { value: 'eye-serum', label: t('productsPage.subEyeSerum') },
+    { value: 'eye-cream', label: t('productsPage.subEyeCream') },
+    { value: 'eye-gel', label: t('productsPage.subEyeGel') },
+  ],
+  'moisturizer': [
+    { value: 'face-cream', label: t('productsPage.subFaceCream') },
+    { value: 'face-gel', label: t('productsPage.subFaceGel') },
+  ],
+  'cleanser': [
+    { value: 'foam-cleanser', label: t('productsPage.subFoamCleanser') },
+    { value: 'oil-cleanser', label: t('productsPage.subOilCleanser') },
+  ],
+}
+const subCategoryOptions = computed(() => subCategoryMap[category.value] || [])
 
 const hasNext = computed(() => {
   const total = Number(products.totalCount || 0)
@@ -202,23 +222,14 @@ const activeBrandLabel = computed(() => {
   return match?.name || t('productsPage.allBrands')
 })
 
-const activeCategoryLabel = computed(() => {
-  if (!category.value) return t('productsPage.allCategories')
-  const match = categoryOptions.value.find((c: any) => c.key === category.value)
-  return match?.name || t('productsPage.allCategories')
-})
-
-const activeSubCategoryLabel = computed(() => {
-  if (!subCategory.value) return t('productsPage.allSubCategories')
-  const match = subCategoryOptions(category.value).find((s: any) => s.key === subCategory.value)
-  return match?.name || t('productsPage.allSubCategories')
-})
-
 const toolbarText = computed(() => {
   const count = products.totalCount || products.items.length || 0
-  if (subCategory.value) return t('productsPage.toolbarSubCategory', { count, subCategory: activeSubCategoryLabel.value })
-  if (category.value) return t('productsPage.toolbarCategory', { count, category: activeCategoryLabel.value })
-  if (brand.value) return t('productsPage.toolbarBrand', { count, brand: activeBrandLabel.value })
+  if (brand.value) {
+    return t('productsPage.toolbarBrand', { count, brand: activeBrandLabel.value })
+  }
+  if (category.value) {
+    return t('productsPage.toolbarCategory', { count, category: categoryOptions.value.find(c => c.value === category.value)?.label || category.value })
+  }
   return t('productsPage.toolbarAll', { count })
 })
 
@@ -234,6 +245,11 @@ async function fetchProducts() {
   })
 }
 
+
+function onCategoryChange() {
+  if (!subCategoryOptions.value.find((x) => x.value === subCategory.value)) subCategory.value = ''
+  applyFilters()
+}
 function applyFilters() {
   page.value = 1
   router.push({

@@ -1,5 +1,6 @@
 using System;
-using Ecommerce.Api.Infrastructure;
+using System.Collections.Generic;
+using System.Linq;
 using Ecommerce.Api.Infrastructure.Data;
 using Ecommerce.Api.Models.Products;
 using Microsoft.AspNetCore.Mvc;
@@ -18,380 +19,240 @@ public class ProductsController : ControllerBase
         _db = db;
     }
 
-    // GET /api/Products?Page=1&PageSize=12&Q=abc&Sort=new|price:asc|price:desc
+    private static string N(string? value) => (value ?? string.Empty).Trim().ToLowerInvariant();
+
+    private static readonly Dictionary<string, string[]> CategoryKeywords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["moisturizer"] = new[] { "مرطب", "moisturizer", "moisturiser", "hydrating cream", "hydrating gel", "lotion" },
+        ["eye-care"] = new[] { "eye", "عين", "under eye", "undereye", "eye cream", "eye serum", "eye gel" },
+        ["cleanser"] = new[] { "cleanser", "cleanse", "غسول", "foam wash", "face wash" },
+        ["serum"] = new[] { "serum", "سيروم", "ampoule" },
+        ["sunscreen"] = new[] { "sunscreen", "sun screen", "spf", "واقي", "واقي شمس" },
+        ["toner"] = new[] { "toner", "تونر" },
+        ["mask"] = new[] { "mask", "ماسك" },
+    };
+
+    private static readonly Dictionary<string, string[]> SubCategoryKeywords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["eye-serum"] = new[] { "eye serum", "serum eye", "سيروم العين", "سيروم للعين" },
+        ["eye-cream"] = new[] { "eye cream", "cream eye", "كريم العين", "كريم للعين" },
+        ["eye-gel"] = new[] { "eye gel", "جل العين", "جل للعين" },
+        ["face-cream"] = new[] { "face cream", "cream", "كريم", "moisturizing cream" },
+        ["face-gel"] = new[] { "gel", "جل", "moisturizing gel" },
+        ["foam-cleanser"] = new[] { "foam", "رغوي", "foam cleanser" },
+        ["oil-cleanser"] = new[] { "oil cleanser", "cleansing oil", "زيتي" },
+    };
+
+    private static bool ContainsAny(string haystack, IEnumerable<string> needles)
+        => needles.Any(n => haystack.Contains(n, StringComparison.OrdinalIgnoreCase));
+
+    private static bool MatchesCategory(dynamic p, string? category, string? subCategory, string? q)
+    {
+        var text = string.Join(" ", new[]
+        {
+            (string?)p.Title,
+            (string?)p.Description,
+            (string?)p.Slug,
+            (string?)p.Brand,
+            (string?)p.Category,
+            (string?)p.SubCategory,
+        }.Where(x => !string.IsNullOrWhiteSpace(x))).ToLowerInvariant();
+
+        var normalizedCategory = N(category);
+        var normalizedSub = N(subCategory);
+        var normalizedQ = N(q);
+
+        if (!string.IsNullOrWhiteSpace(normalizedCategory))
+        {
+            var storedCat = N((string?)p.Category);
+            if (storedCat == normalizedCategory)
+            {
+                // ok
+            }
+            else if (CategoryKeywords.TryGetValue(normalizedCategory, out var catWords) && ContainsAny(text, catWords))
+            {
+                // inferred match
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedSub))
+        {
+            var storedSub = N((string?)p.SubCategory);
+            if (storedSub == normalizedSub)
+            {
+                // ok
+            }
+            else if (SubCategoryKeywords.TryGetValue(normalizedSub, out var subWords) && ContainsAny(text, subWords))
+            {
+                // inferred
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedQ))
+        {
+            if (!text.Contains(normalizedQ))
+            {
+                if (SubCategoryKeywords.TryGetValue(normalizedQ, out var exactSubWords) && ContainsAny(text, exactSubWords))
+                {
+                }
+                else if (CategoryKeywords.TryGetValue(normalizedQ, out var exactCatWords) && ContainsAny(text, exactCatWords))
+                {
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private async Task<List<dynamic>> BuildProjectedProductsAsync(IQueryable<Domain.Entities.Product> query)
+    {
+        return await query
+            .Select(p => new
+            {
+                p.Id,
+                p.Title,
+                p.Slug,
+                p.Description,
+                p.PriceIqd,
+                p.DiscountPercent,
+                finalPriceIqd = p.DiscountPercent > 0
+                    ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2)
+                    : p.PriceIqd,
+                p.PriceUsd,
+                p.RatingAvg,
+                p.Brand,
+                p.Category,
+                p.SubCategory,
+                p.StockQuantity,
+                p.RatingCount,
+                p.CreatedAt,
+                viewCount = _db.ProductViews.Count(v => v.ProductId == p.Id),
+                favoriteCount = _db.Favorites.Count(f => f.ProductId == p.Id),
+                coverImage = p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault()
+            })
+            .Cast<dynamic>()
+            .ToListAsync();
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] PublicProductQuery query)
     {
         var page = query.Page < 1 ? 1 : query.Page;
         var pageSize = query.PageSize is < 1 or > 60 ? 12 : query.PageSize;
-        var q = (query.Q ?? "").Trim().ToLowerInvariant();
+        var q = N(query.Q);
+        var brand = N(query.Brand);
+        var category = N(query.Category);
+        var subCategory = N(query.SubCategory);
 
-        var baseQuery = _db.Products
-            .AsNoTracking()
-            .Where(p => p.IsPublished);
+        var baseQuery = _db.Products.AsNoTracking().Where(p => p.IsPublished);
 
-        var category = ProductTaxonomy.Normalize(query.Category);
-        var subCategory = ProductTaxonomy.Normalize(query.SubCategory);
+        if (!string.IsNullOrWhiteSpace(brand) && !brand.Equals("all", StringComparison.OrdinalIgnoreCase))
+            baseQuery = baseQuery.Where(p => p.Brand != null && p.Brand.ToLower() == brand);
 
-        var detectedSubCategory = ProductTaxonomy.DetectSubCategoryFromQuery(q);
-        var detectedCategory = ProductTaxonomy.DetectCategoryFromQuery(q);
+        var allItems = await BuildProjectedProductsAsync(baseQuery);
+        var filtered = allItems.Where(p => MatchesCategory(p, category, subCategory, q));
 
-        if (string.IsNullOrWhiteSpace(subCategory) && !string.IsNullOrWhiteSpace(detectedSubCategory))
-            subCategory = detectedSubCategory;
-
-        if (string.IsNullOrWhiteSpace(category) && !string.IsNullOrWhiteSpace(detectedCategory))
-            category = detectedCategory;
-
-        if (!string.IsNullOrWhiteSpace(subCategory))
+        filtered = (query.Sort ?? "new") switch
         {
-            baseQuery = baseQuery.Where(p => p.SubCategory != null && p.SubCategory.ToLower() == subCategory);
-        }
-
-        if (!string.IsNullOrWhiteSpace(category))
-        {
-            baseQuery = baseQuery.Where(p => p.Category != null && p.Category.ToLower() == category);
-        }
-
-        var matchedTaxonomy = !string.IsNullOrWhiteSpace(subCategory) || !string.IsNullOrWhiteSpace(category);
-        if (!string.IsNullOrWhiteSpace(q) && !matchedTaxonomy)
-        {
-            var searchText = q.Replace('-', ' ').Trim();
-            baseQuery = baseQuery.Where(p =>
-                p.Title.ToLower().Contains(q) ||
-                p.Title.ToLower().Contains(searchText) ||
-                (p.Description != null && (p.Description.ToLower().Contains(q) || p.Description.ToLower().Contains(searchText))) ||
-                p.Slug.ToLower().Contains(q) ||
-                (p.Category != null && p.Category.ToLower().Contains(q)) ||
-                (p.SubCategory != null && p.SubCategory.ToLower().Contains(q))
-            );
-        }
-
-        var brand = (query.Brand ?? "").Trim();
-
-        if (!string.IsNullOrWhiteSpace(brand) && !brand.Equals("All", StringComparison.OrdinalIgnoreCase))
-        {
-            baseQuery = baseQuery.Where(p => p.Brand != null && p.Brand.ToLower() == brand.ToLower());
-        }
-
-        baseQuery = (query.Sort ?? "new") switch
-        {
-            "price:asc" or "priceAsc" => baseQuery.OrderBy(p => p.PriceIqd),
-            "price:desc" or "priceDesc" => baseQuery.OrderByDescending(p => p.PriceIqd),
-            _ => baseQuery.OrderByDescending(p => p.CreatedAt),
+            "price:asc" or "priceAsc" => filtered.OrderBy(p => (decimal)p.PriceIqd),
+            "price:desc" or "priceDesc" => filtered.OrderByDescending(p => (decimal)p.PriceIqd),
+            _ => filtered.OrderByDescending(p => (DateTime)p.CreatedAt),
         };
 
-        var total = await baseQuery.CountAsync();
+        var total = filtered.Count();
+        var items = filtered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
-        var items = await baseQuery
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(p => new
-            {
-                p.Id,
-                p.Title,
-                p.Slug,
-                p.Description,
-                p.PriceIqd,
-                p.DiscountPercent,
-                finalPriceIqd = p.DiscountPercent > 0
-                    ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2)
-                    : p.PriceIqd,
-                p.PriceUsd,
-                p.RatingAvg,
-                p.Brand,
-                p.Category,
-                p.SubCategory,
-                p.RatingCount,
-                p.CreatedAt,
-                viewCount = _db.ProductViews.Count(v => v.ProductId == p.Id),
-                favoriteCount = _db.Favorites.Count(f => f.ProductId == p.Id),
-                // Use navigation property to keep translation stable across providers.
-                coverImage = p.Images
-                    .OrderBy(i => i.SortOrder)
-                    .Select(i => i.Url)
-                    .FirstOrDefault()
-            })
-            .ToListAsync();
-
-        return Ok(new
-        {
-            page,
-            pageSize,
-            totalCount = total,
-            items
-        });
+        return Ok(new { page, pageSize, totalCount = total, items });
     }
 
-    // GET /api/Products/featured
-	// ✅ Home page "Featured Products"
-	// المطلوب: منتجات يحددها الأدمن (IsFeatured = true). وإذا ماكو أي منتج مميز، نرجّع أحدث منتجات منشورة كـ fallback.
     [HttpGet("featured")]
-	public async Task<IActionResult> GetFeatured([FromQuery] int take = 12)
+    public async Task<IActionResult> GetFeatured([FromQuery] int take = 12)
     {
         var safeTake = take is < 1 or > 60 ? 12 : take;
-
-        // 1) Featured first
-        var featured = await _db.Products
-            .AsNoTracking()
-			.Where(p => p.IsPublished && p.IsFeatured)
-            .OrderByDescending(p => p.CreatedAt)
-            .Take(safeTake)
-            .Select(p => new
-            {
-                p.Id,
-                p.Title,
-                p.Slug,
-                p.Description,
-                p.PriceIqd,
-                p.DiscountPercent,
-                finalPriceIqd = p.DiscountPercent > 0
-                    ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2)
-                    : p.PriceIqd,
-                p.PriceUsd,
-                p.RatingAvg,
-                p.Brand,
-                p.Category,
-                p.SubCategory,
-                p.RatingCount,
-                p.CreatedAt,
-                viewCount = _db.ProductViews.Count(v => v.ProductId == p.Id),
-                favoriteCount = _db.Favorites.Count(f => f.ProductId == p.Id),
-                coverImage = p.Images
-                    .OrderBy(i => i.SortOrder)
-                    .Select(i => i.Url)
-                    .FirstOrDefault()
-            })
-            .ToListAsync();
-
-        // 2) Fallback: latest published
-        var items = featured;
+        var items = await BuildProjectedProductsAsync(_db.Products.AsNoTracking().Where(p => p.IsPublished && p.IsFeatured).OrderByDescending(p => p.CreatedAt).Take(safeTake));
         if (items.Count == 0)
-        {
-            items = await _db.Products
-                .AsNoTracking()
-                .Where(p => p.IsPublished)
-                .OrderByDescending(p => p.CreatedAt)
-                .Take(safeTake)
-                .Select(p => new
-                {
-                    p.Id,
-                    p.Title,
-                    p.Slug,
-                    p.Description,
-                    p.PriceIqd,
-                    p.DiscountPercent,
-                    finalPriceIqd = p.DiscountPercent > 0
-                        ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2)
-                        : p.PriceIqd,
-                p.PriceUsd,
-                    p.RatingAvg,
-                    p.Brand,
-                    p.Category,
-                    p.SubCategory,
-                    p.RatingCount,
-                    p.CreatedAt,
-                    viewCount = _db.ProductViews.Count(v => v.ProductId == p.Id),
-                    favoriteCount = _db.Favorites.Count(f => f.ProductId == p.Id),
-                    coverImage = p.Images
-                        .OrderBy(i => i.SortOrder)
-                        .Select(i => i.Url)
-                        .FirstOrDefault()
-                })
-                .ToListAsync();
-        }
-
-        return Ok(new
-        {
-            totalCount = items.Count,
-            items
-        });
+            items = await BuildProjectedProductsAsync(_db.Products.AsNoTracking().Where(p => p.IsPublished).OrderByDescending(p => p.CreatedAt).Take(safeTake));
+        return Ok(new { totalCount = items.Count, items });
     }
 
-    // GET /api/Products/{id}
-    // Public product details by id (compatibility for some frontend pages)
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById([FromRoute] Guid id)
     {
-        var p = await _db.Products
-            .AsNoTracking()
-            .Where(x => x.IsPublished && x.Id == id)
+        var p = await _db.Products.AsNoTracking().Where(x => x.IsPublished && x.Id == id)
             .Select(x => new
             {
-                x.Id,
-                x.Title,
-                x.Slug,
-                x.Description,
-                x.PriceIqd,
-                x.DiscountPercent,
-                finalPriceIqd = x.DiscountPercent > 0
-                    ? Math.Round(x.PriceIqd * (100m - x.DiscountPercent) / 100m, 2)
-                    : x.PriceIqd,
-                x.PriceUsd,
-                x.RatingAvg,
-                x.Brand,
-                x.Category,
-                x.SubCategory,
-                x.RatingCount,
-                x.CreatedAt,
+                x.Id, x.Title, x.Slug, x.Description, x.PriceIqd, x.DiscountPercent,
+                finalPriceIqd = x.DiscountPercent > 0 ? Math.Round(x.PriceIqd * (100m - x.DiscountPercent) / 100m, 2) : x.PriceIqd,
+                x.PriceUsd, x.RatingAvg, x.Brand, x.Category, x.SubCategory, x.StockQuantity, x.RatingCount, x.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
                 favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
-                images = _db.ProductImages
-                    .Where(i => i.ProductId == x.Id)
-                    .OrderBy(i => i.SortOrder)
-                    .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
-                    .ToList()
-            })
-            .FirstOrDefaultAsync();
-
+                images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList()
+            }).FirstOrDefaultAsync();
         if (p == null) return NotFound(new { message = "Product not found" });
         return Ok(p);
     }
 
-    // GET /api/Products/{id}/images
-    // Public images list by product id (compatibility)
     [HttpGet("{id:guid}/images")]
     public async Task<IActionResult> GetImages([FromRoute] Guid id)
     {
         var exists = await _db.Products.AsNoTracking().AnyAsync(x => x.IsPublished && x.Id == id);
         if (!exists) return NotFound(new { message = "Product not found" });
-
-        var images = await _db.ProductImages
-            .AsNoTracking()
-            .Where(i => i.ProductId == id)
-            .OrderBy(i => i.SortOrder)
-            .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
-            .ToListAsync();
-
+        var images = await _db.ProductImages.AsNoTracking().Where(i => i.ProductId == id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToListAsync();
         return Ok(images);
     }
 
-    // GET /api/Products/slug/{slug}
     [HttpGet("slug/{slug}")]
     public async Task<IActionResult> GetBySlug([FromRoute] string slug)
     {
-        slug = (slug ?? "").Trim().ToLowerInvariant();
-
-        var p = await _db.Products
-            .AsNoTracking()
-            .Where(x => x.IsPublished && x.Slug.ToLower() == slug)
+        slug = N(slug);
+        var p = await _db.Products.AsNoTracking().Where(x => x.IsPublished && x.Slug.ToLower() == slug)
             .Select(x => new
             {
-                x.Id,
-                x.Title,
-                x.Slug,
-                x.Description,
-                x.PriceIqd,
-                x.DiscountPercent,
-                finalPriceIqd = x.DiscountPercent > 0
-                    ? Math.Round(x.PriceIqd * (100m - x.DiscountPercent) / 100m, 2)
-                    : x.PriceIqd,
-                x.PriceUsd,
-                x.RatingAvg,
-                x.Brand,
-                x.Category,
-                x.SubCategory,
-                x.RatingCount,
-                x.CreatedAt,
+                x.Id, x.Title, x.Slug, x.Description, x.PriceIqd, x.DiscountPercent,
+                finalPriceIqd = x.DiscountPercent > 0 ? Math.Round(x.PriceIqd * (100m - x.DiscountPercent) / 100m, 2) : x.PriceIqd,
+                x.PriceUsd, x.RatingAvg, x.Brand, x.Category, x.SubCategory, x.StockQuantity, x.RatingCount, x.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
                 favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
-                images = _db.ProductImages
-                    .Where(i => i.ProductId == x.Id)
-                    .OrderBy(i => i.SortOrder)
-                    .Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder })
-                    .ToList()
-            })
-            .FirstOrDefaultAsync();
-
+                images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList()
+            }).FirstOrDefaultAsync();
         if (p == null) return NotFound(new { message = "Product not found" });
         return Ok(p);
     }
 
-    // GET /api/Products/discounts?take=24
     [HttpGet("discounts")]
     public async Task<IActionResult> GetDiscounts([FromQuery] int take = 24)
     {
         var safeTake = take is < 1 or > 120 ? 24 : take;
-        var items = await _db.Products
-            .AsNoTracking()
-            .Where(p => p.IsPublished && p.DiscountPercent > 0)
-            .OrderByDescending(p => p.DiscountPercent)
-            .ThenByDescending(p => p.CreatedAt)
-            .Take(safeTake)
-            .Select(p => new
-            {
-                p.Id,
-                p.Title,
-                p.Slug,
-                p.Description,
-                p.PriceIqd,
-                p.DiscountPercent,
-                finalPriceIqd = Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2),
-                p.RatingAvg,
-                p.Brand,
-                p.Category,
-                p.SubCategory,
-                p.RatingCount,
-                p.CreatedAt,
-                coverImage = p.Images
-                    .OrderBy(i => i.SortOrder)
-                    .Select(i => i.Url)
-                    .FirstOrDefault()
-            })
-            .ToListAsync();
-
+        var items = await BuildProjectedProductsAsync(_db.Products.AsNoTracking().Where(p => p.IsPublished && p.DiscountPercent > 0).OrderByDescending(p => p.DiscountPercent).ThenByDescending(p => p.CreatedAt).Take(safeTake));
         return Ok(new { totalCount = items.Count, items });
     }
 
-    // GET /api/Products/search?q=an&limit=8
     [HttpGet("search")]
     public async Task<IActionResult> LiveSearch([FromQuery] string? q = null, [FromQuery] int limit = 8)
     {
-        var qq = (q ?? "").Trim().ToLowerInvariant();
+        var qq = N(q);
         if (string.IsNullOrWhiteSpace(qq)) return Ok(Array.Empty<object>());
         var safeLimit = limit is < 1 or > 20 ? 8 : limit;
-        var detectedSubCategory = ProductTaxonomy.DetectSubCategoryFromQuery(qq);
-        var detectedCategory = ProductTaxonomy.DetectCategoryFromQuery(qq);
-        var matchedTaxonomy = !string.IsNullOrWhiteSpace(detectedSubCategory) || !string.IsNullOrWhiteSpace(detectedCategory);
-
-        var searchQuery = _db.Products.AsNoTracking().Where(p => p.IsPublished);
-        if (!string.IsNullOrWhiteSpace(detectedSubCategory))
-            searchQuery = searchQuery.Where(p => p.SubCategory == detectedSubCategory);
-        if (!string.IsNullOrWhiteSpace(detectedCategory))
-            searchQuery = searchQuery.Where(p => p.Category == detectedCategory);
-        if (!matchedTaxonomy)
-            searchQuery = searchQuery.Where(p => p.Title.ToLower().Contains(qq) || p.Slug.ToLower().Contains(qq));
-
-        var items = await searchQuery
-            .OrderByDescending(p => p.CreatedAt)
-            .Take(safeLimit)
-            .Select(p => new
-            {
-                p.Id,
-                p.Title,
-                p.Slug,
-                p.Brand,
-                p.PriceIqd,
-                p.DiscountPercent,
-                finalPriceIqd = p.DiscountPercent > 0
-                    ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2)
-                    : p.PriceIqd,
-                coverImage = p.Images
-                    .OrderBy(i => i.SortOrder)
-                    .Select(i => i.Url)
-                    .FirstOrDefault()
-            })
-            .ToListAsync();
-
-        return Ok(items);
+        var items = await BuildProjectedProductsAsync(_db.Products.AsNoTracking().Where(p => p.IsPublished).OrderByDescending(p => p.CreatedAt));
+        return Ok(items.Where(p => MatchesCategory(p, null, null, qq)).Take(safeLimit).ToList());
     }
 
-    // POST /api/products/{id}/view
-    // يناديه الفرونت كل مرة تفتح تفاصيل منتج (S2).
     [HttpPost("{id:guid}/view")]
     [Microsoft.AspNetCore.Authorization.AllowAnonymous]
     public async Task<IActionResult> TrackView(Guid id)
     {
-        // ensure product exists
         var exists = await _db.Products.AnyAsync(p => p.Id == id);
         if (!exists) return NotFound();
 
@@ -403,12 +264,7 @@ public class ProductsController : ControllerBase
         if (!string.IsNullOrWhiteSpace(claim) && Guid.TryParse(claim, out var parsed))
             userId = parsed;
 
-        _db.ProductViews.Add(new Domain.Entities.ProductView
-        {
-            ProductId = id,
-            UserId = userId
-        });
-
+        _db.ProductViews.Add(new Domain.Entities.ProductView { ProductId = id, UserId = userId });
         await _db.SaveChangesAsync();
         return Ok(new { ok = true });
     }

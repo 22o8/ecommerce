@@ -72,6 +72,7 @@
           </div>
           <div class="rtl-text">{{ t('common.price') }}</div>
           <div class="rtl-text">{{ t('admin.status') }}</div>
+          <div class="rtl-text">{{ t('admin.stockQuantity') }}</div>
           <div class="text-right rtl-text">{{ t('common.actions') }}</div>
         </div>
 
@@ -119,6 +120,11 @@
               <span class="badge-icon">★</span>
               <span class="badge-text">{{ t('admin.featured') }}</span>
             </span>
+          </div>
+
+          <div class="font-bold leading-tight">
+            <span class="keep-ltr">{{ p.stockQuantity ?? 0 }}</span>
+            <div class="text-xs opacity-70 rtl-text">{{ p.category || 'general' }}</div>
           </div>
 
           <div class="actions-wrap" @click.stop>
@@ -199,11 +205,14 @@ type Product = {
   id: string
   title: string
   slug: string
-  // Backend might expose different price fields; we normalize for display
   priceIqd: number
   priceUsd?: number
   isPublished: boolean
   isFeatured: boolean
+  stockQuantity?: number
+  lowStockThreshold?: number
+  category?: string
+  subCategory?: string
 }
 
 const { t } = useI18n()

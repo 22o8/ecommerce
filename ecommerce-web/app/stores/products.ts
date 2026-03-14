@@ -34,8 +34,6 @@ export const useProductsStore = defineStore('products', () => {
   const slug = p.slug ?? p.Slug ?? null
   const images = p.images ?? p.Images ?? null
   const description = p.description ?? p.Description ?? null
-  const category = p.category ?? p.Category ?? ''
-  const subCategory = p.subCategory ?? p.SubCategory ?? ''
 
   const imageUrl = cover ? api.buildAssetUrl(String(cover)) : ''
   const normImages = Array.isArray(images)
@@ -47,7 +45,10 @@ export const useProductsStore = defineStore('products', () => {
         .filter(Boolean)
     : []
 
-    return { ...p, name, priceIqd, priceUsd, price: priceIqd, discountPercent, finalPriceIqd, imageUrl, slug, images: normImages, description, category, subCategory }
+    const category = p.category ?? p.Category ?? ''
+    const subCategory = p.subCategory ?? p.SubCategory ?? ''
+    const stockQuantity = Number(p.stockQuantity ?? p.StockQuantity ?? 0)
+    return { ...p, name, priceIqd, priceUsd, price: priceIqd, discountPercent, finalPriceIqd, imageUrl, slug, images: normImages, description, category, subCategory, stockQuantity }
 }
 
 

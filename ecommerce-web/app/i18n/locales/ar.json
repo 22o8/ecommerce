@@ -336,8 +336,18 @@
     "tableMetric": "القيمة",
     "summaryTables": "ملخص مرتب",
     "category": "التصنيف",
-    "subCategory": "النوع الفرعي",
-    "noSubCategory": "بدون نوع فرعي"
+    "subCategory": "النوع الدقيق",
+    "subCategoryPlaceholder": "مثال: eye-serum",
+    "stockQuantity": "الكمية",
+    "lowStockThreshold": "حد التنبيه",
+    "categoryGeneral": "عام",
+    "categoryMoisturizer": "مرطب",
+    "categoryEyeCare": "العناية بالعين",
+    "categoryCleanser": "غسول",
+    "categorySerum": "سيروم",
+    "categorySunscreen": "واقي شمس",
+    "categoryToner": "تونر",
+    "categoryMask": "ماسك"
   },
   "nav": {
     "brands": "البراندات",
@@ -382,8 +392,7 @@
     "catCleanser": "غسول",
     "subtitle": "متجر رقمي احترافي",
     "featuredTab": "المميزة",
-    "discountsTab": "التخفيضات",
-    "catEyeCare": "العناية بالعين"
+    "discountsTab": "التخفيضات"
   },
   "productsPage": {
     "title": "المنتجات",
@@ -393,11 +402,7 @@
     "chooseCategory": "اختر تصنيف",
     "priceFrom": "السعر من",
     "priceTo": "السعر إلى",
-    "sort": {
-      "priceDesc": "السعر: من الأعلى إلى الأقل",
-      "priceAsc": "السعر: من الأقل إلى الأعلى",
-      "new": "الأحدث"
-    },
+    "sort": "الترتيب",
     "sortNewest": "الأحدث",
     "sortPriceAsc": "الأقل سعرًا",
     "sortPriceDesc": "الأعلى سعرًا",
@@ -420,10 +425,23 @@
     "toolbarAll": "عرض {count} منتج بترتيب واضح وسهل التصفح.",
     "toolbarBrand": "عرض {count} منتج من براند {brand}.",
     "allCategories": "كل التصنيفات",
-    "allSubCategories": "كل الأنواع الفرعية",
-    "chooseSubCategory": "اختر النوع الفرعي",
-    "toolbarCategory": "عرض {count} منتج ضمن {category}",
-    "toolbarSubCategory": "عرض {count} منتج ضمن {subCategory}"
+    "chooseSubCategory": "اختر نوع دقيق",
+    "allSubCategories": "كل الأنواع",
+    "categoryMoisturizer": "مرطب",
+    "categoryEyeCare": "العناية بالعين",
+    "categoryCleanser": "غسول",
+    "categorySerum": "سيروم",
+    "categorySunscreen": "واقي شمس",
+    "categoryToner": "تونر",
+    "categoryMask": "ماسك",
+    "subEyeSerum": "سيروم العين",
+    "subEyeCream": "كريم العين",
+    "subEyeGel": "جل العين",
+    "subFaceCream": "كريم الوجه",
+    "subFaceGel": "جل الوجه",
+    "subFoamCleanser": "غسول رغوي",
+    "subOilCleanser": "غسول زيتي",
+    "toolbarCategory": "عرض {count} منتج ضمن {category}"
   },
   "brandsPage": {
     "title": "البراندات",

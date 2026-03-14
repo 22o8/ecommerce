@@ -64,23 +64,37 @@
             </div>
 
             <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.price') }}</label>
+              <UiInput v-model.number="form.priceIqd" type="number" min="0" step="0.01" />
+            </div>
+
+            <div>
               <label class="mb-1 block text-sm text-white/80">{{ t('admin.category') }}</label>
               <select v-model="form.category" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
-                <option v-for="c in categoryOptions" :key="c.key" :value="c.key">{{ c.name }}</option>
+                <option value="general">{{ t('admin.categoryGeneral') }}</option>
+                <option value="moisturizer">{{ t('admin.categoryMoisturizer') }}</option>
+                <option value="eye-care">{{ t('admin.categoryEyeCare') }}</option>
+                <option value="cleanser">{{ t('admin.categoryCleanser') }}</option>
+                <option value="serum">{{ t('admin.categorySerum') }}</option>
+                <option value="sunscreen">{{ t('admin.categorySunscreen') }}</option>
+                <option value="toner">{{ t('admin.categoryToner') }}</option>
+                <option value="mask">{{ t('admin.categoryMask') }}</option>
               </select>
             </div>
 
             <div>
               <label class="mb-1 block text-sm text-white/80">{{ t('admin.subCategory') }}</label>
-              <select v-model="form.subCategory" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
-                <option value="">{{ t('admin.noSubCategory') }}</option>
-                <option v-for="s in subCategoryOptions(form.category)" :key="s.key" :value="s.key">{{ s.name }}</option>
-              </select>
+              <UiInput v-model="form.subCategory" :placeholder="t('admin.subCategoryPlaceholder')" />
             </div>
 
             <div>
-              <label class="mb-1 block text-sm text-white/80">{{ t('admin.price') }}</label>
-              <UiInput v-model.number="form.priceIqd" type="number" min="0" step="0.01" />
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.stockQuantity') }}</label>
+              <UiInput v-model.number="form.stockQuantity" type="number" min="0" step="1" />
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.lowStockThreshold') }}</label>
+              <UiInput v-model.number="form.lowStockThreshold" type="number" min="0" step="1" />
             </div>
 
             <div class="flex flex-wrap items-end gap-6">
@@ -167,7 +181,6 @@ definePageMeta({ layout: 'admin', middleware: 'admin' })
 const { t } = useI18n()
 const toast = useToast()
 const { listBrands, createProduct, uploadProductImages } = useAdminApi()
-const { categoryOptions, subCategoryOptions } = useProductTaxonomy()
 
 type BrandItem = { id: string; slug: string; name: string }
 
@@ -183,8 +196,10 @@ const form = reactive({
   priceIqd: 0,
   // slug الخاص بالبراند (نرسله للباك ضمن الحقل brand)
   brand: '',
-  category: 'serum',
+  category: 'general',
   subCategory: '',
+  stockQuantity: 100,
+  lowStockThreshold: 5,
   isPublished: true,
   isFeatured: false,
 })
@@ -208,14 +223,6 @@ watch(
     if (!slugTouched.value || !form.slug) {
       form.slug = slugify(v)
     }
-  }
-)
-
-watch(
-  () => form.category,
-  () => {
-    const allowed = subCategoryOptions(form.category).map((x: any) => x.key)
-    if (form.subCategory && !allowed.includes(form.subCategory)) form.subCategory = ''
   }
 )
 
@@ -275,7 +282,9 @@ async function onCreate() {
       // ✅ Backend يتحقق من البراند عبر الـ slug
       brand: form.brand,
       category: form.category,
-      subCategory: form.subCategory || undefined,
+      subCategory: form.subCategory,
+      stockQuantity: Number(form.stockQuantity ?? 0),
+      lowStockThreshold: Number(form.lowStockThreshold ?? 0),
       isPublished: !!form.isPublished,
       isFeatured: !!form.isFeatured,
     })

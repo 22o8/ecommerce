@@ -65,26 +65,40 @@
               </div>
 
               <div class="grid gap-2">
-                <label class="text-sm font-medium">{{ t('admin.category') }}</label>
-                <select v-model="form.category" class="h-10 w-full rounded-2xl border border-white/10 bg-white/5 px-3 text-sm outline-none focus:border-white/20">
-                  <option v-for="c in categoryOptions" :key="c.key" :value="c.key">{{ c.name }}</option>
-                </select>
-              </div>
-
-              <div class="grid gap-2">
-                <label class="text-sm font-medium">{{ t('admin.subCategory') }}</label>
-                <select v-model="form.subCategory" class="h-10 w-full rounded-2xl border border-white/10 bg-white/5 px-3 text-sm outline-none focus:border-white/20">
-                  <option value="">{{ t('admin.noSubCategory') }}</option>
-                  <option v-for="s in subCategoryOptions(form.category)" :key="s.key" :value="s.key">{{ s.name }}</option>
-                </select>
-              </div>
-
-              <div class="grid gap-2">
                 <label class="text-sm font-medium">{{ t('admin.discount') || 'Discount %' }}</label>
                 <UiInput v-model.number="form.discountPercent" type="number" min="0" max="100" step="1" />
                 <div class="text-xs text-white/60 keep-ltr">
                   {{ (t('admin.finalPrice') || 'Final') }}: {{ formatIqd(finalPrice) }}
                 </div>
+              </div>
+
+              <div class="grid gap-2">
+                <label class="text-sm font-medium">{{ t('admin.category') }}</label>
+                <select v-model="form.category" class="h-10 w-full rounded-2xl border border-white/10 bg-white/5 px-3 text-sm outline-none focus:border-white/20">
+                  <option value="general">{{ t('admin.categoryGeneral') }}</option>
+                  <option value="moisturizer">{{ t('admin.categoryMoisturizer') }}</option>
+                  <option value="eye-care">{{ t('admin.categoryEyeCare') }}</option>
+                  <option value="cleanser">{{ t('admin.categoryCleanser') }}</option>
+                  <option value="serum">{{ t('admin.categorySerum') }}</option>
+                  <option value="sunscreen">{{ t('admin.categorySunscreen') }}</option>
+                  <option value="toner">{{ t('admin.categoryToner') }}</option>
+                  <option value="mask">{{ t('admin.categoryMask') }}</option>
+                </select>
+              </div>
+
+              <div class="grid gap-2">
+                <label class="text-sm font-medium">{{ t('admin.subCategory') }}</label>
+                <UiInput v-model="form.subCategory" :placeholder="t('admin.subCategoryPlaceholder')" />
+              </div>
+
+              <div class="grid gap-2">
+                <label class="text-sm font-medium">{{ t('admin.stockQuantity') }}</label>
+                <UiInput v-model.number="form.stockQuantity" type="number" min="0" step="1" />
+              </div>
+
+              <div class="grid gap-2">
+                <label class="text-sm font-medium">{{ t('admin.lowStockThreshold') }}</label>
+                <UiInput v-model.number="form.lowStockThreshold" type="number" min="0" step="1" />
               </div>
             </div>
 
@@ -201,7 +215,6 @@ const { t } = useI18n()
 const toast = useToast()
 const api = useApi()
 const imgVer = ref(0)
-const { categoryOptions, subCategoryOptions } = useProductTaxonomy()
 
 const { listBrands, getAdminProduct, updateAdminProduct, deleteAdminProduct, getProductImages, uploadProductImages, deleteProductImage } =
   useAdminApi()
@@ -222,10 +235,12 @@ const form = reactive({
   price: 0,
   discountPercent: 0,
   brandSlug: '',
-  category: 'serum',
-  subCategory: '',
   isActive: true,
   isFeatured: false,
+  category: 'general',
+  subCategory: '',
+  stockQuantity: 0,
+  lowStockThreshold: 5,
 })
 
 const finalPrice = computed(() => {
@@ -264,8 +279,10 @@ function resetForm() {
   form.discountPercent = Number(product.value.discountPercent ?? 0)
   // we store brand slug/name in the same field; API expects "brand"
   form.brandSlug = product.value.brand || product.value.brandSlug || ''
-  form.category = product.value.category || 'serum'
+  form.category = product.value.category || 'general'
   form.subCategory = product.value.subCategory || ''
+  form.stockQuantity = Number(product.value.stockQuantity ?? 0)
+  form.lowStockThreshold = Number(product.value.lowStockThreshold ?? 5)
   // If API returns brand NAME, map it to slug so the dropdown selects correctly.
   const brandList = Array.isArray(brands.value) ? brands.value : []
   const match = brandList.find((b: any) => b.slug === form.brandSlug || b.name === form.brandSlug)
@@ -287,14 +304,6 @@ watch(
       form.slug = next
       autoSlugBase.value = next
     }
-  }
-)
-
-watch(
-  () => form.category,
-  () => {
-    const allowed = subCategoryOptions(form.category).map((x: any) => x.key)
-    if (form.subCategory && !allowed.includes(form.subCategory)) form.subCategory = ''
   }
 )
 
@@ -407,7 +416,9 @@ async function onSave() {
       // Backend validates brand by SLUG; if list not loaded keep current slug.
       brand: match?.slug || form.brandSlug,
       category: form.category,
-      subCategory: form.subCategory || undefined,
+      subCategory: form.subCategory,
+      stockQuantity: Number(form.stockQuantity ?? 0),
+      lowStockThreshold: Number(form.lowStockThreshold ?? 0),
       isPublished: Boolean(form.isActive),
       isFeatured: Boolean(form.isFeatured),
     })

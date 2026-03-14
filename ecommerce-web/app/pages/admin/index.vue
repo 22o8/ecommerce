@@ -56,6 +56,14 @@
           <div class="kpi-sub rtl-text">{{ $t('admin.totalVisits') }}: {{ visits.total }}</div>
         </div>
       </div>
+
+      <div class="kpi-card">
+        <div class="min-w-0">
+          <div class="kpi-label rtl-text">نفاد الكمية</div>
+          <div class="kpi-value keep-ltr">{{ stats.outOfStockCount }}</div>
+          <div class="kpi-sub rtl-text">منخفض المخزون: {{ stats.lowStockCount }}</div>
+        </div>
+      </div>
     </div>
 
     <!-- Activity + Top lists -->
@@ -147,6 +155,26 @@
             </div>
           </div>
 
+          <div class="topbox">
+            <div class="topbox-title rtl-text">📦 منخفض المخزون</div>
+            <div v-if="overview.lowStock.length===0" class="admin-muted rtl-text">—</div>
+            <div v-else class="metric-table">
+              <div v-for="x in overview.lowStock.slice(0,5)" :key="x.productId" class="metric-table__row">
+                <div></div><div class="rtl-text truncate font-bold">{{ x.title }}</div><div class="keep-ltr font-black text-right">{{ x.stockQuantity }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="topbox">
+            <div class="topbox-title rtl-text">🚫 نافد المخزون</div>
+            <div v-if="overview.outOfStock.length===0" class="admin-muted rtl-text">—</div>
+            <div v-else class="metric-table">
+              <div v-for="x in overview.outOfStock.slice(0,5)" :key="x.productId" class="metric-table__row">
+                <div></div><div class="rtl-text truncate font-bold">{{ x.title }}</div><div class="keep-ltr font-black text-right">{{ x.stockQuantity }}</div>
+              </div>
+            </div>
+          </div>
+
           <NuxtLink class="admin-link rtl-text" to="/admin/insights">
             عرض التفاصيل في صفحة Insights →
           </NuxtLink>
@@ -234,6 +262,9 @@ const stats = ref({
   totalOrders: 0,
   totalUsers: 0,
   totalRevenueIqd: 0,
+  totalProducts: 0,
+  outOfStockCount: 0,
+  lowStockCount: 0,
 })
 
 const visits = ref({
@@ -247,6 +278,8 @@ const overview = ref({
   topFavorites: [] as any[],
   topViews: [] as any[],
   neglected: [] as any[],
+  lowStock: [] as any[],
+  outOfStock: [] as any[],
 })
 
 const activity = ref({
@@ -322,6 +355,9 @@ async function loadAll() {
     stats.value.totalOrders = Number(dash?.totalOrders ?? 0)
     stats.value.totalUsers = Number(dash?.totalUsers ?? 0)
     stats.value.totalRevenueIqd = Number(dash?.totalRevenueIqd ?? 0)
+    stats.value.totalProducts = Number(dash?.totalProducts ?? 0)
+    stats.value.outOfStockCount = Number(dash?.outOfStockCount ?? 0)
+    stats.value.lowStockCount = Number(dash?.lowStockCount ?? 0)
 
     const normalizeMetricRows = (rows: any[] = [], metricKeys: string[] = []) =>
       rows
@@ -337,6 +373,8 @@ async function loadAll() {
     overview.value.topFavorites = normalizeMetricRows(Array.isArray(ov?.topFavorites) ? ov.topFavorites : [], ['favorites','count','total'])
     overview.value.topViews = normalizeMetricRows(Array.isArray(ov?.topViews) ? ov.topViews : [], ['views','count','total'])
     overview.value.neglected = normalizeMetricRows(Array.isArray(ov?.neglected) ? ov.neglected : [], ['views','favorites','purchases'])
+    overview.value.lowStock = Array.isArray(ov?.lowStock) ? ov.lowStock : []
+    overview.value.outOfStock = Array.isArray(ov?.outOfStock) ? ov.outOfStock : []
 
     activity.value.daily = Array.isArray(act?.daily) ? act.daily : []
     activity.value.monthly = Array.isArray(act?.monthly) ? act.monthly : []

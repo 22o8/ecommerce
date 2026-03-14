@@ -70,13 +70,24 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Product>()
             .Property(p => p.Category)
-            .HasMaxLength(120)
-            .HasDefaultValue("serum");
+            .HasMaxLength(80)
+            .HasDefaultValue("general");
 
         modelBuilder.Entity<Product>()
             .Property(p => p.SubCategory)
             .HasMaxLength(120)
             .HasDefaultValue("");
+
+        modelBuilder.Entity<Product>()
+            .Property(p => p.StockQuantity)
+            .HasDefaultValue(100);
+
+        modelBuilder.Entity<Product>()
+            .Property(p => p.LowStockThreshold)
+            .HasDefaultValue(5);
+
+        modelBuilder.Entity<Product>()
+            .HasIndex(p => new { p.Category, p.SubCategory, p.IsPublished });
 
         modelBuilder.Entity<Product>()
             .Property(x => x.RatingAvg)

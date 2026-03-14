@@ -52,6 +52,7 @@ public class CheckoutController : ControllerBase
 
         var qty = req.Quantity <= 0 ? 1 : req.Quantity;
         if (qty > 50) return BadRequest("Quantity too large");
+        if (product.StockQuantity < qty) return BadRequest(new { message = "Insufficient stock", available = product.StockQuantity });
 
         // إنشاء Order
         var order = new Order
@@ -86,6 +87,7 @@ public class CheckoutController : ControllerBase
 
         order.Payments.Add(payment);
 
+        product.StockQuantity = Math.Max(0, product.StockQuantity - qty);
         _db.Orders.Add(order);
         await _db.SaveChangesAsync();
 
@@ -132,6 +134,12 @@ public class CheckoutController : ControllerBase
         if (products.Count != productIds.Count)
             return NotFound("One or more products not found");
 
+        var insufficient = items
+            .Select(i => new { item = i, product = products.First(x => x.Id == i.ProductId) })
+            .FirstOrDefault(x => x.product.StockQuantity < x.item.Quantity);
+        if (insufficient != null)
+            return BadRequest(new { message = "Insufficient stock", productId = insufficient.product.Id, available = insufficient.product.StockQuantity });
+
         var order = new Order
         {
             UserId = userId,
@@ -158,6 +166,8 @@ public class CheckoutController : ControllerBase
                 UnitPriceIqd = p.PriceIqd,
                 LineTotalIqd = lineTotalIqd
             });
+
+            p.StockQuantity = Math.Max(0, p.StockQuantity - i.Quantity);
         }
 
         var payment = new Payment
@@ -222,6 +232,12 @@ public class CheckoutController : ControllerBase
 		if (products.Count == 0)
 			return BadRequest(new { message = "Cart is empty" });
 
+		var insufficient = req.Items
+			.Select(i => new { item = i, product = products.FirstOrDefault(x => x.Id == i.ProductId) })
+			.FirstOrDefault(x => x.product != null && x.product.StockQuantity < x.item.Quantity);
+		if (insufficient != null)
+			return BadRequest(new { message = "Insufficient stock", productId = insufficient.product!.Id, available = insufficient.product.StockQuantity });
+
 		var order = new Order
 		{
 			Id = Guid.NewGuid(),
@@ -256,6 +272,8 @@ public class CheckoutController : ControllerBase
 				UnitPriceIqd = p.PriceIqd,
 				LineTotalIqd = lineTotalIqd
 			});
+
+			p.StockQuantity = Math.Max(0, p.StockQuantity - i.Quantity);
 		}
 
 		order.TotalUsd = totalUsd;

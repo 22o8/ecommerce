@@ -59,7 +59,6 @@ const categoryCards = [
   { key: 'moisturizer', icon: '🧴', labelKey: 'home.catMoisturizer', q: { ar: 'مرطب', en: 'moisturizer' } },
   { key: 'sunscreen', icon: '☀️', labelKey: 'home.catSunscreen', q: { ar: 'واقي شمس', en: 'sunscreen' } },
   { key: 'cleanser', icon: '🫧', labelKey: 'home.catCleanser', q: { ar: 'غسول', en: 'cleanser' } },
-  { key: 'eye-care', icon: '👁️', labelKey: 'home.catEyeCare', q: { ar: 'العناية بالعين', en: 'eye care' } },
   { key: 'perfume', icon: '🌸', labelKey: 'home.catPerfume', q: { ar: 'عطر', en: 'perfume' } },
 ] as const
 
@@ -81,7 +80,7 @@ const heroHighlights = computed(() => categoryCards.slice(0, 3))
               <NuxtLink
                 v-for="item in heroHighlights"
                 :key="item.key"
-                :to="`/products?category=${encodeURIComponent(item.key)}`"
+                :to="`/products?q=${encodeURIComponent(categoryQuery(item))}`"
                 class="hero-mini-chip"
               >
                 <span class="text-base">{{ item.icon }}</span>
@@ -222,7 +221,7 @@ const heroHighlights = computed(() => categoryCards.slice(0, 3))
             :delay="35 * idx"
           >
             <NuxtLink
-              :to="`/products?category=${encodeURIComponent(c.key)}`"
+              :to="`/products?q=${encodeURIComponent(categoryQuery(c))}`"
               class="group category-simple-card"
             >
               <div class="category-simple-card__inner">

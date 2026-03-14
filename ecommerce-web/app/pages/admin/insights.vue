@@ -58,6 +58,30 @@
       </div>
 
       <div class="admin-box">
+        <div class="table-card__title rtl-text">📦 منخفض المخزون</div>
+        <div v-if="lowStock.length===0" class="admin-muted rtl-text">—</div>
+        <div v-else class="table-card">
+          <div v-for="(x, idx) in lowStock" :key="x.productId || idx" class="table-card__row">
+            <div class="rank-badge">{{ idx + 1 }}</div>
+            <div class="rtl-text font-bold truncate">{{ x.title }}</div>
+            <div class="keep-ltr font-black text-right">{{ x.stockQuantity }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-box">
+        <div class="table-card__title rtl-text">🚫 نافد المخزون</div>
+        <div v-if="outOfStock.length===0" class="admin-muted rtl-text">—</div>
+        <div v-else class="table-card">
+          <div v-for="(x, idx) in outOfStock" :key="x.productId || idx" class="table-card__row">
+            <div class="rank-badge">{{ idx + 1 }}</div>
+            <div class="rtl-text font-bold truncate">{{ x.title }}</div>
+            <div class="keep-ltr font-black text-right">{{ x.stockQuantity }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-box">
         <div class="table-card__title rtl-text">💤 {{ $t('admin.neglectedProducts') || 'المنتجات المهملة' }}</div>
         <div v-if="neglected.length===0" class="admin-muted rtl-text">—</div>
         <div v-else class="table-card table-card--wide">
@@ -142,6 +166,8 @@ const topPurchased = ref<any[]>([])
 const topFavorites = ref<any[]>([])
 const topViews = ref<any[]>([])
 const neglected = ref<any[]>([])
+const lowStock = ref<any[]>([])
+const outOfStock = ref<any[]>([])
 
 const daily = ref<any[]>([])
 const monthly = ref<any[]>([])
@@ -172,6 +198,8 @@ async function loadAll() {
     topFavorites.value = normalizeRows(ov?.topFavorites ?? ov?.mostFavorited ?? ov?.topFavorited)
     topViews.value = normalizeRows(ov?.topViews ?? ov?.mostViewed ?? ov?.topViewedProducts)
     neglected.value = normalizeRows(ov?.neglected ?? ov?.neglectedProducts)
+    lowStock.value = Array.isArray(ov?.lowStock) ? ov.lowStock : []
+    outOfStock.value = Array.isArray(ov?.outOfStock) ? ov.outOfStock : []
 
     const act: any = await adminApi.get('/admin/analytics/activity')
     daily.value = act?.daily || []
