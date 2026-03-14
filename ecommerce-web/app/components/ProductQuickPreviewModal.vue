@@ -19,13 +19,16 @@
             <div class="grid gap-4">
               <div class="flex items-center justify-between gap-3">
 	                <div class="text-xl md:text-2xl font-black keep-ltr">{{ priceText }}</div>
-                <UiBadge v-if="p?.isFeatured" class="keep-ltr">Featured</UiBadge>
+                <div class="flex items-center gap-2">
+                  <UiBadge v-if="isOutOfStock" class="!bg-[rgb(var(--danger))] !text-white rtl-text">{{ t('common.unavailable') }}</UiBadge>
+                  <UiBadge v-else-if="p?.isFeatured" class="keep-ltr">Featured</UiBadge>
+                </div>
               </div>
 
               <div class="text-sm text-muted rtl-text" v-if="p?.description">{{ p.description }}</div>
 
 	              <div class="flex flex-wrap gap-2">
-                <UiButton variant="secondary" @click="addToCart">
+                <UiButton variant="secondary" @click="addToCart" :disabled="isOutOfStock">
                   <Icon name="mdi:cart-plus" class="text-lg" />
                   <span class="rtl-text">{{ t('productsPage.addToCart') }}</span>
                 </UiButton>
@@ -123,6 +126,7 @@ watch(open, (v) => {
 })
 
 const displayName = computed(() => p.value?.name || p.value?.title || p.value?.Title || '')
+const isOutOfStock = computed(() => Number(p.value?.stockQuantity ?? p.value?.StockQuantity ?? 0) <= 0)
 
 const images = computed(() => {
   const arr: string[] = []
@@ -217,7 +221,7 @@ function close() {
 }
 
 function addToCart() {
-  if (!p.value) return
+  if (!p.value || isOutOfStock.value) return
   cart.add(p.value)
 }
 

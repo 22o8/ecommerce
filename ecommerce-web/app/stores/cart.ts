@@ -7,6 +7,7 @@ export type CartItem = {
   originalPrice?: number | null
   discountPercent?: number
   imageUrl?: string | null
+  stockQuantity?: number
   quantity: number
 }
 
@@ -17,6 +18,7 @@ const normalizeProduct = (product: any) => {
   const finalPrice = Number(product?.finalPriceIqd ?? product?.finalPrice ?? product?.priceIqd ?? product?.price ?? product?.priceUsd ?? 0)
   const originalPrice = Number(product?.priceIqd ?? product?.price ?? product?.priceUsd ?? finalPrice)
   const rawImage = product?.images?.[0]?.url || product?.images?.[0] || product?.coverImage || product?.imageUrl || product?.ImageUrl || product?.image || ''
+  const stockQuantity = Number(product?.stockQuantity ?? product?.StockQuantity ?? 0)
   return {
     id,
     title,
@@ -24,6 +26,7 @@ const normalizeProduct = (product: any) => {
     originalPrice: Number.isFinite(originalPrice) ? originalPrice : null,
     discountPercent: Number.isFinite(discountPercent) ? discountPercent : 0,
     imageUrl: rawImage ? String(rawImage) : null,
+    stockQuantity: Number.isFinite(stockQuantity) ? stockQuantity : 0,
   }
 }
 
@@ -35,7 +38,7 @@ export const useCartStore = defineStore('cart', () => {
 
   function add(product: any, qty = 1) {
     const normalized = normalizeProduct(product)
-    if (!normalized.id) return
+    if (!normalized.id || Number(normalized.stockQuantity ?? 0) <= 0) return
     const existing = items.value.find(i => i.id === normalized.id)
     if (existing) {
       existing.quantity += qty
@@ -44,6 +47,7 @@ export const useCartStore = defineStore('cart', () => {
       existing.discountPercent = normalized.discountPercent ?? existing.discountPercent ?? 0
       existing.imageUrl = normalized.imageUrl || existing.imageUrl || null
       existing.title = normalized.title || existing.title
+      existing.stockQuantity = normalized.stockQuantity ?? existing.stockQuantity ?? 0
     } else {
       items.value.push({ ...normalized, quantity: Math.max(1, qty) })
     }
@@ -54,7 +58,8 @@ export const useCartStore = defineStore('cart', () => {
     const it = items.value.find(i => i.id === id)
     if (!it) return
     const safe = Number.isFinite(qty) ? Math.trunc(qty) : 1
-    it.quantity = Math.min(99, Math.max(1, safe))
+    const maxQty = Math.max(1, Math.min(99, Number(it.stockQuantity ?? 99) || 99))
+    it.quantity = Math.min(maxQty, Math.max(1, safe))
   }
   function increase(id: string) { const it = items.value.find(i => i.id === id); if (it) setQty(id, (it.quantity || 1) + 1) }
   function decrease(id: string) { const it = items.value.find(i => i.id === id); if (it) setQty(id, (it.quantity || 1) - 1) }

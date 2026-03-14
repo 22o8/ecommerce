@@ -35,6 +35,7 @@ public class AppDbContext : DbContext
 
     // ✅ Ads (منفصلة عن Appearance)
     public DbSet<Ad> Ads => Set<Ad>();
+    public DbSet<Coupon> Coupons => Set<Coupon>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -174,5 +175,22 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Ad>()
             .HasIndex(x => new { x.Type, x.Placement, x.SortOrder });
+
+        modelBuilder.Entity<Coupon>()
+            .HasIndex(x => x.Code)
+            .IsUnique();
+
+        modelBuilder.Entity<Coupon>()
+            .Property(x => x.Code)
+            .HasMaxLength(80);
+
+        modelBuilder.Entity<Coupon>()
+            .Property(x => x.Title)
+            .HasMaxLength(160);
+
+        modelBuilder.Entity<Order>()
+            .Property(x => x.CouponCode)
+            .HasMaxLength(80);
+
     }
 }

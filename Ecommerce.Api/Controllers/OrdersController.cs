@@ -38,6 +38,9 @@ public class OrdersController : ControllerBase
             {
                 o.Id,
                 o.Status,
+                o.SubtotalIqd,
+                o.DiscountAmountIqd,
+                o.CouponCode,
                 o.TotalIqd,
                 o.TotalUsd,
                 o.CreatedAt,
@@ -72,6 +75,9 @@ public class OrdersController : ControllerBase
             {
                 o.Id,
                 o.Status,
+                o.SubtotalIqd,
+                o.DiscountAmountIqd,
+                o.CouponCode,
                 o.TotalIqd,
                 o.TotalUsd,
                 o.CreatedAt,

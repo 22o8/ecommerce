@@ -23,9 +23,9 @@ public class ProductsController : ControllerBase
 
     private static readonly Dictionary<string, string[]> CategoryKeywords = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["moisturizer"] = new[] { "مرطب", "moisturizer", "moisturiser", "hydrating cream", "hydrating gel", "lotion" },
+        ["moisturizer"] = new[] { "مرطب", "مرطب الوجه", "كريم مرطب", "جل مرطب", "moisturizer", "moisturiser", "hydrating cream", "hydrating gel", "lotion", "cream" },
         ["eye-care"] = new[] { "eye", "عين", "under eye", "undereye", "eye cream", "eye serum", "eye gel" },
-        ["cleanser"] = new[] { "cleanser", "cleanse", "غسول", "foam wash", "face wash" },
+        ["cleanser"] = new[] { "cleanser", "cleanse", "غسول", "foam wash", "face wash", "منظف" },
         ["serum"] = new[] { "serum", "سيروم", "ampoule" },
         ["sunscreen"] = new[] { "sunscreen", "sun screen", "spf", "واقي", "واقي شمس" },
         ["toner"] = new[] { "toner", "تونر" },

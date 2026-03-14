@@ -323,7 +323,12 @@ async function buildUpsertPayload(id: string, overrides: Partial<{ isPublished: 
     slug: String(full.slug || ''),
     description: String(full.description || ''),
     priceUsd: Number(full.priceUsd ?? 0),
+    priceIqd: Number(full.priceIqd ?? full.priceUsd ?? 0),
     brand: String(full.brand || ''),
+    category: String(full.category || 'general'),
+    subCategory: String(full.subCategory || ''),
+    stockQuantity: Number(full.stockQuantity ?? 0),
+    lowStockThreshold: Number(full.lowStockThreshold ?? 5),
     isPublished: overrides.isPublished ?? !!full.isPublished,
     isFeatured: overrides.isFeatured ?? !!full.isFeatured,
   }

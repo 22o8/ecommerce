@@ -48,7 +48,8 @@
     "retry": "Retry",
     "selectAll": "Select all",
     "selected": "Selected",
-    "total": "Total"
+    "total": "Total",
+    "unavailable": "Unavailable"
   },
   "admin": {
     "title": "Admin Panel",
@@ -320,7 +321,15 @@
     "categorySerum": "Serum",
     "categorySunscreen": "Sunscreen",
     "categoryToner": "Toner",
-    "categoryMask": "Mask"
+    "categoryMask": "Mask",
+    "couponsLabel": "Coupons",
+    "couponsHint": "Create and manage discount coupons.",
+    "couponCode": "Coupon code",
+    "couponTitle": "Coupon title",
+    "discountPercent": "Discount percent",
+    "fixedDiscountIqd": "Fixed discount IQD",
+    "minimumOrderIqd": "Minimum order IQD",
+    "maxUses": "Max uses"
   },
   "nav": {
     "logout": "Logout",
@@ -591,7 +600,12 @@
     "title": "Cart",
     "checkout": "Checkout",
     "emptyTitle": "Your cart is empty",
-    "emptyDesc": "Add products to see them here."
+    "emptyDesc": "Add products to see them here.",
+    "coupon": "Coupon",
+    "couponPlaceholder": "Enter coupon code",
+    "applyCoupon": "Apply",
+    "couponDiscount": "Coupon discount",
+    "finalTotal": "Final total"
   },
   "favorites": {
     "title": "Favorites",

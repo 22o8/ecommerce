@@ -11,6 +11,7 @@ export function useWhatsappCheckout() {
   const api = useApi()
   const config = useRuntimeConfig()
   const cart = useCartStore()
+  const appliedCoupon = useState<any | null>('cart_coupon_applied', () => null)
 
   const buildCartMessage = (items: Array<{ title: string; quantity: number; price: number; originalPrice?: number | null; discountPercent?: number }>) => {
     const when = new Date().toLocaleString('ar-IQ')
@@ -36,7 +37,8 @@ export function useWhatsappCheckout() {
       items: cart.items.map(i => ({
         productId: i.id,
         quantity: Math.max(1, Number(i.quantity) || 1),
-      }))
+      })),
+      couponCode: appliedCoupon.value?.code || undefined
     }
 
     const result = await api.post('/Checkout/cart/whatsapp', payload)
@@ -65,7 +67,8 @@ export function useWhatsappCheckout() {
     const title = String(product?.title ?? product?.name ?? 'منتج')
 
     const result = await api.post('/Checkout/cart/whatsapp', {
-      items: [{ productId: id, quantity: Math.max(1, Number(quantity) || 1) }]
+      items: [{ productId: id, quantity: Math.max(1, Number(quantity) || 1) }],
+      couponCode: appliedCoupon.value?.code || undefined
     })
     if (!(result as any)?.orderId) {
       throw new Error('تعذر حفظ الطلب في النظام.')

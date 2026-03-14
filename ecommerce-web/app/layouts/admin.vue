@@ -144,6 +144,7 @@ const links = computed(() => [
   { to: '/admin/brands', label: t('admin.brandsLabel'), icon: 'mdi:storefront-outline' },
   { to: '/admin/orders', label: t('admin.orders'), icon: 'mdi:receipt-text-outline' },
   { to: '/admin/insights', label: t('admin.insights'), icon: 'mdi:chart-areaspline' },
+  { to: '/admin/coupons', label: t('admin.couponsLabel') || 'Coupons', icon: 'mdi:ticket-percent-outline' },
   { to: '/admin/ads', label: t('admin.adsLabel') || 'Ads', icon: 'mdi:bullhorn-outline' },
   { to: '/admin/appearance', label: t('admin.appearanceLabel'), icon: 'mdi:palette-outline' },
   { to: '/admin/users', label: t('admin.users.title'), icon: 'mdi:account-multiple-outline' },

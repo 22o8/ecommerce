@@ -25,6 +25,12 @@
 
       <div class="absolute top-3 left-3 flex items-center gap-2">
         <div
+          v-if="isOutOfStock"
+          class="px-3 py-1 rounded-full bg-[rgb(var(--danger))]/90 text-white text-xs font-black shadow-lg rtl-text"
+        >
+          {{ t('common.unavailable') }}
+        </div>
+        <div
           v-if="isNew"
           class="px-3 py-1 rounded-full bg-surface-2 backdrop-blur border border-app text-xs"
         >
@@ -86,6 +92,7 @@
             type="button"
             class="product-card-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-app transition text-xs"
             @click.stop.prevent="addToCart"
+            :disabled="isOutOfStock"
           >
             <Icon name="mdi:cart-plus" class="text-base" />
             <span class="rtl-text">{{ t('common.addToCart') }}</span>
@@ -95,6 +102,7 @@
             type="button"
             class="product-card-btn inline-flex items-center px-2.5 py-1.5 rounded-xl border border-app transition text-xs"
             @click.stop.prevent="buyNow"
+            :disabled="isOutOfStock"
           >
             <span class="rtl-text">{{ t('common.buy') }}</span>
           </button>
@@ -133,6 +141,8 @@ const displayFinalPrice = computed(() => {
   return d > 0 ? (price * (100 - d) / 100) : price
 })
 
+const isOutOfStock = computed(() => Number(p.value?.stockQuantity ?? p.value?.StockQuantity ?? 0) <= 0)
+
 const mainImage = computed(() => {
   const raw =
     p.value?.images?.[0]?.url ||
@@ -161,12 +171,14 @@ function formatPrice(v: any) {
 }
 
 function addToCart() {
+  if (isOutOfStock.value) return
   cart.add(p.value)
 }
 
 const { checkoutSingleProduct } = useWhatsappCheckout()
 
 async function buyNow() {
+  if (isOutOfStock.value) return
   try {
     await checkoutSingleProduct(p.value, 1)
   } catch (e) {
@@ -207,6 +219,7 @@ function goProduct() {
 .product-card-btn{
   background: rgb(var(--surface));
 }
+.product-card-btn:disabled{ opacity:.5; cursor:not-allowed; }
 :global(html.theme-light) .product-card-shell{
   background: linear-gradient(180deg, rgba(255,255,255,.99), rgba(255,247,252,.95));
   box-shadow: 0 22px 54px rgba(232, 91, 154, .08), 0 10px 24px rgba(24,24,24,.05);

@@ -49,25 +49,11 @@ namespace Ecommerce.Api.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_Products_Category_SubCategory_IsPublished",
-                table: "Products");
-
-            migrationBuilder.DropColumn(
-                name: "Category",
-                table: "Products");
-
-            migrationBuilder.DropColumn(
-                name: "SubCategory",
-                table: "Products");
-
-            migrationBuilder.DropColumn(
-                name: "StockQuantity",
-                table: "Products");
-
-            migrationBuilder.DropColumn(
-                name: "LowStockThreshold",
-                table: "Products");
+            migrationBuilder.DropIndex(name: "IX_Products_Category_SubCategory_IsPublished", table: "Products");
+            migrationBuilder.DropColumn(name: "Category", table: "Products");
+            migrationBuilder.DropColumn(name: "SubCategory", table: "Products");
+            migrationBuilder.DropColumn(name: "StockQuantity", table: "Products");
+            migrationBuilder.DropColumn(name: "LowStockThreshold", table: "Products");
         }
     }
 }

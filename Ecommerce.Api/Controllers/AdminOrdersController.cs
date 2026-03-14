@@ -30,7 +30,10 @@ public class AdminOrdersController : ControllerBase
                 {
                     o.Id,
                     o.Status,
-                    o.TotalIqd,
+                    o.SubtotalIqd,
+                o.DiscountAmountIqd,
+                o.CouponCode,
+                o.TotalIqd,
                     o.TotalUsd,
                     o.CreatedAt,
 

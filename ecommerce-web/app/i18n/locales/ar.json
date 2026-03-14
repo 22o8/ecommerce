@@ -48,7 +48,8 @@
     "retry": "إعادة المحاولة",
     "selectAll": "تحديد الكل",
     "selected": "المحدد",
-    "total": "الإجمالي"
+    "total": "الإجمالي",
+    "unavailable": "غير متوفر"
   },
   "admin": {
     "title": "لوحة الإدارة",
@@ -347,7 +348,15 @@
     "categorySerum": "سيروم",
     "categorySunscreen": "واقي شمس",
     "categoryToner": "تونر",
-    "categoryMask": "ماسك"
+    "categoryMask": "ماسك",
+    "couponsLabel": "الكوبونات",
+    "couponsHint": "إنشاء وإدارة كوبونات الخصم.",
+    "couponCode": "كود الكوبون",
+    "couponTitle": "اسم الكوبون",
+    "discountPercent": "نسبة الخصم",
+    "fixedDiscountIqd": "خصم ثابت بالدينار",
+    "minimumOrderIqd": "الحد الأدنى للطلب",
+    "maxUses": "أقصى عدد استخدامات"
   },
   "nav": {
     "brands": "البراندات",
@@ -609,7 +618,12 @@
     "title": "السلة",
     "checkout": "إكمال الشراء",
     "emptyTitle": "سلتك فارغة",
-    "emptyDesc": "أضف منتجات لتظهر هنا."
+    "emptyDesc": "أضف منتجات لتظهر هنا.",
+    "coupon": "كوبون الخصم",
+    "couponPlaceholder": "أدخل الكوبون",
+    "applyCoupon": "تطبيق",
+    "couponDiscount": "خصم الكوبون",
+    "finalTotal": "الإجمالي بعد الخصم"
   },
   "favorites": {
     "title": "مفضلاتي",
