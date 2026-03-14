@@ -185,6 +185,8 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
+import { getAdminProductErrorMessage } from '~/utils/adminProductErrors'
+
 const { t } = useI18n()
 const toast = useToast()
 const { listBrands, createProduct, uploadProductImages } = useAdminApi()
@@ -251,7 +253,7 @@ onMounted(async () => {
     const res: any = await listBrands()
     brands.value = (res?.items || res || []) as BrandItem[]
   } catch (e: any) {
-    toast.error(e?.message || t('common.error'))
+    toast.error(getAdminProductErrorMessage(e, { phase: 'create' }))
   }
 })
 
@@ -300,13 +302,24 @@ async function onCreate() {
     const productId = created?.id || created?.productId
 
     if (productId && files.value.length) {
-      await uploadProductImages(productId, files.value.map(x => x.file))
+      try {
+        await uploadProductImages(productId, files.value.map(x => x.file))
+      } catch (uploadError: any) {
+        toast.error(
+          getAdminProductErrorMessage(uploadError, {
+            phase: 'upload',
+            productCreated: true,
+          })
+        )
+        await navigateTo(`/admin/products/${productId}`)
+        return
+      }
     }
 
     toast.success(t('common.saved'))
     await navigateTo('/admin/products')
   } catch (e: any) {
-    toast.error(e?.message || t('common.error'))
+    toast.error(getAdminProductErrorMessage(e, { phase: 'create' }))
   } finally {
     loading.value = false
   }

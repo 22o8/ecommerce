@@ -213,6 +213,7 @@
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 import { formatIqd } from '~/composables/useMoney'
+import { getAdminProductErrorMessage } from '~/utils/adminProductErrors'
 
 const route = useRoute()
 const router = useRouter()
@@ -335,7 +336,7 @@ async function loadBrands() {
     const res: any = await listBrands<any>()
     brands.value = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : (Array.isArray(res?.data) ? res.data : []))
   } catch (e: any) {
-    toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
+    toast.error(getAdminProductErrorMessage(e, { phase: 'update' }))
   }
 }
 
@@ -433,7 +434,7 @@ async function onSave() {
     toast.success(t('common.saved'))
     await loadProduct()
   } catch (e: any) {
-    toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
+    toast.error(getAdminProductErrorMessage(e, { phase: 'update' }))
   } finally {
     saving.value = false
   }
@@ -475,7 +476,7 @@ async function uploadSelected() {
     await loadImages()
     imgVer.value++
   } catch (e: any) {
-    toast.error(e?.data?.message || t('admin.uploadImagesFailed'))
+    toast.error(getAdminProductErrorMessage(e, { phase: 'upload' }))
   } finally {
     uploading.value = false
   }
@@ -490,7 +491,7 @@ async function deleteImage(imageId: string) {
     await loadImages()
     imgVer.value++
   } catch (e: any) {
-    toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
+    toast.error(getAdminProductErrorMessage(e, { phase: 'delete' }))
   }
 }
 
