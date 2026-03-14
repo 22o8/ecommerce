@@ -360,7 +360,9 @@
     "discountPercent": "نسبة الخصم",
     "fixedDiscountIqd": "خصم ثابت بالدينار",
     "minimumOrderIqd": "الحد الأدنى للطلب",
-    "maxUses": "أقصى عدد استخدامات"
+    "maxUses": "أقصى عدد استخدامات",
+    "validationCategory": "يرجى اختيار التصنيف أولًا",
+    "selectCategory": "اختر التصنيف"
   },
   "nav": {
     "brands": "البراندات",
@@ -405,7 +407,8 @@
     "catCleanser": "غسول",
     "subtitle": "متجر رقمي احترافي",
     "featuredTab": "المميزة",
-    "discountsTab": "التخفيضات"
+    "discountsTab": "التخفيضات",
+    "catEyeCare": "العناية بالعين"
   },
   "productsPage": {
     "title": "المنتجات",

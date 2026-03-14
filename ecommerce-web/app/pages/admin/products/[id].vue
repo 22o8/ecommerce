@@ -74,7 +74,8 @@
 
               <div class="grid gap-2">
                 <label class="text-sm font-medium">{{ t('admin.category') }}</label>
-                <select v-model="form.category" class="h-10 w-full rounded-2xl border border-white/10 bg-white/5 px-3 text-sm outline-none focus:border-white/20">
+                <select v-model="form.category" class="h-10 w-full rounded-2xl border border-white/10 bg-white/5 px-3 text-sm outline-none focus:border-white/20" required>
+                  <option value="" disabled>{{ t('admin.selectCategory') }}</option>
                   <option value="general">{{ t('admin.categoryGeneral') }}</option>
                   <option value="moisturizer">{{ t('admin.categoryMoisturizer') }}</option>
                   <option value="eye-care">{{ t('admin.categoryEyeCare') }}</option>
@@ -243,7 +244,7 @@ const form = reactive({
   brandSlug: '',
   isActive: true,
   isFeatured: false,
-  category: 'general',
+  category: '',
   subCategory: '',
   stockQuantity: 0,
   lowStockThreshold: 5,
@@ -402,6 +403,7 @@ function validate() {
   if (!form.name.trim()) return t('admin.validationName')
   if (!form.slug.trim()) return t('admin.validationSlug')
   if (!form.brandSlug.trim()) return t('admin.validationBrand')
+  if (!form.category.trim()) return t('admin.validationCategory')
   if (Number.isNaN(Number(form.price)) || Number(form.price) < 0) return t('admin.validationPrice')
   return ''
 }

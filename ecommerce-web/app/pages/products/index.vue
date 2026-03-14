@@ -164,7 +164,7 @@ const router = useRouter()
 const brandsStore = useBrandsStore()
 const products = useProductsStore()
 
-const q = ref(String(route.query.q || ''))
+const q = ref(route.query.category || route.query.subCategory ? '' : String(route.query.q || ''))
 const sort = ref(String(route.query.sort || 'new'))
 const brand = ref(String(route.query.brand || ''))
 const category = ref(String(route.query.category || ''))
@@ -249,6 +249,7 @@ async function fetchProducts() {
 
 function onCategoryChange() {
   if (!subCategoryOptions.value.find((x) => x.value === subCategory.value)) subCategory.value = ''
+  q.value = ''
   applyFilters()
 }
 function applyFilters() {
@@ -256,7 +257,7 @@ function applyFilters() {
   router.push({
     path: '/products',
     query: {
-      ...(q.value ? { q: q.value } : {}),
+      ...((!category.value && !subCategory.value && q.value) ? { q: q.value } : {}),
       ...(sort.value && sort.value !== 'new' ? { sort: sort.value } : {}),
       ...(brand.value ? { brand: brand.value } : {}),
       ...(category.value ? { category: category.value } : {}),
@@ -294,7 +295,7 @@ onMounted(async () => {
 watch(
   () => route.query,
   async (qv) => {
-    q.value = String(qv.q || '')
+    q.value = qv.category || qv.subCategory ? '' : String(qv.q || '')
     sort.value = String(qv.sort || 'new')
     brand.value = String(qv.brand || '')
     category.value = String(qv.category || '')
