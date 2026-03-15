@@ -196,7 +196,7 @@ public class CheckoutController : ControllerBase
             });
         }
 
-        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, new[] { product });
+        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, products);
         if (couponResult.error != null) return couponResult.error;
 
         order.SubtotalUsd = subtotalUsd;
@@ -300,7 +300,7 @@ public class CheckoutController : ControllerBase
             p.StockQuantity = Math.Max(0, p.StockQuantity - i.Quantity);
         }
 
-        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, new[] { product });
+        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, products);
         if (couponResult.error != null) return couponResult.error;
 
         order.SubtotalUsd = subtotalUsd;
