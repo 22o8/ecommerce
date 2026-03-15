@@ -333,9 +333,7 @@
     "discountPercent": "Discount percent",
     "fixedDiscountIqd": "Fixed discount IQD",
     "minimumOrderIqd": "Minimum order IQD",
-    "maxUses": "Max uses",
-    "validationCategory": "Please choose a category first",
-    "selectCategory": "Select category"
+    "maxUses": "Max uses"
   },
   "nav": {
     "logout": "Logout",
@@ -383,10 +381,7 @@
     "catCleanser": "Cleanser",
     "subtitle": "Professional digital store",
     "featuredTab": "Featured",
-    "discountsTab": "Discounts",
-    "catEyeCare": "Eye care",
-    "catToner": "Toner",
-    "catMask": "Mask"
+    "discountsTab": "Discounts"
   },
   "productsPage": {
     "title": "Products",

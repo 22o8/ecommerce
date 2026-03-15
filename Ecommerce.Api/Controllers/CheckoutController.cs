@@ -93,7 +93,7 @@ public class CheckoutController : ControllerBase
 
         var subtotalUsd = product.PriceUsd * qty;
         var subtotalIqd = product.PriceIqd * qty;
-        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, products);
+        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, new[] { product });
         if (couponResult.error != null) return couponResult.error;
 
         var order = new Order
@@ -196,7 +196,7 @@ public class CheckoutController : ControllerBase
             });
         }
 
-        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, products);
+        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, new[] { product });
         if (couponResult.error != null) return couponResult.error;
 
         order.SubtotalUsd = subtotalUsd;
@@ -300,7 +300,7 @@ public class CheckoutController : ControllerBase
             p.StockQuantity = Math.Max(0, p.StockQuantity - i.Quantity);
         }
 
-        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, products);
+        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, new[] { product });
         if (couponResult.error != null) return couponResult.error;
 
         order.SubtotalUsd = subtotalUsd;

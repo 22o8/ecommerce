@@ -74,8 +74,7 @@
 
               <div class="grid gap-2">
                 <label class="text-sm font-medium">{{ t('admin.category') }}</label>
-                <select v-model="form.category" class="h-10 w-full rounded-2xl border border-white/10 bg-white/5 px-3 text-sm outline-none focus:border-white/20" required>
-                  <option value="" disabled>{{ t('admin.selectCategory') }}</option>
+                <select v-model="form.category" class="h-10 w-full rounded-2xl border border-white/10 bg-white/5 px-3 text-sm outline-none focus:border-white/20">
                   <option value="general">{{ t('admin.categoryGeneral') }}</option>
                   <option value="moisturizer">{{ t('admin.categoryMoisturizer') }}</option>
                   <option value="eye-care">{{ t('admin.categoryEyeCare') }}</option>
@@ -214,7 +213,6 @@
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 import { formatIqd } from '~/composables/useMoney'
-import { getAdminProductErrorMessage } from '~/utils/adminProductErrors'
 
 const route = useRoute()
 const router = useRouter()
@@ -244,7 +242,7 @@ const form = reactive({
   brandSlug: '',
   isActive: true,
   isFeatured: false,
-  category: '',
+  category: 'general',
   subCategory: '',
   stockQuantity: 0,
   lowStockThreshold: 5,
@@ -337,7 +335,7 @@ async function loadBrands() {
     const res: any = await listBrands<any>()
     brands.value = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : (Array.isArray(res?.data) ? res.data : []))
   } catch (e: any) {
-    toast.error(getAdminProductErrorMessage(e, { phase: 'update' }))
+    toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
   }
 }
 
@@ -403,7 +401,6 @@ function validate() {
   if (!form.name.trim()) return t('admin.validationName')
   if (!form.slug.trim()) return t('admin.validationSlug')
   if (!form.brandSlug.trim()) return t('admin.validationBrand')
-  if (!form.category.trim()) return t('admin.validationCategory')
   if (Number.isNaN(Number(form.price)) || Number(form.price) < 0) return t('admin.validationPrice')
   return ''
 }
@@ -436,7 +433,7 @@ async function onSave() {
     toast.success(t('common.saved'))
     await loadProduct()
   } catch (e: any) {
-    toast.error(getAdminProductErrorMessage(e, { phase: 'update' }))
+    toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
   } finally {
     saving.value = false
   }
@@ -478,7 +475,7 @@ async function uploadSelected() {
     await loadImages()
     imgVer.value++
   } catch (e: any) {
-    toast.error(getAdminProductErrorMessage(e, { phase: 'upload' }))
+    toast.error(e?.data?.message || t('admin.uploadImagesFailed'))
   } finally {
     uploading.value = false
   }
@@ -493,7 +490,7 @@ async function deleteImage(imageId: string) {
     await loadImages()
     imgVer.value++
   } catch (e: any) {
-    toast.error(getAdminProductErrorMessage(e, { phase: 'delete' }))
+    toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
   }
 }
 

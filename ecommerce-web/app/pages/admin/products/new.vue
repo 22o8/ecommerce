@@ -70,8 +70,7 @@
 
             <div>
               <label class="mb-1 block text-sm text-white/80">{{ t('admin.category') }}</label>
-              <select v-model="form.category" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20" required>
-                <option value="" disabled>{{ t('admin.selectCategory') }}</option>
+              <select v-model="form.category" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
                 <option value="general">{{ t('admin.categoryGeneral') }}</option>
                 <option value="moisturizer">{{ t('admin.categoryMoisturizer') }}</option>
                 <option value="eye-care">{{ t('admin.categoryEyeCare') }}</option>
@@ -186,8 +185,6 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
-import { getAdminProductErrorMessage } from '~/utils/adminProductErrors'
-
 const { t } = useI18n()
 const toast = useToast()
 const { listBrands, createProduct, uploadProductImages } = useAdminApi()
@@ -206,7 +203,7 @@ const form = reactive({
   priceIqd: 0,
   // slug الخاص بالبراند (نرسله للباك ضمن الحقل brand)
   brand: '',
-  category: '',
+  category: 'general',
   subCategory: '',
   stockQuantity: 100,
   lowStockThreshold: 5,
@@ -254,7 +251,7 @@ onMounted(async () => {
     const res: any = await listBrands()
     brands.value = (res?.items || res || []) as BrandItem[]
   } catch (e: any) {
-    toast.error(getAdminProductErrorMessage(e, { phase: 'create' }))
+    toast.error(e?.message || t('common.error'))
   }
 })
 
@@ -280,20 +277,8 @@ onBeforeUnmount(() => {
   }
 })
 
-function validateForm() {
-  if (!form.brand.trim()) return t('admin.validationBrand')
-  if (!form.category.trim()) return t('admin.validationCategory')
-  if (!form.title.trim()) return t('admin.validationName')
-  if (!form.slug.trim()) return t('admin.validationSlug')
-  if (Number.isNaN(Number(form.priceIqd)) || Number(form.priceIqd) < 0) return t('admin.validationPrice')
-  return ''
-}
-
 async function onCreate() {
   if (loading.value) return
-  const err = validateForm()
-  if (err) return toast.error(err)
-
   loading.value = true
   try {
     const created: any = await createProduct({
@@ -315,24 +300,13 @@ async function onCreate() {
     const productId = created?.id || created?.productId
 
     if (productId && files.value.length) {
-      try {
-        await uploadProductImages(productId, files.value.map(x => x.file))
-      } catch (uploadError: any) {
-        toast.error(
-          getAdminProductErrorMessage(uploadError, {
-            phase: 'upload',
-            productCreated: true,
-          })
-        )
-        await navigateTo(`/admin/products/${productId}`)
-        return
-      }
+      await uploadProductImages(productId, files.value.map(x => x.file))
     }
 
     toast.success(t('common.saved'))
     await navigateTo('/admin/products')
   } catch (e: any) {
-    toast.error(getAdminProductErrorMessage(e, { phase: 'create' }))
+    toast.error(e?.message || t('common.error'))
   } finally {
     loading.value = false
   }
