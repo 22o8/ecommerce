@@ -57,9 +57,11 @@ const topBrands = computed(() => {
 const categoryCards = [
   { key: 'serum', icon: '💧', labelKey: 'home.catSerum' },
   { key: 'moisturizer', icon: '🧴', labelKey: 'home.catMoisturizer' },
-  { key: 'sunscreen', icon: '☀️', labelKey: 'home.catSunscreen' },
   { key: 'cleanser', icon: '🫧', labelKey: 'home.catCleanser' },
+  { key: 'sunscreen', icon: '☀️', labelKey: 'home.catSunscreen' },
+  { key: 'toner', icon: '🧪', labelKey: 'home.catToner' },
   { key: 'eye-care', icon: '👁️', labelKey: 'home.catEyeCare' },
+  { key: 'mask', icon: '✨', labelKey: 'home.catMask' },
 ] as const
 
 const heroHighlights = computed(() => categoryCards.slice(0, 3))

@@ -111,6 +111,10 @@ public class AdminProductsController : ControllerBase
         if (string.IsNullOrWhiteSpace(brandSlug))
             return BadRequest(new { message = "Brand is required" });
 
+        var category = NormalizeCategory(req.Category);
+        if (string.IsNullOrWhiteSpace(category))
+            return BadRequest(new { message = "Category is required" });
+
         var brandOk = await _db.Brands.AsNoTracking().AnyAsync(b => b.IsActive && b.Slug.ToLower() == brandSlug);
         if (!brandOk)
             return BadRequest(new { message = "Invalid brand" });
@@ -134,7 +138,7 @@ public class AdminProductsController : ControllerBase
             IsPublished = req.IsPublished,
             IsFeatured = req.IsFeatured,
             Brand = brandSlug,
-            Category = NormalizeCategory(req.Category),
+            Category = category,
             SubCategory = NormalizeSubCategory(req.SubCategory),
             StockQuantity = Math.Max(0, req.StockQuantity),
             LowStockThreshold = Math.Max(0, req.LowStockThreshold),
@@ -167,6 +171,10 @@ public class AdminProductsController : ControllerBase
         if (string.IsNullOrWhiteSpace(brandSlug))
             return BadRequest(new { message = "Brand is required" });
 
+        var category = NormalizeCategory(req.Category);
+        if (string.IsNullOrWhiteSpace(category))
+            return BadRequest(new { message = "Category is required" });
+
         var brandOk = await _db.Brands.AsNoTracking().AnyAsync(b => b.IsActive && b.Slug.ToLower() == brandSlug);
         if (!brandOk)
             return BadRequest(new { message = "Invalid brand" });
@@ -180,7 +188,7 @@ public class AdminProductsController : ControllerBase
         p.IsPublished = req.IsPublished;
         p.IsFeatured = req.IsFeatured;
         p.Brand = brandSlug;
-        p.Category = NormalizeCategory(req.Category);
+        p.Category = category;
         p.SubCategory = NormalizeSubCategory(req.SubCategory);
         p.StockQuantity = Math.Max(0, req.StockQuantity);
         p.LowStockThreshold = Math.Max(0, req.LowStockThreshold);
@@ -357,12 +365,34 @@ public class AdminProductsController : ControllerBase
     private static string NormalizeCategory(string? value)
     {
         var v = (value ?? string.Empty).Trim().ToLowerInvariant();
-        return string.IsNullOrWhiteSpace(v) ? "general" : v;
+        return v switch
+        {
+            "serum" or "سيروم" => "serum",
+            "moisturizer" or "مرطب" => "moisturizer",
+            "eye-care" or "eyecare" or "العناية-بالعين" or "العناية بالعين" => "eye-care",
+            "cleanser" or "غسول" => "cleanser",
+            "sunscreen" or "واقي-شمس" or "واقي شمس" => "sunscreen",
+            "toner" or "تونر" => "toner",
+            "mask" or "ماسك" => "mask",
+            "general" or "عام" or "" => "general",
+            _ => v,
+        };
     }
 
     private static string NormalizeSubCategory(string? value)
     {
-        return (value ?? string.Empty).Trim().ToLowerInvariant();
+        var v = (value ?? string.Empty).Trim().ToLowerInvariant();
+        return v switch
+        {
+            "eye-serum" or "سيروم-العين" or "سيروم العين" => "eye-serum",
+            "eye-cream" or "كريم-العين" or "كريم العين" => "eye-cream",
+            "eye-gel" or "جل-العين" or "جل العين" => "eye-gel",
+            "face-cream" or "كريم-الوجه" or "كريم الوجه" => "face-cream",
+            "face-gel" or "جل-الوجه" or "جل الوجه" => "face-gel",
+            "foam-cleanser" or "غسول-رغوي" or "غسول رغوي" => "foam-cleanser",
+            "oil-cleanser" or "غسول-زيتي" or "غسول زيتي" => "oil-cleanser",
+            _ => v,
+        };
     }
 
     private static string ExtractStorageKeyFromUrl(string? url)
@@ -404,6 +434,8 @@ public class UpsertProductRequest
 
     public bool IsPublished { get; set; }
     public bool IsFeatured { get; set; }
+    [Required]
+    [MinLength(1)]
     public string? Category { get; set; }
     public string? SubCategory { get; set; }
     [Range(0, 999999)]

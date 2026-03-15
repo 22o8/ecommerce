@@ -384,7 +384,9 @@
     "subtitle": "Professional digital store",
     "featuredTab": "Featured",
     "discountsTab": "Discounts",
-    "catEyeCare": "Eye care"
+    "catEyeCare": "Eye care",
+    "catToner": "Toner",
+    "catMask": "Mask"
   },
   "productsPage": {
     "title": "Products",

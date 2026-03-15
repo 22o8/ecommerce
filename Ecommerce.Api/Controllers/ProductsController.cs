@@ -21,96 +21,72 @@ public class ProductsController : ControllerBase
 
     private static string N(string? value) => (value ?? string.Empty).Trim().ToLowerInvariant();
 
-    private static readonly Dictionary<string, string[]> CategoryKeywords = new(StringComparer.OrdinalIgnoreCase)
+    private static string NormalizeCategorySlug(string? value)
     {
-        ["moisturizer"] = new[] { "مرطب", "مرطب الوجه", "كريم مرطب", "جل مرطب", "moisturizer", "moisturiser", "hydrating cream", "hydrating gel", "lotion", "cream" },
-        ["eye-care"] = new[] { "eye", "عين", "under eye", "undereye", "eye cream", "eye serum", "eye gel" },
-        ["cleanser"] = new[] { "cleanser", "cleanse", "غسول", "foam wash", "face wash", "منظف" },
-        ["serum"] = new[] { "serum", "سيروم", "ampoule" },
-        ["sunscreen"] = new[] { "sunscreen", "sun screen", "spf", "واقي", "واقي شمس" },
-        ["toner"] = new[] { "toner", "تونر" },
-        ["mask"] = new[] { "mask", "ماسك" },
-    };
+        var v = N(value);
+        return v switch
+        {
+            "serum" or "سيروم" => "serum",
+            "moisturizer" or "مرطب" => "moisturizer",
+            "eye-care" or "eyecare" or "العناية-بالعين" or "العناية بالعين" => "eye-care",
+            "cleanser" or "غسول" => "cleanser",
+            "sunscreen" or "واقي-شمس" or "واقي شمس" => "sunscreen",
+            "toner" or "تونر" => "toner",
+            "mask" or "ماسك" => "mask",
+            "general" or "عام" or "" => "general",
+            _ => v,
+        };
+    }
 
-    private static readonly Dictionary<string, string[]> SubCategoryKeywords = new(StringComparer.OrdinalIgnoreCase)
+    private static string NormalizeSubCategorySlug(string? value)
     {
-        ["eye-serum"] = new[] { "eye serum", "serum eye", "سيروم العين", "سيروم للعين" },
-        ["eye-cream"] = new[] { "eye cream", "cream eye", "كريم العين", "كريم للعين" },
-        ["eye-gel"] = new[] { "eye gel", "جل العين", "جل للعين" },
-        ["face-cream"] = new[] { "face cream", "cream", "كريم", "moisturizing cream" },
-        ["face-gel"] = new[] { "gel", "جل", "moisturizing gel" },
-        ["foam-cleanser"] = new[] { "foam", "رغوي", "foam cleanser" },
-        ["oil-cleanser"] = new[] { "oil cleanser", "cleansing oil", "زيتي" },
-    };
-
-    private static bool ContainsAny(string haystack, IEnumerable<string> needles)
-        => needles.Any(n => haystack.Contains(n, StringComparison.OrdinalIgnoreCase));
+        var v = N(value);
+        return v switch
+        {
+            "eye-serum" or "سيروم-العين" or "سيروم العين" => "eye-serum",
+            "eye-cream" or "كريم-العين" or "كريم العين" => "eye-cream",
+            "eye-gel" or "جل-العين" or "جل العين" => "eye-gel",
+            "face-cream" or "كريم-الوجه" or "كريم الوجه" => "face-cream",
+            "face-gel" or "جل-الوجه" or "جل الوجه" => "face-gel",
+            "foam-cleanser" or "غسول-رغوي" or "غسول رغوي" => "foam-cleanser",
+            "oil-cleanser" or "غسول-زيتي" or "غسول زيتي" => "oil-cleanser",
+            _ => v,
+        };
+    }
 
     private static bool MatchesCategory(dynamic p, string? category, string? subCategory, string? q)
     {
-        var text = string.Join(" ", new[]
+        var searchableText = string.Join(" ", new[]
         {
             (string?)p.Title,
             (string?)p.Description,
             (string?)p.Slug,
             (string?)p.Brand,
-            (string?)p.Category,
-            (string?)p.SubCategory,
         }.Where(x => !string.IsNullOrWhiteSpace(x))).ToLowerInvariant();
 
-        var normalizedCategory = N(category);
-        var normalizedSub = N(subCategory);
+        var normalizedCategory = NormalizeCategorySlug(category);
+        var normalizedSub = NormalizeSubCategorySlug(subCategory);
         var normalizedQ = N(q);
 
         if (!string.IsNullOrWhiteSpace(normalizedCategory))
         {
-            var storedCat = N((string?)p.Category);
-            if (storedCat == normalizedCategory)
-            {
-                // ok
-            }
-            else if (CategoryKeywords.TryGetValue(normalizedCategory, out var catWords) && ContainsAny(text, catWords))
-            {
-                // inferred match
-            }
-            else
-            {
+            var storedCat = NormalizeCategorySlug((string?)p.Category);
+            if (storedCat != normalizedCategory)
                 return false;
-            }
         }
 
         if (!string.IsNullOrWhiteSpace(normalizedSub))
         {
-            var storedSub = N((string?)p.SubCategory);
-            if (storedSub == normalizedSub)
-            {
-                // ok
-            }
-            else if (SubCategoryKeywords.TryGetValue(normalizedSub, out var subWords) && ContainsAny(text, subWords))
-            {
-                // inferred
-            }
-            else
-            {
+            var storedSub = NormalizeSubCategorySlug((string?)p.SubCategory);
+            if (storedSub != normalizedSub)
                 return false;
-            }
         }
 
-        if (!string.IsNullOrWhiteSpace(normalizedQ))
+        // عند اختيار قسم/نوع دقيق، لا نعتمد البحث النصي لتحديد محتوى القسم.
+        if (string.IsNullOrWhiteSpace(normalizedCategory) && string.IsNullOrWhiteSpace(normalizedSub))
         {
-            if (!text.Contains(normalizedQ))
-            {
-                if (SubCategoryKeywords.TryGetValue(normalizedQ, out var exactSubWords) && ContainsAny(text, exactSubWords))
-                {
-                }
-                else if (CategoryKeywords.TryGetValue(normalizedQ, out var exactCatWords) && ContainsAny(text, exactCatWords))
-                {
-                }
-                else
-                {
-                    return false;
-                }
-            }
+            if (!string.IsNullOrWhiteSpace(normalizedQ) && !searchableText.Contains(normalizedQ))
+                return false;
         }
 
         return true;
@@ -154,8 +130,8 @@ public class ProductsController : ControllerBase
         var pageSize = query.PageSize is < 1 or > 60 ? 12 : query.PageSize;
         var q = N(query.Q);
         var brand = N(query.Brand);
-        var category = N(query.Category);
-        var subCategory = N(query.SubCategory);
+        var category = NormalizeCategorySlug(query.Category);
+        var subCategory = NormalizeSubCategorySlug(query.SubCategory);
 
         var baseQuery = _db.Products.AsNoTracking().Where(p => p.IsPublished);
 
