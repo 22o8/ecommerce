@@ -6,8 +6,21 @@ const cfg = useRuntimeConfig()
 const phone = computed(() => String(cfg.public.whatsappNumber || '').replace(/\D/g, ''))
 
 const showTop = ref(false)
+
 function onScroll() {
-  showTop.value = window.scrollY > 500
+  const scrollTop = window.scrollY || document.documentElement.scrollTop || 0
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0
+  const documentHeight = Math.max(
+    document.body.scrollHeight,
+    document.documentElement.scrollHeight,
+    document.body.offsetHeight,
+    document.documentElement.offsetHeight,
+    document.body.clientHeight,
+    document.documentElement.clientHeight,
+  )
+
+  const reachedBottomZone = scrollTop + viewportHeight >= documentHeight - 180
+  showTop.value = reachedBottomZone
 }
 
 function toTop() {
@@ -24,8 +37,12 @@ const waLink = computed(() => {
 onMounted(() => {
   onScroll()
   window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', onScroll, { passive: true })
 })
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+  window.removeEventListener('resize', onScroll)
+})
 </script>
 
 <template>
@@ -51,7 +68,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
       aria-label="Back to top"
       title="للأعلى"
     >
-      <span class="icon">↑</span>
+      <span class="icon icon-top">↑</span>
     </button>
   </div>
 </template>
@@ -63,7 +80,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   bottom: 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   z-index: 60;
 }
 
@@ -79,26 +96,51 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   font-weight: 900;
   color: rgb(var(--text-strong));
   backdrop-filter: blur(14px);
-  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease, opacity .18s ease;
 }
 
-.fab:hover{ transform: translateY(-1px); box-shadow: var(--shadow1); }
+.fab:hover{ transform: translateY(-2px) scale(1.02); box-shadow: var(--shadow1); }
 
 .fab-wa{
   border-color: rgba(34,197,94,.35);
 }
 
 .fab-top{
-  width: 44px;
-  height: 44px;
+  width: 64px;
+  height: 64px;
   justify-content: center;
+  padding: 0;
+  border-width: 2px;
+  border-color: rgba(var(--text-strong), .14);
+  background: rgba(var(--panel), .98);
+  box-shadow: 0 16px 36px rgba(0,0,0,.18);
 }
 
 .icon{ font-size: 16px; }
+.icon-top{
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 900;
+}
 .label{ font-size: 13px; }
 
 @media (max-width: 520px){
+  .floating{
+    inset-inline-end: 14px;
+    bottom: 14px;
+  }
+
   .label{ display: none; }
   .fab{ padding: 12px; }
+
+  .fab-top{
+    width: 58px;
+    height: 58px;
+    padding: 0;
+  }
+
+  .icon-top{
+    font-size: 32px;
+  }
 }
 </style>
