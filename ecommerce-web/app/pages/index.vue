@@ -66,6 +66,7 @@ const categoryCards = [
 ] as const
 
 const heroHighlights = computed(() => categoryCards.slice(0, 4))
+const heroBrandBgSrc = heroImage
 
 </script>
 
@@ -83,8 +84,8 @@ const heroHighlights = computed(() => categoryCards.slice(0, 4))
         <div class="hero-aurora hero-aurora--two" />
         <div class="hero-aurora hero-aurora--three" />
 
-        <div class="relative z-[1] mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-18 lg:px-10 lg:py-20">
-          <div class="hero-content-panel me-auto max-w-[48rem] text-center lg:text-start lg:me-[40%] xl:me-[44%]">
+        <div class="relative z-[1] mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-18 lg:px-10 lg:py-20 xl:px-12">
+          <div class="hero-content-panel me-auto max-w-[45rem] text-center lg:text-start lg:me-[46%] xl:me-[48%] 2xl:me-[50%]">
             <div class="hero-mini-badges mb-6 flex flex-wrap items-center justify-center gap-3">
               <NuxtLink
                 v-for="item in heroHighlights"

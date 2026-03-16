@@ -133,6 +133,7 @@ public class ProductsController : ControllerBase
                 p.PriceUsd,
                 p.RatingAvg,
                 p.Brand,
+                brandName = _db.Brands.Where(b => b.Slug == p.Brand).Select(b => b.Name).FirstOrDefault(),
                 p.Category,
                 p.SubCategory,
                 p.StockQuantity,
@@ -162,7 +163,29 @@ public class ProductsController : ControllerBase
             .Where(p => p.IsPublished);
 
         if (!string.IsNullOrWhiteSpace(brand) && !brand.Equals("all", StringComparison.OrdinalIgnoreCase))
-            baseQuery = baseQuery.Where(p => p.Brand != null && p.Brand.ToLower() == brand);
+        {
+            var requestedBrand = brand;
+            var matchedBrand = await _db.Brands
+                .AsNoTracking()
+                .Where(b => b.IsActive)
+                .Select(b => new
+                {
+                    Slug = (b.Slug ?? string.Empty).ToLower(),
+                    Name = (b.Name ?? string.Empty).ToLower()
+                })
+                .FirstOrDefaultAsync(b => b.Slug == requestedBrand || b.Name == requestedBrand);
+
+            var acceptedBrandValues = new List<string> { requestedBrand };
+            if (matchedBrand != null)
+            {
+                if (!string.IsNullOrWhiteSpace(matchedBrand.Slug) && !acceptedBrandValues.Contains(matchedBrand.Slug))
+                    acceptedBrandValues.Add(matchedBrand.Slug);
+                if (!string.IsNullOrWhiteSpace(matchedBrand.Name) && !acceptedBrandValues.Contains(matchedBrand.Name))
+                    acceptedBrandValues.Add(matchedBrand.Name);
+            }
+
+            baseQuery = baseQuery.Where(p => p.Brand != null && acceptedBrandValues.Contains(p.Brand.ToLower()));
+        }
 
         if (!string.IsNullOrWhiteSpace(category) && !category.Equals("all", StringComparison.OrdinalIgnoreCase))
             baseQuery = baseQuery.Where(p => p.Category != null && p.Category.ToLower() == category);
@@ -211,7 +234,8 @@ public class ProductsController : ControllerBase
             {
                 x.Id, x.Title, x.Slug, x.Description, x.PriceIqd, x.DiscountPercent,
                 finalPriceIqd = x.DiscountPercent > 0 ? Math.Round(x.PriceIqd * (100m - x.DiscountPercent) / 100m, 2) : x.PriceIqd,
-                x.PriceUsd, x.RatingAvg, x.Brand, x.Category, x.SubCategory, x.StockQuantity, x.IsCouponAllowed, x.RatingCount, x.CreatedAt,
+                x.PriceUsd, x.RatingAvg, x.Brand,
+                brandName = _db.Brands.Where(b => b.Slug == x.Brand).Select(b => b.Name).FirstOrDefault(), x.Category, x.SubCategory, x.StockQuantity, x.IsCouponAllowed, x.RatingCount, x.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
                 favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
                 images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList()
@@ -238,7 +262,8 @@ public class ProductsController : ControllerBase
             {
                 x.Id, x.Title, x.Slug, x.Description, x.PriceIqd, x.DiscountPercent,
                 finalPriceIqd = x.DiscountPercent > 0 ? Math.Round(x.PriceIqd * (100m - x.DiscountPercent) / 100m, 2) : x.PriceIqd,
-                x.PriceUsd, x.RatingAvg, x.Brand, x.Category, x.SubCategory, x.StockQuantity, x.IsCouponAllowed, x.RatingCount, x.CreatedAt,
+                x.PriceUsd, x.RatingAvg, x.Brand,
+                brandName = _db.Brands.Where(b => b.Slug == x.Brand).Select(b => b.Name).FirstOrDefault(), x.Category, x.SubCategory, x.StockQuantity, x.IsCouponAllowed, x.RatingCount, x.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
                 favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
                 images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList()

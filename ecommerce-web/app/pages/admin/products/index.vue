@@ -13,13 +13,19 @@
       </div>
 
       <!-- Filters -->
-      <div class="filter-grid mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div class="filter-grid mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         <input v-model="q" class="admin-input" :placeholder="t('admin.searchProducts')" @keydown.enter="fetchList(1)" />
 
         <select v-model="status" class="admin-input" @change="fetchList(1)">
           <option value="">{{ t('admin.all') }}</option>
           <option value="published">{{ t('admin.published') }}</option>
           <option value="draft">{{ t('admin.draft') }}</option>
+        </select>
+
+
+        <select v-model="brandFilter" class="admin-input" @change="fetchList(1)">
+          <option value="">{{ t('admin.allBrands') }}</option>
+          <option v-for="b in brandOptions" :key="b.slug" :value="b.slug">{{ b.name }}</option>
         </select>
 
         <select v-model="sort" class="admin-input" @change="fetchList(1)">
@@ -220,6 +226,8 @@ type Product = {
   lowStockThreshold?: number
   category?: string
   subCategory?: string
+  brand?: string
+  brandName?: string
   imageUrl?: string
 }
 
@@ -238,6 +246,8 @@ function goDetails(id: any) {
 const q = ref('')
 const status = ref<'published' | 'draft' | ''>('')
 const sort = ref<'newest' | 'oldest' | 'title' | 'priceHigh' | 'priceLow'>('newest')
+const brandFilter = ref('')
+const brandOptions = ref<{ id: string; slug: string; name: string }[]>([])
 
 const loading = ref(false)
 const pending = ref(false)
@@ -289,6 +299,8 @@ function applyClientFilters(list: Product[]) {
   if (status.value === 'published') out = out.filter(x => !!x.isPublished)
   if (status.value === 'draft') out = out.filter(x => !x.isPublished)
 
+  if (brandFilter.value) out = out.filter(x => (x.brand || '').toLowerCase() === brandFilter.value || (x.brandName || '').toLowerCase() === brandFilter.value)
+
   if (sort.value === 'title') out.sort((a,b) => (a.title||'').localeCompare(b.title||''))
   if (sort.value === 'oldest') out.sort((a,b) => String(a.id).localeCompare(String(b.id)))
   if (sort.value === 'newest') out.sort((a,b) => String(b.id).localeCompare(String(a.id)))
@@ -320,6 +332,8 @@ async function fetchList(p = 1) {
       lowStockThreshold: Number(x.lowStockThreshold ?? 0),
       category: String(x.category || 'general'),
       subCategory: String(x.subCategory || ''),
+      brand: String(x.brand || ''),
+      brandName: String(x.brandName || x.brand || ''),
       imageUrl: typeof x.coverImage === 'string'
         ? publicApi.buildAssetUrl(x.coverImage)
         : (typeof x.imageUrl === 'string'
@@ -437,7 +451,23 @@ async function bulkDelete() {
   }
 }
 
-onMounted(() => fetchList(1))
+async function loadBrandOptions() {
+  try {
+    const res = await api.listBrands<any>()
+    const raw = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : [])
+    brandOptions.value = raw
+      .map((b:any) => ({ id: String(b.id || ''), slug: String(b.slug || '').toLowerCase(), name: String(b.name || b.slug || '') }))
+      .filter((b:any) => b.slug)
+      .sort((a:any,b:any) => a.name.localeCompare(b.name))
+  } catch {
+    brandOptions.value = []
+  }
+}
+
+onMounted(async () => {
+  await loadBrandOptions()
+  await fetchList(1)
+})
 </script>
 
 <style scoped>

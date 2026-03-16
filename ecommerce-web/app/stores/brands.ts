@@ -68,7 +68,7 @@ export const useBrandsStore = defineStore('brands', () => {
     try {
       // AdminBrandsController يرجّع Array مباشرة
       const res = await get<any>('/admin/brands')
-      items.value = Array.isArray(res) ? res : (res?.items || [])
+      items.value = (Array.isArray(res) ? res : (res?.items || [])).map(normalizeBrand).filter(b => b && b.slug)
     } finally {
       loading.value = false
     }

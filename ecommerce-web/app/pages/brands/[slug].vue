@@ -4,7 +4,7 @@
     <div class="brand-hero overflow-hidden">
       <div class="p-6 sm:p-8 lg:p-10 flex flex-col sm:flex-row gap-6 sm:items-center">
         <div class="brand-logo-shell">
-          <SmartImage v-if="brandLogo" :src="brandLogo" :alt="brand?.name" class="w-full h-full object-contain p-2" />
+          <SmartImage v-if="brandLogo" :src="brandLogo" :alt="brand?.name" class="w-full h-full object-contain p-1 sm:p-2" />
           <div v-else class="text-xs text-[rgba(var(--muted),0.85)]">Logo</div>
         </div>
 
@@ -109,9 +109,9 @@ const brandLogo = computed(() => buildAssetUrl(brand.value?.logoUrl || ''))
   box-shadow: 0 24px 64px rgba(0,0,0,.18);
 }
 .brand-logo-shell{
-  width: 104px;
-  height: 104px;
-  border-radius: 28px;
+  width: 132px;
+  height: 132px;
+  border-radius: 32px;
   border: 1px solid rgba(var(--border), .96);
   background: linear-gradient(180deg, rgba(var(--surface-rgb), .94), rgba(var(--surface-2-rgb), .86));
   overflow: hidden;
@@ -129,6 +129,6 @@ const brandLogo = computed(() => buildAssetUrl(brand.value?.logoUrl || ''))
   background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,244,248,.94));
 }
 @media (max-width: 640px){
-  .brand-logo-shell{ width: 88px; height: 88px; border-radius: 24px; }
+  .brand-logo-shell{ width: 104px; height: 104px; border-radius: 26px; }
 }
 </style>
