@@ -685,12 +685,13 @@ const heroBrandBgSrc = heroImage
 
 <style scoped>
 :global(html.theme-light) .hero-brand-bg-image{
-  opacity: .30;
-  filter: brightness(.44) contrast(1.05) saturate(.82) drop-shadow(0 18px 42px rgba(0,0,0,.12));
+  opacity: .58;
+  filter: brightness(.72) contrast(1.02) saturate(.92) drop-shadow(0 16px 36px rgba(0,0,0,.08));
 }
+
 :global(html.theme-light) .hero-premium-shell::after{
   background: none;
-  border: 1px solid rgba(228, 232, 239, .92);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.95);
+  border: 1px solid rgba(228, 232, 239, .72);
+  box-shadow: none;
 }
 </style>
