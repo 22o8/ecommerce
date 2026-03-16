@@ -3,10 +3,8 @@
     <div class="mx-auto max-w-7xl px-4 py-10 grid gap-8 md:grid-cols-3">
       <div class="grid gap-3">
         <div class="flex items-center gap-3">
-          <div class="h-10 w-10 rounded-2xl bg-[rgb(var(--primary))] text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black overflow-hidden">
-            <!-- ضع رابط شعار الموقع هنا بدل # -->
-            <img v-if="siteLogoSrc !== '#'" :src="siteLogoSrc" alt="Site logo" class="h-full w-full object-cover" />
-            <Icon v-else name="mdi:storefront-outline" class="text-xl" />
+          <div class="h-10 w-10 rounded-2xl bg-[rgb(var(--primary))] text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black">
+            <Icon name="mdi:storefront-outline" class="text-xl" />
           </div>
           <div>
             <div class="font-extrabold">ECOMMERCE</div>
@@ -14,7 +12,7 @@
           </div>
         </div>
         <p class="text-sm text-muted rtl-text">
-          {{ t('homeHero.subtitle') }}
+          {{ t('home.hero.subtitle') }}
         </p>
       </div>
 
@@ -55,13 +53,11 @@
 </template>
 
 <script setup lang="ts">
-import siteLogoSrc from '~/assets/img/site-logo.jpg'
 const { t } = useI18n()
 const config = useRuntimeConfig()
 const supportEmail = String((config.public as any).supportEmail || '')
 const supportPhone = String((config.public as any).supportPhone || '')
 const instagramUrl = String((config.public as any).instagramUrl || '')
-
 
 function toTop(){ if (import.meta.client) window.scrollTo({ top: 0, behavior: 'smooth' }) }
 </script>
