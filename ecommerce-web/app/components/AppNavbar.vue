@@ -208,7 +208,7 @@
 </template>
 
 <script setup lang="ts">
-import siteLogoSrc from '~/app/assets/img/site-logo.jpg'
+import siteLogoSrc from '~/assets/img/site-logo.jpg'
 import UiButton from '~/components/ui/UiButton.vue'
 import { useFavoritesStore } from '~/stores/favorites'
 import { useProductsStore } from '~/stores/products'

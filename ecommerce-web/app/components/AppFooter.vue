@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import siteLogoSrc from '~/app/assets/img/site-logo.jpg'
+import siteLogoSrc from '~/assets/img/site-logo.jpg'
 const { t } = useI18n()
 const config = useRuntimeConfig()
 const supportEmail = String((config.public as any).supportEmail || '')
