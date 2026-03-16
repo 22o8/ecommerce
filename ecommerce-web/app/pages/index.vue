@@ -464,9 +464,9 @@ const heroBrandBgSrc = heroImage
 }
 :global(html.theme-light) .hero-premium-shell{
   background:
-    linear-gradient(180deg, rgba(255,255,255,.97), rgba(255,246,251,.96)),
-    linear-gradient(135deg, rgba(232, 91, 154, .10), transparent 35%, rgba(246, 180, 212, .12) 100%);
-  box-shadow: 0 36px 90px rgba(232, 91, 154, .10), 0 14px 30px rgba(22,22,22,.05);
+    linear-gradient(180deg, rgba(255,255,255,.995), rgba(255,255,255,.985)),
+    linear-gradient(135deg, rgba(236,72,153,.03), transparent 38%, rgba(244,114,182,.04) 100%);
+  box-shadow: 0 20px 48px rgba(22,22,22,.04);
 }
 :global(html.theme-light) .hero-mini-chip,
 :global(html.theme-light) .hero-stat-card,
@@ -554,15 +554,15 @@ const heroBrandBgSrc = heroImage
 }
 :global(html.theme-light) .home-section-panel{
   background:
-    linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,247,252,.95)),
-    linear-gradient(135deg, rgba(232,91,154,.05), transparent 35%, rgba(246,180,212,.06) 100%);
+    linear-gradient(180deg, rgba(255,255,255,.995), rgba(255,255,255,.985)),
+    linear-gradient(135deg, rgba(236,72,153,.018), transparent 42%, rgba(244,114,182,.026) 100%);
 }
 :global(html.theme-light) .category-simple-card{
-  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,247,252,.94));
+  background: linear-gradient(180deg, rgba(255,255,255,.995), rgba(255,255,255,.982));
 }
 :global(html.theme-light) .category-simple-card:hover{
-  background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,244,250,.98));
-  box-shadow: 0 24px 56px rgba(232, 91, 154, .12), 0 12px 28px rgba(24,24,24,.06);
+  background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,.99));
+  box-shadow: 0 18px 40px rgba(22,22,22,.06);
 }
 :global(html.theme-dark) .hero-premium-shell{
   background:
@@ -680,5 +680,17 @@ const heroBrandBgSrc = heroImage
     min-height:110px;
     font-size:.82rem;
   }
+}
+</style>
+
+<style scoped>
+:global(html.theme-light) .hero-brand-bg-image{
+  opacity: .68;
+  filter: brightness(.74) contrast(1.01) saturate(.92) drop-shadow(0 16px 36px rgba(0,0,0,.08));
+}
+:global(html.theme-light) .hero-premium-shell::after{
+  background: none;
+  border: 1px solid rgba(228, 232, 239, .72);
+  box-shadow: none;
 }
 </style>

@@ -230,7 +230,7 @@ type Product = {
   imageUrl?: string
 }
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const api = useAdminApi()
 const publicApi = useApi()
 const { formatIqd } = useMoney()
@@ -248,6 +248,11 @@ const status = ref<'published' | 'draft' | ''>('')
 const brand = ref('')
 const sort = ref<'newest' | 'oldest' | 'title' | 'priceHigh' | 'priceLow'>('newest')
 const brandOptions = computed(() => (brandsStore.publicItems || []).map((b:any) => ({ slug: String(b.slug || ''), name: String(b.name || '') })).filter((b:any) => b.slug && b.name))
+const allBrandsLabel = computed(() => {
+  const raw = t('admin.allBrands')
+  if (raw && raw !== 'admin.allBrands') return raw
+  return locale.value === 'ar' ? 'كل البراندات' : 'All brands'
+})
 
 const loading = ref(false)
 const pending = ref(false)
@@ -300,7 +305,10 @@ function applyClientFilters(list: Product[]) {
   if (status.value === 'draft') out = out.filter(x => !x.isPublished)
   if (brand.value) {
     const bq = brand.value.trim().toLowerCase()
-    out = out.filter(x => String(x.brand || '').trim().toLowerCase() === bq)
+    out = out.filter(x => {
+      const v = String(x.brand || '').trim().toLowerCase()
+      return v === bq || v.replace(/\s+/g,'-') === bq || v.replace(/-/g,' ') === bq
+    })
   }
 
   if (sort.value === 'title') out.sort((a,b) => (a.title||'').localeCompare(b.title||''))
