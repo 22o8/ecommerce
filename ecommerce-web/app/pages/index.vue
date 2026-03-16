@@ -55,14 +55,15 @@ const topBrands = computed(() => {
   return uniq.slice(0, 10)
 })
 const categoryCards = [
-  { key: 'serum', icon: '💧', labelKey: 'home.catSerum', q: { ar: 'سيروم', en: 'serum' } },
-  { key: 'moisturizer', icon: '🧴', labelKey: 'home.catMoisturizer', q: { ar: 'مرطب', en: 'moisturizer' } },
-  { key: 'sunscreen', icon: '☀️', labelKey: 'home.catSunscreen', q: { ar: 'واقي شمس', en: 'sunscreen' } },
-  { key: 'cleanser', icon: '🫧', labelKey: 'home.catCleanser', q: { ar: 'غسول', en: 'cleanser' } },
-  { key: 'perfume', icon: '🌸', labelKey: 'home.catPerfume', q: { ar: 'عطر', en: 'perfume' } },
+  { key: 'serum', icon: '💧', labelKey: 'home.catSerum' },
+  { key: 'moisturizer', icon: '🧴', labelKey: 'home.catMoisturizer' },
+  { key: 'sunscreen', icon: '☀️', labelKey: 'home.catSunscreen' },
+  { key: 'cleanser', icon: '🫧', labelKey: 'home.catCleanser' },
+  { key: 'toner', icon: '🫙', labelKey: 'home.catToner' },
+  { key: 'mask', icon: '✨', labelKey: 'home.catMask' },
+  { key: 'eye-care', icon: '👁️', labelKey: 'home.catEyeCare' },
 ] as const
 
-const categoryQuery = (c: (typeof categoryCards)[number]) => (locale.value === 'ar' ? c.q.ar : c.q.en)
 const heroHighlights = computed(() => categoryCards.slice(0, 3))
 </script>
 
@@ -80,7 +81,7 @@ const heroHighlights = computed(() => categoryCards.slice(0, 3))
               <NuxtLink
                 v-for="item in heroHighlights"
                 :key="item.key"
-                :to="`/products?q=${encodeURIComponent(categoryQuery(item))}`"
+                :to="`/products?category=${encodeURIComponent(item.key)}`"
                 class="hero-mini-chip"
               >
                 <span class="text-base">{{ item.icon }}</span>
@@ -221,7 +222,7 @@ const heroHighlights = computed(() => categoryCards.slice(0, 3))
             :delay="35 * idx"
           >
             <NuxtLink
-              :to="`/products?q=${encodeURIComponent(categoryQuery(c))}`"
+              :to="`/products?category=${encodeURIComponent(c.key)}`"
               class="group category-simple-card"
             >
               <div class="category-simple-card__inner">

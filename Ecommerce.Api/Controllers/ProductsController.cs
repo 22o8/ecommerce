@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Ecommerce.Api.Infrastructure.Data;
 using Ecommerce.Api.Models.Products;
@@ -20,101 +19,6 @@ public class ProductsController : ControllerBase
     }
 
     private static string N(string? value) => (value ?? string.Empty).Trim().ToLowerInvariant();
-
-    private static readonly Dictionary<string, string[]> CategoryKeywords = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["moisturizer"] = new[] { "مرطب", "مرطب الوجه", "كريم مرطب", "جل مرطب", "moisturizer", "moisturiser", "hydrating cream", "hydrating gel", "lotion", "cream" },
-        ["eye-care"] = new[] { "eye", "عين", "under eye", "undereye", "eye cream", "eye serum", "eye gel" },
-        ["cleanser"] = new[] { "cleanser", "cleanse", "غسول", "foam wash", "face wash", "منظف" },
-        ["serum"] = new[] { "serum", "سيروم", "ampoule" },
-        ["sunscreen"] = new[] { "sunscreen", "sun screen", "spf", "واقي", "واقي شمس" },
-        ["toner"] = new[] { "toner", "تونر" },
-        ["mask"] = new[] { "mask", "ماسك" },
-    };
-
-    private static readonly Dictionary<string, string[]> SubCategoryKeywords = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["eye-serum"] = new[] { "eye serum", "serum eye", "سيروم العين", "سيروم للعين" },
-        ["eye-cream"] = new[] { "eye cream", "cream eye", "كريم العين", "كريم للعين" },
-        ["eye-gel"] = new[] { "eye gel", "جل العين", "جل للعين" },
-        ["face-cream"] = new[] { "face cream", "cream", "كريم", "moisturizing cream" },
-        ["face-gel"] = new[] { "gel", "جل", "moisturizing gel" },
-        ["foam-cleanser"] = new[] { "foam", "رغوي", "foam cleanser" },
-        ["oil-cleanser"] = new[] { "oil cleanser", "cleansing oil", "زيتي" },
-    };
-
-    private static bool ContainsAny(string haystack, IEnumerable<string> needles)
-        => needles.Any(n => haystack.Contains(n, StringComparison.OrdinalIgnoreCase));
-
-    private static bool MatchesCategory(dynamic p, string? category, string? subCategory, string? q)
-    {
-        var text = string.Join(" ", new[]
-        {
-            (string?)p.Title,
-            (string?)p.Description,
-            (string?)p.Slug,
-            (string?)p.Brand,
-            (string?)p.Category,
-            (string?)p.SubCategory,
-        }.Where(x => !string.IsNullOrWhiteSpace(x))).ToLowerInvariant();
-
-        var normalizedCategory = N(category);
-        var normalizedSub = N(subCategory);
-        var normalizedQ = N(q);
-
-        if (!string.IsNullOrWhiteSpace(normalizedCategory))
-        {
-            var storedCat = N((string?)p.Category);
-            if (storedCat == normalizedCategory)
-            {
-                // ok
-            }
-            else if (CategoryKeywords.TryGetValue(normalizedCategory, out var catWords) && ContainsAny(text, catWords))
-            {
-                // inferred match
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(normalizedSub))
-        {
-            var storedSub = N((string?)p.SubCategory);
-            if (storedSub == normalizedSub)
-            {
-                // ok
-            }
-            else if (SubCategoryKeywords.TryGetValue(normalizedSub, out var subWords) && ContainsAny(text, subWords))
-            {
-                // inferred
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(normalizedQ))
-        {
-            if (!text.Contains(normalizedQ))
-            {
-                if (SubCategoryKeywords.TryGetValue(normalizedQ, out var exactSubWords) && ContainsAny(text, exactSubWords))
-                {
-                }
-                else if (CategoryKeywords.TryGetValue(normalizedQ, out var exactCatWords) && ContainsAny(text, exactCatWords))
-                {
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
 
     private async Task<List<dynamic>> BuildProjectedProductsAsync(IQueryable<Domain.Entities.Product> query)
     {
@@ -157,23 +61,44 @@ public class ProductsController : ControllerBase
         var category = N(query.Category);
         var subCategory = N(query.SubCategory);
 
-        var baseQuery = _db.Products.AsNoTracking().Where(p => p.IsPublished);
+        var baseQuery = _db.Products
+            .AsNoTracking()
+            .Where(p => p.IsPublished);
 
         if (!string.IsNullOrWhiteSpace(brand) && !brand.Equals("all", StringComparison.OrdinalIgnoreCase))
-            baseQuery = baseQuery.Where(p => p.Brand != null && p.Brand.ToLower() == brand);
-
-        var allItems = await BuildProjectedProductsAsync(baseQuery);
-        var filtered = allItems.Where(p => MatchesCategory(p, category, subCategory, q));
-
-        filtered = (query.Sort ?? "new") switch
         {
-            "price:asc" or "priceAsc" => filtered.OrderBy(p => (decimal)p.PriceIqd),
-            "price:desc" or "priceDesc" => filtered.OrderByDescending(p => (decimal)p.PriceIqd),
-            _ => filtered.OrderByDescending(p => (DateTime)p.CreatedAt),
+            baseQuery = baseQuery.Where(p => p.Brand != null && p.Brand.ToLower() == brand);
+        }
+
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            baseQuery = baseQuery.Where(p => p.Category != null && p.Category.ToLower() == category);
+        }
+
+        if (!string.IsNullOrWhiteSpace(subCategory))
+        {
+            baseQuery = baseQuery.Where(p => p.SubCategory != null && p.SubCategory.ToLower() == subCategory);
+        }
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            baseQuery = baseQuery.Where(p =>
+                (p.Title != null && p.Title.ToLower().Contains(q)) ||
+                (p.Description != null && p.Description.ToLower().Contains(q)) ||
+                (p.Slug != null && p.Slug.ToLower().Contains(q)) ||
+                (p.Brand != null && p.Brand.ToLower().Contains(q)));
+        }
+
+        baseQuery = (query.Sort ?? "new") switch
+        {
+            "price:asc" or "priceAsc" => baseQuery.OrderBy(p => p.PriceIqd),
+            "price:desc" or "priceDesc" => baseQuery.OrderByDescending(p => p.PriceIqd),
+            _ => baseQuery.OrderByDescending(p => p.CreatedAt),
         };
 
-        var total = filtered.Count();
-        var items = filtered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        var total = await baseQuery.CountAsync();
+        var pagedQuery = baseQuery.Skip((page - 1) * pageSize).Take(pageSize);
+        var items = await BuildProjectedProductsAsync(pagedQuery);
 
         return Ok(new { page, pageSize, totalCount = total, items });
     }
@@ -235,27 +160,58 @@ public class ProductsController : ControllerBase
     [HttpGet("discounts")]
     public async Task<IActionResult> GetDiscounts([FromQuery] int take = 24)
     {
-        var safeTake = take is < 1 or > 120 ? 24 : take;
-        var items = await BuildProjectedProductsAsync(_db.Products.AsNoTracking().Where(p => p.IsPublished && p.DiscountPercent > 0).OrderByDescending(p => p.DiscountPercent).ThenByDescending(p => p.CreatedAt).Take(safeTake));
+        var safeTake = take is < 1 or > 60 ? 24 : take;
+        var items = await BuildProjectedProductsAsync(
+            _db.Products.AsNoTracking()
+                .Where(p => p.IsPublished && p.DiscountPercent > 0)
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(safeTake)
+        );
+
         return Ok(new { totalCount = items.Count, items });
     }
 
     [HttpGet("search")]
-    public async Task<IActionResult> LiveSearch([FromQuery] string? q = null, [FromQuery] int limit = 8)
+    public async Task<IActionResult> Search([FromQuery] string q, [FromQuery] int limit = 8)
     {
-        var qq = N(q);
-        if (string.IsNullOrWhiteSpace(qq)) return Ok(Array.Empty<object>());
+        var nq = N(q);
+        if (string.IsNullOrWhiteSpace(nq)) return Ok(Array.Empty<object>());
         var safeLimit = limit is < 1 or > 20 ? 8 : limit;
-        var items = await BuildProjectedProductsAsync(_db.Products.AsNoTracking().Where(p => p.IsPublished).OrderByDescending(p => p.CreatedAt));
-        return Ok(items.Where(p => MatchesCategory(p, null, null, qq)).Take(safeLimit).ToList());
+
+        var query = _db.Products.AsNoTracking()
+            .Where(p => p.IsPublished && (
+                (p.Title != null && p.Title.ToLower().Contains(nq)) ||
+                (p.Description != null && p.Description.ToLower().Contains(nq)) ||
+                (p.Brand != null && p.Brand.ToLower().Contains(nq)) ||
+                (p.Slug != null && p.Slug.ToLower().Contains(nq)) ||
+                (p.Category != null && p.Category.ToLower().Contains(nq)) ||
+                (p.SubCategory != null && p.SubCategory.ToLower().Contains(nq))
+            ))
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(safeLimit)
+            .Select(p => new
+            {
+                p.Id,
+                p.Title,
+                p.Slug,
+                p.PriceIqd,
+                p.DiscountPercent,
+                finalPriceIqd = p.DiscountPercent > 0
+                    ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2)
+                    : p.PriceIqd,
+                p.Brand,
+                p.Category,
+                coverImage = p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault()
+            });
+
+        return Ok(await query.ToListAsync());
     }
 
     [HttpPost("{id:guid}/view")]
-    [Microsoft.AspNetCore.Authorization.AllowAnonymous]
-    public async Task<IActionResult> TrackView(Guid id)
+    public async Task<IActionResult> TrackView([FromRoute] Guid id)
     {
-        var exists = await _db.Products.AnyAsync(p => p.Id == id);
-        if (!exists) return NotFound();
+        var exists = await _db.Products.AsNoTracking().AnyAsync(x => x.IsPublished && x.Id == id);
+        if (!exists) return NotFound(new { message = "Product not found" });
 
         Guid? userId = null;
         var claim = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
