@@ -3,8 +3,10 @@
     <div class="bg-app/80 backdrop-blur supports-[backdrop-filter]:bg-app/70 border-b border-app">
       <div class="mx-auto max-w-7xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3">
         <NuxtLink to="/" class="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black">
-            <Icon name="mdi:shopping-outline" class="text-xl animate-floaty" />
+          <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black overflow-hidden">
+            <!-- ضع رابط شعار الموقع هنا بدل # -->
+            <img v-if="siteLogoSrc !== '#'" :src="siteLogoSrc" alt="Site logo" class="h-full w-full object-cover" />
+            <Icon v-else name="mdi:shopping-outline" class="text-xl animate-floaty" />
           </div>
           <div class="leading-tight min-w-0">
             <!-- خلّ الاسم يبين أوضح باللايت بدون ما ينقص بسرعة -->
@@ -218,6 +220,9 @@ const products = useProductsStore()
 const { t } = useI18n()
 
 const route = useRoute()
+
+// ضع رابط شعار الموقع هنا بدل #
+const siteLogoSrc = '#'
 const router = useRouter()
 const open = ref(false)
 const q = ref(String(route.query.q || ''))

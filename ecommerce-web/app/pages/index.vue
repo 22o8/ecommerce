@@ -65,12 +65,21 @@ const categoryCards = [
 ] as const
 
 const heroHighlights = computed(() => categoryCards.slice(0, 4))
+
+// ضع رابط صورة/خلفية الهوية هنا بدل #
+const heroBrandBgSrc = '#'
 </script>
 
 <template>
   <div class="min-h-screen home-page-shell">
     <section class="relative mx-auto max-w-6xl px-4 pt-4 sm:pt-6">
       <div class="hero-premium-shell hero-shimmer overflow-hidden rounded-[2rem] border border-app">
+        <div v-if="heroBrandBgSrc !== '#'" class="hero-brand-bg-wrap" aria-hidden="true">
+          <img :src="heroBrandBgSrc" alt="" class="hero-brand-bg-image" />
+        </div>
+        <div v-else class="hero-brand-bg-placeholder" aria-hidden="true">
+          <span>ضع صورة الخلفية هنا</span>
+        </div>
         <div class="hero-aurora hero-aurora--one" />
         <div class="hero-aurora hero-aurora--two" />
         <div class="hero-aurora hero-aurora--three" />
@@ -562,5 +571,85 @@ const heroHighlights = computed(() => categoryCards.slice(0, 4))
   .category-simple-card__inner{ min-height: 94px; padding: 16px; }
   .category-simple-card__icon{ width: 46px; height: 46px; border-radius: 16px; font-size: 22px; }
   .category-simple-card__arrow{ width: 32px; height: 32px; }
+}
+</style>
+
+
+<style scoped>
+.hero-brand-bg-wrap,
+.hero-brand-bg-placeholder{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+}
+.hero-brand-bg-image{
+  position:absolute;
+  inset-inline-end:2rem;
+  top:50%;
+  width:min(42vw, 540px);
+  max-width:42%;
+  transform:translateY(-50%);
+  object-fit:contain;
+  opacity:.14;
+  filter:drop-shadow(0 24px 80px rgba(0,0,0,.28));
+}
+.hero-brand-bg-placeholder{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding-inline:2rem;
+}
+.hero-brand-bg-placeholder span{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:220px;
+  width:min(42vw, 520px);
+  min-height:220px;
+  border-radius:32px;
+  border:1px dashed rgba(var(--border), .65);
+  background:linear-gradient(135deg, rgba(var(--surface-rgb), .28), rgba(var(--primary), .08));
+  color:rgba(var(--text), .35);
+  font-size:.95rem;
+  font-weight:800;
+}
+@media (max-width: 1024px){
+  .hero-brand-bg-image{
+    inset-inline-end:1rem;
+    width:min(56vw, 420px);
+    max-width:58%;
+    opacity:.11;
+  }
+  .hero-brand-bg-placeholder{
+    justify-content:center;
+    padding-inline:1rem;
+    padding-top:1rem;
+  }
+  .hero-brand-bg-placeholder span{
+    width:min(78vw, 420px);
+    min-height:160px;
+  }
+}
+@media (max-width: 640px){
+  .hero-brand-bg-image{
+    top:auto;
+    bottom:1rem;
+    inset-inline:50% auto;
+    transform:translateX(-50%);
+    width:min(76vw, 320px);
+    max-width:none;
+    opacity:.09;
+  }
+  .hero-brand-bg-placeholder{
+    justify-content:center;
+    align-items:flex-end;
+    padding:1rem;
+  }
+  .hero-brand-bg-placeholder span{
+    width:min(88vw, 320px);
+    min-height:110px;
+    font-size:.82rem;
+  }
 }
 </style>
