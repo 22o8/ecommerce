@@ -75,8 +75,7 @@ export const useBrandsStore = defineStore('brands', () => {
   }
 
   const getBySlug = async (slug: string) => {
-    const res = await get<BrandDto>(`/Brands/slug/${encodeURIComponent(slug)}`)
-    return normalizeBrand(res)
+    return await get<BrandDto>(`/Brands/slug/${encodeURIComponent(slug)}`)
   }
 
   const createBrand = async (payload: { name: string; slug?: string; description?: string; isActive?: boolean }) => {

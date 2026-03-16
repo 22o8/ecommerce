@@ -3,8 +3,8 @@
     <!-- Brand hero -->
     <div class="rounded-3xl border border-[rgba(var(--border),1)] bg-[rgba(var(--surface),0.7)] overflow-hidden">
       <div class="p-6 sm:p-8 flex flex-col sm:flex-row gap-6 sm:items-center">
-        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-[28px] bg-[rgba(var(--surface-2-rgb),0.92)] border border-[rgba(var(--border),1)] overflow-hidden flex items-center justify-center p-2 shadow-[0_20px_50px_rgba(0,0,0,0.14)]">
-          <SmartImage v-if="brandLogo" :src="brandLogo" :alt="brand?.name" class="w-full h-full object-contain rounded-[20px] bg-white/5" />
+        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-[1.75rem] bg-black/20 border border-[rgba(var(--border),1)] overflow-hidden flex items-center justify-center p-2 sm:p-3 shadow-[0_18px_44px_rgba(0,0,0,.18)]">
+          <SmartImage v-if="brandLogo" :src="brandLogo" :alt="brand?.name" class="w-full h-full rounded-[1.1rem] object-contain bg-white/5" />
           <div v-else class="text-xs text-[rgba(var(--muted),0.85)]">Logo</div>
         </div>
 

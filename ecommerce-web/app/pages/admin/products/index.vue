@@ -13,18 +13,13 @@
       </div>
 
       <!-- Filters -->
-      <div class="filter-grid mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+      <div class="filter-grid mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <input v-model="q" class="admin-input" :placeholder="t('admin.searchProducts')" @keydown.enter="fetchList(1)" />
 
         <select v-model="status" class="admin-input" @change="fetchList(1)">
           <option value="">{{ t('admin.all') }}</option>
           <option value="published">{{ t('admin.published') }}</option>
           <option value="draft">{{ t('admin.draft') }}</option>
-        </select>
-
-        <select v-model="brandFilter" class="admin-input" @change="fetchList(1)">
-          <option value="">{{ t('admin.selectBrand') }}</option>
-          <option v-for="b in brandOptions" :key="b.slug" :value="b.slug">{{ b.name }}</option>
         </select>
 
         <select v-model="sort" class="admin-input" @change="fetchList(1)">
@@ -223,7 +218,6 @@ type Product = {
   isFeatured: boolean
   stockQuantity?: number
   lowStockThreshold?: number
-  brand?: string
   category?: string
   subCategory?: string
   imageUrl?: string
@@ -232,7 +226,6 @@ type Product = {
 const { t } = useI18n()
 const api = useAdminApi()
 const publicApi = useApi()
-const brandsStore = useBrandsStore()
 const { formatIqd } = useMoney()
 
 const router = useRouter()
@@ -244,7 +237,6 @@ function goDetails(id: any) {
 
 const q = ref('')
 const status = ref<'published' | 'draft' | ''>('')
-const brandFilter = ref('')
 const sort = ref<'newest' | 'oldest' | 'title' | 'priceHigh' | 'priceLow'>('newest')
 
 const loading = ref(false)
@@ -256,7 +248,6 @@ const success = ref('')
 
 const items = ref<Product[]>([])
 const total = computed(() => items.value.length)
-const brandOptions = computed(() => (brandsStore.publicItems || []).map((b: any) => ({ name: b.name, slug: b.slug })).filter((b:any) => b.slug))
 
 // pagination client-side
 const page = ref(1)
@@ -298,14 +289,6 @@ function applyClientFilters(list: Product[]) {
   if (status.value === 'published') out = out.filter(x => !!x.isPublished)
   if (status.value === 'draft') out = out.filter(x => !x.isPublished)
 
-  if (brandFilter.value) {
-    out = out.filter(x => {
-      const raw = String(x.brand || '').trim().toLowerCase()
-      const slug = raw.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-      return raw === brandFilter.value || slug === brandFilter.value
-    })
-  }
-
   if (sort.value === 'title') out.sort((a,b) => (a.title||'').localeCompare(b.title||''))
   if (sort.value === 'oldest') out.sort((a,b) => String(a.id).localeCompare(String(b.id)))
   if (sort.value === 'newest') out.sort((a,b) => String(b.id).localeCompare(String(a.id)))
@@ -333,7 +316,6 @@ async function fetchList(p = 1) {
       priceUsd: x.priceUsd == null ? undefined : Number(x.priceUsd),
       isPublished: !!(x.isActive ?? x.isPublished),
       isFeatured: !!x.isFeatured,
-      brand: String(x.brand || ''),
       stockQuantity: Number(x.stockQuantity ?? 0),
       lowStockThreshold: Number(x.lowStockThreshold ?? 0),
       category: String(x.category || 'general'),
@@ -455,9 +437,7 @@ async function bulkDelete() {
   }
 }
 
-onMounted(async () => {
-  await Promise.allSettled([brandsStore.fetchPublic(100), fetchList(1)])
-})
+onMounted(() => fetchList(1))
 </script>
 
 <style scoped>

@@ -208,7 +208,6 @@
 </template>
 
 <script setup lang="ts">
-import siteLogoImage from '~/assets/img/site-logo.jpg'
 import UiButton from '~/components/ui/UiButton.vue'
 import { useFavoritesStore } from '~/stores/favorites'
 import { useProductsStore } from '~/stores/products'
@@ -223,7 +222,7 @@ const { t } = useI18n()
 const route = useRoute()
 
 
-const siteLogoSrc = siteLogoImage
+const siteLogoSrc = '../assets/img/9f8b6f3daf40bf671b51aca47243a774.jpg'
 const router = useRouter()
 const open = ref(false)
 const q = ref(String(route.query.q || ''))

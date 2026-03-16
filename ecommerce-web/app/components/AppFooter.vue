@@ -55,7 +55,6 @@
 </template>
 
 <script setup lang="ts">
-import siteLogoImage from '~/assets/img/site-logo.jpg'
 const { t } = useI18n()
 const config = useRuntimeConfig()
 const supportEmail = String((config.public as any).supportEmail || '')
@@ -63,7 +62,7 @@ const supportPhone = String((config.public as any).supportPhone || '')
 const instagramUrl = String((config.public as any).instagramUrl || '')
 
 
-const siteLogoSrc = siteLogoImage
+const siteLogoSrc = '../assets/img/470242929_435317702981132_8360512818133532558_n (1).jpg'
 
 function toTop(){ if (import.meta.client) window.scrollTo({ top: 0, behavior: 'smooth' }) }
 </script>
