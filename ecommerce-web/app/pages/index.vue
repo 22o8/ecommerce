@@ -56,13 +56,13 @@ const topBrands = computed(() => {
   return uniq.slice(0, 10)
 })
 const categoryCards = [
-  { key: 'serum', icon: '💧', labelKey: 'home.catSerum', accent: 'from-cyan-500/25 to-indigo-500/10' },
-  { key: 'moisturizer', icon: '🧴', labelKey: 'home.catMoisturizer', accent: 'from-fuchsia-500/20 to-rose-500/10' },
-  { key: 'sunscreen', icon: '☀️', labelKey: 'home.catSunscreen', accent: 'from-amber-500/25 to-orange-500/10' },
-  { key: 'cleanser', icon: '🫧', labelKey: 'home.catCleanser', accent: 'from-sky-500/20 to-violet-500/10' },
-  { key: 'toner', icon: '🧊', labelKey: 'home.catToner', accent: 'from-blue-500/20 to-cyan-500/10' },
-  { key: 'mask', icon: '✨', labelKey: 'home.catMask', accent: 'from-pink-500/20 to-violet-500/10' },
-  { key: 'eye-care', icon: '👁️', labelKey: 'home.catEyeCare', accent: 'from-emerald-500/20 to-cyan-500/10' },
+  { key: 'serum', icon: '💧', labelKey: 'home.catSerum' },
+  { key: 'moisturizer', icon: '🧴', labelKey: 'home.catMoisturizer' },
+  { key: 'sunscreen', icon: '☀️', labelKey: 'home.catSunscreen' },
+  { key: 'cleanser', icon: '🫧', labelKey: 'home.catCleanser' },
+  { key: 'toner', icon: '🫙', labelKey: 'home.catToner' },
+  { key: 'mask', icon: '✨', labelKey: 'home.catMask' },
+  { key: 'eye-care', icon: '👁️', labelKey: 'home.catEyeCare' },
 ] as const
 
 const heroHighlights = computed(() => categoryCards.slice(0, 4))
@@ -85,7 +85,7 @@ const heroBrandBgSrc = heroImage
         <div class="hero-aurora hero-aurora--three" />
 
         <div class="relative z-[1] mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-18 lg:px-10 lg:py-20">
-          <div class="hero-content-panel me-auto max-w-[46rem] text-center lg:text-start lg:max-w-[42rem] lg:me-[38%] xl:me-[41%]">
+          <div class="hero-content-panel me-auto text-center lg:text-start lg:me-[38%] xl:me-[40%]">
             <div class="hero-mini-badges mb-6 flex flex-wrap items-center justify-center gap-3">
               <NuxtLink
                 v-for="item in heroHighlights"
@@ -223,7 +223,7 @@ const heroBrandBgSrc = heroImage
           </NuxtLink>
         </div>
 
-        <div class="category-showcase mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+        <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <RevealOnScroll
             v-for="(c, idx) in categoryCards"
             :key="c.key"
@@ -234,7 +234,7 @@ const heroBrandBgSrc = heroImage
               :to="`/categories/${encodeURIComponent(c.key)}`"
               class="group category-simple-card"
             >
-              <div class="category-simple-card__inner" :class="`bg-gradient-to-br ${c.accent}`">
+              <div class="category-simple-card__inner">
                 <div class="category-simple-card__icon">{{ c.icon }}</div>
                 <div class="min-w-0 flex-1">
                   <div class="truncate text-base font-black text-[rgb(var(--text))]">
@@ -243,7 +243,6 @@ const heroBrandBgSrc = heroImage
                   <div class="mt-1 truncate text-xs text-[rgb(var(--muted))]">
                     {{ t('home.tapToExplore') }}
                   </div>
-                  <div class="category-simple-card__meta">{{ c.key }}</div>
                 </div>
                 <div class="category-simple-card__arrow">→</div>
               </div>
@@ -256,21 +255,6 @@ const heroBrandBgSrc = heroImage
 </template>
 
 <style scoped>
-.hero-content-panel{
-  position: relative;
-  width: min(100%, 42rem);
-  padding: 1.6rem 1.4rem;
-  border-radius: 30px;
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .78), rgba(var(--surface-2-rgb), .64));
-  border: 1px solid rgba(var(--border), .78);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 24px 60px rgba(5, 10, 20, .16);
-}
-:global(html.theme-light) .hero-content-panel{
-  background: linear-gradient(180deg, rgba(255,255,255,.90), rgba(249,250,252,.84));
-  border-color: rgba(214, 218, 228, .95);
-  box-shadow: 0 26px 60px rgba(15, 20, 35, .08);
-}
 .home-page-shell{
   position: relative;
 }
@@ -278,28 +262,32 @@ const heroBrandBgSrc = heroImage
   position: relative;
   background:
     linear-gradient(180deg, rgba(var(--surface-rgb), .94), rgba(var(--surface-rgb), .82)),
-    linear-gradient(135deg, rgba(var(--primary), .10), transparent 32%, rgba(var(--cta-glow-2), .08) 72%, transparent 100%);
-  box-shadow: 0 34px 90px rgba(10, 10, 20, .10);
+    linear-gradient(135deg, rgba(var(--primary), .08), transparent 34%, rgba(var(--cta-glow-2), .06) 72%, transparent 100%);
+  box-shadow: 0 28px 72px rgba(10, 10, 20, .08);
 }
 .hero-premium-shell::after{
   content: '';
   position: absolute;
   inset: 1px;
   border-radius: calc(2rem - 1px);
-  border: 1px solid rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.14);
   pointer-events: none;
+}
+.hero-content-panel{
+  position: relative;
+  width: min(100%, 42rem);
+  padding: 1.25rem 1.1rem;
 }
 .hero-title-accent{
   display: inline-block;
   margin-inline-start: .35rem;
   color: rgb(var(--primary));
-  text-shadow: 0 12px 34px rgba(var(--primary), .24);
 }
 .hero-aurora{
   position: absolute;
   border-radius: 999px;
   filter: blur(18px);
-  opacity: .9;
+  opacity: .8;
   pointer-events: none;
 }
 .hero-aurora--one{
@@ -307,14 +295,14 @@ const heroBrandBgSrc = heroImage
   height: 300px;
   top: -80px;
   inset-inline-start: -50px;
-  background: radial-gradient(circle, rgba(var(--primary), .22), transparent 70%);
+  background: radial-gradient(circle, rgba(var(--primary), .18), transparent 70%);
 }
 .hero-aurora--two{
   width: 340px;
   height: 340px;
   top: 15%;
   inset-inline-end: -60px;
-  background: radial-gradient(circle, rgba(var(--cta-glow-2), .20), transparent 70%);
+  background: radial-gradient(circle, rgba(var(--cta-glow-2), .14), transparent 70%);
 }
 .hero-aurora--three{
   width: 360px;
@@ -322,7 +310,7 @@ const heroBrandBgSrc = heroImage
   bottom: -50px;
   left: 50%;
   transform: translateX(-50%);
-  background: radial-gradient(circle, rgba(var(--primary), .14), transparent 72%);
+  background: radial-gradient(circle, rgba(var(--primary), .10), transparent 72%);
 }
 .hero-mini-chip{
   display: inline-flex;
@@ -332,9 +320,9 @@ const heroBrandBgSrc = heroImage
   padding: .7rem 1rem;
   border-radius: 999px;
   border: 1px solid rgba(var(--border), .9);
-  background: rgba(var(--surface-rgb), .72);
-  box-shadow: 0 16px 36px rgba(0,0,0,.08);
-  backdrop-filter: blur(10px);
+  background: rgba(var(--surface-rgb), .78);
+  box-shadow: 0 12px 28px rgba(0,0,0,.06);
+  backdrop-filter: blur(8px);
   color: rgb(var(--text));
   font-size: .9rem;
   font-weight: 700;
@@ -342,8 +330,7 @@ const heroBrandBgSrc = heroImage
 }
 .hero-mini-chip:hover{
   transform: translateY(-2px);
-  border-color: rgba(var(--primary), .42);
-  box-shadow: 0 20px 42px rgba(var(--primary), .12);
+  border-color: rgba(var(--primary), .35);
 }
 .hero-stat-grid{
   align-items: stretch;
@@ -355,7 +342,7 @@ const heroBrandBgSrc = heroImage
   border: 1px solid rgba(var(--border), .92);
   background: linear-gradient(180deg, rgba(var(--surface-rgb), .88), rgba(var(--surface-2-rgb), .82));
   padding: 1rem 1.1rem;
-  box-shadow: 0 18px 44px rgba(0,0,0,.10);
+  box-shadow: 0 16px 36px rgba(0,0,0,.06);
 }
 .hero-stat-card__glow{
   position: absolute;
@@ -364,7 +351,7 @@ const heroBrandBgSrc = heroImage
   width: 84px;
   height: 84px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(var(--primary), .22), transparent 72%);
+  background: radial-gradient(circle, rgba(var(--primary), .14), transparent 72%);
   pointer-events: none;
 }
 .hero-stat-card__label{
@@ -390,37 +377,39 @@ const heroBrandBgSrc = heroImage
   border: 1px solid rgba(var(--border), .92);
   background:
     linear-gradient(180deg, rgba(var(--surface-rgb), .94), rgba(var(--surface-rgb), .86)),
-    linear-gradient(135deg, rgba(var(--primary), .05), transparent 35%, rgba(var(--cta-glow-2), .05) 100%);
+    linear-gradient(135deg, rgba(var(--primary), .03), transparent 35%, rgba(var(--cta-glow-2), .03) 100%);
   padding: 1.5rem;
-  box-shadow: 0 24px 70px rgba(15, 15, 25, .08);
+  box-shadow: 0 20px 52px rgba(15, 15, 25, .06);
 }
 .home-section-panel::before{
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(420px 160px at 10% 0%, rgba(var(--primary), .08), transparent 65%);
+  background: radial-gradient(420px 160px at 10% 0%, rgba(var(--primary), .05), transparent 65%);
 }
 .home-section-panel--brands::before{
-  background: radial-gradient(420px 160px at 85% 0%, rgba(var(--primary), .10), transparent 65%);
+  background: radial-gradient(420px 160px at 85% 0%, rgba(var(--primary), .06), transparent 65%);
 }
 .home-section-panel--categories::before{
-  background: radial-gradient(420px 160px at 50% 0%, rgba(var(--primary), .09), transparent 65%);
+  background: radial-gradient(420px 160px at 50% 0%, rgba(var(--primary), .05), transparent 65%);
 }
 .section-kicker{
   width: 88px;
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(var(--primary), .25), rgba(var(--primary), .88), rgba(var(--cta-glow-2), .35));
-  box-shadow: 0 8px 24px rgba(var(--primary), .25);
+  background: linear-gradient(90deg, rgba(var(--primary), .18), rgba(var(--primary), .72), rgba(var(--cta-glow-2), .24));
+  box-shadow: 0 6px 18px rgba(var(--primary), .18);
 }
 .shadow-soft{
-  box-shadow: 0 16px 38px rgba(0,0,0,.08);
+  box-shadow: 0 14px 30px rgba(0,0,0,.06);
 }
 .category-simple-card{
   display:block;
   border-radius: 24px;
   border: 1px solid rgba(var(--border), .95);
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-rgb), .94));
+  box-shadow: 0 14px 32px rgba(0,0,0,.05);
   transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease, background-color .22s ease;
 }
 .category-simple-card__inner{
@@ -436,7 +425,7 @@ const heroBrandBgSrc = heroImage
   width: 52px;
   height: 52px;
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(var(--primary), .16), rgba(var(--primary), .08));
+  background: linear-gradient(180deg, rgba(var(--primary), .12), rgba(var(--primary), .06));
   box-shadow: inset 0 1px 0 rgba(255,255,255,.45);
   font-size: 24px;
   flex: 0 0 auto;
@@ -454,109 +443,38 @@ const heroBrandBgSrc = heroImage
 }
 .category-simple-card:hover{
   transform: translateY(-3px);
-  border-color: rgba(var(--primary), .34);
+  border-color: rgba(var(--primary), .26);
+  box-shadow: 0 16px 36px rgba(0,0,0,.06);
 }
 .category-simple-card:hover .category-simple-card__arrow{
   color: rgb(var(--primary));
-  border-color: rgba(var(--primary), .28);
-  background: rgba(var(--primary), .08);
+  border-color: rgba(var(--primary), .24);
+  background: rgba(var(--primary), .06);
   transform: translateX(2px);
+}
+:global(html.theme-light) .hero-premium-shell{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.99), rgba(255,255,255,.97)),
+    linear-gradient(135deg, rgba(0,0,0,.012), transparent 38%, rgba(0,0,0,.008) 100%);
+  box-shadow: 0 24px 54px rgba(22,22,22,.05);
 }
 :global(html.theme-light) .hero-mini-chip,
 :global(html.theme-light) .hero-stat-card,
 :global(html.theme-light) .home-section-panel,
-
-.category-showcase{
-  align-items:stretch;
-}
-.category-simple-card{
-  position:relative;
-  overflow:hidden;
-  min-height:116px;
-  border-radius:28px;
-  border:1px solid rgba(var(--border), .92);
-  background:linear-gradient(180deg, rgba(var(--surface-rgb), .84), rgba(var(--surface-rgb), .68));
-  box-shadow:0 18px 40px rgba(8,10,20,.12);
-  transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease;
-}
-.category-simple-card::before{
-  content:'';
-  position:absolute; inset:auto -12% -55% auto;
-  width:160px; height:160px;
-  border-radius:999px;
-  background:radial-gradient(circle, rgba(var(--primary), .18), transparent 66%);
-  pointer-events:none;
-}
-.category-simple-card__inner{
-  position:relative;
-  display:flex;
-  align-items:center;
-  gap:1rem;
-  height:100%;
-  min-height:116px;
-  padding:1.1rem 1rem 1.1rem 1.1rem;
-}
-.category-simple-card__icon{
-  display:grid; place-items:center;
-  width:64px; height:64px;
-  border-radius:22px;
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(255,255,255,.12);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
-  font-size:1.9rem;
-  flex:0 0 auto;
-}
-.category-simple-card__meta{
-  display:inline-flex;
-  margin-top:.55rem;
-  padding:.28rem .58rem;
-  border-radius:999px;
-  border:1px solid rgba(var(--border), .85);
-  background:rgba(255,255,255,.06);
-  color:rgb(var(--muted));
-  font-size:.68rem;
-  font-weight:800;
-  text-transform:uppercase;
-  letter-spacing:.06em;
-  max-width:max-content;
-}
-.category-simple-card__arrow{
-  display:grid; place-items:center;
-  width:42px; height:42px;
-  border-radius:999px;
-  border:1px solid rgba(var(--border), .9);
-  background:rgba(255,255,255,.08);
-  font-size:1rem;
-  flex:0 0 auto;
-}
-.category-simple-card:hover{
-  transform:translateY(-4px);
-  border-color:rgba(var(--primary), .34);
-  box-shadow:0 26px 60px rgba(8,10,20,.18);
-}
-.category-simple-card:hover .category-simple-card__arrow{
-  transform:translateX(-2px);
-}
-@media (max-width: 768px){
-  .category-showcase{ grid-template-columns:1fr; }
-  .category-simple-card{ min-height:102px; border-radius:24px; }
-  .category-simple-card__inner{ min-height:102px; padding:1rem; gap:.85rem; }
-  .category-simple-card__icon{ width:56px; height:56px; border-radius:18px; font-size:1.6rem; }
-}
 :global(html.theme-light) .category-simple-card{
-  box-shadow: 0 18px 44px rgba(232, 91, 154, .08), 0 10px 26px rgba(24,24,24,.05);
+  box-shadow: 0 14px 32px rgba(24,24,24,.05);
 }
 :global(html.theme-light) .home-section-panel{
   background:
     linear-gradient(180deg, rgba(255,255,255,.995), rgba(255,255,255,.985)),
-    linear-gradient(135deg, rgba(236,72,153,.018), transparent 42%, rgba(244,114,182,.026) 100%);
+    linear-gradient(135deg, rgba(0,0,0,.01), transparent 42%, rgba(0,0,0,.005) 100%);
 }
 :global(html.theme-light) .category-simple-card{
-  background: linear-gradient(180deg, rgba(255,255,255,.995), rgba(255,255,255,.982));
+  background: linear-gradient(180deg, rgba(255,255,255,.998), rgba(255,255,255,.99));
 }
 :global(html.theme-light) .category-simple-card:hover{
-  background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,.99));
-  box-shadow: 0 18px 40px rgba(22,22,22,.06);
+  background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,.995));
+  box-shadow: 0 16px 34px rgba(24,24,24,.06);
 }
 :global(html.theme-dark) .hero-premium-shell{
   background:
@@ -574,22 +492,14 @@ const heroBrandBgSrc = heroImage
   background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .86));
 }
 @media (max-width: 640px){
-  .hero-premium-shell{ border-radius: 26px; }
-  .hero-stat-card__value{ font-size: 1.55rem; }
-  .home-section-panel{ padding: 1rem; border-radius: 24px; }
-  .category-simple-card__inner{ min-height: 94px; padding: 16px; }
-  .category-simple-card__icon{ width: 46px; height: 46px; border-radius: 16px; font-size: 22px; }
-  .category-simple-card__arrow{ width: 32px; height: 32px; }
-  .hero-content-panel{
-    width:100%;
-    padding:1rem 1rem 1.1rem;
-    border-radius:24px;
-    text-align:center;
-  }
+  .hero-content-panel{ width:100%; padding:0; text-align:center; }
   .hero-mini-badges{ gap:.55rem; margin-bottom:1rem; }
   .hero-mini-chip{ min-height:38px; padding:.55rem .8rem; font-size:.82rem; }
   .hero-stat-grid{ gap:.75rem; }
   .hero-stat-card{ padding:.85rem .95rem; border-radius:20px; }
+  .category-simple-card__inner{ min-height: 94px; padding: 16px; }
+  .category-simple-card__icon{ width: 46px; height: 46px; border-radius: 16px; font-size: 22px; }
+  .category-simple-card__arrow{ width: 32px; height: 32px; }
 }
 </style>
 
@@ -612,8 +522,8 @@ const heroBrandBgSrc = heroImage
   object-fit:cover;
   object-position:center;
   border-radius: 28px;
-  opacity:.34;
-  filter: brightness(.50) contrast(1.04) saturate(.88) drop-shadow(0 22px 68px rgba(0,0,0,.26));
+  opacity:.88;
+  filter:none;
 }
 .hero-brand-bg-placeholder{
   display:flex;
@@ -630,28 +540,17 @@ const heroBrandBgSrc = heroImage
   min-height:220px;
   border-radius:32px;
   border:1px dashed rgba(var(--border), .65);
-  background:linear-gradient(135deg, rgba(var(--surface-rgb), .28), rgba(var(--primary), .08));
+  background:linear-gradient(135deg, rgba(var(--surface-rgb), .28), rgba(var(--primary), .04));
   color:rgba(var(--text), .35);
   font-size:.95rem;
   font-weight:800;
 }
-
-:global(html.theme-light) .hero-brand-bg-image{
-  opacity:.50;
-  filter: brightness(.62) contrast(1.03) saturate(.90) drop-shadow(0 20px 56px rgba(0,0,0,.18));
-}
-
-:global(html.theme-dark) .hero-brand-bg-image{
-  opacity:.36;
-  filter: brightness(.46) contrast(1.04) saturate(.88) drop-shadow(0 22px 68px rgba(0,0,0,.30));
-}
-
 @media (max-width: 1024px){
   .hero-brand-bg-image{
     inset-inline-end:.8rem;
     width:min(42vw, 360px);
     max-width:42%;
-    opacity:.28;
+    opacity:.72;
   }
   .hero-brand-bg-placeholder{
     justify-content:center;
@@ -672,7 +571,7 @@ const heroBrandBgSrc = heroImage
     transform:none;
     width:min(58vw, 240px);
     max-width:none;
-    opacity:.22;
+    opacity:.54;
     border-radius: 22px;
   }
   .hero-brand-bg-placeholder{
