@@ -686,6 +686,10 @@ const heroBrandBgSrc = heroImage
 <style scoped>
 :global(html.theme-light) .hero-brand-bg-image{
   opacity: .68;
-  filter: brightness(.74) contrast(1.01) saturate(.92) drop-shadow(0 16px 36px rgba(0,0,0,.08));
+}
+:global(html.theme-light) .hero-premium-shell::after{
+  background: none;
+  border: 1px solid rgba(228, 232, 239, .72);
+  box-shadow: none;
 }
 </style>
