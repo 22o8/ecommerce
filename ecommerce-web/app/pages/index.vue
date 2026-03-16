@@ -4,7 +4,7 @@ import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const brandsStore = useBrandsStore()
 const productsStore = useProductsStore()
@@ -55,16 +55,16 @@ const topBrands = computed(() => {
   return uniq.slice(0, 10)
 })
 const categoryCards = [
-  { key: 'serum', icon: '💧', labelKey: 'home.catSerum' },
-  { key: 'moisturizer', icon: '🧴', labelKey: 'home.catMoisturizer' },
-  { key: 'sunscreen', icon: '☀️', labelKey: 'home.catSunscreen' },
-  { key: 'cleanser', icon: '🫧', labelKey: 'home.catCleanser' },
-  { key: 'toner', icon: '🧊', labelKey: 'home.catToner' },
-  { key: 'mask', icon: '✨', labelKey: 'home.catMask' },
-  { key: 'eye-care', icon: '👁️', labelKey: 'home.catEyeCare' },
+  { key: 'serum', icon: '💧', labelKey: 'home.catSerum', accent: 'from-cyan-500/25 to-indigo-500/10' },
+  { key: 'moisturizer', icon: '🧴', labelKey: 'home.catMoisturizer', accent: 'from-fuchsia-500/20 to-rose-500/10' },
+  { key: 'sunscreen', icon: '☀️', labelKey: 'home.catSunscreen', accent: 'from-amber-500/25 to-orange-500/10' },
+  { key: 'cleanser', icon: '🫧', labelKey: 'home.catCleanser', accent: 'from-sky-500/20 to-violet-500/10' },
+  { key: 'toner', icon: '🧊', labelKey: 'home.catToner', accent: 'from-blue-500/20 to-cyan-500/10' },
+  { key: 'mask', icon: '✨', labelKey: 'home.catMask', accent: 'from-pink-500/20 to-violet-500/10' },
+  { key: 'eye-care', icon: '👁️', labelKey: 'home.catEyeCare', accent: 'from-emerald-500/20 to-cyan-500/10' },
 ] as const
 
-const heroHighlights = computed(() => categoryCards.slice(0, 3))
+const heroHighlights = computed(() => categoryCards.slice(0, 4))
 </script>
 
 <template>
@@ -214,7 +214,7 @@ const heroHighlights = computed(() => categoryCards.slice(0, 3))
           </NuxtLink>
         </div>
 
-        <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div class="category-showcase mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
           <RevealOnScroll
             v-for="(c, idx) in categoryCards"
             :key="c.key"
@@ -225,7 +225,7 @@ const heroHighlights = computed(() => categoryCards.slice(0, 3))
               :to="`/products?category=${encodeURIComponent(c.key)}`"
               class="group category-simple-card"
             >
-              <div class="category-simple-card__inner">
+              <div class="category-simple-card__inner" :class="`bg-gradient-to-br ${c.accent}`">
                 <div class="category-simple-card__icon">{{ c.icon }}</div>
                 <div class="min-w-0 flex-1">
                   <div class="truncate text-base font-black text-[rgb(var(--text))]">
@@ -234,6 +234,7 @@ const heroHighlights = computed(() => categoryCards.slice(0, 3))
                   <div class="mt-1 truncate text-xs text-[rgb(var(--muted))]">
                     {{ t('home.tapToExplore') }}
                   </div>
+                  <div class="category-simple-card__meta">{{ c.key }}</div>
                 </div>
                 <div class="category-simple-card__arrow">→</div>
               </div>
@@ -446,6 +447,84 @@ const heroHighlights = computed(() => categoryCards.slice(0, 3))
 :global(html.theme-light) .hero-mini-chip,
 :global(html.theme-light) .hero-stat-card,
 :global(html.theme-light) .home-section-panel,
+
+.category-showcase{
+  align-items:stretch;
+}
+.category-simple-card{
+  position:relative;
+  overflow:hidden;
+  min-height:116px;
+  border-radius:28px;
+  border:1px solid rgba(var(--border), .92);
+  background:linear-gradient(180deg, rgba(var(--surface-rgb), .84), rgba(var(--surface-rgb), .68));
+  box-shadow:0 18px 40px rgba(8,10,20,.12);
+  transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+.category-simple-card::before{
+  content:'';
+  position:absolute; inset:auto -12% -55% auto;
+  width:160px; height:160px;
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(var(--primary), .18), transparent 66%);
+  pointer-events:none;
+}
+.category-simple-card__inner{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  height:100%;
+  min-height:116px;
+  padding:1.1rem 1rem 1.1rem 1.1rem;
+}
+.category-simple-card__icon{
+  display:grid; place-items:center;
+  width:64px; height:64px;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+  font-size:1.9rem;
+  flex:0 0 auto;
+}
+.category-simple-card__meta{
+  display:inline-flex;
+  margin-top:.55rem;
+  padding:.28rem .58rem;
+  border-radius:999px;
+  border:1px solid rgba(var(--border), .85);
+  background:rgba(255,255,255,.06);
+  color:rgb(var(--muted));
+  font-size:.68rem;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  max-width:max-content;
+}
+.category-simple-card__arrow{
+  display:grid; place-items:center;
+  width:42px; height:42px;
+  border-radius:999px;
+  border:1px solid rgba(var(--border), .9);
+  background:rgba(255,255,255,.08);
+  font-size:1rem;
+  flex:0 0 auto;
+}
+.category-simple-card:hover{
+  transform:translateY(-4px);
+  border-color:rgba(var(--primary), .34);
+  box-shadow:0 26px 60px rgba(8,10,20,.18);
+}
+.category-simple-card:hover .category-simple-card__arrow{
+  transform:translateX(-2px);
+}
+@media (max-width: 768px){
+  .category-showcase{ grid-template-columns:1fr; }
+  .category-simple-card{ min-height:102px; border-radius:24px; }
+  .category-simple-card__inner{ min-height:102px; padding:1rem; gap:.85rem; }
+  .category-simple-card__icon{ width:56px; height:56px; border-radius:18px; font-size:1.6rem; }
+}
 :global(html.theme-light) .category-simple-card{
   box-shadow: 0 18px 44px rgba(232, 91, 154, .08), 0 10px 26px rgba(24,24,24,.05);
 }

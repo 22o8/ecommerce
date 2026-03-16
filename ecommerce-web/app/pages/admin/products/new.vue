@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full">
+  <div class="w-full admin-product-form-page">
     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 class="text-2xl font-bold">{{ t('admin.addProduct') }}</h1>
@@ -13,7 +13,7 @@
 
     <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
       <!-- Form -->
-      <UiCard class="lg:col-span-2">
+      <UiCard class="form-shell lg:col-span-2">
         <UiCardHeader>
           <UiCardTitle>{{ t('admin.productDetails') }}</UiCardTitle>
           <UiCardDescription>{{ t('admin.productDetailsHint') }}</UiCardDescription>
@@ -134,7 +134,7 @@
       </UiCard>
 
       <!-- Images -->
-      <UiCard>
+      <UiCard class="side-shell">
         <UiCardHeader>
           <UiCardTitle>{{ t('admin.images') }}</UiCardTitle>
           <UiCardDescription>{{ t('admin.imagesCreateHint') }}</UiCardDescription>
@@ -312,3 +312,27 @@ async function onCreate() {
   }
 }
 </script>
+
+<style scoped>
+.admin-product-form-page :deep(.form-shell),
+.admin-product-form-page :deep(.side-shell){
+  border-radius: 28px;
+  border: 1px solid rgba(var(--border), .95);
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .97), rgba(var(--surface-rgb), .90));
+  box-shadow: 0 22px 60px rgba(12, 16, 32, .14);
+}
+.admin-product-form-page :deep(.form-shell > div:first-child),
+.admin-product-form-page :deep(.side-shell > div:first-child){
+  border-bottom-color: rgba(var(--border), .85);
+}
+.admin-product-form-page :deep(input),
+.admin-product-form-page :deep(select),
+.admin-product-form-page :deep(textarea){
+  min-height: 46px;
+  border-radius: 16px;
+}
+@media (max-width: 768px){
+  .admin-product-form-page :deep(.form-shell),
+  .admin-product-form-page :deep(.side-shell){ border-radius: 22px; }
+}
+</style>

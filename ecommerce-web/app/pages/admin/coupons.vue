@@ -1,16 +1,35 @@
 <template>
-  <div class="grid gap-6">
-    <div>
+  <div class="grid gap-6 coupons-admin-page">
+    <div class="coupons-hero rounded-[30px] border border-app bg-surface p-5 shadow-sm">
+      <div class="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+        <div>
       <h1 class="text-3xl font-black rtl-text text-[rgb(var(--text))]">
         {{ t('admin.couponsLabel') }}
       </h1>
       <p class="mt-1 text-sm text-muted rtl-text">
         إدارة الكوبونات بشكل واضح ودقيق مع شرح مختصر لكل قيمة.
       </p>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-3">
+          <div class="coupon-stat-card">
+            <div class="coupon-stat-card__label rtl-text">إجمالي الكوبونات</div>
+            <div class="coupon-stat-card__value keep-ltr">{{ items.length }}</div>
+          </div>
+          <div class="coupon-stat-card">
+            <div class="coupon-stat-card__label rtl-text">المفعّلة الآن</div>
+            <div class="coupon-stat-card__value keep-ltr">{{ activeCount }}</div>
+          </div>
+          <div class="coupon-stat-card">
+            <div class="coupon-stat-card__label rtl-text">إجمالي الاستخدام</div>
+            <div class="coupon-stat-card__value keep-ltr">{{ totalUses }}</div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="grid gap-5 xl:grid-cols-[520px_1fr]">
-      <div class="rounded-[28px] border border-app bg-surface p-5 shadow-sm">
+    <div class="grid gap-5 xl:grid-cols-[minmax(0,540px)_1fr]">
+      <div class="panel-shell rounded-[30px] border border-app bg-surface p-5 shadow-sm">
         <div class="mb-4 rounded-2xl border border-app bg-surface-2 p-4">
           <div class="text-sm font-bold rtl-text">قواعد الكوبون</div>
           <div class="mt-2 grid gap-2 text-sm text-muted rtl-text">
@@ -107,7 +126,7 @@
         </div>
       </div>
 
-      <div class="rounded-[28px] border border-app bg-surface p-5 shadow-sm">
+      <div class="panel-shell rounded-[30px] border border-app bg-surface p-5 shadow-sm">
         <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <div class="text-sm font-bold rtl-text text-[rgb(var(--text))]">قائمة الكوبونات</div>
@@ -139,7 +158,7 @@
           <div
             v-for="item in filteredItems"
             :key="item.id"
-            class="rounded-3xl border border-app bg-surface-2 p-4 transition hover:shadow-sm"
+            class="coupon-card rounded-3xl border border-app bg-surface-2 p-4 transition hover:shadow-sm"
           >
             <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div class="min-w-0 flex-1">
@@ -241,6 +260,9 @@ const form = reactive({
   endsAtUtc: ''
 })
 
+const activeCount = computed(() => items.value.filter((x: any) => x?.isActive).length)
+const totalUses = computed(() => items.value.reduce((sum: number, x: any) => sum + Number(x?.usedCount ?? 0), 0))
+
 const filteredItems = computed(() => {
   const s = search.value.trim().toLowerCase()
   if (!s) return items.value
@@ -333,3 +355,54 @@ function fmtDate(v?: string) {
 
 onMounted(load)
 </script>
+<style scoped>
+.coupons-admin-page{
+  --coupon-shadow: 0 22px 60px rgba(12, 16, 32, .14);
+}
+.coupons-hero, .panel-shell{
+  box-shadow: var(--coupon-shadow);
+}
+.coupons-hero{
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-rgb), .88));
+}
+.coupons-hero::after{
+  content:'';
+  position:absolute;
+  inset:auto 0 -85px auto;
+  width:230px;
+  height:230px;
+  border-radius:999px;
+  background:radial-gradient(circle, rgba(var(--primary), .15), transparent 68%);
+  pointer-events:none;
+}
+.panel-shell{
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .97), rgba(var(--surface-rgb), .90));
+}
+.coupon-stat-card{
+  border-radius:22px;
+  border:1px solid rgba(var(--border), .95);
+  background: linear-gradient(180deg, rgba(var(--surface-2-rgb), .96), rgba(var(--surface-2-rgb), .84));
+  padding:14px 16px;
+}
+.coupon-stat-card__label{
+  font-size:.78rem;
+  color:rgb(var(--muted));
+  font-weight:800;
+}
+.coupon-stat-card__value{
+  margin-top:.35rem;
+  font-size:1.8rem;
+  font-weight:950;
+  color:rgb(var(--fg));
+}
+.coupon-card{
+  background: linear-gradient(180deg, rgba(var(--surface-2-rgb), .98), rgba(var(--surface-rgb), .94));
+  box-shadow: 0 14px 30px rgba(10, 14, 26, .08);
+}
+@media (max-width: 768px){
+  .coupons-hero, .panel-shell{ border-radius:24px !important; }
+  .coupon-stat-card{ border-radius:18px; }
+}
+</style>

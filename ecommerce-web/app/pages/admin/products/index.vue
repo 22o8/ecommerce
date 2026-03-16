@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-5 products-admin-page">
     <!-- Header -->
-    <div class="admin-box">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+    <div class="admin-box admin-box--hero">
+      <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div>
           <div class="text-xl font-extrabold">{{ t('admin.products.title') }}</div>
           <div class="text-sm admin-muted rtl-text">{{ t('admin.productsHint') }}</div>
@@ -13,7 +13,7 @@
       </div>
 
       <!-- Filters -->
-      <div class="mt-4 grid gap-2 md:grid-cols-4">
+      <div class="filter-grid mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <input v-model="q" class="admin-input" :placeholder="t('admin.searchProducts')" @keydown.enter="fetchList(1)" />
 
         <select v-model="status" class="admin-input" @change="fetchList(1)">
@@ -55,7 +55,7 @@
     </div>
 
     <!-- List -->
-    <div class="admin-box overflow-hidden">
+    <div class="admin-box admin-list-shell overflow-hidden">
       <div v-if="loading" class="p-4 admin-muted rtl-text">{{ t('common.loading') }}</div>
 
       <div v-else-if="items.length === 0" class="p-6 text-center">
@@ -93,16 +93,20 @@
               @change.stop="toggleOne(p.id)"
             />
 
-            <div class="thumb" aria-hidden="true">
-              <!-- إزالة صندوق IMG حتى يصير أنظف بصرياً -->
-              <div class="thumb-inner">
-                <span class="thumb-dot" />
-              </div>
-            </div>
+            <img
+              v-if="resolveImage(p)"
+              :src="resolveImage(p)"
+              :alt="p.title"
+              class="product-thumb"
+              loading="lazy"
+            />
 
             <div class="min-w-0">
               <div class="font-extrabold product-name">{{ p.title }}</div>
-              <div class="text-xs admin-muted product-slug">/{{ p.slug }}</div>
+              <div class="mt-1 flex flex-wrap items-center gap-2">
+                <div class="text-xs admin-muted product-slug">/{{ p.slug }}</div>
+                <span class="product-category-chip rtl-text">{{ p.category || 'general' }}</span>
+              </div>
             </div>
           </div>
 
@@ -122,9 +126,9 @@
             </span>
           </div>
 
-          <div class="font-bold leading-tight">
-            <span class="keep-ltr">{{ p.stockQuantity ?? 0 }}</span>
-            <div class="text-xs opacity-70 rtl-text">{{ p.category || 'general' }}</div>
+          <div class="font-bold leading-tight stock-cell">
+            <span class="keep-ltr stock-value">{{ p.stockQuantity ?? 0 }}</span>
+            <div class="text-xs opacity-70 rtl-text">{{ (p.stockQuantity ?? 0) <= (p.lowStockThreshold ?? 0) ? 'منخفض' : 'مستقر' }}</div>
           </div>
 
           <div class="actions-wrap" @click.stop>
@@ -213,10 +217,12 @@ type Product = {
   lowStockThreshold?: number
   category?: string
   subCategory?: string
+  imageUrl?: string
 }
 
 const { t } = useI18n()
 const api = useAdminApi()
+const publicApi = useApi()
 const { formatIqd } = useMoney()
 
 const router = useRouter()
@@ -267,6 +273,10 @@ function go(p: number) {
   page.value = Math.min(Math.max(1, p), totalPages.value)
 }
 
+function resolveImage(p: Product) {
+  return p.imageUrl || ''
+}
+
 function applyClientFilters(list: Product[]) {
   let out = [...list]
 
@@ -303,6 +313,17 @@ async function fetchList(p = 1) {
       priceUsd: x.priceUsd == null ? undefined : Number(x.priceUsd),
       isPublished: !!(x.isActive ?? x.isPublished),
       isFeatured: !!x.isFeatured,
+      stockQuantity: Number(x.stockQuantity ?? 0),
+      lowStockThreshold: Number(x.lowStockThreshold ?? 0),
+      category: String(x.category || 'general'),
+      subCategory: String(x.subCategory || ''),
+      imageUrl: typeof x.coverImage === 'string'
+        ? publicApi.buildAssetUrl(x.coverImage)
+        : (typeof x.imageUrl === 'string'
+            ? publicApi.buildAssetUrl(x.imageUrl)
+            : (Array.isArray(x.images) && x.images[0]
+                ? publicApi.buildAssetUrl(String(x.images[0]?.url || x.images[0]?.imageUrl || x.images[0]?.path || x.images[0]))
+                : '')),
     })))
 
     page.value = p
@@ -417,49 +438,76 @@ onMounted(() => fetchList(1))
 </script>
 
 <style scoped>
-.admin-box{ border-radius: 20px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); padding: 16px; }
+.products-admin-page{
+  --soft-glow: 0 22px 60px rgba(12, 16, 32, .16);
+}
+.admin-box{
+  border-radius: 28px;
+  border: 1px solid rgba(var(--border), .95);
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-rgb), .88));
+  padding: 18px;
+  box-shadow: var(--soft-glow);
+}
+.admin-box--hero{
+  position: relative;
+  overflow: hidden;
+}
+.admin-box--hero::after{
+  content: '';
+  position: absolute;
+  inset: auto auto -70px -40px;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(var(--primary), .14), transparent 68%);
+  pointer-events: none;
+}
+.admin-list-shell{ padding: 10px; }
 .admin-muted{ color: rgb(var(--muted)); }
-
-.admin-input{ width: 100%; border-radius: 14px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface-2)); padding: 10px 12px; color: rgb(var(--fg)); outline: none; }
-.admin-input:focus{ border-color: rgba(99,102,241,.45); box-shadow: 0 0 0 3px rgba(99,102,241,.14); }
-
-.admin-primary{ padding: 10px 12px; border-radius: 14px; background: rgba(99,102,241,.18); border: 1px solid rgba(99,102,241,.38); color: rgb(var(--fg)); font-weight: 900; }
-.admin-ghost{ padding: 10px 12px; border-radius: 14px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); color: rgb(var(--fg)); font-weight: 800; }
-.admin-pill{ padding: 8px 10px; border-radius: 14px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface-2)); color: rgb(var(--fg)); font-weight: 800; }
-.admin-btn-danger{ padding: 8px 10px; border-radius: 14px; border: 1px solid rgba(239,68,68,.45); background: rgba(239,68,68,.14); color: rgb(var(--fg)); font-weight: 900; }
-
-.admin-table{ display: grid; }
-.admin-tr{ display: grid; grid-template-columns: 2fr 1fr 1fr 2fr; gap: 12px; padding: 12px 16px; border-top: 1px solid rgb(var(--border)); }
-.admin-th{ border-top: none; background: rgb(var(--surface-2)); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: rgb(var(--muted)); }
-
-.badge-on{ padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(16,185,129,.40); background: rgba(16,185,129,.12); font-weight: 800; display: inline-flex; }
-.badge-off{ padding: 6px 10px; border-radius: 999px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); color: rgb(var(--muted)); font-weight: 800; display: inline-flex; }
-.badge-featured{ padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(99,102,241,.45); background: rgba(99,102,241,.12); font-weight: 800; display: inline-flex; }
-
-.admin-error{ border-radius: 16px; border: 1px solid rgba(239,68,68,.45); background: rgba(239,68,68,.10); padding: 12px 14px; }
-.admin-success{ border-radius: 16px; border: 1px solid rgba(16,185,129,.40); background: rgba(16,185,129,.10); padding: 12px 14px; }
-
-.thumb{ width: 46px; height: 46px; border-radius: 14px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); flex: 0 0 auto; overflow: hidden; }
-.thumb-inner{ width: 100%; height: 100%; display:flex; align-items:center; justify-content:center; }
-.thumb-dot{ width: 10px; height: 10px; border-radius: 999px; background: rgba(var(--primary), 0.35); box-shadow: 0 0 0 6px rgba(var(--primary), 0.12); }
-
+.admin-input{ width: 100%; border-radius: 18px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface-2)); padding: 12px 14px; color: rgb(var(--fg)); outline: none; min-height: 50px; }
+.admin-input:focus{ border-color: rgba(99,102,241,.45); box-shadow: 0 0 0 4px rgba(99,102,241,.12); }
+.admin-primary,.admin-ghost,.admin-pill,.admin-btn-danger{ display:inline-flex; align-items:center; justify-content:center; min-height:46px; padding: 10px 14px; border-radius: 16px; font-weight: 900; transition: transform .16s ease, border-color .16s ease, background .16s ease; }
+.admin-primary{ background: linear-gradient(135deg, rgba(var(--primary), .24), rgba(var(--primary), .14)); border: 1px solid rgba(var(--primary), .38); color: rgb(var(--fg)); }
+.admin-ghost{ border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); color: rgb(var(--fg)); }
+.admin-pill{ border: 1px solid rgb(var(--border)); background: rgb(var(--surface-2)); color: rgb(var(--fg)); }
+.admin-btn-danger{ border: 1px solid rgba(239,68,68,.45); background: rgba(239,68,68,.14); color: rgb(var(--fg)); }
+.admin-table{ display: grid; gap: 12px; }
+.admin-tr{ display: grid; grid-template-columns: minmax(0,2.1fr) .95fr 1fr .8fr minmax(0,1.25fr); gap: 14px; padding: 16px; border: 1px solid rgba(var(--border), .88); border-radius: 22px; background: linear-gradient(180deg, rgba(var(--surface-rgb), .82), rgba(var(--surface-2-rgb), .88)); }
+.admin-th{ border-radius: 18px; background: rgba(var(--surface-2-rgb), .95); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: rgb(var(--muted)); }
+.badge-on,.badge-off,.badge-featured{ padding: 6px 10px; border-radius: 999px; font-weight: 800; display: inline-flex; align-items:center; gap:6px; }
+.badge-on{ border: 1px solid rgba(16,185,129,.40); background: rgba(16,185,129,.12); }
+.badge-off{ border: 1px solid rgb(var(--border)); background: rgb(var(--surface)); color: rgb(var(--muted)); }
+.badge-featured{ border: 1px solid rgba(99,102,241,.45); background: rgba(99,102,241,.12); }
+.admin-error,.admin-success{ border-radius: 18px; padding: 13px 15px; }
+.admin-error{ border: 1px solid rgba(239,68,68,.45); background: rgba(239,68,68,.10); }
+.admin-success{ border: 1px solid rgba(16,185,129,.40); background: rgba(16,185,129,.10); }
+.product-thumb{ width: 60px; height: 60px; border-radius: 20px; object-fit: cover; border: 1px solid rgba(var(--border), .95); flex: 0 0 auto; box-shadow: 0 12px 24px rgba(0,0,0,.16); }
 .products-tr{align-items:center;}
 .product-name{line-height:1.35;word-break:break-word;}
 .product-slug{line-height:1.35;word-break:break-word;}
+.product-category-chip{ display:inline-flex; padding:.3rem .6rem; border-radius:999px; border:1px solid rgba(var(--border), .9); background:rgba(var(--surface-2-rgb), .9); font-size:.7rem; font-weight:800; color:rgb(var(--muted)); }
+.stock-cell{display:grid;gap:4px;}
+.stock-value{font-size:1.05rem;}
 .actions-wrap{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;}
-.admin-icon-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:12px;border:1px solid rgb(var(--border));background:rgb(var(--surface-2));font-weight:800;}
+.admin-icon-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 11px;border-radius:14px;border:1px solid rgb(var(--border));background:rgb(var(--surface-2));font-weight:800;}
 .admin-icon-btn.danger{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10);}
 .btn-label{font-size:12px;}
+.filter-grid{align-items:stretch;}
+@media (max-width: 1100px){
+  .admin-tr{ grid-template-columns:minmax(0,1.9fr) .9fr 1fr .8fr minmax(0,1.15fr); }
+}
 @media (max-width: 768px){
+  .admin-box{ border-radius:24px; padding:14px; }
+  .admin-list-shell{ padding: 0; border: none; box-shadow:none; background: transparent; }
   .admin-tr.products-tr.admin-th{display:none;}
-  .admin-tr.products-tr{grid-template-columns:1fr;gap:12px;padding:14px;border-top:1px solid rgb(var(--border));background:rgba(255,255,255,.01);}
+  .admin-tr.products-tr{grid-template-columns:1fr;gap:12px;padding:14px;border-radius:22px;background:linear-gradient(180deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-2-rgb), .95));}
   .admin-tr.products-tr > div:nth-child(2),
   .admin-tr.products-tr > div:nth-child(3),
-  .admin-tr.products-tr > div:nth-child(4){padding-inline-start:52px;}
+  .admin-tr.products-tr > div:nth-child(4){padding-inline-start:0;}
   .admin-tr.products-tr > div:nth-child(2){display:flex;justify-content:space-between;align-items:center;font-size:15px;}
   .admin-tr.products-tr > div:nth-child(3){display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-  .actions-wrap{justify-content:flex-start;padding-inline-start:52px;}
+  .actions-wrap{justify-content:flex-start;}
   .btn-label{display:inline;}
+  .product-thumb{ width:56px; height:56px; border-radius:18px; }
 }
-
 </style>
