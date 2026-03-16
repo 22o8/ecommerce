@@ -690,7 +690,7 @@ const heroBrandBgSrc = heroImage
 }
 :global(html.theme-light) .hero-premium-shell::after{
   background: none;
-  border: 1px solid rgba(228, 232, 239, .72);
+  border: 1px solid rgba(255, 255, 255, 0.72);
   box-shadow: none;
 }
 </style>
