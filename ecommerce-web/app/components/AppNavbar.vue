@@ -1,149 +1,137 @@
 <template>
-  <header class="sticky top-0 z-50">
-    <div class="bg-app/80 backdrop-blur supports-[backdrop-filter]:bg-app/70 border-b border-app">
-      <div class="mx-auto max-w-7xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3">
-        <NuxtLink to="/" class="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black overflow-hidden">
-            <!-- ضع رابط شعار الموقع هنا بدل # -->
-            <img v-if="siteLogoSrc !== '#'" :src="siteLogoSrc" alt="Site logo" class="h-full w-full object-contain p-1" />
-            <Icon v-else name="mdi:shopping-outline" class="text-xl animate-floaty" />
-          </div>
-          <div class="leading-tight min-w-0">
-            <!-- خلّ الاسم يبين أوضح باللايت بدون ما ينقص بسرعة -->
-            <div class="font-extrabold tracking-wide text-sm sm:text-base max-w-[92px] sm:max-w-[120px] md:max-w-none truncate md:overflow-visible md:text-clip">ECOMMERCE</div>
-            <div class="hidden md:block text-xs text-muted -mt-0.5 rtl-text">{{ t('tagline') }}</div>
-          </div>
-        </NuxtLink>
+  <header class="sticky top-0 z-50 px-2 pt-2 sm:px-3 sm:pt-3">
+    <div class="nav-shell mx-auto max-w-7xl overflow-hidden rounded-[28px] border border-app">
+      <div class="nav-shell__aurora nav-shell__aurora--one" />
+      <div class="nav-shell__aurora nav-shell__aurora--two" />
 
-        <div class="flex-1" />
-
-        <!-- Search (desktop) -->
-        <div class="hidden lg:flex items-center gap-2 w-[420px]">
-          <div class="relative w-full">
-            <div class="flex items-center gap-2 w-full rounded-2xl border border-app bg-surface px-3 py-2">
-            <Icon name="mdi:magnify" class="text-lg opacity-70" />
-            <input
-              v-model="q"
-              class="w-full bg-transparent outline-none text-sm rtl-text"
-              :placeholder="t('productsPage.searchPlaceholder')"
-              @keydown.enter="goSearch"
-              @focus="openSearch = true"
-            />
+      <div class="relative z-[1] mx-auto max-w-7xl px-3 py-3 sm:px-4">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <NuxtLink to="/" class="brand-lockup min-w-0 shrink-0">
+            <div class="brand-lockup__logo">
+              <img :src="siteLogoSrc" alt="Site logo" class="h-full w-full object-cover" />
             </div>
+            <div class="brand-lockup__text min-w-0">
+              <div class="truncate text-sm font-extrabold tracking-[0.04em] text-[rgb(var(--text))] sm:text-base">
+                ECOMMERCE
+              </div>
+              <div class="truncate text-xs text-[rgb(var(--muted))] rtl-text">
+                {{ t('tagline') }}
+              </div>
+            </div>
+          </NuxtLink>
 
-            <!-- Live Search dropdown -->
-            <div
-              v-if="openSearch && liveItems.length"
-              class="absolute top-[calc(100%+10px)] left-0 right-0 z-50 rounded-2xl border border-app bg-surface shadow-2xl overflow-hidden"
-            >
-              <button
-                v-for="item in liveItems"
-                :key="item.id"
-                type="button"
-                class="w-full px-3 py-3 text-left hover:bg-surface-2 transition flex items-center gap-3"
-                @click="openLive(item)"
-              >
-                <img
-                  class="h-10 w-10 rounded-xl object-cover border border-app"
-                  :src="item.imageUrl || '/hero-placeholder.svg'"
-                  :alt="item.name"
+          <div class="hidden xl:flex flex-1 items-center justify-center px-2">
+            <div class="nav-search-wrap relative w-full max-w-[420px]">
+              <div class="nav-search-bar">
+                <Icon name="mdi:magnify" class="text-lg opacity-70" />
+                <input
+                  v-model="q"
+                  class="w-full bg-transparent outline-none text-sm rtl-text"
+                  :placeholder="t('productsPage.searchPlaceholder')"
+                  @keydown.enter="goSearch"
+                  @focus="openSearch = true"
                 />
-                <div class="min-w-0 flex-1">
-                  <div class="font-extrabold text-sm truncate keep-ltr">{{ item.name }}</div>
-                  <div class="text-xs text-muted truncate">{{ item.brand }}</div>
-                </div>
-                <div class="text-sm font-black keep-ltr">{{ formatIqd(item.finalPriceIqd ?? item.priceIqd) }}</div>
-              </button>
+                <button type="button" class="nav-search-go" @click="goSearch">
+                  <Icon name="mdi:arrow-right" class="keep-ltr" />
+                </button>
+              </div>
 
-              <NuxtLink
-                v-if="q"
-                :to="{ path: '/products', query: { q } }"
-                class="block px-4 py-3 text-sm font-bold text-[rgb(var(--primary))] bg-surface-2 hover:opacity-90"
-                @click="openSearch = false"
+              <div
+                v-if="openSearch && liveItems.length"
+                class="absolute top-[calc(100%+12px)] left-0 right-0 z-50 overflow-hidden rounded-[24px] border border-app bg-surface shadow-2xl"
               >
-                {{ t('productsPage.viewAll') || 'عرض كل النتائج' }}
-              </NuxtLink>
+                <button
+                  v-for="item in liveItems"
+                  :key="item.id"
+                  type="button"
+                  class="w-full px-3 py-3 text-left hover:bg-surface-2 transition flex items-center gap-3"
+                  @click="openLive(item)"
+                >
+                  <img
+                    class="h-10 w-10 rounded-xl object-cover border border-app"
+                    :src="item.imageUrl || '/hero-placeholder.svg'"
+                    :alt="item.name"
+                  />
+                  <div class="min-w-0 flex-1">
+                    <div class="font-extrabold text-sm truncate keep-ltr">{{ item.name }}</div>
+                    <div class="text-xs text-muted truncate">{{ item.brand }}</div>
+                  </div>
+                  <div class="text-sm font-black keep-ltr">{{ formatIqd(item.finalPriceIqd ?? item.priceIqd) }}</div>
+                </button>
+
+                <NuxtLink
+                  v-if="q"
+                  :to="{ path: '/products', query: { q } }"
+                  class="block px-4 py-3 text-sm font-bold text-[rgb(var(--primary))] bg-surface-2 hover:opacity-90"
+                  @click="openSearch = false"
+                >
+                  {{ t('productsPage.viewAll') || 'عرض كل النتائج' }}
+                </NuxtLink>
+              </div>
             </div>
           </div>
-          <UiButton variant="secondary" @click="goSearch">
-            <Icon name="mdi:arrow-right" class="keep-ltr" />
-          </UiButton>
-        </div>
 
-        <!-- Actions -->
-	        <div class="flex items-center gap-0.5 sm:gap-2 flex-shrink-0">
-	          <!-- Brands -->
-	          <NuxtLink to="/brands" class="hidden sm:block">
-	            <UiButton variant="secondary" class="px-2 sm:px-3">
-              <Icon name="mdi:storefront-outline" class="text-lg" />
-              <span class="hidden md:inline rtl-text">{{ t('home.brands') }}</span>
+          <div class="actions-strip ms-auto flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            <NuxtLink to="/brands" class="hidden md:block">
+              <UiButton variant="secondary" class="nav-action-btn">
+                <Icon name="mdi:storefront-outline" class="text-lg" />
+                <span class="hidden lg:inline rtl-text">{{ t('home.brands') }}</span>
+              </UiButton>
+            </NuxtLink>
+
+            <NuxtLink v-if="auth.isAuthed" to="/favorites" class="hidden sm:block">
+              <UiButton variant="secondary" class="nav-action-btn relative">
+                <Icon name="mdi:heart-outline" class="text-lg" />
+                <span class="hidden lg:inline rtl-text">{{ t('nav.favorites') }}</span>
+                <span v-if="fav.count" class="nav-badge">{{ fav.count }}</span>
+              </UiButton>
+            </NuxtLink>
+
+            <NuxtLink to="/cart" class="block">
+              <UiButton variant="secondary" class="nav-action-btn relative">
+                <Icon name="mdi:cart-outline" class="text-lg" />
+                <span class="hidden md:inline rtl-text">{{ t('nav.cart') }}</span>
+                <span v-if="cart.count" class="nav-badge">{{ cart.count }}</span>
+              </UiButton>
+            </NuxtLink>
+
+            <UiButton variant="ghost" class="nav-icon-btn" @click="toggleLocale" :title="t('nav.language')">
+              <Icon name="mdi:translate" class="text-lg" />
+              <span class="hidden sm:inline keep-ltr">{{ ui.locale.toUpperCase() }}</span>
             </UiButton>
-          </NuxtLink>
-	          <!-- Favorites -->
-          <NuxtLink v-if="auth.isAuthed" to="/favorites" class="hidden sm:block">
-            <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0">
-              <Icon name="mdi:heart-outline" class="text-lg" />
-              <span class="hidden md:inline rtl-text">{{ t('nav.favorites') }}</span>
-              <span
-                v-if="fav.count"
-                class="absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full bg-[rgb(var(--primary))] text-black text-xs font-black grid place-items-center"
-              >
-                {{ fav.count }}
-              </span>
+
+            <UiButton variant="ghost" class="nav-icon-btn" @click="toggleTheme" :title="ui.theme === 'dark' ? t('ui.dark') : t('ui.light')">
+              <Icon :name="ui.theme === 'dark' ? 'mdi:weather-night' : 'mdi:white-balance-sunny'" class="text-lg" />
             </UiButton>
-          </NuxtLink>
 
-          <!-- Cart: يظهر على الهاتف أيضاً (أيقونة فقط) -->
-	          <NuxtLink to="/cart" class="block">
-	            <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0">
-              <Icon name="mdi:cart-outline" class="text-lg" />
-	              <span class="hidden sm:inline rtl-text">{{ t('nav.cart') }}</span>
-              <span
-                v-if="cart.count"
-                class="absolute -top-2 -right-2 h-5 min-w-[20px] px-1 rounded-full bg-[rgb(var(--primary))] text-black text-xs font-black grid place-items-center"
-              >
-                {{ cart.count }}
-              </span>
+            <NuxtLink v-if="isAdmin" to="/admin" class="hidden sm:block">
+              <UiButton variant="secondary" class="nav-action-btn nav-action-btn--highlight">
+                <Icon name="mdi:view-dashboard-outline" class="text-lg" />
+                <span class="hidden lg:inline rtl-text">{{ t('home.dashboard') }}</span>
+              </UiButton>
+            </NuxtLink>
+
+            <NuxtLink v-if="!auth.isAuthed" to="/login">
+              <UiButton class="nav-action-btn nav-action-btn--solid">
+                <Icon name="mdi:login-variant" class="text-lg" />
+                <span class="hidden md:inline rtl-text">{{ t('nav.login') }}</span>
+              </UiButton>
+            </NuxtLink>
+            <UiButton v-else variant="secondary" class="nav-action-btn" @click="logout">
+              <Icon name="mdi:logout-variant" class="text-lg" />
+              <span class="hidden md:inline rtl-text">{{ t('nav.logout') }}</span>
             </UiButton>
-          </NuxtLink>
-	          <UiButton variant="ghost" class="px-2 sm:px-3 shrink-0" @click="toggleLocale" :title="t('nav.language')">
-            <Icon name="mdi:translate" class="text-lg" />
-            <span class="hidden sm:inline keep-ltr">{{ ui.locale.toUpperCase() }}</span>
-          </UiButton>
 
-	          <UiButton variant="ghost" class="px-2 sm:px-3 shrink-0" @click="toggleTheme" :title="ui.theme === 'dark' ? t('ui.dark') : t('ui.light')">
-            <Icon :name="ui.theme === 'dark' ? 'mdi:weather-night' : 'mdi:white-balance-sunny'" class="text-lg" />
-          </UiButton>
-
-	          <!-- Admin: نخليها فقط داخل زر المينيو على الهاتف -->
-	          <NuxtLink v-if="isAdmin" to="/admin" class="hidden sm:block">
-	            <UiButton variant="secondary">
-              <Icon name="mdi:view-dashboard-outline" class="text-lg" />
-              <span class="rtl-text">{{ t('home.dashboard') }}</span>
-            </UiButton>
-          </NuxtLink>
-
-          <NuxtLink v-if="!auth.isAuthed" to="/login">
-            <UiButton>
-              <Icon name="mdi:login-variant" class="text-lg" />
-              <span class="hidden sm:inline rtl-text">{{ t('nav.login') }}</span>
-            </UiButton>
-          </NuxtLink>
-          <UiButton v-else variant="secondary" @click="logout">
-            <Icon name="mdi:logout-variant" class="text-lg" />
-            <span class="hidden sm:inline rtl-text">{{ t('nav.logout') }}</span>
-          </UiButton>
-
-	        <button class="lg:hidden shrink-0 min-w-[40px] rounded-2xl border border-app bg-surface px-2 py-2" @click="open = !open">
-            <Icon name="mdi:menu" class="text-xl" />
-          </button>
+            <button class="mobile-menu-btn lg:hidden" @click="open = !open">
+              <Icon name="mdi:menu" class="text-xl" />
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Mobile drawer -->
-      <div v-if="open" class="lg:hidden border-t border-app bg-surface">
-        <div class="mx-auto max-w-7xl px-3 sm:px-4 py-4 grid gap-3">
-          <div class="flex items-center gap-2 w-full rounded-2xl border border-app bg-surface px-3 py-2">
+      <div v-if="open" class="relative z-[1] border-t border-app bg-surface/90 px-3 py-4 lg:hidden sm:px-4">
+        <div class="grid gap-3">
+          <div class="nav-search-bar">
             <Icon name="mdi:magnify" class="text-lg opacity-70" />
             <input
               v-model="q"
@@ -151,54 +139,41 @@
               :placeholder="t('productsPage.searchPlaceholder')"
               @keydown.enter="goSearch"
             />
+            <button type="button" class="nav-search-go" @click="goSearch">
+              <Icon name="mdi:arrow-right" class="keep-ltr" />
+            </button>
           </div>
 
           <nav class="grid grid-cols-2 gap-2 text-sm">
-            <NuxtLink to="/" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
-              <div class="flex items-center gap-2">
-                <Icon name="mdi:home-outline" class="text-lg" />
-                <span class="rtl-text">{{ t('nav.home') }}</span>
-              </div>
+            <NuxtLink to="/" class="drawer-link">
+              <Icon name="mdi:home-outline" class="text-lg" />
+              <span class="rtl-text">{{ t('nav.home') }}</span>
             </NuxtLink>
-
-	          <NuxtLink to="/brands" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
-	            <div class="flex items-center gap-2">
-	              <Icon name="mdi:storefront-outline" class="text-lg" />
-	              <span class="rtl-text">{{ t('home.brands') }}</span>
-	            </div>
-	          </NuxtLink>
-            <NuxtLink v-if="auth.isAuthed" to="/favorites" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
-              <div class="flex items-center gap-2">
-                <Icon name="mdi:heart-outline" class="text-lg" />
-                <span class="rtl-text">{{ t('nav.favorites') }}</span>
-                <span v-if="fav.count" class="keep-ltr text-xs text-muted">({{ fav.count }})</span>
-              </div>
+            <NuxtLink to="/brands" class="drawer-link">
+              <Icon name="mdi:storefront-outline" class="text-lg" />
+              <span class="rtl-text">{{ t('home.brands') }}</span>
             </NuxtLink>
-
-            <NuxtLink to="/cart" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
-              <div class="flex items-center gap-2">
-                <Icon name="mdi:cart-outline" class="text-lg" />
-                <span class="rtl-text">{{ t('nav.cart') }}</span>
-                <span v-if="cart.count" class="keep-ltr text-xs text-muted">({{ cart.count }})</span>
-              </div>
+            <NuxtLink v-if="auth.isAuthed" to="/favorites" class="drawer-link">
+              <Icon name="mdi:heart-outline" class="text-lg" />
+              <span class="rtl-text">{{ t('nav.favorites') }}</span>
+              <span v-if="fav.count" class="keep-ltr text-xs text-muted">({{ fav.count }})</span>
             </NuxtLink>
-            <NuxtLink v-if="auth.isAuthed" to="/orders" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
-              <div class="flex items-center gap-2">
-                <Icon name="mdi:receipt-text-outline" class="text-lg" />
-                <span class="rtl-text">{{ t('myOrders') }}</span>
-              </div>
+            <NuxtLink to="/cart" class="drawer-link">
+              <Icon name="mdi:cart-outline" class="text-lg" />
+              <span class="rtl-text">{{ t('nav.cart') }}</span>
+              <span v-if="cart.count" class="keep-ltr text-xs text-muted">({{ cart.count }})</span>
             </NuxtLink>
-	            <NuxtLink v-if="isAdmin" to="/admin" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
-	              <div class="flex items-center gap-2">
-	                <Icon name="mdi:view-dashboard-outline" class="text-lg" />
-	                <span class="rtl-text">{{ $t('adminPanel') }}</span>
-	              </div>
-	            </NuxtLink>
-            <NuxtLink to="/contact" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
-              <div class="flex items-center gap-2">
-                <Icon name="mdi:message-text-outline" class="text-lg" />
-                <span class="rtl-text">{{ t('contact') }}</span>
-              </div>
+            <NuxtLink v-if="auth.isAuthed" to="/orders" class="drawer-link">
+              <Icon name="mdi:receipt-text-outline" class="text-lg" />
+              <span class="rtl-text">{{ t('myOrders') }}</span>
+            </NuxtLink>
+            <NuxtLink v-if="isAdmin" to="/admin" class="drawer-link">
+              <Icon name="mdi:view-dashboard-outline" class="text-lg" />
+              <span class="rtl-text">{{ t('adminPanel') }}</span>
+            </NuxtLink>
+            <NuxtLink to="/contact" class="drawer-link col-span-2">
+              <Icon name="mdi:message-text-outline" class="text-lg" />
+              <span class="rtl-text">{{ t('contact') }}</span>
             </NuxtLink>
           </nav>
         </div>
@@ -209,10 +184,10 @@
 
 <script setup lang="ts">
 import UiButton from '~/components/ui/UiButton.vue'
+import siteLogoSrc from '~/assets/img/site-logo.jpg'
 import { useFavoritesStore } from '~/stores/favorites'
 import { useProductsStore } from '~/stores/products'
 import { formatIqd } from '~/composables/useMoney'
-import siteLogoImage from '~/assets/img/site-logo.jpg'
 
 const ui = useUiStore()
 const auth = useAuthStore()
@@ -220,24 +195,21 @@ const cart = useCartStore()
 const fav = useFavoritesStore()
 const products = useProductsStore()
 const { t } = useI18n()
-
 const route = useRoute()
-
-
-const siteLogoSrc = siteLogoImage
 const router = useRouter()
+
 const open = ref(false)
 const q = ref(String(route.query.q || ''))
 const openSearch = ref(false)
 const liveItems = ref<any[]>([])
-let liveTimer: any = null
+let liveTimer: ReturnType<typeof setTimeout> | null = null
 
 const isAdmin = computed(() => auth.isAdmin)
 
-function toggleTheme(){ ui.toggleTheme() }
-function toggleLocale(){ ui.setLocale(ui.locale === 'ar' ? 'en' : 'ar') }
+function toggleTheme() { ui.toggleTheme() }
+function toggleLocale() { ui.setLocale(ui.locale === 'ar' ? 'en' : 'ar') }
 
-function goSearch(){
+function goSearch() {
   router.push({ path: '/products', query: q.value ? { q: q.value } : {} })
   open.value = false
   openSearch.value = false
@@ -260,16 +232,15 @@ watch(q, (val) => {
   }, 180)
 })
 
-function openLive(item: any){
+function openLive(item: any) {
   openSearch.value = false
   q.value = ''
   navigateTo(`/product/${item.id}`)
 }
 
-const onDocClick = (e: any) => {
+const onDocClick = (e: Event) => {
   const target = e?.target as HTMLElement | null
   if (!target) return
-  // إذا ضغط داخل الهيدر نخليها مفتوحة
   if (target.closest('header')) return
   openSearch.value = false
 }
@@ -282,8 +253,151 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', onDocClick)
 })
 
-async function logout(){
+async function logout() {
   auth.logout()
   if (route.path.startsWith('/admin')) router.push('/')
 }
 </script>
+
+<style scoped>
+.nav-shell{
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(var(--surface-rgb), .92), rgba(var(--surface-2-rgb), .78)),
+    linear-gradient(135deg, rgba(var(--primary), .08), transparent 35%, rgba(var(--cta-glow-2), .08) 100%);
+  box-shadow: 0 18px 44px rgba(3, 8, 20, .18);
+  backdrop-filter: blur(18px);
+}
+.nav-shell__aurora{
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(20px);
+}
+.nav-shell__aurora--one{
+  inset-inline-start: -40px;
+  top: -40px;
+  width: 180px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(var(--primary), .16), transparent 72%);
+}
+.nav-shell__aurora--two{
+  inset-inline-end: 12%;
+  bottom: -46px;
+  width: 240px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(var(--cta-glow-2), .12), transparent 72%);
+}
+.brand-lockup{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+  min-width:0;
+  padding:.4rem .5rem .4rem .35rem;
+  border-radius:22px;
+  background:linear-gradient(180deg, rgba(var(--surface-rgb), .82), rgba(var(--surface-2-rgb), .72));
+  border:1px solid rgba(var(--border), .92);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+.brand-lockup__logo{
+  width:48px;
+  height:48px;
+  overflow:hidden;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow: 0 12px 24px rgba(0,0,0,.18);
+  flex:0 0 auto;
+}
+.nav-search-wrap{ min-width: 0; }
+.nav-search-bar{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  min-height:54px;
+  padding:.55rem .7rem .55rem .9rem;
+  border-radius:22px;
+  border:1px solid rgba(var(--border), .92);
+  background:linear-gradient(180deg, rgba(var(--surface-rgb), .88), rgba(var(--surface-2-rgb), .74));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 12px 28px rgba(0,0,0,.14);
+}
+.nav-search-go{
+  display:grid;
+  place-items:center;
+  width:38px;
+  height:38px;
+  border-radius:999px;
+  border:1px solid rgba(var(--border), .9);
+  background: rgba(var(--primary), .12);
+  color: rgb(var(--text));
+}
+.actions-strip{ min-width: 0; }
+.nav-action-btn{
+  min-height:48px;
+  border-radius:18px;
+}
+.nav-action-btn--highlight{
+  background: linear-gradient(135deg, rgba(var(--primary), .18), rgba(var(--cta-glow-2), .12));
+}
+.nav-action-btn--solid{
+  box-shadow: 0 12px 24px rgba(var(--primary), .18);
+}
+.nav-icon-btn{
+  min-height:48px;
+  border-radius:18px;
+}
+.nav-badge{
+  position:absolute;
+  top:-8px;
+  inset-inline-end:-8px;
+  display:grid;
+  place-items:center;
+  min-width:20px;
+  height:20px;
+  padding-inline:.3rem;
+  border-radius:999px;
+  background:rgb(var(--primary));
+  color:black;
+  font-size:.72rem;
+  font-weight:900;
+}
+.mobile-menu-btn{
+  display:grid;
+  place-items:center;
+  width:46px;
+  height:46px;
+  border-radius:18px;
+  border:1px solid rgba(var(--border), .92);
+  background:linear-gradient(180deg, rgba(var(--surface-rgb), .88), rgba(var(--surface-2-rgb), .76));
+}
+.drawer-link{
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+  min-height:52px;
+  padding:.85rem 1rem;
+  border-radius:18px;
+  border:1px solid rgba(var(--border), .9);
+  background:linear-gradient(180deg, rgba(var(--surface-rgb), .84), rgba(var(--surface-2-rgb), .74));
+}
+:global(html.theme-light) .nav-shell{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,247,252,.9)),
+    linear-gradient(135deg, rgba(232,91,154,.08), transparent 35%, rgba(246,180,212,.08) 100%);
+  box-shadow: 0 18px 40px rgba(232, 91, 154, .10), 0 8px 24px rgba(18,18,18,.05);
+}
+:global(html.theme-light) .brand-lockup,
+:global(html.theme-light) .nav-search-bar,
+:global(html.theme-light) .mobile-menu-btn,
+:global(html.theme-light) .drawer-link{
+  box-shadow: 0 12px 28px rgba(232, 91, 154, .08), inset 0 1px 0 rgba(255,255,255,.7);
+}
+@media (max-width: 1024px){
+  .brand-lockup__logo{ width:44px; height:44px; }
+  .nav-action-btn, .nav-icon-btn{ min-height:44px; }
+}
+@media (max-width: 640px){
+  .nav-shell{ border-radius:24px; }
+  .brand-lockup{ padding:.35rem .45rem .35rem .3rem; }
+  .brand-lockup__logo{ width:40px; height:40px; border-radius:14px; }
+}
+</style>

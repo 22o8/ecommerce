@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import heroBrandBgSrc from '~/assets/img/hero-brand-bg.jpg'
 import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
-import heroBrandBgImage from '~/assets/img/hero-brand-bg.jpg'
 
 const { t, locale } = useI18n()
 
@@ -67,23 +67,31 @@ const categoryCards = [
 
 const heroHighlights = computed(() => categoryCards.slice(0, 4))
 
-const heroBrandBgSrc = heroBrandBgImage
 </script>
 
 <template>
   <div class="min-h-screen home-page-shell">
     <section class="relative mx-auto max-w-6xl px-4 pt-4 sm:pt-6">
       <div class="hero-premium-shell hero-shimmer overflow-hidden rounded-[2rem] border border-app">
-        <div v-if="heroBrandBgSrc !== '#'" class="hero-brand-bg-wrap" aria-hidden="true">
+        <div class="hero-brand-bg-wrap" aria-hidden="true">
           <img :src="heroBrandBgSrc" alt="" class="hero-brand-bg-image" />
         </div>
-                <div class="hero-aurora hero-aurora--one" />
+        <div class="hero-overlay-grid" aria-hidden="true" />
+        <div class="hero-aurora hero-aurora--one" />
         <div class="hero-aurora hero-aurora--two" />
         <div class="hero-aurora hero-aurora--three" />
+        <div class="hero-floating-card hero-floating-card--top">
+          <div class="hero-floating-card__label">{{ t('homeHero.categories') }}</div>
+          <div class="hero-floating-card__value">{{ categoryCards.length }}</div>
+        </div>
+        <div class="hero-floating-card hero-floating-card--bottom">
+          <div class="hero-floating-card__label">{{ t('homeHero.featuredProducts') }}</div>
+          <div class="hero-floating-card__value">{{ featuredList.length }}</div>
+        </div>
 
-        <div class="relative z-[1] mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-20 lg:py-24">
-          <div class="mx-auto max-w-4xl text-center">
-            <div class="hero-mini-badges mb-6 flex flex-wrap items-center justify-center gap-3">
+        <div class="relative z-[1] grid gap-10 px-5 py-14 sm:px-8 sm:py-18 lg:grid-cols-[minmax(0,1.1fr)_340px] lg:items-center lg:px-10 lg:py-20">
+          <div>
+            <div class="hero-mini-badges mb-6 flex flex-wrap items-center gap-3">
               <NuxtLink
                 v-for="item in heroHighlights"
                 :key="item.key"
@@ -95,16 +103,21 @@ const heroBrandBgSrc = heroBrandBgImage
               </NuxtLink>
             </div>
 
-            <h1 class="text-4xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-6xl xl:text-7xl">
+            <div class="hero-kicker mb-5 inline-flex items-center gap-2 rounded-full border border-app bg-surface/60 px-4 py-2 text-xs font-extrabold tracking-[0.18em] text-[rgb(var(--muted))]">
+              <span class="hero-kicker__dot" />
+              BEAUTY STORE
+            </div>
+
+            <h1 class="max-w-3xl text-4xl font-extrabold leading-[1.05] tracking-tight text-[rgb(var(--text))] sm:text-6xl xl:text-7xl">
               {{ t('homeHero.title1') }}
               <span class="hero-title-accent">{{ t('homeHero.title2') }}</span>
             </h1>
 
-            <p class="mx-auto mt-6 max-w-2xl text-base leading-8 text-[rgb(var(--muted))] sm:text-lg">
+            <p class="mt-6 max-w-2xl text-base leading-8 text-[rgb(var(--muted))] sm:text-lg">
               {{ t('homeHero.subtitle') }}
             </p>
 
-            <div class="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+            <div class="mt-8 flex flex-wrap items-center gap-3 sm:gap-4">
               <NuxtLink
                 to="/products"
                 class="btn-cta-animated inline-flex items-center justify-center rounded-full px-7 py-3.5 text-sm font-semibold hover:opacity-95"
@@ -135,6 +148,27 @@ const heroBrandBgSrc = heroBrandBgImage
                 <div class="hero-stat-card__glow" />
                 <div class="hero-stat-card__label">{{ t('homeHero.categories') }}</div>
                 <div class="hero-stat-card__value">{{ categoryCards.length }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-visual-panel hidden lg:block">
+            <div class="hero-visual-panel__surface">
+              <div class="hero-visual-panel__badge">PREMIUM PICKS</div>
+              <div class="hero-visual-panel__title">{{ t('home.spotlightTitle') }}</div>
+              <div class="hero-visual-panel__copy">{{ t('home.spotlightSubtitle') }}</div>
+
+              <div class="mt-6 grid gap-3">
+                <NuxtLink
+                  v-for="item in categoryCards.slice(0, 3)"
+                  :key="`${item.key}-panel`"
+                  :to="`/products?category=${encodeURIComponent(item.key)}`"
+                  class="hero-panel-chip"
+                >
+                  <span class="hero-panel-chip__icon">{{ item.icon }}</span>
+                  <span class="truncate">{{ t(item.labelKey) }}</span>
+                  <span class="hero-panel-chip__arrow">→</span>
+                </NuxtLink>
               </div>
             </div>
           </div>
@@ -452,8 +486,69 @@ const heroBrandBgSrc = heroBrandBgImage
 }
 :global(html.theme-light) .hero-mini-chip,
 :global(html.theme-light) .hero-stat-card,
-:global(html.theme-light) .home-section-panel,
-
+:global(html.theme-light) .home-section-panel{
+  box-shadow: 0 18px 44px rgba(232, 91, 154, .08), 0 10px 26px rgba(24,24,24,.05);
+}
+.hero-overlay-grid{
+  position:absolute;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(circle at 40% 40%, black, transparent 85%);
+  opacity:.22;
+  pointer-events:none;
+}
+.hero-kicker__dot{
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:rgb(var(--primary));
+  box-shadow:0 0 0 6px rgba(var(--primary), .14);
+}
+.hero-floating-card{
+  position:absolute;
+  z-index:1;
+  min-width:130px;
+  padding:1rem 1rem .9rem;
+  border-radius:22px;
+  border:1px solid rgba(var(--border), .9);
+  background:linear-gradient(180deg, rgba(var(--surface-rgb), .78), rgba(var(--surface-2-rgb), .74));
+  box-shadow:0 22px 48px rgba(0,0,0,.18);
+  backdrop-filter: blur(14px);
+}
+.hero-floating-card--top{ top:1.25rem; inset-inline-end:1.25rem; }
+.hero-floating-card--bottom{ bottom:1.25rem; inset-inline-end:1.75rem; }
+.hero-floating-card__label{ font-size:.72rem; font-weight:800; color:rgb(var(--muted)); }
+.hero-floating-card__value{ margin-top:.35rem; font-size:1.55rem; font-weight:900; color:rgb(var(--text)); }
+.hero-visual-panel{ position:relative; }
+.hero-visual-panel__surface{
+  position:relative;
+  overflow:hidden;
+  padding:1.4rem;
+  border-radius:30px;
+  border:1px solid rgba(var(--border), .94);
+  background:linear-gradient(180deg, rgba(var(--surface-rgb), .86), rgba(var(--surface-2-rgb), .76));
+  box-shadow:0 24px 56px rgba(0,0,0,.18);
+}
+.hero-visual-panel__surface::before{
+  content:''; position:absolute; inset:auto -18% -26% auto; width:220px; height:220px; border-radius:999px;
+  background:radial-gradient(circle, rgba(var(--primary), .18), transparent 70%);
+}
+.hero-visual-panel__badge{
+  display:inline-flex; padding:.45rem .75rem; border-radius:999px; border:1px solid rgba(var(--border), .9);
+  background:rgba(var(--surface-rgb), .72); font-size:.72rem; font-weight:900; letter-spacing:.08em; color:rgb(var(--muted));
+}
+.hero-visual-panel__title{ position:relative; z-index:1; margin-top:1rem; font-size:1.4rem; font-weight:900; color:rgb(var(--text)); }
+.hero-visual-panel__copy{ position:relative; z-index:1; margin-top:.5rem; color:rgb(var(--muted)); line-height:1.8; }
+.hero-panel-chip{
+  position:relative; z-index:1; display:flex; align-items:center; gap:.8rem; min-height:58px; padding:.9rem 1rem; border-radius:20px;
+  border:1px solid rgba(var(--border), .9); background:rgba(var(--surface-rgb), .64); transition:transform .2s ease, border-color .2s ease;
+}
+.hero-panel-chip:hover{ transform:translateY(-2px); border-color:rgba(var(--primary), .3); }
+.hero-panel-chip__icon{ display:grid; place-items:center; width:38px; height:38px; border-radius:14px; background:rgba(var(--primary), .12); }
+.hero-panel-chip__arrow{ margin-inline-start:auto; color:rgb(var(--muted)); }
 .category-showcase{
   align-items:stretch;
 }
@@ -573,80 +668,44 @@ const heroBrandBgSrc = heroBrandBgImage
 
 
 <style scoped>
-.hero-brand-bg-wrap,
-.hero-brand-bg-placeholder{
+.hero-brand-bg-wrap{
   position:absolute;
   inset:0;
   pointer-events:none;
   z-index:0;
 }
+.hero-brand-bg-wrap::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg, rgba(var(--surface-rgb), .96) 0%, rgba(var(--surface-rgb), .88) 34%, rgba(var(--surface-rgb), .42) 72%, rgba(var(--surface-rgb), .76) 100%);
+}
 .hero-brand-bg-image{
   position:absolute;
-  inset-inline-end:2rem;
-  top:50%;
-  width:min(42vw, 540px);
-  max-width:42%;
-  transform:translateY(-50%);
-  object-fit:contain;
-  opacity:.14;
-  filter:drop-shadow(0 24px 80px rgba(0,0,0,.28));
-}
-.hero-brand-bg-placeholder{
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  padding-inline:2rem;
-}
-.hero-brand-bg-placeholder span{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-width:220px;
-  width:min(42vw, 520px);
-  min-height:220px;
-  border-radius:32px;
-  border:1px dashed rgba(var(--border), .65);
-  background:linear-gradient(135deg, rgba(var(--surface-rgb), .28), rgba(var(--primary), .08));
-  color:rgba(var(--text), .35);
-  font-size:.95rem;
-  font-weight:800;
+  inset-inline-end:0;
+  top:0;
+  height:100%;
+  width:min(46%, 520px);
+  object-fit:cover;
+  object-position:center;
+  opacity:.72;
+  filter:saturate(.95) contrast(1.02);
 }
 @media (max-width: 1024px){
+  .hero-brand-bg-wrap::after{
+    background:linear-gradient(180deg, rgba(var(--surface-rgb), .90) 0%, rgba(var(--surface-rgb), .78) 44%, rgba(var(--surface-rgb), .92) 100%);
+  }
   .hero-brand-bg-image{
-    inset-inline-end:1rem;
-    width:min(56vw, 420px);
-    max-width:58%;
-    opacity:.11;
+    width:100%;
+    height:100%;
+    inset-inline-end:0;
+    opacity:.22;
   }
-  .hero-brand-bg-placeholder{
-    justify-content:center;
-    padding-inline:1rem;
-    padding-top:1rem;
-  }
-  .hero-brand-bg-placeholder span{
-    width:min(78vw, 420px);
-    min-height:160px;
-  }
+  .hero-floating-card,
+  .hero-visual-panel{ display:none; }
 }
 @media (max-width: 640px){
-  .hero-brand-bg-image{
-    top:auto;
-    bottom:1rem;
-    inset-inline:50% auto;
-    transform:translateX(-50%);
-    width:min(76vw, 320px);
-    max-width:none;
-    opacity:.09;
-  }
-  .hero-brand-bg-placeholder{
-    justify-content:center;
-    align-items:flex-end;
-    padding:1rem;
-  }
-  .hero-brand-bg-placeholder span{
-    width:min(88vw, 320px);
-    min-height:110px;
-    font-size:.82rem;
-  }
+  .hero-brand-bg-image{ opacity:.18; }
+  .hero-kicker{ width:100%; justify-content:center; }
 }
 </style>

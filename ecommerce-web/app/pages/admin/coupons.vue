@@ -21,7 +21,7 @@
             <div class="coupon-stat-card__value keep-ltr">{{ activeCount }}</div>
           </div>
           <div class="coupon-stat-card">
-            <div class="coupon-stat-card__label rtl-text">{{ totalUsesLabel }}</div>
+            <div class="coupon-stat-card__label rtl-text">{{ t('admin.totalUses') }}</div>
             <div class="coupon-stat-card__value keep-ltr">{{ totalUses }}</div>
           </div>
         </div>
@@ -199,7 +199,7 @@
                   </div>
 
                   <div class="rounded-2xl border border-app bg-surface px-3 py-2 text-sm rtl-text">
-                    <div class="text-muted">{{ totalUsesLabel }}</div>
+                    <div class="text-muted">{{ t('admin.totalUses') }}</div>
                     <div class="mt-1 font-bold text-[rgb(var(--text))]">
                       {{ item.usedCount ?? 0 }}
                     </div>
@@ -247,16 +247,6 @@ const api = useAdminApi()
 const items = ref<any[]>([])
 const editingId = ref<string>('')
 const search = ref('')
-
-
-const totalUsesLabel = computed(() => {
-  const translated = t('admin.totalUses')
-  if (translated && translated !== 'admin.totalUses') return translated
-  const fallback = t('admin.usageCount')
-  if (fallback && fallback !== 'admin.usageCount') return fallback
-  return 'إجمالي الاستخدامات'
-})
-
 
 const form = reactive({
   code: '',
