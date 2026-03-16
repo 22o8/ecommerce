@@ -663,8 +663,8 @@ const heroBrandBgSrc = heroImage
   object-fit:cover;
   object-position:center;
   border-radius: 28px;
-  opacity:.34;
-  filter: brightness(.50) contrast(1.04) saturate(.88) drop-shadow(0 22px 68px rgba(0,0,0,.26));
+  opacity:.5;
+  filter: grayscale(1) saturate(0) brightness(.88) contrast(1.02) drop-shadow(0 22px 68px rgba(0,0,0,.18));
 }
 .hero-brand-bg-placeholder{
   display:flex;
@@ -691,7 +691,7 @@ const heroBrandBgSrc = heroImage
     inset-inline-end:.8rem;
     width:min(42vw, 360px);
     max-width:42%;
-    opacity:.28;
+    opacity:.42;
   }
   .hero-brand-bg-placeholder{
     justify-content:center;
@@ -715,11 +715,11 @@ const heroBrandBgSrc = heroImage
     height:100%;
     max-width:none;
     margin:.25rem .75rem .9rem;
-    opacity:1;
+    opacity:.92;
     border-radius:24px;
     object-fit:cover;
     object-position:center top;
-    filter:none;
+    filter: grayscale(1) saturate(0) brightness(.92) contrast(1.02);
   }
   .hero-brand-bg-placeholder{
     justify-content:center;
