@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
-import heroBrandBgSrc from '~/app/assets/img/hero-brand-bg.jpg'
+import heroImage from '~/assets/img/hero-brand-bg.jpg'
 
 const { t, locale } = useI18n()
 
