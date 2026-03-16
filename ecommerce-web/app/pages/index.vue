@@ -462,12 +462,6 @@ const heroBrandBgSrc = heroImage
   background: rgba(var(--primary), .08);
   transform: translateX(2px);
 }
-:global(html.theme-light) .hero-premium-shell{
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.995), rgba(255,255,255,.985)),
-    linear-gradient(135deg, rgba(236,72,153,.03), transparent 38%, rgba(244,114,182,.04) 100%);
-  box-shadow: 0 20px 48px rgba(22,22,22,.04);
-}
 :global(html.theme-light) .hero-mini-chip,
 :global(html.theme-light) .hero-stat-card,
 :global(html.theme-light) .home-section-panel,
@@ -680,17 +674,5 @@ const heroBrandBgSrc = heroImage
     min-height:110px;
     font-size:.82rem;
   }
-}
-</style>
-
-<style scoped>
-:global(html.theme-light) .hero-brand-bg-image{
-  opacity: .58;
-  filter: brightness(.74) contrast(1.01) saturate(.92) drop-shadow(0 16px 36px rgba(0,0,0,.08));
-}
-:global(html.theme-light) .hero-premium-shell::after{
-  background: none;
-  border: 1px solid rgba(228, 232, 239, .72);
-  box-shadow: none;
 }
 </style>
