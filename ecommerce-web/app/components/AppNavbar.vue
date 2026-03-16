@@ -10,7 +10,7 @@
           </div>
           <div class="leading-tight min-w-0">
             <!-- خلّ الاسم يبين أوضح باللايت بدون ما ينقص بسرعة -->
-            <div class="font-extrabold tracking-wide text-sm sm:text-base max-w-[92px] sm:max-w-[140px] md:max-w-[180px] lg:max-w-none truncate lg:overflow-visible lg:text-clip">ECOMMERCE</div>
+            <div class="font-extrabold tracking-wide text-sm sm:text-base max-w-[92px] sm:max-w-[120px] md:max-w-none truncate md:overflow-visible md:text-clip">ECOMMERCE</div>
             <div class="hidden md:block text-xs text-muted -mt-0.5 rtl-text">{{ t('tagline') }}</div>
           </div>
         </NuxtLink>
@@ -18,7 +18,7 @@
         <div class="flex-1" />
 
         <!-- Search (desktop) -->
-        <div class="hidden md:flex items-center gap-2 w-[420px] max-w-[32vw] xl:max-w-none">
+        <div class="hidden lg:flex items-center gap-2 w-[420px]">
           <div class="relative w-full">
             <div class="flex items-center gap-2 w-full rounded-2xl border border-app bg-surface px-3 py-2">
             <Icon name="mdi:magnify" class="text-lg opacity-70" />
@@ -73,14 +73,14 @@
         <!-- Actions -->
 	        <div class="flex items-center gap-0.5 sm:gap-2 flex-shrink-0">
 	          <!-- Brands -->
-	          <NuxtLink to="/brands" class="hidden md:block">
+	          <NuxtLink to="/brands" class="hidden sm:block">
 	            <UiButton variant="secondary" class="px-2 sm:px-3">
               <Icon name="mdi:storefront-outline" class="text-lg" />
               <span class="hidden md:inline rtl-text">{{ t('home.brands') }}</span>
             </UiButton>
           </NuxtLink>
 	          <!-- Favorites -->
-          <NuxtLink v-if="auth.isAuthed" to="/favorites" class="hidden md:block">
+          <NuxtLink v-if="auth.isAuthed" to="/favorites" class="hidden sm:block">
             <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0">
               <Icon name="mdi:heart-outline" class="text-lg" />
               <span class="hidden md:inline rtl-text">{{ t('nav.favorites') }}</span>
@@ -116,7 +116,7 @@
           </UiButton>
 
 	          <!-- Admin: نخليها فقط داخل زر المينيو على الهاتف -->
-	          <NuxtLink v-if="isAdmin" to="/admin" class="hidden md:block">
+	          <NuxtLink v-if="isAdmin" to="/admin" class="hidden sm:block">
 	            <UiButton variant="secondary">
               <Icon name="mdi:view-dashboard-outline" class="text-lg" />
               <span class="rtl-text">{{ t('home.dashboard') }}</span>
@@ -208,11 +208,11 @@
 </template>
 
 <script setup lang="ts">
+import siteLogoSrc from '~/app/assets/img/site-logo.jpg'
 import UiButton from '~/components/ui/UiButton.vue'
 import { useFavoritesStore } from '~/stores/favorites'
 import { useProductsStore } from '~/stores/products'
 import { formatIqd } from '~/composables/useMoney'
-import siteLogoSrc from '~/assets/img/site-logo.jpg'
 const ui = useUiStore()
 const auth = useAuthStore()
 const cart = useCartStore()

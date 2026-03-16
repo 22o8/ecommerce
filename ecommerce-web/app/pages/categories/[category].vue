@@ -5,13 +5,13 @@
         <div>
           <div class="inline-flex items-center gap-2 rounded-full border border-app bg-surface px-3 py-1 text-xs font-bold text-[rgb(var(--muted))]">
             <span class="h-2 w-2 rounded-full bg-[rgb(var(--primary))]" />
-            {{ t('productsPage.title') }}
+            {{ categoryLabel }}
           </div>
           <h1 class="mt-4 text-3xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-5xl rtl-text">
-            {{ t('productsPage.title') }}
+            {{ categoryLabel }}
           </h1>
           <p class="mt-3 max-w-2xl text-sm leading-7 text-[rgb(var(--muted))] sm:text-base rtl-text">
-            {{ t('productsPage.subtitle') }}
+            {{ categorySubtitle }}
           </p>
         </div>
 
@@ -68,15 +68,6 @@
               </option>
             </select>
           </div>
-
-          <div class="filter-field">
-            <label class="filter-label rtl-text">{{ t('productsPage.chooseCategory') }}</label>
-            <select v-model="category" class="input products-select" @change="onCategoryChange" :aria-label="t('productsPage.chooseCategory')">
-              <option value="">{{ t('productsPage.allCategories') }}</option>
-              <option v-for="c in categoryOptions" :key="c.value" :value="c.value">{{ c.label }}</option>
-            </select>
-          </div>
-
           <div class="filter-field">
             <label class="filter-label rtl-text">{{ t('productsPage.chooseSubCategory') }}</label>
             <select v-model="subCategory" class="input products-select" @change="applyFilters" :aria-label="t('productsPage.chooseSubCategory')">
@@ -167,11 +158,11 @@ const products = useProductsStore()
 const q = ref(String(route.query.q || ''))
 const sort = ref(String(route.query.sort || 'new'))
 const brand = ref(String(route.query.brand || ''))
-const category = ref(String(route.query.category || ''))
+const category = ref(String(route.params.category || '').toLowerCase())
 const subCategory = ref(String(route.query.subCategory || ''))
 const page = ref(Number(route.query.page || 1) || 1)
 
-const productsPageKey = computed(() => `products_page_boot:${JSON.stringify(route.query)}`)
+const productsPageKey = computed(() => `category_page_boot:${String(route.params.category || '').toLowerCase()}:${JSON.stringify(route.query)}`)
 await useAsyncData(productsPageKey, async () => {
   await brandsStore.fetchPublic()
   await fetchProducts()
@@ -188,6 +179,9 @@ const categoryOptions = computed(() => [
   { value: 'toner', label: t('productsPage.categoryToner') },
   { value: 'mask', label: t('productsPage.categoryMask') },
 ])
+const categoryLabel = computed(() => categoryOptions.value.find(c => c.value === category.value)?.label || category.value)
+const categorySubtitle = computed(() => t('productsPage.toolbarCategory', { count: products.totalCount || products.items.length || 0, category: categoryLabel.value }))
+
 const subCategoryMap: Record<string, Array<{value:string,label:string}>> = {
   'eye-care': [
     { value: 'eye-serum', label: t('productsPage.subEyeSerum') },
@@ -228,10 +222,7 @@ const toolbarText = computed(() => {
   if (brand.value) {
     return t('productsPage.toolbarBrand', { count, brand: activeBrandLabel.value })
   }
-  if (category.value) {
-    return t('productsPage.toolbarCategory', { count, category: categoryOptions.value.find(c => c.value === category.value)?.label || category.value })
-  }
-  return t('productsPage.toolbarAll', { count })
+  return t('productsPage.toolbarCategory', { count, category: categoryLabel.value })
 })
 
 async function fetchProducts() {
@@ -247,27 +238,10 @@ async function fetchProducts() {
 }
 
 
-function onCategoryChange() {
-  if (!subCategoryOptions.value.find((x) => x.value === subCategory.value)) subCategory.value = ''
-  page.value = 1
-  if (category.value) {
-    router.push({
-      path: `/categories/${category.value}`,
-      query: {
-        ...(sort.value && sort.value !== 'new' ? { sort: sort.value } : {}),
-        ...(brand.value ? { brand: brand.value } : {}),
-        ...(subCategory.value ? { subCategory: subCategory.value } : {}),
-        page: '1',
-      },
-    })
-    return
-  }
-  applyFilters()
-}
 function applyFilters() {
   page.value = 1
   router.push({
-    path: '/products',
+    path: `/categories/${category.value}`,
     query: {
       ...(q.value ? { q: q.value } : {}),
       ...(sort.value && sort.value !== 'new' ? { sort: sort.value } : {}),
@@ -286,13 +260,13 @@ function clearFilters() {
   subCategory.value = ''
   q.value = ''
   page.value = 1
-  router.push({ path: '/products', query: { page: '1' } })
+  router.push({ path: `/categories/${category.value}`, query: { page: '1' } })
 }
 
 function goPage(p: number) {
   page.value = Math.max(1, p)
   router.push({
-    path: '/products',
+    path: `/categories/${category.value}`,
     query: {
       ...route.query,
       page: String(page.value),
@@ -310,7 +284,7 @@ watch(
     q.value = String(qv.q || '')
     sort.value = String(qv.sort || 'new')
     brand.value = String(qv.brand || '')
-    category.value = String(qv.category || '')
+    category.value = String(route.params.category || '').toLowerCase()
     subCategory.value = String(qv.subCategory || '')
     page.value = Number(qv.page || 1) || 1
     await fetchProducts()

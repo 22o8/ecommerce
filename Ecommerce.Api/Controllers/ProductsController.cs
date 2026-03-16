@@ -147,7 +147,7 @@ public class ProductsController : ControllerBase
             .ToListAsync();
     }
 
-    [HttpGet]
+        [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] PublicProductQuery query)
     {
         var page = query.Page < 1 ? 1 : query.Page;
@@ -157,23 +157,38 @@ public class ProductsController : ControllerBase
         var category = N(query.Category);
         var subCategory = N(query.SubCategory);
 
-        var baseQuery = _db.Products.AsNoTracking().Where(p => p.IsPublished);
+        var baseQuery = _db.Products
+            .AsNoTracking()
+            .Where(p => p.IsPublished);
 
         if (!string.IsNullOrWhiteSpace(brand) && !brand.Equals("all", StringComparison.OrdinalIgnoreCase))
             baseQuery = baseQuery.Where(p => p.Brand != null && p.Brand.ToLower() == brand);
 
-        var allItems = await BuildProjectedProductsAsync(baseQuery);
-        var filtered = allItems.Where(p => MatchesCategory(p, category, subCategory, q));
+        if (!string.IsNullOrWhiteSpace(category) && !category.Equals("all", StringComparison.OrdinalIgnoreCase))
+            baseQuery = baseQuery.Where(p => p.Category != null && p.Category.ToLower() == category);
 
-        filtered = (query.Sort ?? "new") switch
+        if (!string.IsNullOrWhiteSpace(subCategory) && !subCategory.Equals("all", StringComparison.OrdinalIgnoreCase))
+            baseQuery = baseQuery.Where(p => p.SubCategory != null && p.SubCategory.ToLower() == subCategory);
+
+        if (!string.IsNullOrWhiteSpace(q))
         {
-            "price:asc" or "priceAsc" => filtered.OrderBy(p => (decimal)p.PriceIqd),
-            "price:desc" or "priceDesc" => filtered.OrderByDescending(p => (decimal)p.PriceIqd),
-            _ => filtered.OrderByDescending(p => (DateTime)p.CreatedAt),
+            baseQuery = baseQuery.Where(p =>
+                (p.Title != null && p.Title.ToLower().Contains(q)) ||
+                (p.Description != null && p.Description.ToLower().Contains(q)) ||
+                (p.Slug != null && p.Slug.ToLower().Contains(q)) ||
+                (p.Brand != null && p.Brand.ToLower().Contains(q)));
+        }
+
+        baseQuery = (query.Sort ?? "new") switch
+        {
+            "price:asc" or "priceAsc" => baseQuery.OrderBy(p => p.PriceIqd),
+            "price:desc" or "priceDesc" => baseQuery.OrderByDescending(p => p.PriceIqd),
+            _ => baseQuery.OrderByDescending(p => p.CreatedAt),
         };
 
-        var total = filtered.Count();
-        var items = filtered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        var total = await baseQuery.CountAsync();
+        var pagedQuery = baseQuery.Skip((page - 1) * pageSize).Take(pageSize);
+        var items = await BuildProjectedProductsAsync(pagedQuery);
 
         return Ok(new { page, pageSize, totalCount = total, items });
     }
