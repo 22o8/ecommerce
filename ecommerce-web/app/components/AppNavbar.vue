@@ -5,7 +5,7 @@
         <NuxtLink to="/" class="flex items-center gap-2 sm:gap-3 min-w-0">
           <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black overflow-hidden">
             <!-- ضع رابط شعار الموقع هنا بدل # -->
-            <img v-if="siteLogoSrc !== '#'" :src="siteLogoSrc" alt="Site logo" class="h-full w-full object-cover" />
+            <img v-if="siteLogoSrc !== '#'" :src="siteLogoSrc" alt="Site logo" class="h-full w-full object-contain p-1" />
             <Icon v-else name="mdi:shopping-outline" class="text-xl animate-floaty" />
           </div>
           <div class="leading-tight min-w-0">
@@ -212,6 +212,8 @@ import UiButton from '~/components/ui/UiButton.vue'
 import { useFavoritesStore } from '~/stores/favorites'
 import { useProductsStore } from '~/stores/products'
 import { formatIqd } from '~/composables/useMoney'
+import siteLogoImage from '~/assets/img/site-logo.jpg'
+
 const ui = useUiStore()
 const auth = useAuthStore()
 const cart = useCartStore()
@@ -222,7 +224,7 @@ const { t } = useI18n()
 const route = useRoute()
 
 
-const siteLogoSrc = '../assets/img/9f8b6f3daf40bf671b51aca47243a774.jpg'
+const siteLogoSrc = siteLogoImage
 const router = useRouter()
 const open = ref(false)
 const q = ref(String(route.query.q || ''))

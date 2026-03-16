@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
+import heroBrandBgImage from '~/assets/img/hero-brand-bg.jpg'
 
 const { t, locale } = useI18n()
 
@@ -66,8 +67,7 @@ const categoryCards = [
 
 const heroHighlights = computed(() => categoryCards.slice(0, 4))
 
-// ضع رابط صورة/خلفية الهوية هنا بدل #
-const heroBrandBgSrc = '#'
+const heroBrandBgSrc = heroBrandBgImage
 </script>
 
 <template>
@@ -77,10 +77,7 @@ const heroBrandBgSrc = '#'
         <div v-if="heroBrandBgSrc !== '#'" class="hero-brand-bg-wrap" aria-hidden="true">
           <img :src="heroBrandBgSrc" alt="" class="hero-brand-bg-image" />
         </div>
-        <div v-else class="hero-brand-bg-placeholder" aria-hidden="true">
-          <span>ضع صورة الخلفية هنا</span>
-        </div>
-        <div class="hero-aurora hero-aurora--one" />
+                <div class="hero-aurora hero-aurora--one" />
         <div class="hero-aurora hero-aurora--two" />
         <div class="hero-aurora hero-aurora--three" />
 

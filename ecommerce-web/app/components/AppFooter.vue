@@ -5,7 +5,7 @@
         <div class="flex items-center gap-3">
           <div class="h-10 w-10 rounded-2xl bg-[rgb(var(--primary))] text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black overflow-hidden">
             <!-- ضع رابط شعار الموقع هنا بدل # -->
-            <img v-if="siteLogoSrc !== '#'" :src="siteLogoSrc" alt="Site logo" class="h-full w-full object-cover" />
+            <img v-if="siteLogoSrc !== '#'" :src="siteLogoSrc" alt="Site logo" class="h-full w-full object-contain p-1" />
             <Icon v-else name="mdi:storefront-outline" class="text-xl" />
           </div>
           <div>
@@ -55,6 +55,8 @@
 </template>
 
 <script setup lang="ts">
+import siteLogoImage from '~/assets/img/site-logo.jpg'
+
 const { t } = useI18n()
 const config = useRuntimeConfig()
 const supportEmail = String((config.public as any).supportEmail || '')
@@ -62,7 +64,7 @@ const supportPhone = String((config.public as any).supportPhone || '')
 const instagramUrl = String((config.public as any).instagramUrl || '')
 
 
-const siteLogoSrc = '../assets/img/470242929_435317702981132_8360512818133532558_n (1).jpg'
+const siteLogoSrc = siteLogoImage
 
 function toTop(){ if (import.meta.client) window.scrollTo({ top: 0, behavior: 'smooth' }) }
 </script>
