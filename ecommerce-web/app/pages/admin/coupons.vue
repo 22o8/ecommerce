@@ -7,21 +7,21 @@
         {{ t('admin.couponsLabel') }}
       </h1>
       <p class="mt-1 text-sm text-muted rtl-text">
-        إدارة الكوبونات بشكل واضح ودقيق مع شرح مختصر لكل قيمة.
+        {{ t('admin.couponsHeroHint') }}
       </p>
         </div>
 
         <div class="grid gap-3 sm:grid-cols-3">
           <div class="coupon-stat-card">
-            <div class="coupon-stat-card__label rtl-text">إجمالي الكوبونات</div>
+            <div class="coupon-stat-card__label rtl-text">{{ t('admin.couponsLabel') }}</div>
             <div class="coupon-stat-card__value keep-ltr">{{ items.length }}</div>
           </div>
           <div class="coupon-stat-card">
-            <div class="coupon-stat-card__label rtl-text">المفعّلة الآن</div>
+            <div class="coupon-stat-card__label rtl-text">{{ t('admin.active') }}</div>
             <div class="coupon-stat-card__value keep-ltr">{{ activeCount }}</div>
           </div>
           <div class="coupon-stat-card">
-            <div class="coupon-stat-card__label rtl-text">إجمالي الاستخدام</div>
+            <div class="coupon-stat-card__label rtl-text">{{ t('admin.totalUses') }}</div>
             <div class="coupon-stat-card__value keep-ltr">{{ totalUses }}</div>
           </div>
         </div>
@@ -31,28 +31,28 @@
     <div class="grid gap-5 xl:grid-cols-[minmax(0,540px)_1fr]">
       <div class="panel-shell rounded-[30px] border border-app bg-surface p-5 shadow-sm">
         <div class="mb-4 rounded-2xl border border-app bg-surface-2 p-4">
-          <div class="text-sm font-bold rtl-text">قواعد الكوبون</div>
+          <div class="text-sm font-bold rtl-text">{{ t('admin.couponRules') }}</div>
           <div class="mt-2 grid gap-2 text-sm text-muted rtl-text">
-            <div>• اسم واضح للكوبون حتى تعرفه بسرعة داخل الإدارة.</div>
-            <div>• كود الكوبون لا يمكن تكراره.</div>
-            <div>• الكوبون لا يُعاد استخدامه من نفس الجهاز حتى لو تم إنشاء حساب جديد.</div>
-            <div>• يمكنك تحديد مدة التفعيل والانتهاء، وبعد انتهائها يتوقف الكوبون تلقائيًا.</div>
+            <div>• {{ t('admin.couponRule1') }}</div>
+            <div>• {{ t('admin.couponRule2') }}</div>
+            <div>• {{ t('admin.couponRule3') }}</div>
+            <div>• {{ t('admin.couponRule4') }}</div>
           </div>
         </div>
 
         <div class="grid gap-4">
           <UiInput
             v-model="form.code"
-            label="كود الكوبون"
-            hint="هذا هو الكود الذي يكتبه الزبون داخل السلة، مثل: SAVE10 أو EYE30"
-            placeholder="مثال: SAVE10"
+            :label="t('admin.couponCode')"
+            :hint="t('admin.couponCodeHint')"
+            placeholder="SAVE10"
           />
 
           <UiInput
             v-model="form.title"
-            label="اسم الكوبون"
-            hint="اسم داخلي واضح يظهر لك داخل الإدارة ويساعدك تميّز الكوبون بسرعة"
-            placeholder="مثال: خصم منتجات العناية بالعين"
+            :label="t('admin.couponTitle')"
+            :hint="t('admin.couponTitleHint')"
+            :placeholder="t('admin.couponTitle')"
           />
 
           <div class="grid gap-4 md:grid-cols-2">
@@ -61,8 +61,8 @@
               type="number"
               min="0"
               max="100"
-              label="نسبة الخصم"
-              hint="أدخل نسبة الخصم التي ستُخصم من الطلب. مثال: 10 يعني خصم 10%"
+              :label="t('admin.discountPercent')"
+              :hint="t('admin.discountPercentHint')"
               placeholder="مثال: 10"
             />
 
@@ -70,8 +70,8 @@
               v-model.number="form.maxUses"
               type="number"
               min="0"
-              label="أقصى عدد للاستخدام"
-              hint="هذا الرقم يحدد كم مرة يمكن استخدام الكوبون إجمالًا. إذا كان 0 يصبح بدون حد"
+              :label="t('admin.maxUses')"
+              :hint="t('admin.maxUsesHint')"
               placeholder="مثال: 100"
             />
           </div>
@@ -79,7 +79,7 @@
           <div class="grid gap-4 md:grid-cols-2">
             <div class="rounded-2xl border border-app bg-surface-2 p-4">
               <label class="mb-2 block text-sm font-bold rtl-text text-[rgb(var(--text))]">
-                بداية التفعيل
+                {{ t('admin.activationStart') }}
               </label>
               <input
                 v-model="form.startsAtUtc"
@@ -87,13 +87,13 @@
                 class="w-full rounded-2xl border border-app bg-surface px-4 py-3 text-sm text-[rgb(var(--text))] outline-none transition focus:ring-0"
               />
               <p class="mt-2 text-xs text-muted rtl-text">
-                اختياري. إذا تركته فارغًا يبدأ الكوبون مباشرة.
+                {{ t('admin.activationStartHint') }}
               </p>
             </div>
 
             <div class="rounded-2xl border border-app bg-surface-2 p-4">
               <label class="mb-2 block text-sm font-bold rtl-text text-[rgb(var(--text))]">
-                نهاية التفعيل
+                {{ t('admin.activationEnd') }}
               </label>
               <input
                 v-model="form.endsAtUtc"
@@ -101,7 +101,7 @@
                 class="w-full rounded-2xl border border-app bg-surface px-4 py-3 text-sm text-[rgb(var(--text))] outline-none transition focus:ring-0"
               />
               <p class="mt-2 text-xs text-muted rtl-text">
-                اختياري. بعد هذا التاريخ يصبح الكوبون غير صالح تلقائيًا.
+                {{ t('admin.activationEndHint') }}
               </p>
             </div>
           </div>
@@ -110,18 +110,18 @@
             class="flex items-center gap-2 rounded-2xl border border-app bg-surface-2 px-4 py-3 text-sm text-[rgb(var(--text))]"
           >
             <input v-model="form.isActive" type="checkbox" />
-            <span class="rtl-text font-semibold">الكوبون مفعّل حاليًا</span>
+            <span class="rtl-text font-semibold">{{ t('admin.couponActiveNow') }}</span>
           </label>
 
           <div class="rounded-2xl border border-app bg-surface-2 p-4 text-sm text-muted rtl-text">
-            يتم منع إعادة استخدام الكوبون من نفس الجهاز حتى لو تم إنشاء حساب جديد.
+            {{ t('admin.couponDeviceLimit') }}
           </div>
 
           <div class="flex flex-wrap gap-3">
             <UiButton @click="save">
-              {{ editingId ? 'حفظ التعديلات' : 'إنشاء الكوبون' }}
+              {{ editingId ? t('admin.saveChanges') : t('admin.createCoupon') }}
             </UiButton>
-            <UiButton variant="ghost" @click="resetForm">إلغاء</UiButton>
+            <UiButton variant="ghost" @click="resetForm">{{ t('common.cancel') }}</UiButton>
           </div>
         </div>
       </div>
@@ -129,16 +129,16 @@
       <div class="panel-shell rounded-[30px] border border-app bg-surface p-5 shadow-sm">
         <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <div class="text-sm font-bold rtl-text text-[rgb(var(--text))]">قائمة الكوبونات</div>
+            <div class="text-sm font-bold rtl-text text-[rgb(var(--text))]">{{ t('admin.couponList') }}</div>
             <div class="mt-1 text-sm text-muted rtl-text">
-              {{ filteredItems.length }} من أصل {{ items.length }} كوبون
+              {{ filteredItems.length }} {{ t('admin.couponCountFrom') }} {{ items.length }} {{ t('admin.couponsLabel') }}
             </div>
           </div>
 
           <input
             v-model="search"
             class="w-full rounded-2xl border border-app bg-surface px-4 py-3 text-sm text-[rgb(var(--text))] outline-none transition focus:ring-0 md:w-[280px]"
-            placeholder="بحث بالكود أو الاسم"
+            :placeholder="t('admin.searchByCodeOrTitle')"
           />
         </div>
 
@@ -147,10 +147,10 @@
           class="rounded-3xl border border-app bg-surface-2 p-8 text-center"
         >
           <div class="text-lg font-bold rtl-text text-[rgb(var(--text))]">
-            لا توجد كوبونات مطابقة
+            {{ t('common.noResults') || 'لا توجد نتائج' }}
           </div>
           <div class="mt-2 text-sm text-muted rtl-text">
-            جرّب تغيير البحث أو أنشئ كوبون جديد من النموذج.
+            {{ t('common.tryDifferentSearch') || 'جرّب تغيير البحث أو أنشئ كوبون جديد من النموذج.' }}
           </div>
         </div>
 
@@ -175,7 +175,7 @@
                         : 'bg-red-500/15 text-red-600 dark:text-red-300'
                     "
                   >
-                    {{ item.isActive ? 'مفعّل' : 'متوقف' }}
+                    {{ item.isActive ? t('admin.active') : t('admin.disabled') }}
                   </span>
                 </div>
 
@@ -185,21 +185,21 @@
 
                 <div class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                   <div class="rounded-2xl border border-app bg-surface px-3 py-2 text-sm rtl-text">
-                    <div class="text-muted">نسبة الخصم</div>
+                    <div class="text-muted">{{ t('admin.discountPercent') }}</div>
                     <div class="mt-1 font-bold text-[rgb(var(--text))]">
                       {{ item.discountPercent }}%
                     </div>
                   </div>
 
                   <div class="rounded-2xl border border-app bg-surface px-3 py-2 text-sm rtl-text">
-                    <div class="text-muted">أقصى عدد للاستخدام</div>
+                    <div class="text-muted">{{ t('admin.maxUses') }}</div>
                     <div class="mt-1 font-bold text-[rgb(var(--text))]">
-                      {{ item.maxUses ?? 'غير محدود' }}
+                      {{ item.maxUses ?? t('common.unlimited') }}
                     </div>
                   </div>
 
                   <div class="rounded-2xl border border-app bg-surface px-3 py-2 text-sm rtl-text">
-                    <div class="text-muted">عدد الاستخدامات</div>
+                    <div class="text-muted">{{ t('admin.totalUses') }}</div>
                     <div class="mt-1 font-bold text-[rgb(var(--text))]">
                       {{ item.usedCount ?? 0 }}
                     </div>
@@ -208,24 +208,24 @@
 
                 <div class="mt-3 grid gap-2 sm:grid-cols-2 text-sm">
                   <div class="rounded-2xl border border-app bg-surface px-3 py-2 rtl-text">
-                    <div class="text-muted">بداية التفعيل</div>
+                    <div class="text-muted">{{ t('admin.activationStart') }}</div>
                     <div class="mt-1 font-semibold text-[rgb(var(--text))]">
-                      {{ item.startsAtUtc ? fmtDate(item.startsAtUtc) : 'مباشر' }}
+                      {{ item.startsAtUtc ? fmtDate(item.startsAtUtc) : (t('common.immediate') || 'مباشر') }}
                     </div>
                   </div>
 
                   <div class="rounded-2xl border border-app bg-surface px-3 py-2 rtl-text">
-                    <div class="text-muted">نهاية التفعيل</div>
+                    <div class="text-muted">{{ t('admin.activationEnd') }}</div>
                     <div class="mt-1 font-semibold text-[rgb(var(--text))]">
-                      {{ item.endsAtUtc ? fmtDate(item.endsAtUtc) : 'بدون نهاية' }}
+                      {{ item.endsAtUtc ? fmtDate(item.endsAtUtc) : (t('common.noEnd') || 'بدون نهاية') }}
                     </div>
                   </div>
                 </div>
               </div>
 
               <div class="flex shrink-0 gap-2 self-start">
-                <UiButton size="sm" variant="ghost" @click="editItem(item)">تعديل</UiButton>
-                <UiButton size="sm" variant="ghost" @click="removeItem(item.id)">حذف</UiButton>
+                <UiButton size="sm" variant="ghost" @click="editItem(item)">{{ t('common.edit') }}</UiButton>
+                <UiButton size="sm" variant="ghost" @click="removeItem(item.id)">{{ t('common.delete') }}</UiButton>
               </div>
             </div>
           </div>
@@ -356,53 +356,13 @@ function fmtDate(v?: string) {
 onMounted(load)
 </script>
 <style scoped>
-.coupons-admin-page{
-  --coupon-shadow: 0 22px 60px rgba(12, 16, 32, .14);
-}
-.coupons-hero, .panel-shell{
-  box-shadow: var(--coupon-shadow);
-}
-.coupons-hero{
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-rgb), .88));
-}
-.coupons-hero::after{
-  content:'';
-  position:absolute;
-  inset:auto 0 -85px auto;
-  width:230px;
-  height:230px;
-  border-radius:999px;
-  background:radial-gradient(circle, rgba(var(--primary), .15), transparent 68%);
-  pointer-events:none;
-}
-.panel-shell{
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .97), rgba(var(--surface-rgb), .90));
-}
-.coupon-stat-card{
-  border-radius:22px;
-  border:1px solid rgba(var(--border), .95);
-  background: linear-gradient(180deg, rgba(var(--surface-2-rgb), .96), rgba(var(--surface-2-rgb), .84));
-  padding:14px 16px;
-}
-.coupon-stat-card__label{
-  font-size:.78rem;
-  color:rgb(var(--muted));
-  font-weight:800;
-}
-.coupon-stat-card__value{
-  margin-top:.35rem;
-  font-size:1.8rem;
-  font-weight:950;
-  color:rgb(var(--fg));
-}
-.coupon-card{
-  background: linear-gradient(180deg, rgba(var(--surface-2-rgb), .98), rgba(var(--surface-rgb), .94));
-  box-shadow: 0 14px 30px rgba(10, 14, 26, .08);
-}
-@media (max-width: 768px){
-  .coupons-hero, .panel-shell{ border-radius:24px !important; }
-  .coupon-stat-card{ border-radius:18px; }
-}
+.coupons-admin-page{ --coupon-shadow: 0 26px 84px rgba(12,16,32,.16); }
+.coupons-hero,.panel-shell{ position:relative; overflow:hidden; border-radius:30px; border:1px solid rgba(var(--border), .95); background:linear-gradient(180deg, rgba(var(--surface-rgb), .97), rgba(var(--surface-rgb), .90)); box-shadow:var(--coupon-shadow); }
+.coupons-hero::before,.panel-shell::before{ content:''; position:absolute; inset:0; pointer-events:none; background-image: linear-gradient(rgba(var(--border), .18) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--border), .14) 1px, transparent 1px); background-size: 100% 84px, 84px 100%; mask-image: linear-gradient(180deg, rgba(0,0,0,.18), transparent 18%, transparent 82%, rgba(0,0,0,.14)); opacity:.22; }
+.coupons-hero > *, .panel-shell > *{ position:relative; z-index:1; }
+.coupons-hero::after{ content:''; position:absolute; inset:auto auto -100px -40px; width:260px; height:260px; border-radius:999px; background:radial-gradient(circle, rgba(var(--primary), .16), transparent 68%); pointer-events:none; }
+.coupon-stat-card{ border-radius:22px; border:1px solid rgba(var(--border), .92); background:rgba(var(--surface-2-rgb), .88); padding:14px 16px; min-width:120px; }
+.coupon-stat-card__label{ font-size:12px; color:rgb(var(--muted)); font-weight:800; }
+.coupon-stat-card__value{ font-size:2rem; line-height:1; font-weight:1000; margin-top:8px; }
+@media (max-width:768px){ .coupons-hero,.panel-shell{ border-radius:22px !important; } .coupons-hero::before,.panel-shell::before{ display:none; } }
 </style>

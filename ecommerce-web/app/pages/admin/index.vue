@@ -6,16 +6,16 @@
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <div class="text-xl font-extrabold rtl-text">{{ t('admin.dashboard') }}</div>
-          <div class="text-sm admin-muted rtl-text">{{ t('admin.dashboardHint') }}</div>
+          <div class="text-sm admin-muted rtl-text">{{ t('admin.dashboardDesignHint') }}</div>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
           <div class="flex gap-2">
             <button class="admin-chip" :class="range==='daily' ? 'is-active' : ''" type="button" @click="range='daily'">
-              يومي
+              {{ t('admin.dailyLabel') }}
             </button>
             <button class="admin-chip" :class="range==='monthly' ? 'is-active' : ''" type="button" @click="range='monthly'">
-              شهري
+              {{ t('admin.monthlyLabel') }}
             </button>
           </div>
 
@@ -59,9 +59,9 @@
 
       <div class="kpi-card">
         <div class="min-w-0">
-          <div class="kpi-label rtl-text">نفاد الكمية</div>
+          <div class="kpi-label rtl-text">{{ t('admin.outOfStock') }}</div>
           <div class="kpi-value keep-ltr">{{ stats.outOfStockCount }}</div>
-          <div class="kpi-sub rtl-text">منخفض المخزون: {{ stats.lowStockCount }}</div>
+          <div class="kpi-sub rtl-text">{{ t('admin.lowStock') }}: {{ stats.lowStockCount }}</div>
         </div>
       </div>
     </div>
@@ -70,7 +70,7 @@
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
       <div class="admin-box xl:col-span-2">
         <div class="flex items-center justify-between gap-3 mb-4">
-          <div class="font-extrabold rtl-text">النشاط {{ range==='daily' ? 'اليومي' : 'الشهري' }}</div>
+          <div class="font-extrabold rtl-text">{{ t('admin.activityTitle') }} {{ range==='daily' ? t('admin.dailyLabel') : t('admin.monthlyLabel') }}</div>
           <div class="admin-muted text-sm rtl-text">
             {{ range==='daily' ? $t('admin.last30Days') : $t('admin.last12Months') }}
           </div>
@@ -86,15 +86,15 @@
 
         <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
           <div class="mini-stat">
-            <div class="admin-muted text-xs rtl-text">طلبات</div>
+            <div class="admin-muted text-xs rtl-text">{{ t('admin.activityOrders') }}</div>
             <div class="font-black keep-ltr">{{ activityTotals.orders }}</div>
           </div>
           <div class="mini-stat">
-            <div class="admin-muted text-xs rtl-text">مستخدمين جدد</div>
+            <div class="admin-muted text-xs rtl-text">{{ t('admin.activityUsers') }}</div>
             <div class="font-black keep-ltr">{{ activityTotals.users }}</div>
           </div>
           <div class="mini-stat">
-            <div class="admin-muted text-xs rtl-text">زيارات</div>
+            <div class="admin-muted text-xs rtl-text">{{ t('admin.activityVisits') }}</div>
             <div class="font-black keep-ltr">{{ activityTotals.visits }}</div>
           </div>
         </div>
@@ -156,7 +156,7 @@
           </div>
 
           <div class="topbox">
-            <div class="topbox-title rtl-text">📦 منخفض المخزون</div>
+            <div class="topbox-title rtl-text">📦 {{ t('admin.lowStock') }}</div>
             <div v-if="overview.lowStock.length===0" class="admin-muted rtl-text">—</div>
             <div v-else class="metric-table">
               <div v-for="x in overview.lowStock.slice(0,5)" :key="x.productId" class="metric-table__row">
@@ -166,7 +166,7 @@
           </div>
 
           <div class="topbox">
-            <div class="topbox-title rtl-text">🚫 نافد المخزون</div>
+            <div class="topbox-title rtl-text">🚫 {{ t('admin.outOfStock') }}</div>
             <div v-if="overview.outOfStock.length===0" class="admin-muted rtl-text">—</div>
             <div v-else class="metric-table">
               <div v-for="x in overview.outOfStock.slice(0,5)" :key="x.productId" class="metric-table__row">
@@ -176,7 +176,7 @@
           </div>
 
           <NuxtLink class="admin-link rtl-text" to="/admin/insights">
-            عرض التفاصيل في صفحة Insights →
+            {{ t('admin.viewInsightsDetails') }}
           </NuxtLink>
         </div>
       </div>
@@ -227,8 +227,8 @@
           </NuxtLink>
 
           <NuxtLink class="admin-action" to="/admin/insights">
-            <div class="font-extrabold rtl-text">Insights</div>
-            <div class="admin-muted text-sm rtl-text">تحليلات المفضلة/الزيارة/الشراء</div>
+            <div class="font-extrabold rtl-text">{{ t('admin.insightsShortcutTitle') }}</div>
+            <div class="admin-muted text-sm rtl-text">{{ t('admin.insightsShortcutHint') }}</div>
           </NuxtLink>
         </div>
       </div>
@@ -415,115 +415,31 @@ loadAll()
 
 
 <style scoped>
-.admin-overview-page{
-  --admin-shadow: 0 24px 70px rgba(12, 16, 32, .16);
-}
-.admin-box{
-  border-radius: 26px;
-  border: 1px solid rgba(var(--border), .95);
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .97), rgba(var(--surface-rgb), .89));
-  padding: 18px;
-  box-shadow: var(--admin-shadow);
-}
-.admin-box--hero{
-  position: relative;
-  overflow: hidden;
-}
-.admin-box--hero::after{
-  content: '';
-  position: absolute;
-  inset: auto auto -90px -30px;
-  width: 250px;
-  height: 250px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(var(--primary), .16), transparent 67%);
-  pointer-events: none;
-}
+.admin-overview-page{ --admin-shadow: 0 26px 84px rgba(12, 16, 32, .16); }
+.admin-box{ position:relative; overflow:hidden; border-radius: 28px; border: 1px solid rgba(var(--border), .95); background: linear-gradient(180deg, rgba(var(--surface-rgb), .97), rgba(var(--surface-rgb), .90)); padding: 18px; box-shadow: var(--admin-shadow); }
+.admin-box::before{ content:''; position:absolute; inset:0; pointer-events:none; background-image: linear-gradient(rgba(var(--border), .18) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--border), .14) 1px, transparent 1px); background-size: 100% 84px, 84px 100%; mask-image: linear-gradient(180deg, rgba(0,0,0,.18), transparent 18%, transparent 82%, rgba(0,0,0,.14)); opacity:.22; }
+.admin-box > *{ position:relative; z-index:1; }
+.admin-box--hero{ position: relative; overflow: hidden; }
+.admin-box--hero::after{ content: ''; position: absolute; inset: auto auto -90px -30px; width: 250px; height: 250px; border-radius: 999px; background: radial-gradient(circle, rgba(var(--primary), .16), transparent 67%); pointer-events: none; }
 .admin-muted{ color: rgb(var(--muted)); }
-.admin-error{
-  border: 1px solid rgba(255,0,0,.25);
-  background: rgba(255,0,0,.08);
-  color: #ffb4b4;
-  padding: 12px 14px;
-  border-radius: 16px;
-}
-.admin-chip{
-  border-radius: 999px;
-  border: 1px solid rgb(var(--border));
-  padding: 9px 14px;
-  font-weight: 900;
-  font-size: 12px;
-  background: rgba(255,255,255,.03);
-}
-.admin-chip.is-active{
-  background: rgba(124,58,237,.18);
-  border-color: rgba(124,58,237,.45);
-}
-.kpi-card{
-  border-radius: 24px;
-  border: 1px solid rgba(var(--border), .95);
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .92), rgba(var(--surface-2-rgb), .86));
-  padding: 16px;
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  box-shadow: 0 14px 34px rgba(0,0,0,.10);
-}
-.kpi-icon{
-  width: 46px; height: 46px;
-  border-radius: 16px;
-  display:flex; align-items:center; justify-content:center;
-  background: rgba(124,58,237,.18);
-  border: 1px solid rgba(124,58,237,.35);
-}
+.admin-error{ border: 1px solid rgba(255,0,0,.25); background: rgba(255,0,0,.08); color: #ffb4b4; padding: 12px 14px; border-radius: 16px; }
+.admin-chip{ border-radius: 999px; border: 1px solid rgb(var(--border)); padding: 9px 14px; font-weight: 900; font-size: 12px; background: rgba(var(--surface-2-rgb), .86); }
+.admin-chip.is-active{ background: rgba(124,58,237,.18); border-color: rgba(124,58,237,.45); box-shadow: 0 10px 22px rgba(124,58,237,.10); }
+.kpi-card{ position:relative; overflow:hidden; border-radius: 24px; border: 1px solid rgba(var(--border), .95); background: linear-gradient(180deg, rgba(var(--surface-rgb), .92), rgba(var(--surface-2-rgb), .86)); padding: 16px; display: flex; gap: 12px; align-items: center; box-shadow: 0 14px 34px rgba(0,0,0,.10); }
+.kpi-card::after{ content:''; position:absolute; inset-inline:16px; bottom:0; height:1px; background: linear-gradient(90deg, transparent, rgba(var(--border), .5), transparent); }
+.kpi-icon{ width: 46px; height: 46px; border-radius: 16px; display:flex; align-items:center; justify-content:center; background: rgba(124,58,237,.18); border: 1px solid rgba(124,58,237,.35); }
 .kpi-ic{ width: 22px; height: 22px; }
 .kpi-label{ font-size: 12px; font-weight: 800; color: rgb(var(--muted)); }
 .kpi-value{ font-size: 30px; font-weight: 1000; margin-top: 2px; }
 .kpi-sub{ font-size: 12px; color: rgb(var(--muted)); margin-top: 4px; }
 .bars-shell{ overflow-x:auto; padding-bottom:6px; }
-.bars{
-  height: 190px;
-  min-width: 520px;
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  gap: 8px;
-  align-items: end;
-}
-.bar{
-  position: relative;
-  height: 100%;
-  border-radius: 18px;
-  border: 1px solid rgb(var(--border));
-  background: rgba(255,255,255,.02);
-  overflow: hidden;
-}
-.bar-fill{
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  background: linear-gradient(180deg, rgba(124,58,237,.32), rgba(124,58,237,.52));
-  border-top: 1px solid rgba(124,58,237,.45);
-}
-.bar-label{
-  position: absolute;
-  bottom: 6px;
-  left: 0; right: 0;
-  text-align: center;
-  font-size: 10px;
-  color: rgba(255,255,255,.7);
-}
-.mini-stat{
-  border-radius: 18px;
-  border: 1px solid rgb(var(--border));
-  background: rgba(255,255,255,.02);
-  padding: 12px 14px;
-}
-.topbox{
-  border-radius: 18px;
-  border: 1px solid rgb(var(--border));
-  background: rgba(255,255,255,.02);
-  padding: 12px 14px;
-}
+.bars{ height: 190px; min-width: 520px; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; align-items: end; }
+.bar{ position: relative; height: 100%; border-radius: 18px; border: 1px solid rgb(var(--border)); background: rgba(255,255,255,.02); overflow: hidden; }
+.bar-fill{ position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(180deg, rgba(124,58,237,.32), rgba(124,58,237,.52)); border-top: 1px solid rgba(124,58,237,.45); }
+.bar-label{ position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 10px; color: rgba(255,255,255,.7); }
+.mini-stat,.topbox,.order-row,.admin-action,.admin-link,.admin-ghost{ border-radius: 18px; border: 1px solid rgba(var(--border), .9); background: rgba(var(--surface-2-rgb), .82); }
+.mini-stat{ padding: 12px 14px; }
+.topbox{ padding: 14px; }
 .topbox-title{ font-weight: 900; margin-bottom: 8px; }
 .metric-table{display:grid;gap:8px;}
 .metric-table__head,.metric-table__row{display:grid;grid-template-columns:36px minmax(0,1fr) 66px;gap:10px;align-items:center;}
@@ -531,19 +447,11 @@ loadAll()
 .metric-table__row{padding-top:10px;border-top:1px solid rgba(var(--border), .75);}
 .metric-rank,.rank-badge{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;background:rgba(124,58,237,.16);border:1px solid rgba(124,58,237,.34);font-weight:900;}
 .orders{display:grid;gap:10px;}
-.order-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border-radius:18px;border:1px solid rgba(var(--border), .88);background:rgba(var(--surface-2-rgb), .74);}
+.order-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;}
 .order-badge{padding:6px 10px;border-radius:999px;font-size:11px;font-weight:900;border:1px solid rgba(var(--border), .9);}
-.order-badge.ok{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.4);}
-.order-badge.warn{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.38);}
-.order-badge.bad{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.38);}
-.order-badge.neutral{background:rgba(255,255,255,.05);}
-.admin-action,.admin-link,.admin-ghost{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 14px;border-radius:16px;font-weight:800;border:1px solid rgb(var(--border));background:rgb(var(--surface-2));}
+.order-badge.ok{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.4);} .order-badge.warn{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.38);} .order-badge.bad{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.38);} .order-badge.neutral{background:rgba(255,255,255,.05);}
+.admin-action,.admin-link,.admin-ghost{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 14px;font-weight:800;}
 .admin-link{background:rgba(var(--primary), .1);border-color:rgba(var(--primary), .3);}
-@media (max-width: 768px){
-  .admin-box{ border-radius:22px; padding:14px; }
-  .kpi-card{ border-radius:20px; }
-  .orders{ gap:8px; }
-  .order-row{ align-items:flex-start; flex-direction:column; }
-}
+@media (max-width: 768px){ .admin-box{ border-radius:22px; padding:14px; } .admin-box::before{ display:none; } .kpi-card{ border-radius:20px; } .orders{ gap:8px; } .order-row{ align-items:flex-start; flex-direction:column; } }
 </style>
 

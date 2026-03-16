@@ -58,7 +58,7 @@
       </div>
 
       <div class="admin-box">
-        <div class="table-card__title rtl-text">📦 منخفض المخزون</div>
+        <div class="table-card__title rtl-text">📦 {{ t('admin.lowStock') }}</div>
         <div v-if="lowStock.length===0" class="admin-muted rtl-text">—</div>
         <div v-else class="table-card">
           <div v-for="(x, idx) in lowStock" :key="x.productId || idx" class="table-card__row">
@@ -70,7 +70,7 @@
       </div>
 
       <div class="admin-box">
-        <div class="table-card__title rtl-text">🚫 نافد المخزون</div>
+        <div class="table-card__title rtl-text">🚫 {{ t('admin.outOfStock') }}</div>
         <div v-if="outOfStock.length===0" class="admin-muted rtl-text">—</div>
         <div v-else class="table-card">
           <div v-for="(x, idx) in outOfStock" :key="x.productId || idx" class="table-card__row">
@@ -219,53 +219,23 @@ loadAll()
 </script>
 
 <style scoped>
-.insights-admin-page{
-  --insight-shadow: 0 24px 70px rgba(12, 16, 32, .16);
-}
-.admin-box{
-  border-radius: 26px;
-  border: 1px solid rgba(var(--border), .95);
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .97), rgba(var(--surface-rgb), .89));
-  padding: 18px;
-  box-shadow: var(--insight-shadow);
-}
-.admin-box--hero{ position:relative; overflow:hidden; }
+.insights-admin-page{ --insight-shadow: 0 26px 84px rgba(12, 16, 32, .16); }
+.admin-box{ position:relative; overflow:hidden; border-radius: 28px; border: 1px solid rgba(var(--border), .95); background: linear-gradient(180deg, rgba(var(--surface-rgb), .97), rgba(var(--surface-rgb), .90)); padding: 18px; box-shadow: var(--insight-shadow); }
+.admin-box::before{ content:''; position:absolute; inset:0; pointer-events:none; background-image: linear-gradient(rgba(var(--border), .18) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--border), .14) 1px, transparent 1px); background-size: 100% 84px, 84px 100%; mask-image: linear-gradient(180deg, rgba(0,0,0,.18), transparent 18%, transparent 82%, rgba(0,0,0,.14)); opacity:.22; }
+.admin-box > *{ position:relative; z-index:1; }
 .admin-box--hero::after{ content:''; position:absolute; inset:auto auto -90px -30px; width:240px; height:240px; border-radius:999px; background:radial-gradient(circle, rgba(var(--primary), .16), transparent 68%); pointer-events:none; }
-.sub-box{
-  border-radius: 20px;
-  border: 1px solid rgba(var(--border), .95);
-  background: rgba(var(--surface-2-rgb), .9);
-  padding: 14px;
-}
+.sub-box{ border-radius: 20px; border: 1px solid rgba(var(--border), .95); background: rgba(var(--surface-2-rgb), .9); padding: 14px; }
 .label{ font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: rgb(var(--muted)); }
 .admin-muted{ color: rgb(var(--muted)); }
-.admin-ghost{
-  padding: 10px 14px;
-  border-radius: 16px;
-  border: 1px solid rgb(var(--border));
-  background: rgb(var(--surface-2));
-  color: rgb(var(--fg));
-  font-weight: 800;
-}
-.admin-error{
-  border-radius: 16px;
-  border: 1px solid rgba(239,68,68,.35);
-  background: rgba(239,68,68,.10);
-  padding: 12px 14px;
-}
+.admin-ghost{ padding: 10px 14px; border-radius: 16px; border: 1px solid rgb(var(--border)); background: rgb(var(--surface-2)); color: rgb(var(--fg)); font-weight: 800; }
+.admin-error{ border-radius: 16px; border: 1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.10); padding: 12px 14px; }
 .table-card{display:grid;gap:8px;}
 .table-card__title{font-weight:900;margin-bottom:12px;}
 .table-card__head,.table-card__row{display:grid;grid-template-columns:40px minmax(0,1fr) 76px;gap:10px;align-items:center;}
 .table-card__head{padding-bottom:8px;border-bottom:1px dashed rgb(var(--border));font-size:11px;color:rgb(var(--muted));text-transform:uppercase;letter-spacing:.06em;}
-.table-card__row{padding:10px 0;border-top:1px solid rgba(var(--border),.7);}
-.table-card__row:first-of-type{border-top:none;}
+.table-card__row{padding:10px 0;border-top:1px solid rgba(var(--border),.7);} .table-card__row:first-of-type{border-top:none;}
 .table-card--wide .table-card__head--wide,.table-card--wide .table-card__row--wide{grid-template-columns:40px minmax(0,1.5fr) 64px 64px 64px;}
 .rank-badge{width:30px;height:30px;border-radius:999px;display:grid;place-items:center;background:rgba(124,58,237,.16);border:1px solid rgba(124,58,237,.34);font-weight:900;}
-.table-scroll{overflow-x:auto;}
-.table-scroll > .grid{min-width:520px;}
-@media (max-width: 768px){
-  .admin-box{ border-radius:22px; padding:14px; }
-  .table-card__head,.table-card__row{grid-template-columns:32px minmax(0,1fr) 52px;gap:8px;}
-  .table-card--wide .table-card__head--wide,.table-card--wide .table-card__row--wide{grid-template-columns:28px minmax(0,1fr) 48px 48px 48px;}
-}
+.table-scroll{overflow-x:auto;} .table-scroll > .grid{min-width:520px;}
+@media (max-width: 768px){ .admin-box{ border-radius:22px; padding:14px; } .admin-box::before{ display:none; } .table-card__head,.table-card__row{grid-template-columns:32px minmax(0,1fr) 52px;gap:8px;} .table-card--wide .table-card__head--wide,.table-card--wide .table-card__row--wide{grid-template-columns:28px minmax(0,1fr) 48px 48px 48px;} }
 </style>

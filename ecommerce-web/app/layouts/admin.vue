@@ -60,8 +60,8 @@
       </div>
     </header>
 
-    <div class="mx-auto max-w-7xl px-3 sm:px-4 py-4 md:py-6">
-      <div class="relative flex gap-4">
+    <div class="mx-auto max-w-[1480px] px-3 sm:px-4 py-4 md:py-6">
+      <div class="relative admin-shell gap-4 xl:gap-6">
         <!-- Overlay (mobile) -->
         <div
           v-if="open"
@@ -73,9 +73,8 @@
         <aside
           class="fixed inset-y-0 start-0 z-50
                  w-[82vw] max-w-[320px]
-                 bg-surface border-e border-app
-                 shadow-2xl md:shadow-none
-                 md:static md:w-72
+                 admin-sidebar-shell shadow-2xl md:shadow-none
+                 md:static md:w-[290px]
                  transition-transform duration-200"
           :class="open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
           :style="safeAreaTopStyle"
@@ -118,7 +117,7 @@
         </aside>
 
         <!-- Main -->
-        <main class="flex-1 min-w-0 overflow-x-hidden">
+        <main class="flex-1 min-w-0 overflow-x-hidden admin-main-shell">
           <slot />
         </main>
       </div>
@@ -179,21 +178,85 @@ const safeAreaTopStyle = computed(() => ({
 </script>
 
 <style scoped>
+.admin-shell{
+  display:flex;
+  align-items:flex-start;
+}
+.admin-sidebar-shell{
+  overflow:hidden;
+  border-inline-end: 1px solid rgba(var(--border), .95);
+  background:
+    linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-rgb), .92)),
+    radial-gradient(circle at top, rgba(var(--primary), .10), transparent 42%);
+  border-radius: 30px;
+}
+.admin-sidebar-shell::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background: linear-gradient(180deg, rgba(255,255,255,.035), transparent 24%, transparent 76%, rgba(255,255,255,.02));
+}
+.admin-main-shell{
+  position:relative;
+}
+.admin-main-shell::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius: 30px;
+  pointer-events:none;
+  background-image:
+    linear-gradient(rgba(var(--border), .22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--border), .18) 1px, transparent 1px);
+  background-size: 100% 84px, 84px 100%;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,.22), transparent 22%, transparent 78%, rgba(0,0,0,.12));
+  opacity:.22;
+}
 .admin-link{
+  position:relative;
   display:flex;
   align-items:center;
-  gap:.75rem;
-  padding:.85rem 1rem;
-  border-radius:1.25rem;
-  border:1px solid rgb(var(--border));
-  background: rgb(var(--surface-2));
-  transition: filter .15s ease, background .15s ease, border-color .15s ease;
+  gap:.8rem;
+  padding: 1rem 1.05rem;
+  border-radius: 1.35rem;
+  border:1px solid rgba(var(--border), .92);
+  background: linear-gradient(180deg, rgba(var(--surface-2-rgb), .92), rgba(var(--surface-rgb), .88));
+  box-shadow: 0 14px 34px rgba(8,10,20,.08);
+  transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
 }
-.admin-link:hover{ filter: brightness(1.03); }
-
+.admin-link::after{
+  content:'';
+  position:absolute;
+  inset-inline-start: 12px;
+  inset-inline-end: 12px;
+  bottom:0;
+  height:1px;
+  background: linear-gradient(90deg, transparent, rgba(var(--border), .55), transparent);
+}
+.admin-link:hover{
+  transform: translateY(-1px);
+  border-color: rgba(var(--primary), .24);
+  box-shadow: 0 18px 38px rgba(var(--primary), .08);
+}
 .router-link-active{
-  background: rgba(var(--primary), .12);
-  border-color: rgba(var(--primary), .35);
+  background: linear-gradient(180deg, rgba(var(--primary), .18), rgba(var(--primary), .11));
+  border-color: rgba(var(--primary), .42);
   color: rgb(var(--fg));
+  box-shadow: 0 18px 40px rgba(var(--primary), .14);
+}
+.router-link-active::before{
+  content:'';
+  position:absolute;
+  inset-inline-start: 0;
+  top:14%;
+  bottom:14%;
+  width:4px;
+  border-radius:999px;
+  background: rgb(var(--primary));
+}
+@media (max-width: 767px){
+  .admin-sidebar-shell{ border-radius: 0 24px 24px 0; }
+  .admin-main-shell::before{ display:none; }
 }
 </style>
