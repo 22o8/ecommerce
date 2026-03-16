@@ -140,7 +140,7 @@ body{
 }
 
 /* ==========================
-   Light-mode fixes (natural white, no washout)
+   Light-mode reset (restore natural light theme)
    ========================== */
 html.theme-dark{ --spark-rgb: 255,255,255; --snow-rgb: 255,255,255; }
 html.theme-light{ --spark-rgb: 160,120,40; --snow-rgb: 80,80,90; }
@@ -151,62 +151,80 @@ html.theme-light.theme-christmas{ --spark-rgb: 150,40,40; }
 html.theme-light.theme-valentines{ --spark-rgb: 210,60,90; }
 html.theme-light.theme-blackFriday{ --spark-rgb: 220,50,80; }
 
-/* Light base يرجع طبيعي وواضح مثل قبل بدون بهتان */
+/* رجوع الثيم الأبيض إلى ألوانه الطبيعية مثل النسخة القديمة */
 html.theme-light{
-  --bg: 252 252 254;
+  --bg: 255 245 250;
   --surface: 255 255 255;
-  --surface-2: 248 249 252;
+  --surface-2: 255 250 253;
   --surface-rgb: 255 255 255;
-  --surface-2-rgb: 248 249 252;
+  --surface-2-rgb: 255 250 253;
   --text: 18 18 24;
-  --muted: 98 104 120;
-  --border: 225 228 235;
+  --muted: 104 104 120;
+  --border: 226 228 242;
 }
 
-/* الخلفيات الموسمية بالـ light تبقى خفيفة جدًا */
+/* تأثيرات موسمية خفيفة جدًا حتى لا تغسل الواجهة */
 html.theme-light.theme-ramadan .bg-app{
   background:
-    radial-gradient(1200px 700px at 20% 10%, rgba(30, 120, 140, 0.045), transparent 58%),
-    radial-gradient(900px 600px at 80% 0%, rgba(196, 140, 40, 0.045), transparent 60%),
+    radial-gradient(1200px 700px at 20% 10%, rgba(30, 120, 140, 0.06), transparent 58%),
+    radial-gradient(900px 600px at 80% 0%, rgba(196, 140, 40, 0.07), transparent 60%),
+    radial-gradient(800px 520px at 40% 90%, rgba(20, 80, 120, 0.04), transparent 60%),
     rgb(var(--bg));
 }
 
 html.theme-light.theme-eid .bg-app{
   background:
-    radial-gradient(1200px 700px at 20% 10%, rgba(170, 120, 60, 0.045), transparent 58%),
-    radial-gradient(900px 600px at 80% 0%, rgba(120, 170, 160, 0.04), transparent 60%),
+    radial-gradient(1200px 700px at 20% 10%, rgba(170, 120, 60, 0.06), transparent 58%),
+    radial-gradient(900px 600px at 80% 0%, rgba(120, 170, 160, 0.05), transparent 60%),
+    radial-gradient(700px 520px at 50% 95%, rgba(255, 220, 140, 0.04), transparent 60%),
     rgb(var(--bg));
 }
 
 html.theme-light.theme-christmas .bg-app{
   background:
-    radial-gradient(1200px 700px at 15% 10%, rgba(200, 60, 60, 0.04), transparent 60%),
-    radial-gradient(900px 600px at 85% 0%, rgba(30, 140, 90, 0.04), transparent 60%),
+    radial-gradient(1200px 700px at 15% 10%, rgba(200, 60, 60, 0.05), transparent 60%),
+    radial-gradient(900px 600px at 85% 0%, rgba(30, 140, 90, 0.05), transparent 60%),
+    radial-gradient(900px 520px at 50% 100%, rgba(240, 240, 255, 0.04), transparent 65%),
     rgb(var(--bg));
 }
 
 html.theme-light.theme-valentines .bg-app{
   background:
-    radial-gradient(1200px 700px at 20% 10%, rgba(255, 77, 130, 0.05), transparent 58%),
-    radial-gradient(900px 600px at 80% 0%, rgba(255, 0, 96, 0.035), transparent 60%),
+    radial-gradient(1200px 700px at 20% 10%, rgba(255, 77, 130, 0.06), transparent 58%),
+    radial-gradient(900px 600px at 80% 0%, rgba(255, 0, 96, 0.04), transparent 60%),
+    radial-gradient(800px 520px at 45% 95%, rgba(255, 180, 200, 0.05), transparent 60%),
     rgb(var(--bg));
 }
 
 html.theme-light.theme-blackFriday .bg-app{
   background:
-    radial-gradient(1200px 700px at 20% 10%, rgba(255, 0, 70, 0.035), transparent 58%),
-    radial-gradient(900px 600px at 80% 0%, rgba(255, 200, 80, 0.03), transparent 60%),
+    radial-gradient(1200px 700px at 20% 10%, rgba(255, 0, 70, 0.04), transparent 58%),
+    radial-gradient(900px 600px at 80% 0%, rgba(255, 200, 80, 0.035), transparent 60%),
+    radial-gradient(800px 520px at 45% 95%, rgba(255, 0, 70, 0.025), transparent 60%),
     rgb(var(--bg));
 }
 
-/* نلغي الطبقة الثابتة التي كانت تغسل الواجهة بالـ light */
-html.theme-light.theme-ramadan body::before,
-html.theme-light.theme-eid body::before,
-html.theme-light.theme-christmas body::before,
-html.theme-light.theme-valentines body::before,
-html.theme-light.theme-blackFriday body::before{
-  content: none;
+/* حراسة إضافية: امنع أي overlay أو غسل بصري في الثيم الأبيض */
+html.theme-light::before,
+html.theme-light body::before,
+html.theme-light .bg-app::before,
+html.theme-light .bg-app::after{
+  content: none !important;
+  display: none !important;
+  background: none !important;
 }
+
+html.theme-light body,
+html.theme-light .bg-app{
+  background: rgb(var(--bg)) !important;
+  color: rgb(var(--text));
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+html.theme-light .bg-surface{ background: rgb(var(--surface)) !important; }
+html.theme-light .bg-surface-2{ background: rgb(var(--surface-2)) !important; }
+
 /* Subtle animated glow for primary CTA (works in both themes) */
 .btn-cta-animated{
   position: relative;
