@@ -635,6 +635,17 @@ const heroBrandBgSrc = heroImage
   font-size:.95rem;
   font-weight:800;
 }
+
+:global(html.theme-light) .hero-brand-bg-image{
+  opacity:.50;
+  filter: brightness(.62) contrast(1.03) saturate(.90) drop-shadow(0 20px 56px rgba(0,0,0,.18));
+}
+
+:global(html.theme-dark) .hero-brand-bg-image{
+  opacity:.36;
+  filter: brightness(.46) contrast(1.04) saturate(.88) drop-shadow(0 22px 68px rgba(0,0,0,.30));
+}
+
 @media (max-width: 1024px){
   .hero-brand-bg-image{
     inset-inline-end:.8rem;

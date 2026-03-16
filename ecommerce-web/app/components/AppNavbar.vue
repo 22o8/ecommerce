@@ -65,8 +65,13 @@
               </NuxtLink>
             </div>
           </div>
-          <UiButton variant="secondary" @click="goSearch">
-            <Icon name="mdi:arrow-right" class="keep-ltr" />
+          <UiButton
+            variant="primary"
+            class="h-12 w-12 rounded-2xl px-0 shadow-lg shadow-[rgb(var(--primary))]/20 hover:shadow-[rgb(var(--primary))]/30"
+            @click="goSearch"
+            :title="t('productsPage.searchPlaceholder')"
+          >
+            <Icon name="mdi:arrow-right" class="keep-ltr text-xl font-black" />
           </UiButton>
         </div>
 
