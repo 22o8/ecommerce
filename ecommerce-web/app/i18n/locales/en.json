@@ -373,9 +373,6 @@
     "catSerum": "Serums",
     "catSunscreen": "Sunscreen",
     "catMakeup": "Makeup",
-    "catToner": "Toner",
-    "catMask": "Mask",
-    "catEyeCare": "Eye Care",
     "catPerfume": "Perfumes",
     "brandShowcaseTitle": "Brand showcase",
     "brandShowcaseSubtitle": "Explore top brands in an interactive 3D view.",
@@ -384,7 +381,10 @@
     "catCleanser": "Cleanser",
     "subtitle": "Professional digital store",
     "featuredTab": "Featured",
-    "discountsTab": "Discounts"
+    "discountsTab": "Discounts",
+    "catToner": "Toner",
+    "catMask": "Mask",
+    "catEyeCare": "Eye Care"
   },
   "productsPage": {
     "title": "Products",

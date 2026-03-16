@@ -397,9 +397,6 @@
     "catSerum": "السيروم",
     "catSunscreen": "واقي الشمس",
     "catMakeup": "المكياج",
-    "catToner": "تونر",
-    "catMask": "ماسك",
-    "catEyeCare": "العناية بالعين",
     "catPerfume": "العطور",
     "brandShowcaseTitle": "عرض البراندات",
     "brandShowcaseSubtitle": "استكشف أفضل البراندات بطريقة تفاعلية ثلاثية الأبعاد.",
@@ -408,7 +405,10 @@
     "catCleanser": "غسول",
     "subtitle": "متجر رقمي احترافي",
     "featuredTab": "المميزة",
-    "discountsTab": "التخفيضات"
+    "discountsTab": "التخفيضات",
+    "catToner": "تونر",
+    "catMask": "ماسك",
+    "catEyeCare": "العناية بالعين"
   },
   "productsPage": {
     "title": "المنتجات",

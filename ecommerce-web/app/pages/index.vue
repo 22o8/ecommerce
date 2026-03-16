@@ -4,7 +4,7 @@ import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 
 const brandsStore = useBrandsStore()
 const productsStore = useProductsStore()
@@ -59,7 +59,7 @@ const categoryCards = [
   { key: 'moisturizer', icon: '🧴', labelKey: 'home.catMoisturizer' },
   { key: 'sunscreen', icon: '☀️', labelKey: 'home.catSunscreen' },
   { key: 'cleanser', icon: '🫧', labelKey: 'home.catCleanser' },
-  { key: 'toner', icon: '🫙', labelKey: 'home.catToner' },
+  { key: 'toner', icon: '🧊', labelKey: 'home.catToner' },
   { key: 'mask', icon: '✨', labelKey: 'home.catMask' },
   { key: 'eye-care', icon: '👁️', labelKey: 'home.catEyeCare' },
 ] as const

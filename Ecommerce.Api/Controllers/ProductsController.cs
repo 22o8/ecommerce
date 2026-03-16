@@ -20,35 +20,32 @@ public class ProductsController : ControllerBase
 
     private static string N(string? value) => (value ?? string.Empty).Trim().ToLowerInvariant();
 
-    private async Task<List<dynamic>> BuildProjectedProductsAsync(IQueryable<Domain.Entities.Product> query)
+    private IQueryable<object> BuildProjectedProducts(IQueryable<Domain.Entities.Product> query)
     {
-        return await query
-            .Select(p => new
-            {
-                p.Id,
-                p.Title,
-                p.Slug,
-                p.Description,
-                p.PriceIqd,
-                p.DiscountPercent,
-                finalPriceIqd = p.DiscountPercent > 0
-                    ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2)
-                    : p.PriceIqd,
-                p.PriceUsd,
-                p.RatingAvg,
-                p.Brand,
-                p.Category,
-                p.SubCategory,
-                p.StockQuantity,
-                p.IsCouponAllowed,
-                p.RatingCount,
-                p.CreatedAt,
-                viewCount = _db.ProductViews.Count(v => v.ProductId == p.Id),
-                favoriteCount = _db.Favorites.Count(f => f.ProductId == p.Id),
-                coverImage = p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault()
-            })
-            .Cast<dynamic>()
-            .ToListAsync();
+        return query.Select(p => new
+        {
+            p.Id,
+            p.Title,
+            p.Slug,
+            p.Description,
+            p.PriceIqd,
+            p.DiscountPercent,
+            finalPriceIqd = p.DiscountPercent > 0
+                ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2)
+                : p.PriceIqd,
+            p.PriceUsd,
+            p.RatingAvg,
+            p.Brand,
+            p.Category,
+            p.SubCategory,
+            p.StockQuantity,
+            p.IsCouponAllowed,
+            p.RatingCount,
+            p.CreatedAt,
+            viewCount = _db.ProductViews.Count(v => v.ProductId == p.Id),
+            favoriteCount = _db.Favorites.Count(f => f.ProductId == p.Id),
+            coverImage = p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault()
+        });
     }
 
     [HttpGet]
@@ -61,44 +58,42 @@ public class ProductsController : ControllerBase
         var category = N(query.Category);
         var subCategory = N(query.SubCategory);
 
-        var baseQuery = _db.Products
+        IQueryable<Domain.Entities.Product> baseQuery = _db.Products
             .AsNoTracking()
             .Where(p => p.IsPublished);
 
         if (!string.IsNullOrWhiteSpace(brand) && !brand.Equals("all", StringComparison.OrdinalIgnoreCase))
-        {
             baseQuery = baseQuery.Where(p => p.Brand != null && p.Brand.ToLower() == brand);
-        }
 
-        if (!string.IsNullOrWhiteSpace(category))
-        {
+        // التصنيف يجب أن يعتمد فقط على الحقل المخزن داخل المنتج
+        if (!string.IsNullOrWhiteSpace(category) && !category.Equals("all", StringComparison.OrdinalIgnoreCase))
             baseQuery = baseQuery.Where(p => p.Category != null && p.Category.ToLower() == category);
-        }
 
-        if (!string.IsNullOrWhiteSpace(subCategory))
-        {
+        if (!string.IsNullOrWhiteSpace(subCategory) && !subCategory.Equals("all", StringComparison.OrdinalIgnoreCase))
             baseQuery = baseQuery.Where(p => p.SubCategory != null && p.SubCategory.ToLower() == subCategory);
-        }
 
+        // البحث النصي يبقى مستقلاً ولا يغير منطق التصنيف
         if (!string.IsNullOrWhiteSpace(q))
         {
+            var like = $"%{q}%";
             baseQuery = baseQuery.Where(p =>
-                (p.Title != null && p.Title.ToLower().Contains(q)) ||
-                (p.Description != null && p.Description.ToLower().Contains(q)) ||
-                (p.Slug != null && p.Slug.ToLower().Contains(q)) ||
-                (p.Brand != null && p.Brand.ToLower().Contains(q)));
+                EF.Functions.ILike(p.Title ?? string.Empty, like) ||
+                EF.Functions.ILike(p.Description ?? string.Empty, like) ||
+                EF.Functions.ILike(p.Slug ?? string.Empty, like) ||
+                EF.Functions.ILike(p.Brand ?? string.Empty, like));
         }
 
-        baseQuery = (query.Sort ?? "new") switch
+        var projected = BuildProjectedProducts(baseQuery);
+
+        projected = (query.Sort ?? "new") switch
         {
-            "price:asc" or "priceAsc" => baseQuery.OrderBy(p => p.PriceIqd),
-            "price:desc" or "priceDesc" => baseQuery.OrderByDescending(p => p.PriceIqd),
-            _ => baseQuery.OrderByDescending(p => p.CreatedAt),
+            "price:asc" or "priceAsc" => projected.OrderBy(p => EF.Property<decimal>(p, "PriceIqd")),
+            "price:desc" or "priceDesc" => projected.OrderByDescending(p => EF.Property<decimal>(p, "PriceIqd")),
+            _ => projected.OrderByDescending(p => EF.Property<DateTime>(p, "CreatedAt")),
         };
 
-        var total = await baseQuery.CountAsync();
-        var pagedQuery = baseQuery.Skip((page - 1) * pageSize).Take(pageSize);
-        var items = await BuildProjectedProductsAsync(pagedQuery);
+        var total = await projected.CountAsync();
+        var items = await projected.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
         return Ok(new { page, pageSize, totalCount = total, items });
     }
@@ -107,9 +102,9 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> GetFeatured([FromQuery] int take = 12)
     {
         var safeTake = take is < 1 or > 60 ? 12 : take;
-        var items = await BuildProjectedProductsAsync(_db.Products.AsNoTracking().Where(p => p.IsPublished && p.IsFeatured).OrderByDescending(p => p.CreatedAt).Take(safeTake));
+        var items = await BuildProjectedProducts(_db.Products.AsNoTracking().Where(p => p.IsPublished && p.IsFeatured).OrderByDescending(p => p.CreatedAt).Take(safeTake)).ToListAsync();
         if (items.Count == 0)
-            items = await BuildProjectedProductsAsync(_db.Products.AsNoTracking().Where(p => p.IsPublished).OrderByDescending(p => p.CreatedAt).Take(safeTake));
+            items = await BuildProjectedProducts(_db.Products.AsNoTracking().Where(p => p.IsPublished).OrderByDescending(p => p.CreatedAt).Take(safeTake)).ToListAsync();
         return Ok(new { totalCount = items.Count, items });
     }
 
@@ -157,36 +152,19 @@ public class ProductsController : ControllerBase
         return Ok(p);
     }
 
-    [HttpGet("discounts")]
-    public async Task<IActionResult> GetDiscounts([FromQuery] int take = 24)
-    {
-        var safeTake = take is < 1 or > 60 ? 24 : take;
-        var items = await BuildProjectedProductsAsync(
-            _db.Products.AsNoTracking()
-                .Where(p => p.IsPublished && p.DiscountPercent > 0)
-                .OrderByDescending(p => p.CreatedAt)
-                .Take(safeTake)
-        );
-
-        return Ok(new { totalCount = items.Count, items });
-    }
-
     [HttpGet("search")]
     public async Task<IActionResult> Search([FromQuery] string q, [FromQuery] int limit = 8)
     {
-        var nq = N(q);
-        if (string.IsNullOrWhiteSpace(nq)) return Ok(Array.Empty<object>());
+        q = q?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(q)) return Ok(Array.Empty<object>());
         var safeLimit = limit is < 1 or > 20 ? 8 : limit;
-
-        var query = _db.Products.AsNoTracking()
-            .Where(p => p.IsPublished && (
-                (p.Title != null && p.Title.ToLower().Contains(nq)) ||
-                (p.Description != null && p.Description.ToLower().Contains(nq)) ||
-                (p.Brand != null && p.Brand.ToLower().Contains(nq)) ||
-                (p.Slug != null && p.Slug.ToLower().Contains(nq)) ||
-                (p.Category != null && p.Category.ToLower().Contains(nq)) ||
-                (p.SubCategory != null && p.SubCategory.ToLower().Contains(nq))
-            ))
+        var like = $"%{q}%";
+        var items = await _db.Products.AsNoTracking()
+            .Where(p => p.IsPublished &&
+                (EF.Functions.ILike(p.Title ?? string.Empty, like)
+                || EF.Functions.ILike(p.Description ?? string.Empty, like)
+                || EF.Functions.ILike(p.Brand ?? string.Empty, like)
+                || EF.Functions.ILike(p.Slug ?? string.Empty, like)))
             .OrderByDescending(p => p.CreatedAt)
             .Take(safeLimit)
             .Select(p => new
@@ -195,34 +173,23 @@ public class ProductsController : ControllerBase
                 p.Title,
                 p.Slug,
                 p.PriceIqd,
-                p.DiscountPercent,
-                finalPriceIqd = p.DiscountPercent > 0
-                    ? Math.Round(p.PriceIqd * (100m - p.DiscountPercent) / 100m, 2)
-                    : p.PriceIqd,
+                p.PriceUsd,
                 p.Brand,
-                p.Category,
                 coverImage = p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault()
-            });
-
-        return Ok(await query.ToListAsync());
+            }).ToListAsync();
+        return Ok(items);
     }
 
-    [HttpPost("{id:guid}/view")]
-    public async Task<IActionResult> TrackView([FromRoute] Guid id)
+    [HttpGet("discounts")]
+    public async Task<IActionResult> GetDiscounts([FromQuery] int take = 24)
     {
-        var exists = await _db.Products.AsNoTracking().AnyAsync(x => x.IsPublished && x.Id == id);
-        if (!exists) return NotFound(new { message = "Product not found" });
+        var safeTake = take is < 1 or > 100 ? 24 : take;
+        var items = await BuildProjectedProducts(_db.Products.AsNoTracking()
+            .Where(p => p.IsPublished && p.DiscountPercent > 0)
+            .OrderByDescending(p => p.DiscountPercent)
+            .ThenByDescending(p => p.CreatedAt)
+            .Take(safeTake)).ToListAsync();
 
-        Guid? userId = null;
-        var claim = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                    ?? User?.FindFirst("sub")?.Value
-                    ?? User?.FindFirst("userId")?.Value;
-
-        if (!string.IsNullOrWhiteSpace(claim) && Guid.TryParse(claim, out var parsed))
-            userId = parsed;
-
-        _db.ProductViews.Add(new Domain.Entities.ProductView { ProductId = id, UserId = userId });
-        await _db.SaveChangesAsync();
-        return Ok(new { ok = true });
+        return Ok(new { totalCount = items.Count, items });
     }
 }
