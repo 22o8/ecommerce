@@ -22,9 +22,8 @@
           <option value="draft">{{ t('admin.draft') }}</option>
         </select>
 
-
         <select v-model="brandFilter" class="admin-input" @change="fetchList(1)">
-          <option value="">{{ t('admin.allBrands') }}</option>
+          <option value="">{{ t('admin.selectBrand') }}</option>
           <option v-for="b in brandOptions" :key="b.slug" :value="b.slug">{{ b.name }}</option>
         </select>
 
@@ -224,16 +223,16 @@ type Product = {
   isFeatured: boolean
   stockQuantity?: number
   lowStockThreshold?: number
+  brand?: string
   category?: string
   subCategory?: string
-  brand?: string
-  brandName?: string
   imageUrl?: string
 }
 
 const { t } = useI18n()
 const api = useAdminApi()
 const publicApi = useApi()
+const brandsStore = useBrandsStore()
 const { formatIqd } = useMoney()
 
 const router = useRouter()
@@ -245,9 +244,8 @@ function goDetails(id: any) {
 
 const q = ref('')
 const status = ref<'published' | 'draft' | ''>('')
-const sort = ref<'newest' | 'oldest' | 'title' | 'priceHigh' | 'priceLow'>('newest')
 const brandFilter = ref('')
-const brandOptions = ref<{ id: string; slug: string; name: string }[]>([])
+const sort = ref<'newest' | 'oldest' | 'title' | 'priceHigh' | 'priceLow'>('newest')
 
 const loading = ref(false)
 const pending = ref(false)
@@ -258,6 +256,7 @@ const success = ref('')
 
 const items = ref<Product[]>([])
 const total = computed(() => items.value.length)
+const brandOptions = computed(() => (brandsStore.publicItems || []).map((b: any) => ({ name: b.name, slug: b.slug })).filter((b:any) => b.slug))
 
 // pagination client-side
 const page = ref(1)
@@ -299,7 +298,13 @@ function applyClientFilters(list: Product[]) {
   if (status.value === 'published') out = out.filter(x => !!x.isPublished)
   if (status.value === 'draft') out = out.filter(x => !x.isPublished)
 
-  if (brandFilter.value) out = out.filter(x => (x.brand || '').toLowerCase() === brandFilter.value || (x.brandName || '').toLowerCase() === brandFilter.value)
+  if (brandFilter.value) {
+    out = out.filter(x => {
+      const raw = String(x.brand || '').trim().toLowerCase()
+      const slug = raw.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+      return raw === brandFilter.value || slug === brandFilter.value
+    })
+  }
 
   if (sort.value === 'title') out.sort((a,b) => (a.title||'').localeCompare(b.title||''))
   if (sort.value === 'oldest') out.sort((a,b) => String(a.id).localeCompare(String(b.id)))
@@ -328,12 +333,11 @@ async function fetchList(p = 1) {
       priceUsd: x.priceUsd == null ? undefined : Number(x.priceUsd),
       isPublished: !!(x.isActive ?? x.isPublished),
       isFeatured: !!x.isFeatured,
+      brand: String(x.brand || ''),
       stockQuantity: Number(x.stockQuantity ?? 0),
       lowStockThreshold: Number(x.lowStockThreshold ?? 0),
       category: String(x.category || 'general'),
       subCategory: String(x.subCategory || ''),
-      brand: String(x.brand || ''),
-      brandName: String(x.brandName || x.brand || ''),
       imageUrl: typeof x.coverImage === 'string'
         ? publicApi.buildAssetUrl(x.coverImage)
         : (typeof x.imageUrl === 'string'
@@ -451,22 +455,8 @@ async function bulkDelete() {
   }
 }
 
-async function loadBrandOptions() {
-  try {
-    const res = await api.listBrands<any>()
-    const raw = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : [])
-    brandOptions.value = raw
-      .map((b:any) => ({ id: String(b.id || ''), slug: String(b.slug || '').toLowerCase(), name: String(b.name || b.slug || '') }))
-      .filter((b:any) => b.slug)
-      .sort((a:any,b:any) => a.name.localeCompare(b.name))
-  } catch {
-    brandOptions.value = []
-  }
-}
-
 onMounted(async () => {
-  await loadBrandOptions()
-  await fetchList(1)
+  await Promise.allSettled([brandsStore.fetchPublic(100), fetchList(1)])
 })
 </script>
 

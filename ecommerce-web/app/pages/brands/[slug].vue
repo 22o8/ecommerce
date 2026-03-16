@@ -1,15 +1,15 @@
 <template>
   <div class="container mx-auto px-4 py-8">
     <!-- Brand hero -->
-    <div class="brand-hero overflow-hidden">
-      <div class="p-6 sm:p-8 lg:p-10 flex flex-col sm:flex-row gap-6 sm:items-center">
-        <div class="brand-logo-shell">
-          <SmartImage v-if="brandLogo" :src="brandLogo" :alt="brand?.name" class="w-full h-full object-contain p-1 sm:p-2" />
+    <div class="rounded-3xl border border-[rgba(var(--border),1)] bg-[rgba(var(--surface),0.7)] overflow-hidden">
+      <div class="p-6 sm:p-8 flex flex-col sm:flex-row gap-6 sm:items-center">
+        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-[28px] bg-[rgba(var(--surface-2-rgb),0.92)] border border-[rgba(var(--border),1)] overflow-hidden flex items-center justify-center p-2 shadow-[0_20px_50px_rgba(0,0,0,0.14)]">
+          <SmartImage v-if="brandLogo" :src="brandLogo" :alt="brand?.name" class="w-full h-full object-contain rounded-[20px] bg-white/5" />
           <div v-else class="text-xs text-[rgba(var(--muted),0.85)]">Logo</div>
         </div>
 
         <div class="min-w-0">
-          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[rgb(var(--text))]">
+          <h1 class="text-3xl sm:text-4xl font-extrabold text-[rgb(var(--text))]">
             {{ brand?.name || slug }}
           </h1>
           <p class="text-[rgba(var(--muted),0.9)] mt-2 max-w-2xl">
@@ -99,36 +99,3 @@ watch([q, sort], async () => {
 
 const brandLogo = computed(() => buildAssetUrl(brand.value?.logoUrl || ''))
 </script>
-
-
-<style scoped>
-.brand-hero{
-  border-radius: 32px;
-  border: 1px solid rgba(var(--border), .96);
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-2-rgb), .9));
-  box-shadow: 0 24px 64px rgba(0,0,0,.18);
-}
-.brand-logo-shell{
-  width: 132px;
-  height: 132px;
-  border-radius: 32px;
-  border: 1px solid rgba(var(--border), .96);
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .94), rgba(var(--surface-2-rgb), .86));
-  overflow: hidden;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 18px 44px rgba(0,0,0,.16);
-  flex: 0 0 auto;
-}
-:global(html.theme-light) .brand-hero{
-  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,246,250,.94));
-  box-shadow: 0 22px 56px rgba(232,91,154,.10), 0 10px 24px rgba(17,24,39,.05);
-}
-:global(html.theme-light) .brand-logo-shell{
-  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,244,248,.94));
-}
-@media (max-width: 640px){
-  .brand-logo-shell{ width: 104px; height: 104px; border-radius: 26px; }
-}
-</style>

@@ -68,14 +68,15 @@ export const useBrandsStore = defineStore('brands', () => {
     try {
       // AdminBrandsController يرجّع Array مباشرة
       const res = await get<any>('/admin/brands')
-      items.value = (Array.isArray(res) ? res : (res?.items || [])).map(normalizeBrand).filter(b => b && b.slug)
+      items.value = Array.isArray(res) ? res : (res?.items || [])
     } finally {
       loading.value = false
     }
   }
 
   const getBySlug = async (slug: string) => {
-    return await get<BrandDto>(`/Brands/slug/${encodeURIComponent(slug)}`)
+    const res = await get<BrandDto>(`/Brands/slug/${encodeURIComponent(slug)}`)
+    return normalizeBrand(res)
   }
 
   const createBrand = async (payload: { name: string; slug?: string; description?: string; isActive?: boolean }) => {

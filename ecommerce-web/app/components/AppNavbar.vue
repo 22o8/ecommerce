@@ -134,14 +134,14 @@
             <span class="hidden sm:inline rtl-text">{{ t('nav.logout') }}</span>
           </UiButton>
 
-	        <button class="md:hidden shrink-0 min-w-[40px] rounded-2xl border border-app bg-surface px-2 py-2" @click="open = !open">
+	        <button class="lg:hidden shrink-0 min-w-[40px] rounded-2xl border border-app bg-surface px-2 py-2" @click="open = !open">
             <Icon name="mdi:menu" class="text-xl" />
           </button>
         </div>
       </div>
 
       <!-- Mobile drawer -->
-      <div v-if="open" class="md:hidden border-t border-app bg-surface">
+      <div v-if="open" class="lg:hidden border-t border-app bg-surface">
         <div class="mx-auto max-w-7xl px-3 sm:px-4 py-4 grid gap-3">
           <div class="flex items-center gap-2 w-full rounded-2xl border border-app bg-surface px-3 py-2">
             <Icon name="mdi:magnify" class="text-lg opacity-70" />
@@ -208,7 +208,7 @@
 </template>
 
 <script setup lang="ts">
-import siteLogoSrc from '~/assets/img/site-logo.jpg'
+import siteLogoImage from '~/assets/img/site-logo.jpg'
 import UiButton from '~/components/ui/UiButton.vue'
 import { useFavoritesStore } from '~/stores/favorites'
 import { useProductsStore } from '~/stores/products'
@@ -222,6 +222,8 @@ const { t } = useI18n()
 
 const route = useRoute()
 
+
+const siteLogoSrc = siteLogoImage
 const router = useRouter()
 const open = ref(false)
 const q = ref(String(route.query.q || ''))

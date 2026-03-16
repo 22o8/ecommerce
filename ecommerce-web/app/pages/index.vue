@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import heroBrandBgImage from '~/assets/img/hero-brand-bg.jpg'
 import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
-import heroImage from '~/assets/img/hero-brand-bg.jpg'
 
 const { t, locale } = useI18n()
 
@@ -66,8 +66,9 @@ const categoryCards = [
 ] as const
 
 const heroHighlights = computed(() => categoryCards.slice(0, 4))
-const heroBrandBgSrc = heroImage
 
+// ضع رابط صورة/خلفية الهوية هنا بدل #
+const heroBrandBgSrc = heroBrandBgImage
 </script>
 
 <template>
@@ -84,13 +85,13 @@ const heroBrandBgSrc = heroImage
         <div class="hero-aurora hero-aurora--two" />
         <div class="hero-aurora hero-aurora--three" />
 
-        <div class="relative z-[1] mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-18 lg:px-10 lg:py-20 xl:px-12">
-          <div class="hero-content-panel me-auto max-w-[45rem] text-center lg:text-start lg:me-[46%] xl:me-[48%] 2xl:me-[50%]">
+        <div class="relative z-[1] mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-20 lg:py-24">
+          <div class="mx-auto max-w-4xl text-center">
             <div class="hero-mini-badges mb-6 flex flex-wrap items-center justify-center gap-3">
               <NuxtLink
                 v-for="item in heroHighlights"
                 :key="item.key"
-                :to="`/categories/${encodeURIComponent(item.key)}`"
+                :to="`/products?category=${encodeURIComponent(item.key)}`"
                 class="hero-mini-chip"
               >
                 <span class="text-base">{{ item.icon }}</span>
@@ -107,7 +108,7 @@ const heroBrandBgSrc = heroImage
               {{ t('homeHero.subtitle') }}
             </p>
 
-            <div class="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:justify-start">
+            <div class="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
               <NuxtLink
                 to="/products"
                 class="btn-cta-animated inline-flex items-center justify-center rounded-full px-7 py-3.5 text-sm font-semibold hover:opacity-95"
@@ -123,7 +124,7 @@ const heroBrandBgSrc = heroImage
               </a>
             </div>
 
-            <div class="hero-stat-grid mt-10 grid gap-3 sm:grid-cols-3 lg:max-w-3xl">
+            <div class="hero-stat-grid mt-10 grid gap-3 sm:grid-cols-3">
               <div class="hero-stat-card">
                 <div class="hero-stat-card__glow" />
                 <div class="hero-stat-card__label">{{ t('homeHero.featuredProducts') }}</div>
@@ -231,7 +232,7 @@ const heroBrandBgSrc = heroImage
             :delay="35 * idx"
           >
             <NuxtLink
-              :to="`/categories/${encodeURIComponent(c.key)}`"
+              :to="`/products?category=${encodeURIComponent(c.key)}`"
               class="group category-simple-card"
             >
               <div class="category-simple-card__inner" :class="`bg-gradient-to-br ${c.accent}`">
@@ -256,20 +257,6 @@ const heroBrandBgSrc = heroImage
 </template>
 
 <style scoped>
-.hero-content-panel{
-  position: relative;
-  padding: 1.5rem;
-  border-radius: 34px;
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .88), rgba(var(--surface-2-rgb), .78));
-  border: 1px solid rgba(var(--border), .94);
-  box-shadow: 0 24px 70px rgba(0,0,0,.18);
-  backdrop-filter: blur(14px);
-}
-:global(html.theme-light) .hero-content-panel{
-  background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,248,252,.86));
-  box-shadow: 0 20px 56px rgba(232,91,154,.12), 0 10px 24px rgba(17,24,39,.05);
-  border-color: rgba(228, 208, 221, .96);
-}
 .home-page-shell{
   position: relative;
 }
@@ -594,20 +581,27 @@ const heroBrandBgSrc = heroImage
 .hero-brand-bg-placeholder{
   position:absolute;
   inset:0;
-  pointer-events:none;
+  inset-inline-start:60%;
+  width:40%;
   z-index:0;
 }
-.hero-brand-bg-image{
+.hero-brand-bg-wrap::after{
+  content:'';
   position:absolute;
-  inset-inline-end:1.2rem;
-  top:50%;
-  width:min(40vw, 500px);
-  max-width:40%;
-  transform:translateY(-50%);
-  object-fit:contain;
-  opacity:.18;
-  filter:drop-shadow(0 24px 80px rgba(0,0,0,.28));
+  inset:0;
+  background:linear-gradient(90deg, rgba(6,8,14,.58) 0%, rgba(6,8,14,.36) 40%, rgba(6,8,14,.18) 100%);
+  pointer-events:none;
 }
+
+.hero-brand-bg-image{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  filter: brightness(.48) contrast(1.08) saturate(.88);
+  opacity:.78;
+}
+
 .hero-brand-bg-placeholder{
   display:flex;
   align-items:center;
@@ -631,8 +625,8 @@ const heroBrandBgSrc = heroImage
 @media (max-width: 1024px){
   .hero-brand-bg-image{
     inset-inline-end:1rem;
-    width:min(50vw, 380px);
-    max-width:50%;
+    width:min(56vw, 420px);
+    max-width:58%;
     opacity:.11;
   }
   .hero-brand-bg-placeholder{
@@ -667,3 +661,12 @@ const heroBrandBgSrc = heroImage
   }
 }
 </style>
+
+:global(html.theme-light) .hero-brand-bg-image{
+  filter: brightness(.62) contrast(1.02) saturate(.86);
+  opacity:.34;
+}
+
+:global(html.theme-light) .hero-brand-bg-wrap::after{
+  background:linear-gradient(90deg, rgba(255,248,250,.70) 0%, rgba(255,248,250,.46) 45%, rgba(255,248,250,.18) 100%);
+}

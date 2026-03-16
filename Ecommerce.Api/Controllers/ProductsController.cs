@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Ecommerce.Api.Infrastructure.Data;
 using Ecommerce.Api.Models.Products;
 using Microsoft.AspNetCore.Mvc;
@@ -21,99 +22,57 @@ public class ProductsController : ControllerBase
 
     private static string N(string? value) => (value ?? string.Empty).Trim().ToLowerInvariant();
 
-    private static readonly Dictionary<string, string[]> CategoryKeywords = new(StringComparer.OrdinalIgnoreCase)
+    private static string Slugify(string? value)
     {
-        ["moisturizer"] = new[] { "مرطب", "مرطب الوجه", "كريم مرطب", "جل مرطب", "moisturizer", "moisturiser", "hydrating cream", "hydrating gel", "lotion", "cream" },
-        ["eye-care"] = new[] { "eye", "عين", "under eye", "undereye", "eye cream", "eye serum", "eye gel" },
-        ["cleanser"] = new[] { "cleanser", "cleanse", "غسول", "foam wash", "face wash", "منظف" },
-        ["serum"] = new[] { "serum", "سيروم", "ampoule" },
-        ["sunscreen"] = new[] { "sunscreen", "sun screen", "spf", "واقي", "واقي شمس" },
-        ["toner"] = new[] { "toner", "تونر" },
-        ["mask"] = new[] { "mask", "ماسك" },
-    };
-
-    private static readonly Dictionary<string, string[]> SubCategoryKeywords = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["eye-serum"] = new[] { "eye serum", "serum eye", "سيروم العين", "سيروم للعين" },
-        ["eye-cream"] = new[] { "eye cream", "cream eye", "كريم العين", "كريم للعين" },
-        ["eye-gel"] = new[] { "eye gel", "جل العين", "جل للعين" },
-        ["face-cream"] = new[] { "face cream", "cream", "كريم", "moisturizing cream" },
-        ["face-gel"] = new[] { "gel", "جل", "moisturizing gel" },
-        ["foam-cleanser"] = new[] { "foam", "رغوي", "foam cleanser" },
-        ["oil-cleanser"] = new[] { "oil cleanser", "cleansing oil", "زيتي" },
-    };
-
-    private static bool ContainsAny(string haystack, IEnumerable<string> needles)
-        => needles.Any(n => haystack.Contains(n, StringComparison.OrdinalIgnoreCase));
-
-    private static bool MatchesCategory(dynamic p, string? category, string? subCategory, string? q)
-    {
-        var text = string.Join(" ", new[]
+        if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+        var text = value.Trim().ToLowerInvariant();
+        var sb = new StringBuilder(text.Length);
+        var prevDash = false;
+        foreach (var ch in text)
         {
-            (string?)p.Title,
-            (string?)p.Description,
-            (string?)p.Slug,
-            (string?)p.Brand,
-            (string?)p.Category,
-            (string?)p.SubCategory,
-        }.Where(x => !string.IsNullOrWhiteSpace(x))).ToLowerInvariant();
-
-        var normalizedCategory = N(category);
-        var normalizedSub = N(subCategory);
-        var normalizedQ = N(q);
-
-        if (!string.IsNullOrWhiteSpace(normalizedCategory))
-        {
-            var storedCat = N((string?)p.Category);
-            if (storedCat == normalizedCategory)
+            if (char.IsLetterOrDigit(ch))
             {
-                // ok
+                sb.Append(ch);
+                prevDash = false;
             }
-            else if (CategoryKeywords.TryGetValue(normalizedCategory, out var catWords) && ContainsAny(text, catWords))
+            else if (char.IsWhiteSpace(ch) || ch is '-' or '_' or '/' or ':' or '.')
             {
-                // inferred match
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(normalizedSub))
-        {
-            var storedSub = N((string?)p.SubCategory);
-            if (storedSub == normalizedSub)
-            {
-                // ok
-            }
-            else if (SubCategoryKeywords.TryGetValue(normalizedSub, out var subWords) && ContainsAny(text, subWords))
-            {
-                // inferred
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(normalizedQ))
-        {
-            if (!text.Contains(normalizedQ))
-            {
-                if (SubCategoryKeywords.TryGetValue(normalizedQ, out var exactSubWords) && ContainsAny(text, exactSubWords))
+                if (!prevDash && sb.Length > 0)
                 {
-                }
-                else if (CategoryKeywords.TryGetValue(normalizedQ, out var exactCatWords) && ContainsAny(text, exactCatWords))
-                {
-                }
-                else
-                {
-                    return false;
+                    sb.Append('-');
+                    prevDash = true;
                 }
             }
         }
+        return sb.ToString().Trim('-');
+    }
 
-        return true;
+    private async Task<HashSet<string>> BuildBrandCandidatesAsync(string? brand)
+    {
+        var candidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var raw = (brand ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(raw)) return candidates;
+
+        var normalized = N(raw);
+        var slugifiedInput = Slugify(raw);
+        candidates.Add(normalized);
+        if (!string.IsNullOrWhiteSpace(slugifiedInput)) candidates.Add(slugifiedInput);
+
+        var entity = await _db.Brands
+            .AsNoTracking()
+            .Where(b => b.IsActive && (b.Slug.ToLower() == normalized || b.Name.ToLower() == normalized || b.Slug.ToLower() == slugifiedInput || b.Name.ToLower() == slugifiedInput))
+            .Select(b => new { b.Slug, b.Name })
+            .FirstOrDefaultAsync();
+
+        if (entity != null)
+        {
+            candidates.Add(N(entity.Slug));
+            candidates.Add(N(entity.Name));
+            var nameSlug = Slugify(entity.Name);
+            if (!string.IsNullOrWhiteSpace(nameSlug)) candidates.Add(nameSlug);
+        }
+
+        return candidates;
     }
 
     private async Task<List<dynamic>> BuildProjectedProductsAsync(IQueryable<Domain.Entities.Product> query)
@@ -133,7 +92,6 @@ public class ProductsController : ControllerBase
                 p.PriceUsd,
                 p.RatingAvg,
                 p.Brand,
-                brandName = _db.Brands.Where(b => b.Slug == p.Brand).Select(b => b.Name).FirstOrDefault(),
                 p.Category,
                 p.SubCategory,
                 p.StockQuantity,
@@ -148,7 +106,52 @@ public class ProductsController : ControllerBase
             .ToListAsync();
     }
 
-        [HttpGet]
+    private static IEnumerable<dynamic> ApplyExactFilters(IEnumerable<dynamic> source, string? brand, HashSet<string> brandCandidates, string? category, string? subCategory, string? q)
+    {
+        var filtered = source;
+
+        if (!string.IsNullOrWhiteSpace(brand) && !brand.Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            filtered = filtered.Where(p =>
+            {
+                var stored = ((string?)p.Brand ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(stored)) return false;
+                var storedLower = stored.ToLowerInvariant();
+                var storedSlug = Slugify(stored);
+                return brandCandidates.Contains(storedLower) || (!string.IsNullOrWhiteSpace(storedSlug) && brandCandidates.Contains(storedSlug));
+            });
+        }
+
+        var normalizedCategory = N(category);
+        if (!string.IsNullOrWhiteSpace(normalizedCategory))
+            filtered = filtered.Where(p => N((string?)p.Category) == normalizedCategory);
+
+        var normalizedSub = N(subCategory);
+        if (!string.IsNullOrWhiteSpace(normalizedSub))
+            filtered = filtered.Where(p => N((string?)p.SubCategory) == normalizedSub);
+
+        var normalizedQ = N(q);
+        if (!string.IsNullOrWhiteSpace(normalizedQ))
+        {
+            filtered = filtered.Where(p =>
+            {
+                var text = string.Join(" ", new[]
+                {
+                    (string?)p.Title,
+                    (string?)p.Description,
+                    (string?)p.Slug,
+                    (string?)p.Brand,
+                    (string?)p.Category,
+                    (string?)p.SubCategory,
+                }.Where(x => !string.IsNullOrWhiteSpace(x))).ToLowerInvariant();
+                return text.Contains(normalizedQ);
+            });
+        }
+
+        return filtered;
+    }
+
+    [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] PublicProductQuery query)
     {
         var page = query.Page < 1 ? 1 : query.Page;
@@ -157,61 +160,21 @@ public class ProductsController : ControllerBase
         var brand = N(query.Brand);
         var category = N(query.Category);
         var subCategory = N(query.SubCategory);
+        var brandCandidates = await BuildBrandCandidatesAsync(brand);
 
-        var baseQuery = _db.Products
-            .AsNoTracking()
-            .Where(p => p.IsPublished);
+        var baseQuery = _db.Products.AsNoTracking().Where(p => p.IsPublished);
+        var allItems = await BuildProjectedProductsAsync(baseQuery);
+        var filtered = ApplyExactFilters(allItems, brand, brandCandidates, category, subCategory, q);
 
-        if (!string.IsNullOrWhiteSpace(brand) && !brand.Equals("all", StringComparison.OrdinalIgnoreCase))
+        filtered = (query.Sort ?? "new") switch
         {
-            var requestedBrand = brand;
-            var matchedBrand = await _db.Brands
-                .AsNoTracking()
-                .Where(b => b.IsActive)
-                .Select(b => new
-                {
-                    Slug = (b.Slug ?? string.Empty).ToLower(),
-                    Name = (b.Name ?? string.Empty).ToLower()
-                })
-                .FirstOrDefaultAsync(b => b.Slug == requestedBrand || b.Name == requestedBrand);
-
-            var acceptedBrandValues = new List<string> { requestedBrand };
-            if (matchedBrand != null)
-            {
-                if (!string.IsNullOrWhiteSpace(matchedBrand.Slug) && !acceptedBrandValues.Contains(matchedBrand.Slug))
-                    acceptedBrandValues.Add(matchedBrand.Slug);
-                if (!string.IsNullOrWhiteSpace(matchedBrand.Name) && !acceptedBrandValues.Contains(matchedBrand.Name))
-                    acceptedBrandValues.Add(matchedBrand.Name);
-            }
-
-            baseQuery = baseQuery.Where(p => p.Brand != null && acceptedBrandValues.Contains(p.Brand.ToLower()));
-        }
-
-        if (!string.IsNullOrWhiteSpace(category) && !category.Equals("all", StringComparison.OrdinalIgnoreCase))
-            baseQuery = baseQuery.Where(p => p.Category != null && p.Category.ToLower() == category);
-
-        if (!string.IsNullOrWhiteSpace(subCategory) && !subCategory.Equals("all", StringComparison.OrdinalIgnoreCase))
-            baseQuery = baseQuery.Where(p => p.SubCategory != null && p.SubCategory.ToLower() == subCategory);
-
-        if (!string.IsNullOrWhiteSpace(q))
-        {
-            baseQuery = baseQuery.Where(p =>
-                (p.Title != null && p.Title.ToLower().Contains(q)) ||
-                (p.Description != null && p.Description.ToLower().Contains(q)) ||
-                (p.Slug != null && p.Slug.ToLower().Contains(q)) ||
-                (p.Brand != null && p.Brand.ToLower().Contains(q)));
-        }
-
-        baseQuery = (query.Sort ?? "new") switch
-        {
-            "price:asc" or "priceAsc" => baseQuery.OrderBy(p => p.PriceIqd),
-            "price:desc" or "priceDesc" => baseQuery.OrderByDescending(p => p.PriceIqd),
-            _ => baseQuery.OrderByDescending(p => p.CreatedAt),
+            "price:asc" or "priceAsc" => filtered.OrderBy(p => (decimal)p.PriceIqd),
+            "price:desc" or "priceDesc" => filtered.OrderByDescending(p => (decimal)p.PriceIqd),
+            _ => filtered.OrderByDescending(p => (DateTime)p.CreatedAt),
         };
 
-        var total = await baseQuery.CountAsync();
-        var pagedQuery = baseQuery.Skip((page - 1) * pageSize).Take(pageSize);
-        var items = await BuildProjectedProductsAsync(pagedQuery);
+        var total = filtered.Count();
+        var items = filtered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
         return Ok(new { page, pageSize, totalCount = total, items });
     }
@@ -234,8 +197,7 @@ public class ProductsController : ControllerBase
             {
                 x.Id, x.Title, x.Slug, x.Description, x.PriceIqd, x.DiscountPercent,
                 finalPriceIqd = x.DiscountPercent > 0 ? Math.Round(x.PriceIqd * (100m - x.DiscountPercent) / 100m, 2) : x.PriceIqd,
-                x.PriceUsd, x.RatingAvg, x.Brand,
-                brandName = _db.Brands.Where(b => b.Slug == x.Brand).Select(b => b.Name).FirstOrDefault(), x.Category, x.SubCategory, x.StockQuantity, x.IsCouponAllowed, x.RatingCount, x.CreatedAt,
+                x.PriceUsd, x.RatingAvg, x.Brand, x.Category, x.SubCategory, x.StockQuantity, x.IsCouponAllowed, x.RatingCount, x.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
                 favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
                 images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList()
@@ -262,8 +224,7 @@ public class ProductsController : ControllerBase
             {
                 x.Id, x.Title, x.Slug, x.Description, x.PriceIqd, x.DiscountPercent,
                 finalPriceIqd = x.DiscountPercent > 0 ? Math.Round(x.PriceIqd * (100m - x.DiscountPercent) / 100m, 2) : x.PriceIqd,
-                x.PriceUsd, x.RatingAvg, x.Brand,
-                brandName = _db.Brands.Where(b => b.Slug == x.Brand).Select(b => b.Name).FirstOrDefault(), x.Category, x.SubCategory, x.StockQuantity, x.IsCouponAllowed, x.RatingCount, x.CreatedAt,
+                x.PriceUsd, x.RatingAvg, x.Brand, x.Category, x.SubCategory, x.StockQuantity, x.IsCouponAllowed, x.RatingCount, x.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
                 favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
                 images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList()
@@ -287,7 +248,7 @@ public class ProductsController : ControllerBase
         if (string.IsNullOrWhiteSpace(qq)) return Ok(Array.Empty<object>());
         var safeLimit = limit is < 1 or > 20 ? 8 : limit;
         var items = await BuildProjectedProductsAsync(_db.Products.AsNoTracking().Where(p => p.IsPublished).OrderByDescending(p => p.CreatedAt));
-        return Ok(items.Where(p => MatchesCategory(p, null, null, qq)).Take(safeLimit).ToList());
+        return Ok(ApplyExactFilters(items, null, new HashSet<string>(), null, null, qq).Take(safeLimit).ToList());
     }
 
     [HttpPost("{id:guid}/view")]

@@ -249,19 +249,6 @@ async function fetchProducts() {
 
 function onCategoryChange() {
   if (!subCategoryOptions.value.find((x) => x.value === subCategory.value)) subCategory.value = ''
-  page.value = 1
-  if (category.value) {
-    router.push({
-      path: `/categories/${category.value}`,
-      query: {
-        ...(sort.value && sort.value !== 'new' ? { sort: sort.value } : {}),
-        ...(brand.value ? { brand: brand.value } : {}),
-        ...(subCategory.value ? { subCategory: subCategory.value } : {}),
-        page: '1',
-      },
-    })
-    return
-  }
   applyFilters()
 }
 function applyFilters() {
