@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import heroBrandBgSrc from '~/assets/img/hero-brand-bg.jpg'
 import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
+import heroBrandBgSrc from '~/assets/img/hero-brand-bg.jpg'
 
 const { t, locale } = useI18n()
 
@@ -73,25 +73,19 @@ const heroHighlights = computed(() => categoryCards.slice(0, 4))
   <div class="min-h-screen home-page-shell">
     <section class="relative mx-auto max-w-6xl px-4 pt-4 sm:pt-6">
       <div class="hero-premium-shell hero-shimmer overflow-hidden rounded-[2rem] border border-app">
-        <div class="hero-brand-bg-wrap" aria-hidden="true">
+        <div v-if="heroBrandBgSrc !== '#'" class="hero-brand-bg-wrap" aria-hidden="true">
           <img :src="heroBrandBgSrc" alt="" class="hero-brand-bg-image" />
         </div>
-        <div class="hero-overlay-grid" aria-hidden="true" />
+        <div v-else class="hero-brand-bg-placeholder" aria-hidden="true">
+          <span>ضع صورة الخلفية هنا</span>
+        </div>
         <div class="hero-aurora hero-aurora--one" />
         <div class="hero-aurora hero-aurora--two" />
         <div class="hero-aurora hero-aurora--three" />
-        <div class="hero-floating-card hero-floating-card--top">
-          <div class="hero-floating-card__label">{{ t('homeHero.categories') }}</div>
-          <div class="hero-floating-card__value">{{ categoryCards.length }}</div>
-        </div>
-        <div class="hero-floating-card hero-floating-card--bottom">
-          <div class="hero-floating-card__label">{{ t('homeHero.featuredProducts') }}</div>
-          <div class="hero-floating-card__value">{{ featuredList.length }}</div>
-        </div>
 
-        <div class="relative z-[1] grid gap-10 px-5 py-14 sm:px-8 sm:py-18 lg:grid-cols-[minmax(0,1.1fr)_340px] lg:items-center lg:px-10 lg:py-20">
-          <div>
-            <div class="hero-mini-badges mb-6 flex flex-wrap items-center gap-3">
+        <div class="relative z-[1] mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20 lg:py-24">
+          <div class="hero-copy-shell mx-auto max-w-3xl text-center lg:mx-0">
+            <div class="hero-mini-badges mb-6 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <NuxtLink
                 v-for="item in heroHighlights"
                 :key="item.key"
@@ -103,21 +97,16 @@ const heroHighlights = computed(() => categoryCards.slice(0, 4))
               </NuxtLink>
             </div>
 
-            <div class="hero-kicker mb-5 inline-flex items-center gap-2 rounded-full border border-app bg-surface/60 px-4 py-2 text-xs font-extrabold tracking-[0.18em] text-[rgb(var(--muted))]">
-              <span class="hero-kicker__dot" />
-              BEAUTY STORE
-            </div>
-
-            <h1 class="max-w-3xl text-4xl font-extrabold leading-[1.05] tracking-tight text-[rgb(var(--text))] sm:text-6xl xl:text-7xl">
+            <h1 class="text-4xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-6xl xl:text-7xl lg:text-start">
               {{ t('homeHero.title1') }}
               <span class="hero-title-accent">{{ t('homeHero.title2') }}</span>
             </h1>
 
-            <p class="mt-6 max-w-2xl text-base leading-8 text-[rgb(var(--muted))] sm:text-lg">
+            <p class="mx-auto mt-6 max-w-2xl text-base leading-8 text-[rgb(var(--muted))] sm:text-lg lg:mx-0">
               {{ t('homeHero.subtitle') }}
             </p>
 
-            <div class="mt-8 flex flex-wrap items-center gap-3 sm:gap-4">
+            <div class="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:justify-start">
               <NuxtLink
                 to="/products"
                 class="btn-cta-animated inline-flex items-center justify-center rounded-full px-7 py-3.5 text-sm font-semibold hover:opacity-95"
@@ -133,7 +122,7 @@ const heroHighlights = computed(() => categoryCards.slice(0, 4))
               </a>
             </div>
 
-            <div class="hero-stat-grid mt-10 grid gap-3 sm:grid-cols-3">
+            <div class="hero-stat-grid mt-10 grid gap-3 sm:grid-cols-3 lg:max-w-2xl">
               <div class="hero-stat-card">
                 <div class="hero-stat-card__glow" />
                 <div class="hero-stat-card__label">{{ t('homeHero.featuredProducts') }}</div>
@@ -152,23 +141,16 @@ const heroHighlights = computed(() => categoryCards.slice(0, 4))
             </div>
           </div>
 
-          <div class="hero-visual-panel hidden lg:block">
-            <div class="hero-visual-panel__surface">
-              <div class="hero-visual-panel__badge">PREMIUM PICKS</div>
-              <div class="hero-visual-panel__title">{{ t('home.spotlightTitle') }}</div>
-              <div class="hero-visual-panel__copy">{{ t('home.spotlightSubtitle') }}</div>
-
-              <div class="mt-6 grid gap-3">
-                <NuxtLink
-                  v-for="item in categoryCards.slice(0, 3)"
-                  :key="`${item.key}-panel`"
-                  :to="`/products?category=${encodeURIComponent(item.key)}`"
-                  class="hero-panel-chip"
-                >
-                  <span class="hero-panel-chip__icon">{{ item.icon }}</span>
-                  <span class="truncate">{{ t(item.labelKey) }}</span>
-                  <span class="hero-panel-chip__arrow">→</span>
-                </NuxtLink>
+          <div class="hero-visual-panel hidden lg:flex" aria-hidden="true">
+            <div class="hero-visual-panel__glass">
+              <div class="hero-visual-panel__eyebrow">{{ t('home.spotlightTitle') }}</div>
+              <div class="hero-visual-panel__title">{{ t('home.spotlightSubtitle') }}</div>
+              <div class="hero-visual-panel__list">
+                <div v-for="item in categoryCards.slice(0, 3)" :key="`${item.key}-hero-panel`" class="hero-visual-panel__row">
+                  <span class="hero-visual-panel__icon">{{ item.icon }}</span>
+                  <span>{{ t(item.labelKey) }}</span>
+                  <span class="hero-visual-panel__arrow">→</span>
+                </div>
               </div>
             </div>
           </div>
@@ -478,6 +460,77 @@ const heroHighlights = computed(() => categoryCards.slice(0, 4))
   background: rgba(var(--primary), .08);
   transform: translateX(2px);
 }
+
+.hero-copy-shell{
+  position: relative;
+  z-index: 2;
+  padding: 1.35rem;
+  border-radius: 32px;
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .78), rgba(var(--surface-rgb), .56));
+  border: 1px solid rgba(var(--border), .8);
+  box-shadow: 0 24px 60px rgba(8, 10, 20, .12);
+  backdrop-filter: blur(14px);
+}
+.hero-visual-panel{
+  position: absolute;
+  inset-inline-end: 2.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: min(28vw, 320px);
+  justify-content: flex-end;
+}
+.hero-visual-panel__glass{
+  width: 100%;
+  border-radius: 28px;
+  padding: 1.15rem;
+  border: 1px solid rgba(255,255,255,.14);
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .52), rgba(var(--surface-rgb), .24));
+  box-shadow: 0 20px 40px rgba(0,0,0,.18);
+  backdrop-filter: blur(16px);
+}
+.hero-visual-panel__eyebrow{
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgb(var(--primary));
+}
+.hero-visual-panel__title{
+  margin-top: .55rem;
+  color: rgb(var(--text));
+  font-size: 1rem;
+  line-height: 1.8;
+  font-weight: 800;
+}
+.hero-visual-panel__list{
+  margin-top: 1rem;
+  display: grid;
+  gap: .7rem;
+}
+.hero-visual-panel__row{
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  padding:.8rem .9rem;
+  border-radius:20px;
+  border:1px solid rgba(var(--border), .72);
+  background: rgba(var(--surface-rgb), .52);
+  color: rgb(var(--text));
+  font-weight: 700;
+}
+.hero-visual-panel__icon{
+  display:grid;
+  place-items:center;
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  background: rgba(var(--primary), .12);
+}
+.hero-visual-panel__arrow{
+  margin-inline-start:auto;
+  color: rgb(var(--muted));
+}
 :global(html.theme-light) .hero-premium-shell{
   background:
     linear-gradient(180deg, rgba(255,255,255,.97), rgba(255,246,251,.96)),
@@ -489,66 +542,35 @@ const heroHighlights = computed(() => categoryCards.slice(0, 4))
 :global(html.theme-light) .home-section-panel{
   box-shadow: 0 18px 44px rgba(232, 91, 154, .08), 0 10px 26px rgba(24,24,24,.05);
 }
-.hero-overlay-grid{
+:global(html.theme-light) .hero-copy-shell{
+  background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,250,253,.86));
+  border-color: rgba(232,91,154,.14);
+  box-shadow: 0 26px 70px rgba(232,91,154,.12), 0 14px 30px rgba(20,20,20,.05);
+}
+:global(html.theme-light) .hero-visual-panel__glass{
+  background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(255,246,251,.54));
+  border-color: rgba(232,91,154,.16);
+  box-shadow: 0 20px 44px rgba(232,91,154,.12), 0 12px 28px rgba(24,24,24,.05);
+}
+:global(html.theme-light) .hero-brand-bg-wrap::after{
+  content:'';
   position:absolute;
   inset:0;
-  background-image:
-    linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
-  background-size: 34px 34px;
-  mask-image: radial-gradient(circle at 40% 40%, black, transparent 85%);
-  opacity:.22;
-  pointer-events:none;
+  background: linear-gradient(90deg, rgba(255,247,251,.99) 0%, rgba(255,247,251,.98) 36%, rgba(255,247,251,.88) 54%, rgba(255,247,251,.44) 72%, rgba(255,247,251,.12) 88%, rgba(255,247,251,.04) 100%);
 }
-.hero-kicker__dot{
-  width:8px;
-  height:8px;
-  border-radius:999px;
-  background:rgb(var(--primary));
-  box-shadow:0 0 0 6px rgba(var(--primary), .14);
+:global(html.theme-dark) .hero-copy-shell{
+  background: linear-gradient(180deg, rgba(8,10,18,.72), rgba(8,10,18,.48));
+  border-color: rgba(255,255,255,.08);
 }
-.hero-floating-card{
+:global(html.theme-dark) .hero-visual-panel__glass{
+  background: linear-gradient(180deg, rgba(10,12,20,.54), rgba(10,12,20,.24));
+}
+:global(html.theme-dark) .hero-brand-bg-wrap::after{
+  content:'';
   position:absolute;
-  z-index:1;
-  min-width:130px;
-  padding:1rem 1rem .9rem;
-  border-radius:22px;
-  border:1px solid rgba(var(--border), .9);
-  background:linear-gradient(180deg, rgba(var(--surface-rgb), .78), rgba(var(--surface-2-rgb), .74));
-  box-shadow:0 22px 48px rgba(0,0,0,.18);
-  backdrop-filter: blur(14px);
+  inset:0;
+  background: linear-gradient(90deg, rgba(5,8,16,.98) 0%, rgba(5,8,16,.94) 36%, rgba(5,8,16,.70) 56%, rgba(5,8,16,.24) 76%, rgba(5,8,16,.08) 90%, rgba(5,8,16,.04) 100%);
 }
-.hero-floating-card--top{ top:1.25rem; inset-inline-end:1.25rem; }
-.hero-floating-card--bottom{ bottom:1.25rem; inset-inline-end:1.75rem; }
-.hero-floating-card__label{ font-size:.72rem; font-weight:800; color:rgb(var(--muted)); }
-.hero-floating-card__value{ margin-top:.35rem; font-size:1.55rem; font-weight:900; color:rgb(var(--text)); }
-.hero-visual-panel{ position:relative; }
-.hero-visual-panel__surface{
-  position:relative;
-  overflow:hidden;
-  padding:1.4rem;
-  border-radius:30px;
-  border:1px solid rgba(var(--border), .94);
-  background:linear-gradient(180deg, rgba(var(--surface-rgb), .86), rgba(var(--surface-2-rgb), .76));
-  box-shadow:0 24px 56px rgba(0,0,0,.18);
-}
-.hero-visual-panel__surface::before{
-  content:''; position:absolute; inset:auto -18% -26% auto; width:220px; height:220px; border-radius:999px;
-  background:radial-gradient(circle, rgba(var(--primary), .18), transparent 70%);
-}
-.hero-visual-panel__badge{
-  display:inline-flex; padding:.45rem .75rem; border-radius:999px; border:1px solid rgba(var(--border), .9);
-  background:rgba(var(--surface-rgb), .72); font-size:.72rem; font-weight:900; letter-spacing:.08em; color:rgb(var(--muted));
-}
-.hero-visual-panel__title{ position:relative; z-index:1; margin-top:1rem; font-size:1.4rem; font-weight:900; color:rgb(var(--text)); }
-.hero-visual-panel__copy{ position:relative; z-index:1; margin-top:.5rem; color:rgb(var(--muted)); line-height:1.8; }
-.hero-panel-chip{
-  position:relative; z-index:1; display:flex; align-items:center; gap:.8rem; min-height:58px; padding:.9rem 1rem; border-radius:20px;
-  border:1px solid rgba(var(--border), .9); background:rgba(var(--surface-rgb), .64); transition:transform .2s ease, border-color .2s ease;
-}
-.hero-panel-chip:hover{ transform:translateY(-2px); border-color:rgba(var(--primary), .3); }
-.hero-panel-chip__icon{ display:grid; place-items:center; width:38px; height:38px; border-radius:14px; background:rgba(var(--primary), .12); }
-.hero-panel-chip__arrow{ margin-inline-start:auto; color:rgb(var(--muted)); }
 .category-showcase{
   align-items:stretch;
 }
@@ -656,6 +678,16 @@ const heroHighlights = computed(() => categoryCards.slice(0, 4))
 :global(html.theme-dark) .category-simple-card{
   background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .86));
 }
+
+@media (min-width: 1025px){
+  .hero-premium-shell{
+    min-height: 650px;
+  }
+  .hero-copy-shell{
+    width: min(58%, 760px);
+    padding: 1.6rem 1.6rem 1.35rem;
+  }
+}
 @media (max-width: 640px){
   .hero-premium-shell{ border-radius: 26px; }
   .hero-stat-card__value{ font-size: 1.55rem; }
@@ -668,44 +700,99 @@ const heroHighlights = computed(() => categoryCards.slice(0, 4))
 
 
 <style scoped>
-.hero-brand-bg-wrap{
+.hero-brand-bg-wrap,
+.hero-brand-bg-placeholder{
   position:absolute;
   inset:0;
   pointer-events:none;
   z-index:0;
-}
-.hero-brand-bg-wrap::after{
-  content:'';
-  position:absolute;
-  inset:0;
-  background:linear-gradient(90deg, rgba(var(--surface-rgb), .96) 0%, rgba(var(--surface-rgb), .88) 34%, rgba(var(--surface-rgb), .42) 72%, rgba(var(--surface-rgb), .76) 100%);
 }
 .hero-brand-bg-image{
   position:absolute;
   inset-inline-end:0;
   top:0;
   height:100%;
-  width:min(46%, 520px);
+  width:min(46vw, 560px);
+  max-width:46%;
   object-fit:cover;
   object-position:center;
-  opacity:.72;
-  filter:saturate(.95) contrast(1.02);
+  opacity:.92;
+  filter:saturate(1.02) drop-shadow(0 24px 80px rgba(0,0,0,.18));
+}
+.hero-brand-bg-wrap::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background: radial-gradient(circle at 18% 18%, rgba(var(--primary), .10), transparent 32%);
+}
+.hero-brand-bg-placeholder{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding-inline:2rem;
+}
+.hero-brand-bg-placeholder span{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:220px;
+  width:min(42vw, 520px);
+  min-height:220px;
+  border-radius:32px;
+  border:1px dashed rgba(var(--border), .65);
+  background:linear-gradient(135deg, rgba(var(--surface-rgb), .28), rgba(var(--primary), .08));
+  color:rgba(var(--text), .35);
+  font-size:.95rem;
+  font-weight:800;
 }
 @media (max-width: 1024px){
-  .hero-brand-bg-wrap::after{
-    background:linear-gradient(180deg, rgba(var(--surface-rgb), .90) 0%, rgba(var(--surface-rgb), .78) 44%, rgba(var(--surface-rgb), .92) 100%);
+  .hero-copy-shell{
+    margin-inline:auto;
+  }
+  .hero-visual-panel{
+    display:none;
   }
   .hero-brand-bg-image{
-    width:100%;
-    height:100%;
     inset-inline-end:0;
-    opacity:.22;
+    width:min(52vw, 420px);
+    max-width:52%;
+    opacity:.82;
   }
-  .hero-floating-card,
-  .hero-visual-panel{ display:none; }
+  .hero-brand-bg-placeholder{
+    justify-content:center;
+    padding-inline:1rem;
+    padding-top:1rem;
+  }
+  .hero-brand-bg-placeholder span{
+    width:min(78vw, 420px);
+    min-height:160px;
+  }
 }
 @media (max-width: 640px){
-  .hero-brand-bg-image{ opacity:.18; }
-  .hero-kicker{ width:100%; justify-content:center; }
+  .hero-copy-shell{
+    padding: 1rem;
+    border-radius: 24px;
+  }
+  .hero-brand-bg-image{
+    inset-inline:0;
+    top:0;
+    bottom:auto;
+    width:100%;
+    height:100%;
+    max-width:none;
+    transform:none;
+    opacity:.20;
+    object-position:center top;
+  }
+  .hero-brand-bg-placeholder{
+    justify-content:center;
+    align-items:flex-end;
+    padding:1rem;
+  }
+  .hero-brand-bg-placeholder span{
+    width:min(88vw, 320px);
+    min-height:110px;
+    font-size:.82rem;
+  }
 }
 </style>
