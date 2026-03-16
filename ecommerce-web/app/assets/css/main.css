@@ -140,10 +140,8 @@ body{
 }
 
 /* ==========================
-   Light-mode upgrades (أقوى وأوضح)
+   Light-mode fixes (natural white, no washout)
    ========================== */
-
-/* نخلي التأثيرات مثل ما هي */
 html.theme-dark{ --spark-rgb: 255,255,255; --snow-rgb: 255,255,255; }
 html.theme-light{ --spark-rgb: 160,120,40; --snow-rgb: 80,80,90; }
 
@@ -153,82 +151,62 @@ html.theme-light.theme-christmas{ --spark-rgb: 150,40,40; }
 html.theme-light.theme-valentines{ --spark-rgb: 210,60,90; }
 html.theme-light.theme-blackFriday{ --spark-rgb: 220,50,80; }
 
-/* نخلي الثيم الأبيض طبيعي وما نخليه مغسول */
+/* Light base يرجع طبيعي وواضح مثل قبل بدون بهتان */
 html.theme-light{
-  --bg: 255 255 255;
+  --bg: 252 252 254;
   --surface: 255 255 255;
-  --surface-2: 250 250 252;
+  --surface-2: 248 249 252;
   --surface-rgb: 255 255 255;
-  --surface-2-rgb: 250 250 252;
+  --surface-2-rgb: 248 249 252;
   --text: 18 18 24;
-  --muted: 104 104 120;
-  --border: 226 228 242;
+  --muted: 98 104 120;
+  --border: 225 228 235;
 }
 
-/* الخلفيات الموسمية بالـ Light أخف حتى ما تبهت الصفحة */
+/* الخلفيات الموسمية بالـ light تبقى خفيفة جدًا */
 html.theme-light.theme-ramadan .bg-app{
   background:
-    radial-gradient(1200px 700px at 20% 10%, rgba(30, 120, 140, 0.08), transparent 58%),
-    radial-gradient(900px 600px at 80% 0%, rgba(196, 140, 40, 0.08), transparent 60%),
-    radial-gradient(800px 520px at 40% 90%, rgba(20, 80, 120, 0.05), transparent 60%),
+    radial-gradient(1200px 700px at 20% 10%, rgba(30, 120, 140, 0.045), transparent 58%),
+    radial-gradient(900px 600px at 80% 0%, rgba(196, 140, 40, 0.045), transparent 60%),
     rgb(var(--bg));
 }
 
 html.theme-light.theme-eid .bg-app{
   background:
-    radial-gradient(1200px 700px at 20% 10%, rgba(170, 120, 60, 0.08), transparent 58%),
-    radial-gradient(900px 600px at 80% 0%, rgba(120, 170, 160, 0.07), transparent 60%),
-    radial-gradient(700px 520px at 50% 95%, rgba(255, 220, 140, 0.05), transparent 60%),
+    radial-gradient(1200px 700px at 20% 10%, rgba(170, 120, 60, 0.045), transparent 58%),
+    radial-gradient(900px 600px at 80% 0%, rgba(120, 170, 160, 0.04), transparent 60%),
     rgb(var(--bg));
 }
 
 html.theme-light.theme-christmas .bg-app{
   background:
-    radial-gradient(1200px 700px at 15% 10%, rgba(200, 60, 60, 0.07), transparent 60%),
-    radial-gradient(900px 600px at 85% 0%, rgba(30, 140, 90, 0.07), transparent 60%),
-    radial-gradient(900px 520px at 50% 100%, rgba(240, 240, 255, 0.05), transparent 65%),
+    radial-gradient(1200px 700px at 15% 10%, rgba(200, 60, 60, 0.04), transparent 60%),
+    radial-gradient(900px 600px at 85% 0%, rgba(30, 140, 90, 0.04), transparent 60%),
     rgb(var(--bg));
 }
 
 html.theme-light.theme-valentines .bg-app{
   background:
-    radial-gradient(1200px 700px at 20% 10%, rgba(255, 77, 130, 0.08), transparent 58%),
-    radial-gradient(900px 600px at 80% 0%, rgba(255, 0, 96, 0.06), transparent 60%),
-    radial-gradient(800px 520px at 45% 95%, rgba(255, 180, 200, 0.06), transparent 60%),
+    radial-gradient(1200px 700px at 20% 10%, rgba(255, 77, 130, 0.05), transparent 58%),
+    radial-gradient(900px 600px at 80% 0%, rgba(255, 0, 96, 0.035), transparent 60%),
     rgb(var(--bg));
 }
 
 html.theme-light.theme-blackFriday .bg-app{
   background:
-    radial-gradient(1200px 700px at 20% 10%, rgba(255, 0, 70, 0.06), transparent 58%),
-    radial-gradient(900px 600px at 80% 0%, rgba(255, 200, 80, 0.05), transparent 60%),
-    radial-gradient(800px 520px at 45% 95%, rgba(255, 0, 70, 0.04), transparent 60%),
+    radial-gradient(1200px 700px at 20% 10%, rgba(255, 0, 70, 0.035), transparent 58%),
+    radial-gradient(900px 600px at 80% 0%, rgba(255, 200, 80, 0.03), transparent 60%),
     rgb(var(--bg));
 }
 
-/* overlay أخف بكثير حتى ما يغسل الموقع */
+/* نلغي الطبقة الثابتة التي كانت تغسل الواجهة بالـ light */
 html.theme-light.theme-ramadan body::before,
 html.theme-light.theme-eid body::before,
 html.theme-light.theme-christmas body::before,
 html.theme-light.theme-valentines body::before,
 html.theme-light.theme-blackFriday body::before{
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(420px 240px at 15% 20%, rgba(var(--spark-rgb), 0.025), transparent 70%),
-    radial-gradient(380px 220px at 85% 25%, rgba(var(--spark-rgb), 0.02), transparent 70%),
-    radial-gradient(650px 380px at 50% 92%, rgba(var(--spark-rgb), 0.015), transparent 70%);
+  content: none;
 }
-
-/* مهم جدًا: لا نرفع كل عناصر الصفحة فوق overlay لأن هذا سبب بهتان وغسل بصري */
-html.theme-light body > *{
-  position: static;
-  z-index: auto;
-}
-
 /* Subtle animated glow for primary CTA (works in both themes) */
 .btn-cta-animated{
   position: relative;

@@ -23,7 +23,7 @@
         </select>
 
         <select v-model="brand" class="admin-input" @change="fetchList(1)">
-          <option value="">{{ t('admin.allBrands') }}</option>
+          <option value="">{{ allBrandsLabel }}</option>
           <option v-for="b in brandOptions" :key="b.slug" :value="b.slug">{{ b.name }}</option>
         </select>
 

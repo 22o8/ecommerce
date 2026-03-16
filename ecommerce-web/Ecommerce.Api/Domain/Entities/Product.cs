@@ -1,0 +1,47 @@
+// Ecommerce.Api/Domain/Entities/Product.cs
+namespace Ecommerce.Api.Domain.Entities;
+
+public class Product
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Title { get; set; } = "";
+    public string Slug { get; set; } = "";
+    public string Description { get; set; } = "";
+
+    /// <summary>
+    /// السعر بالدينار العراقي (المعتمد في الواجهة).
+    /// </summary>
+    public decimal PriceIqd { get; set; }
+
+    /// <summary>
+    /// نسبة الخصم (0..100). إذا كانت 0 يعني لا يوجد خصم.
+    /// </summary>
+    public int DiscountPercent { get; set; } = 0;
+
+    /// <summary>
+    /// (قديم) كان يستخدم بالدولار. أبقيناه للتوافق الخلفي فقط.
+    /// </summary>
+    public decimal PriceUsd { get; set; }
+
+    // Brand / فهرسة
+    public string Brand { get; set; } = "Unspecified";
+    public string Category { get; set; } = "general";
+    public string SubCategory { get; set; } = "";
+    public int StockQuantity { get; set; } = 100;
+    public int LowStockThreshold { get; set; } = 5;
+    public bool IsCouponAllowed { get; set; } = true;
+
+    public bool IsPublished { get; set; } = true;
+
+    // Admin-controlled flag to show this product on home page (Featured Products)
+    public bool IsFeatured { get; set; } = false;
+
+    // تقييم (يدوي/إداري حالياً)
+    public decimal RatingAvg { get; set; } = 0m;   // 0..5
+    public int RatingCount { get; set; } = 0;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public ProductAsset? Asset { get; set; }
+    public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
+}

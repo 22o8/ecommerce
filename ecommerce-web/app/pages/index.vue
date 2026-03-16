@@ -689,6 +689,8 @@ const heroBrandBgSrc = heroImage
   filter: brightness(.44) contrast(1.05) saturate(.82) drop-shadow(0 18px 42px rgba(0,0,0,.12));
 }
 :global(html.theme-light) .hero-premium-shell::after{
-  background: linear-gradient(90deg, rgba(255,255,255,.78) 0%, rgba(255,255,255,.72) 46%, rgba(255,255,255,.16) 72%, transparent 100%);
+  background: none;
+  border: 1px solid rgba(228, 232, 239, .92);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95);
 }
 </style>
