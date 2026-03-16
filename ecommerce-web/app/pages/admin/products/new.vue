@@ -192,7 +192,6 @@ const { listBrands, createProduct, uploadProductImages } = useAdminApi()
 type BrandItem = { id: string; slug: string; name: string }
 
 const brands = ref<BrandItem[]>([])
-const brandOptions = computed(() => (brands.value || []).filter((b: any) => b?.slug || b?.name))
 const loading = ref(false)
 
 // ✅ مفاتيح الفورم لازم تكون مطابقة لطلب الـ API (.NET)
@@ -250,7 +249,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 onMounted(async () => {
   try {
     const res: any = await listBrands()
-    brands.value = ((res?.items || res || []) as BrandItem[]).map((b: any) => ({ id: String(b.id || ''), slug: String(b.slug || '').trim(), name: String(b.name || b.title || '').trim() })).filter((b: any) => b.slug || b.name) as BrandItem[]
+    brands.value = (res?.items || res || []) as BrandItem[]
   } catch (e: any) {
     toast.error(e?.message || t('common.error'))
   }

@@ -22,6 +22,11 @@
           <option value="draft">{{ t('admin.draft') }}</option>
         </select>
 
+        <select v-model="brand" class="admin-input" @change="fetchList(1)">
+          <option value="">{{ t('admin.allBrands') }}</option>
+          <option v-for="b in brandOptions" :key="b.slug" :value="b.slug">{{ b.name }}</option>
+        </select>
+
         <select v-model="sort" class="admin-input" @change="fetchList(1)">
           <option value="newest">{{ t('admin.sortNewest') }}</option>
           <option value="oldest">{{ t('admin.sortOldest') }}</option>
@@ -204,11 +209,13 @@
 definePageMeta({ layout: 'admin', middleware: ['admin'] })
 
 import { ref, computed, onMounted } from 'vue'
+import { useBrandsStore } from '~/stores/brands'
 import { useAdminApi } from '~/composables/useAdminApi'
 import { useI18n } from '~/composables/useI18n'
 import { useMoney } from '~/composables/useMoney'
 
 type Product = {
+  brand?: string
   id: string
   title: string
   slug: string
@@ -229,6 +236,7 @@ const publicApi = useApi()
 const { formatIqd } = useMoney()
 
 const router = useRouter()
+const brandsStore = useBrandsStore()
 
 function goDetails(id: any) {
   const pid = typeof id === 'string' ? id : (id?.id ?? id?.value ?? '')
@@ -237,7 +245,9 @@ function goDetails(id: any) {
 
 const q = ref('')
 const status = ref<'published' | 'draft' | ''>('')
+const brand = ref('')
 const sort = ref<'newest' | 'oldest' | 'title' | 'priceHigh' | 'priceLow'>('newest')
+const brandOptions = computed(() => (brandsStore.publicItems || []).map((b:any) => ({ slug: String(b.slug || ''), name: String(b.name || '') })).filter((b:any) => b.slug && b.name))
 
 const loading = ref(false)
 const pending = ref(false)
@@ -288,6 +298,10 @@ function applyClientFilters(list: Product[]) {
 
   if (status.value === 'published') out = out.filter(x => !!x.isPublished)
   if (status.value === 'draft') out = out.filter(x => !x.isPublished)
+  if (brand.value) {
+    const bq = brand.value.trim().toLowerCase()
+    out = out.filter(x => String(x.brand || '').trim().toLowerCase() === bq)
+  }
 
   if (sort.value === 'title') out.sort((a,b) => (a.title||'').localeCompare(b.title||''))
   if (sort.value === 'oldest') out.sort((a,b) => String(a.id).localeCompare(String(b.id)))
@@ -320,6 +334,7 @@ async function fetchList(p = 1) {
       lowStockThreshold: Number(x.lowStockThreshold ?? 0),
       category: String(x.category || 'general'),
       subCategory: String(x.subCategory || ''),
+      brand: String(x.brandSlug || x.brand || x.brandName || ''),
       imageUrl: typeof x.coverImage === 'string'
         ? publicApi.buildAssetUrl(x.coverImage)
         : (typeof x.imageUrl === 'string'
@@ -437,7 +452,9 @@ async function bulkDelete() {
   }
 }
 
-onMounted(() => fetchList(1))
+onMounted(async () => {
+  await Promise.allSettled([brandsStore.fetchPublic(100), fetchList(1)])
+})
 </script>
 
 <style scoped>

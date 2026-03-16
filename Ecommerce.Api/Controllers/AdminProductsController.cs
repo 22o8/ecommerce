@@ -23,25 +23,6 @@ public class AdminProductsController : ControllerBase
         _storage = storage;
     }
 
-
-    private async Task<string> ResolveBrandSlugForWriteAsync(string? brand)
-    {
-        var normalized = NormalizeSlug(brand);
-        if (string.IsNullOrWhiteSpace(normalized)) return string.Empty;
-
-        var rows = await _db.Brands
-            .AsNoTracking()
-            .Where(b => b.IsActive)
-            .Select(b => new { b.Slug, b.Name })
-            .ToListAsync();
-
-        var match = rows.FirstOrDefault(b =>
-            NormalizeSlug(b.Slug) == normalized ||
-            NormalizeSlug(b.Name) == normalized);
-
-        return match?.Slug?.Trim().ToLowerInvariant() ?? normalized;
-    }
-
     // ============================
     // CRUD (Admin)
     // ============================
@@ -126,7 +107,7 @@ public class AdminProductsController : ControllerBase
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var brandSlug = await ResolveBrandSlugForWriteAsync(req.Brand);
+        var brandSlug = NormalizeSlug(req.Brand);
         if (string.IsNullOrWhiteSpace(brandSlug))
             return BadRequest(new { message = "Brand is required" });
 
@@ -182,7 +163,7 @@ public class AdminProductsController : ControllerBase
         var exists = await _db.Products.AnyAsync(x => x.Id != id && x.Slug.ToLower() == slug);
         if (exists) return BadRequest(new { message = "Slug already exists" });
 
-        var brandSlug = await ResolveBrandSlugForWriteAsync(req.Brand);
+        var brandSlug = NormalizeSlug(req.Brand);
         if (string.IsNullOrWhiteSpace(brandSlug))
             return BadRequest(new { message = "Brand is required" });
 

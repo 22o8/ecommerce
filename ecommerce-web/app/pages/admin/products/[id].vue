@@ -53,7 +53,7 @@
                   class="h-10 w-full rounded-2xl border border-white/10 bg-white/5 px-3 text-sm outline-none focus:border-white/20"
                 >
                   <option :value="''" disabled>{{ t('admin.selectBrand') }}</option>
-                  <option v-for="b in brandOptions" :key="b.id || b.slug" :value="b.slug">
+                  <option v-for="b in brands" :key="b.slug" :value="b.slug">
                     {{ b.name }} ({{ b.slug }})
                   </option>
                 </select>
@@ -232,14 +232,6 @@ const uploading = ref(false)
 
 const product = ref<any>(null)
 const brands = ref<Array<{ id: string; slug: string; name: string }>>([])
-const brandOptions = computed(() => {
-  const list = Array.isArray(brands.value) ? [...brands.value] : []
-  const currentRaw = String(product.value?.brand || form.brandSlug || '').trim()
-  if (currentRaw && !list.find((b) => b.slug === currentRaw || b.name === currentRaw)) {
-    list.unshift({ id: `legacy-${currentRaw}`, slug: currentRaw, name: currentRaw })
-  }
-  return list
-})
 
 const form = reactive({
   name: '',
@@ -310,19 +302,6 @@ function resetForm() {
   autoSlugBase.value = slugify(form.name)
 }
 
-
-watch(
-  () => brands.value,
-  () => {
-    if (!product.value) return
-    const currentRaw = String(product.value.brand || '').trim()
-    if (!currentRaw) return
-    const match = brandOptions.value.find((b) => b.slug === form.brandSlug || b.slug === currentRaw || b.name === currentRaw)
-    if (match) form.brandSlug = match.slug
-  },
-  { deep: true }
-)
-
 watch(
   () => form.name,
   (val) => {
@@ -354,7 +333,7 @@ function resolveUploadUrl(path?: string) {
 async function loadBrands() {
   try {
     const res: any = await listBrands<any>()
-    brands.value = (Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : (Array.isArray(res?.data) ? res.data : []))).map((b: any) => ({ id: String(b.id || ''), slug: String(b.slug || '').trim(), name: String(b.name || b.title || '').trim() })).filter((b: any) => b.slug || b.name)
+    brands.value = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : (Array.isArray(res?.data) ? res.data : []))
   } catch (e: any) {
     toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
   }

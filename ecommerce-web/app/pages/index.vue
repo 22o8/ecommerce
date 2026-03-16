@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
-import heroBrandBgAsset from '~/assets/img/9f8b6f3daf40bf671b51aca47243a774.jpg'
+import heroImage from '~/assets/img/hero-brand-bg.jpg'
 
 const { t, locale } = useI18n()
 
@@ -66,22 +66,31 @@ const categoryCards = [
 ] as const
 
 const heroHighlights = computed(() => categoryCards.slice(0, 4))
+const heroBrandBgSrc = heroImage
 
-// ضع رابط صورة/خلفية الهوية هنا بدل #
-const heroBrandBgSrc = heroBrandBgAsset
 </script>
 
 <template>
   <div class="min-h-screen home-page-shell">
     <section class="relative mx-auto max-w-6xl px-4 pt-4 sm:pt-6">
-      <div class="hero-premium-shell overflow-hidden rounded-[2rem] border border-app">
-        <div class="hero-content-grid">
-          <div class="hero-copy-panel">
-            <div class="hero-mini-badges mb-6 flex flex-wrap items-center gap-3">
+      <div class="hero-premium-shell hero-shimmer overflow-hidden rounded-[2rem] border border-app">
+        <div v-if="heroBrandBgSrc !== '#'" class="hero-brand-bg-wrap" aria-hidden="true">
+          <img :src="heroBrandBgSrc" alt="" class="hero-brand-bg-image" />
+        </div>
+        <div v-else class="hero-brand-bg-placeholder" aria-hidden="true">
+          <span>ضع صورة الخلفية هنا</span>
+        </div>
+        <div class="hero-aurora hero-aurora--one" />
+        <div class="hero-aurora hero-aurora--two" />
+        <div class="hero-aurora hero-aurora--three" />
+
+        <div class="relative z-[1] mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-18 lg:px-10 lg:py-20">
+          <div class="hero-content-panel me-auto max-w-[46rem] text-center lg:text-start lg:max-w-[42rem] lg:me-[38%] xl:me-[41%]">
+            <div class="hero-mini-badges mb-6 flex flex-wrap items-center justify-center gap-3">
               <NuxtLink
                 v-for="item in heroHighlights"
                 :key="item.key"
-                :to="`/products?category=${encodeURIComponent(item.key)}`"
+                :to="`/categories/${encodeURIComponent(item.key)}`"
                 class="hero-mini-chip"
               >
                 <span class="text-base">{{ item.icon }}</span>
@@ -89,16 +98,16 @@ const heroBrandBgSrc = heroBrandBgAsset
               </NuxtLink>
             </div>
 
-            <h1 class="hero-main-title text-4xl font-extrabold tracking-tight sm:text-6xl xl:text-7xl">
+            <h1 class="text-4xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-6xl xl:text-7xl">
               {{ t('homeHero.title1') }}
               <span class="hero-title-accent">{{ t('homeHero.title2') }}</span>
             </h1>
 
-            <p class="hero-main-subtitle mt-6 max-w-2xl text-base leading-8 sm:text-lg">
+            <p class="mx-auto mt-6 max-w-2xl text-base leading-8 text-[rgb(var(--muted))] sm:text-lg">
               {{ t('homeHero.subtitle') }}
             </p>
 
-            <div class="mt-8 flex flex-wrap items-center gap-3 sm:gap-4">
+            <div class="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:justify-start">
               <NuxtLink
                 to="/products"
                 class="btn-cta-animated inline-flex items-center justify-center rounded-full px-7 py-3.5 text-sm font-semibold hover:opacity-95"
@@ -114,7 +123,7 @@ const heroBrandBgSrc = heroBrandBgAsset
               </a>
             </div>
 
-            <div class="hero-stat-grid mt-10 grid gap-3 sm:grid-cols-3">
+            <div class="hero-stat-grid mt-10 grid gap-3 sm:grid-cols-3 lg:max-w-3xl">
               <div class="hero-stat-card">
                 <div class="hero-stat-card__glow" />
                 <div class="hero-stat-card__label">{{ t('homeHero.featuredProducts') }}</div>
@@ -130,13 +139,6 @@ const heroBrandBgSrc = heroBrandBgAsset
                 <div class="hero-stat-card__label">{{ t('homeHero.categories') }}</div>
                 <div class="hero-stat-card__value">{{ categoryCards.length }}</div>
               </div>
-            </div>
-          </div>
-
-          <div class="hero-media-panel">
-            <div class="hero-media-frame">
-              <img :src="heroBrandBgSrc" alt="" class="hero-preview-image" />
-              <div class="hero-media-overlay" />
             </div>
           </div>
         </div>
@@ -229,7 +231,7 @@ const heroBrandBgSrc = heroBrandBgAsset
             :delay="35 * idx"
           >
             <NuxtLink
-              :to="`/products?category=${encodeURIComponent(c.key)}`"
+              :to="`/categories/${encodeURIComponent(c.key)}`"
               class="group category-simple-card"
             >
               <div class="category-simple-card__inner" :class="`bg-gradient-to-br ${c.accent}`">
@@ -254,6 +256,21 @@ const heroBrandBgSrc = heroBrandBgAsset
 </template>
 
 <style scoped>
+.hero-content-panel{
+  position: relative;
+  width: min(100%, 42rem);
+  padding: 1.6rem 1.4rem;
+  border-radius: 30px;
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .78), rgba(var(--surface-2-rgb), .64));
+  border: 1px solid rgba(var(--border), .78);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 24px 60px rgba(5, 10, 20, .16);
+}
+:global(html.theme-light) .hero-content-panel{
+  background: linear-gradient(180deg, rgba(255,255,255,.90), rgba(249,250,252,.84));
+  border-color: rgba(214, 218, 228, .95);
+  box-shadow: 0 26px 60px rgba(15, 20, 35, .08);
+}
 .home-page-shell{
   position: relative;
 }
@@ -569,6 +586,16 @@ const heroBrandBgSrc = heroBrandBgAsset
   .category-simple-card__inner{ min-height: 94px; padding: 16px; }
   .category-simple-card__icon{ width: 46px; height: 46px; border-radius: 16px; font-size: 22px; }
   .category-simple-card__arrow{ width: 32px; height: 32px; }
+  .hero-content-panel{
+    width:100%;
+    padding:1rem 1rem 1.1rem;
+    border-radius:24px;
+    text-align:center;
+  }
+  .hero-mini-badges{ gap:.55rem; margin-bottom:1rem; }
+  .hero-mini-chip{ min-height:38px; padding:.55rem .8rem; font-size:.82rem; }
+  .hero-stat-grid{ gap:.75rem; }
+  .hero-stat-card{ padding:.85rem .95rem; border-radius:20px; }
 }
 </style>
 
@@ -583,14 +610,16 @@ const heroBrandBgSrc = heroBrandBgAsset
 }
 .hero-brand-bg-image{
   position:absolute;
-  inset-inline-end:2rem;
+  inset-inline-end: clamp(.75rem, 2vw, 1.35rem);
   top:50%;
-  width:min(42vw, 540px);
-  max-width:42%;
+  width:min(37vw, 470px);
+  max-width:37%;
   transform:translateY(-50%);
-  object-fit:contain;
-  opacity:.14;
-  filter:drop-shadow(0 24px 80px rgba(0,0,0,.28));
+  object-fit:cover;
+  object-position:center;
+  border-radius: 28px;
+  opacity:.34;
+  filter: brightness(.50) contrast(1.04) saturate(.88) drop-shadow(0 22px 68px rgba(0,0,0,.26));
 }
 .hero-brand-bg-placeholder{
   display:flex;
@@ -614,10 +643,10 @@ const heroBrandBgSrc = heroBrandBgAsset
 }
 @media (max-width: 1024px){
   .hero-brand-bg-image{
-    inset-inline-end:1rem;
-    width:min(56vw, 420px);
-    max-width:58%;
-    opacity:.11;
+    inset-inline-end:.8rem;
+    width:min(42vw, 360px);
+    max-width:42%;
+    opacity:.28;
   }
   .hero-brand-bg-placeholder{
     justify-content:center;
@@ -631,13 +660,15 @@ const heroBrandBgSrc = heroBrandBgAsset
 }
 @media (max-width: 640px){
   .hero-brand-bg-image{
+    inset-inline-end: .55rem;
+    inset-inline-start: auto;
     top:auto;
-    bottom:1rem;
-    inset-inline:50% auto;
-    transform:translateX(-50%);
-    width:min(76vw, 320px);
+    bottom:.75rem;
+    transform:none;
+    width:min(58vw, 240px);
     max-width:none;
-    opacity:.09;
+    opacity:.22;
+    border-radius: 22px;
   }
   .hero-brand-bg-placeholder{
     justify-content:center;
@@ -650,92 +681,14 @@ const heroBrandBgSrc = heroBrandBgAsset
     font-size:.82rem;
   }
 }
+</style>
 
-.hero-premium-shell{
-  position: relative;
-  background:
-    linear-gradient(180deg, rgba(var(--surface-rgb), .97), rgba(var(--surface-rgb), .90)),
-    linear-gradient(135deg, rgba(var(--primary), .08), transparent 35%, rgba(var(--cta-glow-2), .06) 100%);
-  box-shadow: 0 32px 90px rgba(10, 10, 20, .14);
+<style scoped>
+:global(html.theme-light) .hero-brand-bg-image{
+  opacity: .30;
+  filter: brightness(.44) contrast(1.05) saturate(.82) drop-shadow(0 18px 42px rgba(0,0,0,.12));
 }
-.hero-content-grid{
-  display:grid;
-  grid-template-columns:minmax(0, 1.08fr) minmax(320px, .92fr);
-  gap:0;
-  align-items:stretch;
-  direction:ltr;
+:global(html.theme-light) .hero-premium-shell::after{
+  background: linear-gradient(90deg, rgba(255,255,255,.78) 0%, rgba(255,255,255,.72) 46%, rgba(255,255,255,.16) 72%, transparent 100%);
 }
-.hero-copy-panel{
-  direction:rtl;
-  position:relative;
-  z-index:2;
-  padding:clamp(2rem, 4vw, 4rem);
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  min-height:560px;
-  background:linear-gradient(180deg, rgba(var(--surface-rgb), .94), rgba(var(--surface-rgb), .88));
-}
-.hero-main-title,
-.hero-main-subtitle{
-  color:rgb(var(--text));
-}
-.hero-main-title{ max-width: 11ch; line-height:1.06; }
-.hero-main-subtitle{ color:rgb(var(--muted)); }
-.hero-media-panel{
-  position:relative;
-  min-height:560px;
-  padding:1.25rem 1.25rem 1.25rem 0;
-}
-.hero-media-frame{
-  position:relative;
-  height:100%;
-  min-height:100%;
-  overflow:hidden;
-  border-radius:0 2rem 2rem 0;
-  border-inline-start:1px solid rgba(var(--border), .78);
-  background:rgba(var(--surface-rgb), .6);
-}
-.hero-preview-image{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  object-position:center;
-  filter:brightness(.42) contrast(1.06) saturate(.82);
-}
-.hero-media-overlay{
-  position:absolute;
-  inset:0;
-  background:
-    linear-gradient(90deg, rgba(5,8,14,.34) 0%, rgba(5,8,14,.08) 28%, rgba(5,8,14,.16) 100%),
-    linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.22));
-}
-.hero-mini-chip{ justify-content:center; }
-:global(html.theme-light) .hero-copy-panel{
-  background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,246,251,.95));
-}
-:global(html.theme-light) .hero-media-overlay{
-  background:
-    linear-gradient(90deg, rgba(255,248,252,.18) 0%, rgba(255,248,252,.06) 28%, rgba(20,20,26,.10) 100%),
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(10,10,18,.14));
-}
-:global(html.theme-light) .hero-preview-image{ filter:brightness(.66) contrast(1.02) saturate(.78); }
-@media (max-width: 1200px){
-  .hero-content-grid{ grid-template-columns:minmax(0, 1fr) minmax(300px, .82fr); }
-  .hero-copy-panel,.hero-media-panel{ min-height:520px; }
-}
-@media (max-width: 900px){
-  .hero-content-grid{ grid-template-columns:1fr; }
-  .hero-copy-panel{ min-height:auto; padding:1.6rem; }
-  .hero-media-panel{ min-height:320px; padding:0 1rem 1rem; }
-  .hero-media-frame{ border-radius:1.6rem; border-inline-start:none; border-top:1px solid rgba(var(--border), .78); }
-  .hero-main-title{ max-width:none; }
-}
-@media (max-width: 640px){
-  .hero-copy-panel{ padding:1.25rem; }
-  .hero-mini-badges{ gap:.6rem; }
-  .hero-mini-chip{ padding:.6rem .85rem; min-height:38px; font-size:.82rem; }
-  .hero-media-panel{ min-height:260px; }
-}
-
 </style>
