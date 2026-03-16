@@ -10,17 +10,14 @@ const showTop = ref(false)
 function onScroll() {
   const scrollTop = window.scrollY || document.documentElement.scrollTop || 0
   const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0
-  const documentHeight = Math.max(
+  const fullHeight = Math.max(
     document.body.scrollHeight,
     document.documentElement.scrollHeight,
     document.body.offsetHeight,
-    document.documentElement.offsetHeight,
-    document.body.clientHeight,
-    document.documentElement.clientHeight,
+    document.documentElement.offsetHeight
   )
 
-  const reachedBottomZone = scrollTop + viewportHeight >= documentHeight - 180
-  showTop.value = reachedBottomZone
+  showTop.value = scrollTop + viewportHeight >= fullHeight - 220
 }
 
 function toTop() {
@@ -81,66 +78,64 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  z-index: 60;
+  z-index: 80;
 }
 
 .fab{
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   border-radius: 999px;
-  padding: 12px 14px;
   border: 1px solid rgb(var(--border));
-  background: rgba(var(--panel), .92);
-  box-shadow: var(--shadow2);
+  background: rgba(var(--panel), .96);
+  box-shadow: 0 18px 38px rgba(0,0,0,.18);
   font-weight: 900;
   color: rgb(var(--text-strong));
   backdrop-filter: blur(14px);
   transition: transform .18s ease, box-shadow .18s ease, background .18s ease, opacity .18s ease;
 }
 
-.fab:hover{ transform: translateY(-2px) scale(1.02); box-shadow: var(--shadow1); }
+.fab:hover{
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 22px 44px rgba(0,0,0,.24);
+}
 
 .fab-wa{
+  padding: 14px 16px;
   border-color: rgba(34,197,94,.35);
 }
 
 .fab-top{
-  width: 64px;
-  height: 64px;
-  justify-content: center;
+  width: 62px;
+  height: 62px;
   padding: 0;
-  border-width: 2px;
-  border-color: rgba(var(--text-strong), .14);
-  background: rgba(var(--panel), .98);
-  box-shadow: 0 16px 36px rgba(0,0,0,.18);
+  border-color: rgba(var(--primary), .34);
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .94));
 }
 
-.icon{ font-size: 16px; }
-.icon-top{
-  font-size: 34px;
-  line-height: 1;
-  font-weight: 900;
-}
+.icon{ font-size: 18px; line-height: 1; }
+.icon-top{ font-size: 30px; font-weight: 900; transform: translateY(-1px); }
 .label{ font-size: 13px; }
 
-@media (max-width: 520px){
+:global(html.theme-light) .fab-top{
+  background: rgba(255,255,255,.98);
+}
+
+@media (max-width: 640px){
   .floating{
     inset-inline-end: 14px;
     bottom: 14px;
+    gap: 10px;
   }
-
-  .label{ display: none; }
-  .fab{ padding: 12px; }
-
+  .fab-wa{
+    padding: 13px;
+  }
   .fab-top{
     width: 58px;
     height: 58px;
-    padding: 0;
   }
-
-  .icon-top{
-    font-size: 32px;
-  }
+  .icon-top{ font-size: 28px; }
+  .label{ display: none; }
 }
 </style>

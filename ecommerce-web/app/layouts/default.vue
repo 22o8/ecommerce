@@ -13,17 +13,7 @@
 
     <AppFooter />
 
-    <!-- Floating WhatsApp -->
-    <a
-      v-if="whats"
-      class="fixed bottom-5 right-5 z-40 rounded-full border border-app bg-surface p-4 shadow-card hover:opacity-95 transition"
-      :href="waLink"
-      target="_blank"
-      rel="noreferrer"
-      :title="t('whatsappOrder')"
-    >
-      <Icon name="mdi:whatsapp" class="text-2xl" />
-    </a>
+    <FloatingActions />
   </div>
 </template>
 
@@ -33,11 +23,4 @@ import AppFooter from '~/components/AppFooter.vue'
 import ProductQuickPreviewModal from '~/components/ProductQuickPreviewModal.vue'
 import GlobalEffects from '~/components/appearance/GlobalEffects.vue'
 import GlobalAds from '~/components/appearance/GlobalAds.vue'
-const { t } = useI18n()
-const config = useRuntimeConfig()
-const whats = String((config.public as any).whatsappNumber || '').trim()
-const waLink = computed(() => {
-  const n = whats.replace(/[^0-9]/g, '')
-  return n ? `https://wa.me/${n}` : '#'
-})
 </script>
