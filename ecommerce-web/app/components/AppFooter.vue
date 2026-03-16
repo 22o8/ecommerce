@@ -62,7 +62,7 @@ const supportPhone = String((config.public as any).supportPhone || '')
 const instagramUrl = String((config.public as any).instagramUrl || '')
 
 
-const siteLogoSrc = '../assets/img/470242929_435317702981132_8360512818133532558_n (1).jpg'
+const siteLogoSrc = '~/assets/img/470242929_435317702981132_8360512818133532558_n (1).jpg'
 
 function toTop(){ if (import.meta.client) window.scrollTo({ top: 0, behavior: 'smooth' }) }
 </script>
