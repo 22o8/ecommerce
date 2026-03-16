@@ -47,9 +47,9 @@
     <div class="grad-line mx-auto max-w-7xl" />
     <div class="mx-auto max-w-7xl px-4 py-6 text-xs text-muted flex items-center justify-between">
       <div class="rtl-text">© {{ new Date().getFullYear() }} ECOMMERCE</div>
-      <a class="keep-ltr text-muted hover:opacity-90" href="#" @click.prevent="toTop">
-        <Icon name="mdi:arrow-up" class="inline-block text-lg" />
-      </a>
+      <button type="button" class="footer-top-btn keep-ltr" @click="toTop" aria-label="Back to top" title="Back to top">
+        <Icon name="mdi:arrow-up" class="footer-top-btn__icon" />
+      </button>
     </div>
   </footer>
 </template>
@@ -65,3 +65,26 @@ const instagramUrl = String((config.public as any).instagramUrl || '')
 
 function toTop(){ if (import.meta.client) window.scrollTo({ top: 0, behavior: 'smooth' }) }
 </script>
+
+
+<style scoped>
+.footer-top-btn{
+  width: 2.85rem;
+  height: 2.85rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(var(--border), .85);
+  background: rgba(var(--panel), .9);
+  color: rgb(var(--text-strong));
+  transition: transform .18s ease, opacity .18s ease;
+}
+.footer-top-btn:hover{
+  transform: translateY(-1px);
+  opacity: 1;
+}
+.footer-top-btn__icon{
+  font-size: 1.3rem;
+}
+</style>
