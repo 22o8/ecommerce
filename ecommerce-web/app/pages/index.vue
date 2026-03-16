@@ -74,7 +74,7 @@ const heroBrandBgSrc = heroImage
   <div class="min-h-screen home-page-shell">
     <section class="relative mx-auto max-w-6xl px-4 pt-4 sm:pt-6">
       <div class="hero-premium-shell hero-shimmer overflow-hidden rounded-[2rem] border border-app">
-        <div v-if="heroBrandBgSrc !== '#'" class="hero-brand-bg-wrap" aria-hidden="true">
+        <div v-if="heroBrandBgSrc !== '/'" class="hero-brand-bg-wrap" aria-hidden="true">
           <img :src="heroBrandBgSrc" alt="" class="hero-brand-bg-image" />
         </div>
         <div v-else class="hero-brand-bg-placeholder" aria-hidden="true">
@@ -685,7 +685,8 @@ const heroBrandBgSrc = heroImage
 
 <style scoped>
 :global(html.theme-light) .hero-brand-bg-image{
-  opacity: .68;
+  opacity: .58;
+  filter: brightness(.74) contrast(1.01) saturate(.92) drop-shadow(0 16px 36px rgba(0,0,0,.08));
 }
 :global(html.theme-light) .hero-premium-shell::after{
   background: none;
