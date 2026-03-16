@@ -663,8 +663,8 @@ const heroBrandBgSrc = heroImage
   object-fit:cover;
   object-position:center;
   border-radius: 28px;
-  opacity:.34;
-  filter: brightness(.50) contrast(1.04) saturate(.88) drop-shadow(0 22px 68px rgba(0,0,0,.26));
+  opacity:.86;
+  filter: grayscale(1) brightness(.96) contrast(1.06) drop-shadow(0 22px 68px rgba(0,0,0,.18));
 }
 .hero-brand-bg-placeholder{
   display:flex;
@@ -691,7 +691,7 @@ const heroBrandBgSrc = heroImage
     inset-inline-end:.8rem;
     width:min(42vw, 360px);
     max-width:42%;
-    opacity:.28;
+    opacity:.78;
   }
   .hero-brand-bg-placeholder{
     justify-content:center;
