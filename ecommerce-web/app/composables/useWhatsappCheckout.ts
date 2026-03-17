@@ -23,34 +23,6 @@ function normalizePhone(v: any) {
   return String(v || '').replace(/\D/g, '')
 }
 
-function openWhatsappUrl(url: string) {
-  if (!import.meta.client) return
-
-  const ua = String(navigator.userAgent || '').toLowerCase()
-  const isMobile = /android|iphone|ipad|ipod|mobile|iemobile|opera mini/.test(ua) || window.innerWidth < 768
-
-  if (isMobile) {
-    try {
-      const target = new URL(url)
-      const number = target.pathname.replace(/\//g, '')
-      const text = target.searchParams.get('text') || ''
-      const deepLink = `whatsapp://send${number ? `?phone=${number}` : '?'}${number && text ? '&' : ''}${text ? `text=${text}` : ''}`
-      window.location.assign(deepLink)
-      window.setTimeout(() => window.location.assign(url), 900)
-      return
-    } catch {
-      window.location.assign(url)
-      return
-    }
-  }
-
-  const newTab = window.open(url, '_blank', 'noopener,noreferrer')
-  if (!newTab) {
-    window.location.assign(url)
-  }
-}
-
-
 export function useWhatsappCheckout() {
   const api = useApi()
   const config = useRuntimeConfig()
@@ -124,7 +96,9 @@ export function useWhatsappCheckout() {
       ? `https://wa.me/${number}?text=${text}`
       : `https://wa.me/?text=${text}`
 
-    openWhatsappUrl(url)
+    if (import.meta.client) {
+      window.open(url, '_blank')
+    }
   }
 
   const checkoutSingleProduct = async (product: any, quantity = 1) => {
@@ -168,7 +142,9 @@ export function useWhatsappCheckout() {
       ? `https://wa.me/${number}?text=${text}`
       : `https://wa.me/?text=${text}`
 
-    openWhatsappUrl(url)
+    if (import.meta.client) {
+      window.open(url, '_blank')
+    }
   }
 
   return { openWhatsappForCart, checkoutSingleProduct }

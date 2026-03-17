@@ -140,12 +140,12 @@ function fmt(v: any) {
               </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2">
-              <button class="btn-cta-animated inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold touch-manipulation" @pointerdown.stop @touchstart.stop @click="addToCart" :disabled="isOutOfStock">
+            <div class="flex items-center gap-2">
+              <button class="btn-cta-animated inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold" @click="addToCart" :disabled="isOutOfStock">
                 <Icon name="mdi:cart-plus" class="text-lg" />
                 <span class="rtl-text">{{ t('common.addToCart') }}</span>
               </button>
-              <button class="btn-cta-animated btn-cta-secondary inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold touch-manipulation" @pointerdown.stop @touchstart.stop @click="buyNow" :disabled="isOutOfStock">
+              <button class="btn-cta-animated btn-cta-secondary inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold" @click="buyNow" :disabled="isOutOfStock">
                 <span class="rtl-text">{{ t('common.buy') }}</span>
               </button>
             </div>

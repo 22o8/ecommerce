@@ -1,5 +1,5 @@
 // ecommerce-web/server/api/bff/[...path].ts
-import { deleteCookie, getCookie, getQuery, getRequestHeaders, getRouterParam, readMultipartFormData, readRawBody, setCookie, setResponseHeader, setResponseStatus } from 'h3'
+import { readMultipartFormData, readRawBody } from 'h3'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -153,31 +153,17 @@ export default defineEventHandler(async (event) => {
       try {
         return raw ? JSON.parse(raw) : null
       } catch {
-        return res.ok
-          ? {
-              message: 'Upstream returned invalid JSON.',
-              status: res.status,
-              contentType: responseCt,
-              preview: raw.slice(0, 400),
-            }
-          : {
-              error: 'Upstream request failed',
-              message: raw.slice(0, 400) || 'تعذر إكمال الطلب من الخادم.',
-              status: res.status,
-              contentType: responseCt,
-            }
+        return {
+          error: 'Upstream returned invalid JSON.',
+          status: res.status,
+          contentType: responseCt,
+          preview: raw.slice(0, 400),
+        }
       }
     }
 
     if (responseCt.startsWith('text/')) {
-      const text = await res.text().catch(() => '')
-      if (!res.ok) {
-        return {
-          message: text?.trim() || 'تعذر إكمال الطلب من الخادم.',
-          status: res.status,
-        }
-      }
-      return text
+      return await res.text().catch(() => '')
     }
 
     const buf = new Uint8Array(await res.arrayBuffer())
