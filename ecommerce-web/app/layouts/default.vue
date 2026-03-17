@@ -24,7 +24,8 @@
       >
         <span class="back-to-top-glow" aria-hidden="true"></span>
         <span class="back-to-top-inner">
-          <Icon name="mdi:arrow-up-thin" class="back-to-top-icon" />
+          <span class="back-to-top-badge" aria-hidden="true"></span>
+          <Icon name="mdi:chevron-up" class="back-to-top-icon" />
         </span>
       </button>
     </Transition>
@@ -100,11 +101,11 @@ onUnmounted(() => {
 <style scoped>
 .back-to-top-btn{
   position: fixed;
-  inset-inline-end: 1.15rem;
-  bottom: 6.05rem;
+  inset-inline-end: 5.4rem;
+  bottom: 1.65rem;
   z-index: 55;
-  width: 4.5rem;
-  height: 4.5rem;
+  width: 4.2rem;
+  height: 4.2rem;
   border: 0;
   padding: 0;
   border-radius: 999px;
@@ -112,64 +113,80 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   background: transparent;
-  color: rgb(var(--text-strong));
+  color: rgb(var(--text));
   cursor: pointer;
   isolation: isolate;
-  filter: drop-shadow(0 18px 34px rgba(0, 0, 0, .18));
-  transition: transform .2s ease, filter .2s ease;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .16);
+  transition: transform .22s ease, box-shadow .22s ease, opacity .22s ease;
 }
 .back-to-top-glow{
   position: absolute;
   inset: 0;
   border-radius: inherit;
   background:
-    radial-gradient(circle at 30% 28%, rgba(255,255,255,.92), rgba(255,255,255,.22) 26%, transparent 27%),
-    linear-gradient(135deg, rgba(var(--primary), .96), rgba(var(--primary), .72));
-  border: 1px solid rgba(var(--border), .72);
+    radial-gradient(circle at 28% 24%, rgba(255,255,255,.95), rgba(255,255,255,.18) 26%, transparent 27%),
+    linear-gradient(180deg, rgba(var(--surface), .98), rgba(var(--surface), .94));
+  border: 1px solid rgba(var(--border), .95);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.58),
-    0 0 0 7px rgba(var(--primary), .08);
+    inset 0 1px 0 rgba(255,255,255,.72),
+    inset 0 -10px 22px rgba(var(--primary), .06),
+    0 0 0 6px rgba(var(--primary), .10);
 }
 .back-to-top-inner{
   position: relative;
   z-index: 1;
-  width: calc(100% - 10px);
-  height: calc(100% - 10px);
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
   border-radius: inherit;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,.08);
-  backdrop-filter: blur(8px);
+  background: linear-gradient(180deg, rgba(var(--bg), .72), rgba(var(--bg), .92));
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+.back-to-top-badge{
+  position: absolute;
+  top: .62rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: .42rem;
+  height: .42rem;
+  border-radius: 999px;
+  background: rgba(var(--primary), .9);
+  box-shadow: 0 0 0 6px rgba(var(--primary), .12);
 }
 .back-to-top-btn:hover{
-  transform: translateY(-3px) scale(1.035);
-  filter: drop-shadow(0 22px 40px rgba(0, 0, 0, .22));
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 22px 46px rgba(0, 0, 0, .22);
 }
 .back-to-top-btn:active{
-  transform: translateY(0) scale(.97);
+  transform: translateY(-1px) scale(.97);
 }
 .back-to-top-icon{
-  font-size: 2.35rem;
+  font-size: 2.1rem;
   line-height: 1;
   font-weight: 900;
+  color: rgb(var(--text-strong));
+  transform: translateY(.06rem);
 }
 .back-to-top-fade-enter-active,
 .back-to-top-fade-leave-active{
-  transition: opacity .24s ease, transform .24s ease;
+  transition: opacity .26s ease, transform .26s ease;
 }
 .back-to-top-fade-enter-from,
 .back-to-top-fade-leave-to{
   opacity: 0;
-  transform: translateY(12px) scale(.9);
+  transform: translateY(14px) scale(.88);
 }
 @media (max-width: 768px){
   .back-to-top-btn{
-    inset-inline-end: .95rem;
-    bottom: 5.45rem;
-    width: 4rem;
-    height: 4rem;
+    inset-inline-end: 4.9rem;
+    bottom: 1rem;
+    width: 3.7rem;
+    height: 3.7rem;
   }
-  .back-to-top-icon{ font-size: 2.05rem; }
+  .back-to-top-badge{ top: .52rem; }
+  .back-to-top-icon{ font-size: 1.9rem; }
 }
 </style>
