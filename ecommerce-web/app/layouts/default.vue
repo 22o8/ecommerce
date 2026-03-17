@@ -22,8 +22,8 @@
         :title="t('backToTop') || 'Back to top'"
         :aria-label="t('backToTop') || 'Back to top'"
       >
-        <span class="back-to-top-btn__glow" aria-hidden="true"></span>
-        <Icon name="mdi:chevron-double-up" class="back-to-top-icon" />
+        <span class="back-to-top-glow" aria-hidden="true"></span>
+        <Icon name="mdi:arrow-up-thin" class="back-to-top-icon" />
       </button>
     </Transition>
 
@@ -69,7 +69,8 @@ function handleScroll() {
   )
   const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0
   const distanceToBottom = docHeight - (scrollTop + viewportHeight)
-  showBackToTop.value = distanceToBottom <= 220
+
+  showBackToTop.value = scrollTop > 520 || distanceToBottom <= 260
 }
 
 function scrollToTop() {
@@ -92,70 +93,80 @@ onUnmounted(() => {
 <style scoped>
 .back-to-top-btn{
   position: fixed;
-  inset-inline-end: 1.25rem;
-  bottom: 5.85rem;
-  z-index: 55;
-  width: 4.6rem;
-  height: 4.6rem;
+  inset-inline-end: 1.15rem;
+  bottom: 6rem;
+  z-index: 80;
+  width: 4.5rem;
+  height: 4.5rem;
+  border: 0;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(var(--border), .72);
-  background:
-    radial-gradient(circle at 30% 30%, rgba(255,255,255,.22), transparent 42%),
-    linear-gradient(180deg, rgba(var(--panel), .98), rgba(var(--panel), .92));
-  color: rgb(var(--text-strong));
-  box-shadow:
-    0 18px 44px rgba(0, 0, 0, .18),
-    0 0 0 1px rgba(255,255,255,.05) inset;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  transition: transform .22s ease, box-shadow .22s ease, background .22s ease, opacity .22s ease;
+  isolation: isolate;
   overflow: hidden;
+  cursor: pointer;
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(17, 24, 39, .96), rgba(59, 130, 246, .88));
+  box-shadow: 0 18px 44px rgba(15, 23, 42, .34), 0 0 0 1px rgba(255,255,255,.12) inset;
+  backdrop-filter: blur(12px);
+  transition: transform .22s ease, box-shadow .22s ease, opacity .22s ease, filter .22s ease;
 }
-.back-to-top-btn__glow{
+.back-to-top-btn::after{
+  content: '';
   position: absolute;
-  inset: 0;
+  inset: 4px;
   border-radius: inherit;
-  background: radial-gradient(circle at center, rgba(var(--primary), .22), transparent 68%);
-  opacity: .95;
-  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.02));
+  z-index: 0;
+}
+.back-to-top-glow{
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,0) 65%);
+  opacity: .9;
+  z-index: 0;
+  animation: backToTopPulse 2.2s ease-in-out infinite;
 }
 .back-to-top-btn:hover{
-  transform: translateY(-3px) scale(1.04);
-  box-shadow:
-    0 24px 54px rgba(0, 0, 0, .24),
-    0 0 0 1px rgba(255,255,255,.08) inset;
+  transform: translateY(-4px) scale(1.06);
+  box-shadow: 0 24px 52px rgba(15, 23, 42, .42), 0 0 0 1px rgba(255,255,255,.18) inset;
+  filter: saturate(1.08);
 }
 .back-to-top-btn:active{
-  transform: translateY(-1px) scale(.98);
+  transform: scale(.97);
+}
+.back-to-top-btn:focus-visible{
+  outline: 3px solid rgba(59, 130, 246, .35);
+  outline-offset: 4px;
 }
 .back-to-top-icon{
   position: relative;
   z-index: 1;
-  font-size: 2.25rem;
+  font-size: 2.35rem;
   line-height: 1;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,.18));
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .28));
 }
 .back-to-top-fade-enter-active,
 .back-to-top-fade-leave-active{
-  transition: opacity .22s ease, transform .22s ease;
+  transition: opacity .2s ease, transform .2s ease;
 }
 .back-to-top-fade-enter-from,
 .back-to-top-fade-leave-to{
   opacity: 0;
-  transform: translateY(10px) scale(.9);
+  transform: translateY(10px) scale(.92);
+}
+@keyframes backToTopPulse{
+  0%, 100% { transform: scale(.96); opacity: .82; }
+  50% { transform: scale(1.08); opacity: 1; }
 }
 @media (max-width: 768px){
   .back-to-top-btn{
-    inset-inline-end: 1rem;
-    bottom: 5.25rem;
-    width: 4.2rem;
-    height: 4.2rem;
+    inset-inline-end: .95rem;
+    bottom: 5.65rem;
+    width: 4.1rem;
+    height: 4.1rem;
   }
-  .back-to-top-icon{
-    font-size: 2.05rem;
-  }
+  .back-to-top-icon{ font-size: 2.1rem; }
 }
 </style>
