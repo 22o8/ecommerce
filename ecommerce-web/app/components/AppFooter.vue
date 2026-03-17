@@ -47,9 +47,7 @@
     <div class="grad-line mx-auto max-w-7xl" />
     <div class="mx-auto max-w-7xl px-4 py-6 text-xs text-muted flex items-center justify-between">
       <div class="rtl-text">© {{ new Date().getFullYear() }} ECOMMERCE</div>
-      <a class="keep-ltr text-muted hover:opacity-90" href="#" @click.prevent="toTop">
-        <Icon name="mdi:arrow-up" class="inline-block text-lg" />
-      </a>
+      <div class="footer-end-mark" aria-hidden="true"></div>
     </div>
   </footer>
 </template>
@@ -62,6 +60,15 @@ const supportEmail = String((config.public as any).supportEmail || '')
 const supportPhone = String((config.public as any).supportPhone || '')
 const instagramUrl = String((config.public as any).instagramUrl || '')
 
-
-function toTop(){ if (import.meta.client) window.scrollTo({ top: 0, behavior: 'smooth' }) }
 </script>
+
+
+<style scoped>
+.footer-end-mark{
+  width: 2.85rem;
+  height: 2.85rem;
+  border-radius: 999px;
+  border: 1px dashed rgba(var(--border), .55);
+  opacity: .35;
+}
+</style>
