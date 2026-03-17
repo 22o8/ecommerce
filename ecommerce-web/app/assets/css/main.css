@@ -925,11 +925,3 @@ html.theme-dark .control-box-strong{
   border: 1px solid rgba(var(--border), .92) !important;
   box-shadow: 0 14px 36px rgba(0,0,0,.18);
 }
-
-
-@media (max-width: 768px){
-  .page-enter-active,
-  .page-leave-active{
-    transition-duration: 120ms !important;
-  }
-}

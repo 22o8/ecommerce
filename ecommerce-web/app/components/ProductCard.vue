@@ -7,8 +7,6 @@
     @click="goProduct"
     @keydown.enter.prevent="goProduct"
     @keydown.space.prevent="goProduct"
-    @touchstart.passive="warmProductRoute"
-    @pointerenter="warmProductRoute"
   >
     <div class="relative">
       <div class="relative aspect-[4/3] product-card-media">
@@ -62,9 +60,7 @@
           <button
             type="button"
             class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
-            @pointerdown.stop
-            @touchstart.stop
-            @click.stop="toggleFav"
+            @click.stop.prevent="toggleFav"
             :aria-label="t('wishlist.toggle')"
           >
             <Icon :name="fav ? 'mdi:heart' : 'mdi:heart-outline'" class="text-lg" />
@@ -73,9 +69,7 @@
           <button
             type="button"
             class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
-            @pointerdown.stop
-            @touchstart.stop
-            @click.stop="openPreview"
+            @click.stop.prevent="openPreview"
             :aria-label="t('products.quickPreview')"
           >
             <Icon name="mdi:eye-outline" class="text-lg" />
@@ -97,9 +91,7 @@
           <button
             type="button"
             class="product-card-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-app transition text-xs"
-            @pointerdown.stop
-            @touchstart.stop
-            @click.stop="addToCart"
+            @click.stop.prevent="addToCart"
             :disabled="isOutOfStock"
           >
             <Icon name="mdi:cart-plus" class="text-base" />
@@ -109,9 +101,7 @@
           <button
             type="button"
             class="product-card-btn inline-flex items-center px-2.5 py-1.5 rounded-xl border border-app transition text-xs"
-            @pointerdown.stop
-            @touchstart.stop
-            @click.stop="buyNow"
+            @click.stop.prevent="buyNow"
             :disabled="isOutOfStock"
           >
             <span class="rtl-text">{{ t('common.buy') }}</span>
@@ -134,8 +124,8 @@ const { isInWishlist, toggle } = useWishlist()
 const qp = useQuickPreview()
 const router = useRouter()
 const route = useRoute()
+const toast = useToast()
 const { buildAssetUrl } = useApi()
-let warmedProductHref = ''
 
 const p = computed(() => props.product ?? props.p ?? {})
 
@@ -184,17 +174,7 @@ function formatPrice(v: any) {
 function addToCart() {
   if (isOutOfStock.value) return
   cart.add(p.value)
-}
-
-function warmProductRoute() {
-  const id = String(p.value?.id ?? '')
-  if (!id) return
-  const href = `/product/${id}`
-  if (warmedProductHref === href) return
-  warmedProductHref = href
-  if (import.meta.client) {
-    try { preloadRouteComponents(href) } catch {}
-  }
+  toast.success('تمت إضافة المنتج إلى السلة')
 }
 
 const { checkoutSingleProduct } = useWhatsappCheckout()
@@ -205,7 +185,7 @@ async function buyNow() {
     await checkoutSingleProduct(p.value, 1)
   } catch (e) {
     cart.add(p.value)
-    navigateTo('/cart')
+    await router.push('/cart')
   }
 }
 
@@ -224,14 +204,11 @@ function openPreview() {
   }
 }
 
-function goProduct() {
+async function goProduct() {
   const id = String(p.value?.id ?? '')
   if (!id) return
-  const href = `/product/${id}`
-  if (import.meta.client) {
-    window.scrollTo({ top: 0, behavior: 'auto' })
-  }
-  navigateTo(href)
+  await router.push(`/product/${id}`)
+  if (import.meta.client) window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
 }
 </script>
 
@@ -246,15 +223,6 @@ function goProduct() {
   background: rgb(var(--surface));
 }
 .product-card-btn:disabled{ opacity:.5; cursor:not-allowed; }
-.product-card-shell, .product-card-btn{
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-.product-card-btn{
-  position: relative;
-  min-height: 2.75rem;
-}
-.product-card-btn:active{ transform: scale(.98); }
 :global(html.theme-light) .product-card-shell{
   background: linear-gradient(180deg, rgba(255,255,255,.99), rgba(255,247,252,.95));
   box-shadow: 0 22px 54px rgba(232, 91, 154, .08), 0 10px 24px rgba(24,24,24,.05);

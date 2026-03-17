@@ -28,12 +28,12 @@
               <div class="text-sm text-muted rtl-text" v-if="p?.description">{{ p.description }}</div>
 
 	              <div class="flex flex-wrap gap-2">
-                <UiButton variant="secondary" @click="addToCart" :disabled="isOutOfStock" class="touch-manipulation min-h-[46px]">
+                <UiButton variant="secondary" @click="addToCart" :disabled="isOutOfStock">
                   <Icon name="mdi:cart-plus" class="text-lg" />
                   <span class="rtl-text">{{ t('productsPage.addToCart') }}</span>
                 </UiButton>
 
-                <UiButton variant="ghost" @click="toggleFav" class="touch-manipulation min-h-[46px]">
+                <UiButton variant="ghost" @click="toggleFav">
                   <Icon :name="isFav ? 'mdi:heart' : 'mdi:heart-outline'" class="text-lg" />
                   <span class="rtl-text">{{ isFav ? t('wishlist.remove') : t('wishlist.add') }}</span>
                 </UiButton>
@@ -241,5 +241,4 @@ function toggleFav() {
 }
 .btn-soft:hover{ background: rgba(255,255,255,.10); }
 .btn-soft:active{ transform: scale(.98); }
-.btn-soft{ -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 </style>

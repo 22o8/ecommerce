@@ -7,6 +7,8 @@ const route = useRoute()
 const { t } = useI18n()
 const api = useApi()
 const cart = useCartStore()
+const router = useRouter()
+const toast = useToast()
 
 const productId = computed(() => String(route.params.productId || ''))
 
@@ -29,13 +31,6 @@ const images = computed(() => {
 
 const activeIndex = ref(0)
 watch(images, () => { activeIndex.value = 0 })
-watch(productId, () => {
-  activeIndex.value = 0
-  if (import.meta.client) {
-    window.scrollTo({ top: 0, behavior: 'auto' })
-  }
-}, { immediate: true })
-
 
 const activeImage = computed(() => {
   const im = images.value?.[activeIndex.value]
@@ -48,6 +43,15 @@ const discountPercent = computed(() => Number(product.value?.discountPercent ?? 
 const finalPriceIqd = computed(() => Number(product.value?.finalPriceIqd ?? (discountPercent.value > 0 ? (priceIqd.value * (100 - discountPercent.value) / 100) : priceIqd.value)))
 
 const brand = computed(() => String(product.value?.brand ?? ''))
+
+const isOutOfStock = computed(() => Number(product.value?.stockQuantity ?? product.value?.StockQuantity ?? 0) <= 0)
+
+watch(productId, () => {
+  activeIndex.value = 0
+  if (import.meta.client) {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }
+}, { immediate: true })
 
 // Similar / You may also like: fallback بسيط عبر نفس البراند
 const { data: similar } = await useAsyncData(
@@ -64,6 +68,7 @@ const { data: similar } = await useAsyncData(
 function addToCart() {
   if (!product.value || isOutOfStock.value) return
   cart.add(product.value)
+  toast.success('تمت إضافة المنتج إلى السلة')
 }
 
 const { checkoutSingleProduct } = useWhatsappCheckout()
@@ -73,8 +78,8 @@ async function buyNow() {
   try {
     await checkoutSingleProduct(product.value, 1)
   } catch (e) {
-    addToCart()
-    navigateTo('/cart')
+    cart.add(product.value)
+    await router.push('/cart')
   }
 }
 
@@ -148,11 +153,11 @@ function fmt(v: any) {
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-              <button type="button" class="btn-cta-animated inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold touch-manipulation" @click="addToCart" :disabled="isOutOfStock">
+              <button class="btn-cta-animated inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold touch-manipulation" @click.stop.prevent="addToCart" :disabled="isOutOfStock">
                 <Icon name="mdi:cart-plus" class="text-lg" />
                 <span class="rtl-text">{{ t('common.addToCart') }}</span>
               </button>
-              <button type="button" class="btn-cta-animated btn-cta-secondary inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold touch-manipulation" @click="buyNow" :disabled="isOutOfStock">
+              <button class="btn-cta-animated btn-cta-secondary inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold touch-manipulation" @click.stop.prevent="buyNow" :disabled="isOutOfStock">
                 <span class="rtl-text">{{ t('common.buy') }}</span>
               </button>
             </div>
@@ -195,13 +200,5 @@ function fmt(v: any) {
 :global(html.theme-dark) .product-sheet{
   background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .90));
   box-shadow: 0 20px 52px rgba(0,0,0,.28);
-}
-button.touch-manipulation{
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  min-height: 2.9rem;
-}
-button.touch-manipulation:active{
-  transform: scale(.985);
 }
 </style>
