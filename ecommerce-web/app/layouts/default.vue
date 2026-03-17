@@ -21,7 +21,9 @@
       :title="t('backToTop') || 'Back to top'"
       :aria-label="t('backToTop') || 'Back to top'"
     >
-      <Icon name="mdi:arrow-up" class="back-to-top-icon" />
+      <span class="back-to-top-btn__ring" aria-hidden="true"></span>
+      <span class="back-to-top-btn__shine" aria-hidden="true"></span>
+      <Icon name="mdi:chevron-double-up" class="back-to-top-icon" />
     </button>
 
     <!-- Floating WhatsApp -->
@@ -58,15 +60,7 @@ const waLink = computed(() => {
 function handleScroll() {
   if (!import.meta.client) return
   const scrollTop = window.scrollY || document.documentElement.scrollTop || 0
-  const docHeight = Math.max(
-    document.body.scrollHeight,
-    document.documentElement.scrollHeight,
-    document.body.offsetHeight,
-    document.documentElement.offsetHeight
-  )
-  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0
-  const distanceToBottom = docHeight - (scrollTop + viewportHeight)
-  showBackToTop.value = distanceToBottom <= 160
+  showBackToTop.value = scrollTop > 420
 }
 
 function scrollToTop() {
@@ -89,40 +83,78 @@ onUnmounted(() => {
 <style scoped>
 .back-to-top-btn{
   position: fixed;
-  inset-inline-end: 1.25rem;
-  bottom: 5.85rem;
+  inset-inline-end: 7rem;
+  bottom: 1.85rem;
   z-index: 55;
-  width: 4.15rem;
-  height: 4.15rem;
-  border-radius: 999px;
+  width: 4.65rem;
+  height: 4.65rem;
+  border-radius: 1.6rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(var(--border), .9);
-  background: rgba(var(--panel), .97);
+  border: 1px solid rgba(var(--primary), .28);
+  background:
+    linear-gradient(180deg, rgba(var(--panel), .98), rgba(var(--panel), .90)),
+    radial-gradient(circle at 30% 20%, rgba(var(--primary), .22), transparent 55%);
   color: rgb(var(--text-strong));
-  box-shadow: 0 18px 42px rgba(0, 0, 0, .18);
-  backdrop-filter: blur(10px);
-  transition: transform .18s ease, opacity .18s ease, box-shadow .18s ease, background .18s ease;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, .16);
+  backdrop-filter: blur(14px);
+  transition: transform .22s ease, opacity .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
+  overflow: hidden;
+  cursor: pointer;
 }
 .back-to-top-btn:hover{
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 22px 48px rgba(0, 0, 0, .22);
+  transform: translateY(-6px) scale(1.04);
+  border-color: rgba(var(--primary), .5);
+  box-shadow: 0 26px 54px rgba(0, 0, 0, .22);
 }
 .back-to-top-btn:active{
-  transform: scale(.98);
+  transform: translateY(-2px) scale(.97);
+}
+.back-to-top-btn:focus-visible{
+  outline: 0;
+  box-shadow:
+    0 0 0 4px rgba(var(--primary), .18),
+    0 24px 50px rgba(0, 0, 0, .18);
+}
+.back-to-top-btn__ring,
+.back-to-top-btn__shine{
+  position: absolute;
+  pointer-events: none;
+}
+.back-to-top-btn__ring{
+  inset: 8px;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(var(--primary), .12);
+}
+.back-to-top-btn__shine{
+  width: 4rem;
+  height: 4rem;
+  border-radius: 999px;
+  top: -1.4rem;
+  right: -1.1rem;
+  background: rgba(255,255,255,.22);
+  filter: blur(14px);
 }
 .back-to-top-icon{
-  font-size: 2rem;
+  position: relative;
+  z-index: 1;
+  font-size: 2.1rem;
   line-height: 1;
+  transition: transform .22s ease;
+}
+.back-to-top-btn:hover .back-to-top-icon{
+  transform: translateY(-2px);
 }
 @media (max-width: 768px){
   .back-to-top-btn{
-    inset-inline-end: 1rem;
-    bottom: 5.25rem;
-    width: 3.9rem;
-    height: 3.9rem;
+    inset-inline-end: 6rem;
+    bottom: 1.15rem;
+    width: 4.1rem;
+    height: 4.1rem;
+    border-radius: 1.35rem;
   }
-  .back-to-top-icon{ font-size: 1.85rem; }
+  .back-to-top-btn__ring{ border-radius: 1rem; }
+  .back-to-top-icon{ font-size: 1.9rem; }
 }
 </style>
