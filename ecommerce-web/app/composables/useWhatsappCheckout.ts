@@ -23,6 +23,24 @@ function normalizePhone(v: any) {
   return String(v || '').replace(/\D/g, '')
 }
 
+function openWhatsappUrl(url: string) {
+  if (!import.meta.client) return
+
+  const ua = String(navigator.userAgent || '').toLowerCase()
+  const isMobile = /android|iphone|ipad|ipod|mobile|iemobile|opera mini/.test(ua) || window.innerWidth < 768
+
+  if (isMobile) {
+    window.location.href = url
+    return
+  }
+
+  const newTab = window.open(url, '_blank', 'noopener,noreferrer')
+  if (!newTab) {
+    window.location.href = url
+  }
+}
+
+
 export function useWhatsappCheckout() {
   const api = useApi()
   const config = useRuntimeConfig()
@@ -96,9 +114,7 @@ export function useWhatsappCheckout() {
       ? `https://wa.me/${number}?text=${text}`
       : `https://wa.me/?text=${text}`
 
-    if (import.meta.client) {
-      window.open(url, '_blank')
-    }
+    openWhatsappUrl(url)
   }
 
   const checkoutSingleProduct = async (product: any, quantity = 1) => {
@@ -142,9 +158,7 @@ export function useWhatsappCheckout() {
       ? `https://wa.me/${number}?text=${text}`
       : `https://wa.me/?text=${text}`
 
-    if (import.meta.client) {
-      window.open(url, '_blank')
-    }
+    openWhatsappUrl(url)
   }
 
   return { openWhatsappForCart, checkoutSingleProduct }

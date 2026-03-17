@@ -1,6 +1,6 @@
 <template>
-  <div class="mx-auto max-w-6xl px-3 sm:px-4 lg:px-0">
-    <div class="grid gap-4 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+  <div class="mx-auto max-w-6xl w-full overflow-x-hidden px-3 sm:px-4 lg:px-0">
+    <div class="grid w-full gap-4 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
       <div class="card-soft p-4 sm:p-5 md:p-8 min-w-0 overflow-hidden">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="min-w-0">
@@ -29,9 +29,9 @@
           <div
             v-for="it in cart.items"
             :key="it.id"
-            class="rounded-3xl border border-app bg-surface p-3 sm:p-4 hover:bg-surface-2 transition overflow-hidden"
+            class="max-w-full rounded-3xl border border-app bg-surface p-3 sm:p-4 hover:bg-surface-2 transition overflow-hidden"
           >
-            <div class="flex flex-col gap-4 sm:flex-row">
+            <div class="flex w-full flex-col gap-4 sm:flex-row">
               <div class="mx-auto sm:mx-0 h-24 w-24 sm:h-20 sm:w-20 rounded-2xl overflow-hidden bg-black/20 shrink-0">
                 <img v-if="it.imageUrl" :src="buildAssetUrl(it.imageUrl)" :alt="it.title" class="h-full w-full object-cover" />
               </div>
@@ -49,7 +49,7 @@
                   </button>
                 </div>
 
-                <div class="mt-4 flex flex-wrap items-center gap-3 sm:gap-4">
+                <div class="mt-4 flex w-full flex-wrap items-center gap-3 sm:gap-4">
                   <div class="flex items-center gap-2 rounded-2xl border border-app bg-surface-2 px-2 py-1.5">
                     <UiButton size="sm" variant="ghost" @click="cart.decrease(it.id)" :disabled="Number(it.stockQuantity || 0) <= 0">
                       <Icon name="mdi:minus" />
@@ -279,7 +279,7 @@ function removeCoupon() {
 async function openWhatsApp() {
   error.value = ''
 
-  if (!auth.token) {
+  if (!auth.isAuthed) {
     error.value = 'يرجى تسجيل الدخول أولاً لإكمال الطلب.'
     return
   }
