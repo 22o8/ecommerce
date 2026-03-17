@@ -87,7 +87,7 @@ const heroHighlights = computed(() => {
   if (topRatedProducts.value?.length) {
     highlights.push({
       key: 'top-rated',
-      title: 'المنتجات الأكثر تقييماً',
+      title: t('home.topRatedProducts'),
       to: '/products?sort=topRated',
     })
   }

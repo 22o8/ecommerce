@@ -71,6 +71,7 @@
     "manageOrdersHint": "Track, update and fulfill orders",
     "appearanceLabel": "Themes & Effects",
     "adsLabel": "Ads",
+    "categoriesLabel": "Categories",
     "discount": "Discount",
     "finalPrice": "Final price",
     "appearance": {
@@ -418,6 +419,7 @@
     "brandShowcaseTitle": "Brand showcase",
     "brandShowcaseSubtitle": "Explore top brands in an interactive 3D view.",
     "tapToExplore": "Tap to explore",
+    "topRatedProducts": "Top rated products",
     "catMoisturizer": "Moisturizer",
     "catCleanser": "Cleanser",
     "subtitle": "Professional digital store",

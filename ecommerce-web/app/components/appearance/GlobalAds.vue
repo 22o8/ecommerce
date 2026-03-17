@@ -1,19 +1,19 @@
 <template>
   <div v-if="enabled">
     <div v-if="route.path === '/' && homeSliderAd" class="mx-auto max-w-7xl px-4 pt-4">
-      <div class="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-card">
+      <div class="home-slider-shell relative overflow-hidden rounded-3xl border border-white/10 shadow-card">
         <a
           :href="homeSliderAd.linkUrl || '#'
           "
           :target="homeSliderAd.linkUrl ? '_blank' : undefined"
-          class="block"
+          class="home-slider-link block"
         >
           <transition name="fade" mode="out-in">
             <img
               :key="currentSliderImage"
               :src="asset(currentSliderImage, `${homeSliderAd.updatedAt || homeSliderAd.id}-${sliderIndex}`)"
               :alt="homeSliderAd.title || 'slider'"
-              class="block h-[180px] w-full object-cover sm:h-[240px] lg:h-[300px]"
+              class="home-slider-image block h-[180px] w-full object-contain sm:h-[240px] lg:h-[300px]"
             />
           </transition>
         </a>
@@ -148,6 +148,23 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.home-slider-shell{
+  background:
+    radial-gradient(1200px 240px at 50% -10%, rgba(255,255,255,.12), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+}
+.home-slider-link{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:.6rem;
+}
+.home-slider-image{
+  filter: drop-shadow(0 18px 45px rgba(0,0,0,.16));
+}
 .fade-enter-active,.fade-leave-active{ transition: opacity .55s ease, transform .55s ease; }
 .fade-enter-from,.fade-leave-to{ opacity:0; transform:scale(1.02); }
+@media (max-width: 640px){
+  .home-slider-link{ padding:.45rem; }
+}
 </style>

@@ -75,6 +75,7 @@
     "orders": "الطلبات",
     "appearanceLabel": "الثيمات والتأثيرات",
     "adsLabel": "الإعلانات",
+    "categoriesLabel": "التصنيفات",
     "discount": "الخصم",
     "finalPrice": "السعر بعد الخصم",
     "appearance": {
@@ -442,6 +443,7 @@
     "brandShowcaseTitle": "عرض البراندات",
     "brandShowcaseSubtitle": "استكشف أفضل البراندات بطريقة تفاعلية ثلاثية الأبعاد.",
     "tapToExplore": "اضغط للاستكشاف",
+    "topRatedProducts": "المنتجات الأكثر تقييماً",
     "catMoisturizer": "مرطّب",
     "catCleanser": "غسول",
     "subtitle": "متجر رقمي احترافي",
