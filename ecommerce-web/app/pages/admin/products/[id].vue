@@ -75,14 +75,7 @@
               <div class="grid gap-2">
                 <label class="text-sm font-medium">{{ t('admin.category') }}</label>
                 <select v-model="form.category" class="h-10 w-full rounded-2xl border border-white/10 bg-white/5 px-3 text-sm outline-none focus:border-white/20">
-                  <option value="general">{{ t('admin.categoryGeneral') }}</option>
-                  <option value="moisturizer">{{ t('admin.categoryMoisturizer') }}</option>
-                  <option value="eye-care">{{ t('admin.categoryEyeCare') }}</option>
-                  <option value="cleanser">{{ t('admin.categoryCleanser') }}</option>
-                  <option value="serum">{{ t('admin.categorySerum') }}</option>
-                  <option value="sunscreen">{{ t('admin.categorySunscreen') }}</option>
-                  <option value="toner">{{ t('admin.categoryToner') }}</option>
-                  <option value="mask">{{ t('admin.categoryMask') }}</option>
+                  <option v-for="c in categoryOptions" :key="c.key" :value="c.key">{{ c.nameAr }}</option>
                 </select>
               </div>
 
@@ -217,6 +210,7 @@ import { formatIqd } from '~/composables/useMoney'
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+const { categories, fetchCategories } = useCategories()
 const toast = useToast()
 const api = useApi()
 const imgVer = ref(0)
@@ -256,6 +250,8 @@ const finalPrice = computed(() => {
 })
 
 const slugTouched = ref(false)
+const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام' }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
+
 const autoSlugBase = ref('')
 
 const slugify = (input: string) => {
@@ -386,6 +382,8 @@ async function reloadAll() {
     })
   )
 
+  tasks.push(fetchCategories().catch(() => {}))
+
   // ننتظر أولاً المنتج حتى يصير عندنا id صحيح للصور
   await Promise.all(tasks)
 
@@ -431,7 +429,7 @@ async function onSave() {
       isFeatured: Boolean(form.isFeatured),
     })
     toast.success(t('common.saved'))
-    await loadProduct()
+    await Promise.all([loadProduct(), fetchCategories()])
   } catch (e: any) {
     toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
   } finally {

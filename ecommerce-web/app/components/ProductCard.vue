@@ -13,9 +13,9 @@
         <SmartImage
           :src="mainImage || ''"
           :alt="displayName"
-          fit="cover"
+          fit="contain"
           wrapper-class="w-full h-full"
-          img-class="w-full h-full object-cover transition duration-500 group-hover:scale-110"
+          img-class="w-full h-full object-contain p-3 transition duration-300 group-hover:scale-105"
         />
 
         <div class="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition">

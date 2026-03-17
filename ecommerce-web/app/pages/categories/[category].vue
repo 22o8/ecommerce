@@ -149,6 +149,7 @@ import { computed, ref, watch, onMounted } from 'vue'
 import ProductCard from '~/components/ProductCard.vue'
 
 const { t } = useI18n()
+const { categories, fetchCategories } = useCategories()
 const route = useRoute()
 const router = useRouter()
 
@@ -170,15 +171,15 @@ await useAsyncData(productsPageKey, async () => {
 }, { watch: [() => route.fullPath] })
 
 const brandOptions = computed(() => (brandsStore.publicItems || []).map((b: any) => ({ name: b.name, slug: b.slug })))
-const categoryOptions = computed(() => [
-  { value: 'moisturizer', label: t('productsPage.categoryMoisturizer') },
-  { value: 'eye-care', label: t('productsPage.categoryEyeCare') },
-  { value: 'cleanser', label: t('productsPage.categoryCleanser') },
-  { value: 'serum', label: t('productsPage.categorySerum') },
-  { value: 'sunscreen', label: t('productsPage.categorySunscreen') },
-  { value: 'toner', label: t('productsPage.categoryToner') },
-  { value: 'mask', label: t('productsPage.categoryMask') },
-])
+const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [
+  { key: 'moisturizer', nameAr: t('productsPage.categoryMoisturizer') },
+  { key: 'eye-care', nameAr: t('productsPage.categoryEyeCare') },
+  { key: 'cleanser', nameAr: t('productsPage.categoryCleanser') },
+  { key: 'serum', nameAr: t('productsPage.categorySerum') },
+  { key: 'sunscreen', nameAr: t('productsPage.categorySunscreen') },
+  { key: 'toner', nameAr: t('productsPage.categoryToner') },
+  { key: 'mask', nameAr: t('productsPage.categoryMask') },
+]).map((c:any) => ({ value: String(c.key || c.value || ''), label: String(c.nameAr || c.label || c.key || '') })))
 const categoryLabel = computed(() => categoryOptions.value.find(c => c.value === category.value)?.label || category.value)
 const categorySubtitle = computed(() => t('productsPage.toolbarCategory', { count: products.totalCount || products.items.length || 0, category: categoryLabel.value }))
 

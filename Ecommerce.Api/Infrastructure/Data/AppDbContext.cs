@@ -38,6 +38,7 @@ public class AppDbContext : DbContext
     public DbSet<Coupon> Coupons => Set<Coupon>();
     public DbSet<CouponUsage> CouponUsages => Set<CouponUsage>();
     public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
+    public DbSet<CategoryDefinition> Categories => Set<CategoryDefinition>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -235,6 +236,37 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<CouponUsage>()
             .HasIndex(x => new { x.CouponId, x.UserId });
+
+        modelBuilder.Entity<CategoryDefinition>()
+            .ToTable("Categories");
+
+        modelBuilder.Entity<CategoryDefinition>()
+            .HasIndex(x => x.Key)
+            .IsUnique();
+
+        modelBuilder.Entity<CategoryDefinition>()
+            .Property(x => x.Key)
+            .HasMaxLength(80);
+
+        modelBuilder.Entity<CategoryDefinition>()
+            .Property(x => x.NameAr)
+            .HasMaxLength(120);
+
+        modelBuilder.Entity<CategoryDefinition>()
+            .Property(x => x.NameEn)
+            .HasMaxLength(120);
+
+        modelBuilder.Entity<CategoryDefinition>()
+            .Property(x => x.DescriptionAr)
+            .HasMaxLength(300);
+
+        modelBuilder.Entity<CategoryDefinition>()
+            .Property(x => x.DescriptionEn)
+            .HasMaxLength(300);
+
+        modelBuilder.Entity<CategoryDefinition>()
+            .Property(x => x.ImageUrl)
+            .HasMaxLength(2000);
 
     }
 }

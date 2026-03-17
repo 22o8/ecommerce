@@ -71,14 +71,7 @@
             <div>
               <label class="mb-1 block text-sm text-white/80">{{ t('admin.category') }}</label>
               <select v-model="form.category" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
-                <option value="general">{{ t('admin.categoryGeneral') }}</option>
-                <option value="moisturizer">{{ t('admin.categoryMoisturizer') }}</option>
-                <option value="eye-care">{{ t('admin.categoryEyeCare') }}</option>
-                <option value="cleanser">{{ t('admin.categoryCleanser') }}</option>
-                <option value="serum">{{ t('admin.categorySerum') }}</option>
-                <option value="sunscreen">{{ t('admin.categorySunscreen') }}</option>
-                <option value="toner">{{ t('admin.categoryToner') }}</option>
-                <option value="mask">{{ t('admin.categoryMask') }}</option>
+                <option v-for="c in categoryOptions" :key="c.key" :value="c.key">{{ c.nameAr }}</option>
               </select>
             </div>
 
@@ -186,6 +179,7 @@
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const { t } = useI18n()
+const { categories, fetchCategories } = useCategories()
 const toast = useToast()
 const { listBrands, createProduct, uploadProductImages } = useAdminApi()
 
@@ -213,6 +207,8 @@ const form = reactive({
 })
 
 const slugTouched = ref(false)
+const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام' }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
+
 
 const slugify = (input: string) => {
   return (input || '')
@@ -248,7 +244,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 
 onMounted(async () => {
   try {
-    const res: any = await listBrands()
+    const [res] = await Promise.all([listBrands(), fetchCategories()])
     brands.value = (res?.items || res || []) as BrandItem[]
   } catch (e: any) {
     toast.error(e?.message || t('common.error'))
@@ -293,6 +289,7 @@ async function onCreate() {
       subCategory: form.subCategory,
       stockQuantity: Number(form.stockQuantity ?? 0),
       lowStockThreshold: Number(form.lowStockThreshold ?? 0),
+      isCouponAllowed: !!form.isCouponAllowed,
       isPublished: !!form.isPublished,
       isFeatured: !!form.isFeatured,
     })

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
 import heroImage from '~/assets/img/hero-brand-bg.jpg'
 
 const { t, locale } = useI18n()
+const { categories, fetchCategories } = useCategories()
 
 const brandsStore = useBrandsStore()
 const productsStore = useProductsStore()
@@ -19,6 +20,7 @@ await useAsyncData(
       productsStore.fetchDiscounts(8),
       productsStore.fetchTopRated(8),
       productsStore.fetch({ page: 1, pageSize: 8, sort: 'newest' }),
+      fetchCategories(),
     ])
     return true
   },
@@ -57,18 +59,25 @@ const topBrands = computed(() => {
   }
   return uniq.slice(0, 10)
 })
-const categoryCards = [
-  { key: 'serum', icon: '💧', labelKey: 'home.catSerum', accent: 'from-cyan-500/25 to-indigo-500/10' },
-  { key: 'moisturizer', icon: '🧴', labelKey: 'home.catMoisturizer', accent: 'from-fuchsia-500/20 to-rose-500/10' },
-  { key: 'sunscreen', icon: '☀️', labelKey: 'home.catSunscreen', accent: 'from-amber-500/25 to-orange-500/10' },
-  { key: 'cleanser', icon: '🫧', labelKey: 'home.catCleanser', accent: 'from-sky-500/20 to-violet-500/10' },
-  { key: 'toner', icon: '🧊', labelKey: 'home.catToner', accent: 'from-blue-500/20 to-cyan-500/10' },
-  { key: 'mask', icon: '✨', labelKey: 'home.catMask', accent: 'from-pink-500/20 to-violet-500/10' },
-  { key: 'eye-care', icon: '👁️', labelKey: 'home.catEyeCare', accent: 'from-emerald-500/20 to-cyan-500/10' },
-] as const
+const categoryCards = computed(() => (categories.value || []).map((c: any, idx: number) => ({
+  key: String(c.key || '').toLowerCase(),
+  title: locale.value === 'en' ? (c.nameEn || c.nameAr || c.key) : (c.nameAr || c.nameEn || c.key),
+  subtitle: locale.value === 'en' ? (c.descriptionEn || c.descriptionAr || t('home.tapToExplore')) : (c.descriptionAr || c.descriptionEn || t('home.tapToExplore')),
+  imageUrl: c.imageUrl || '',
+  accent: [
+    'from-cyan-500/25 to-indigo-500/10',
+    'from-fuchsia-500/20 to-rose-500/10',
+    'from-amber-500/25 to-orange-500/10',
+    'from-sky-500/20 to-violet-500/10',
+    'from-blue-500/20 to-cyan-500/10',
+    'from-pink-500/20 to-violet-500/10',
+    'from-emerald-500/20 to-cyan-500/10',
+  ][idx % 7],
+})))
 
-const heroHighlights = computed(() => categoryCards.slice(0, 4))
+const heroHighlights = computed(() => (categoryCards.value || []).slice(0, 4))
 const heroBrandBgSrc = heroImage
+const { buildAssetUrl } = useApi()
 
 </script>
 
@@ -95,8 +104,7 @@ const heroBrandBgSrc = heroImage
                 :to="`/categories/${encodeURIComponent(item.key)}`"
                 class="hero-mini-chip"
               >
-                <span class="text-base">{{ item.icon }}</span>
-                <span>{{ t(item.labelKey) }}</span>
+                <span>{{ item.title }}</span>
               </NuxtLink>
             </div>
 
@@ -188,22 +196,6 @@ const heroBrandBgSrc = heroImage
       </div>
     </section>
 
-
-    <section class="mx-auto max-w-6xl px-4 pb-16">
-      <div class="home-section-panel">
-        <div class="flex flex-col items-center justify-center gap-3 text-center">
-          <div class="section-kicker" />
-          <h2 class="text-2xl font-extrabold text-[rgb(var(--text))] sm:text-4xl">المنتجات الأكثر تقييماً</h2>
-          <p class="max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">أفضل المنتجات حسب تقييمات العملاء الحقيقية داخل المتجر.</p>
-        </div>
-
-        <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <RevealOnScroll v-for="(p, idx) in topRatedProducts" :key="p.id" :parity="idx % 2">
-            <ProductCard :p="p" />
-          </RevealOnScroll>
-        </div>
-      </div>
-    </section>
     <section class="mx-auto max-w-6xl px-4 pb-20">
       <div class="home-section-panel home-section-panel--brands">
         <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
@@ -241,6 +233,21 @@ const heroBrandBgSrc = heroImage
           </NuxtLink>
         </div>
 
+        <div class="mt-10 rounded-[2rem] border border-app bg-[rgba(var(--surface),.42)] p-5 sm:p-6">
+          <div class="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-end">
+            <div>
+              <h3 class="text-xl font-extrabold text-[rgb(var(--text))] sm:text-3xl">المنتجات الأكثر تقييماً</h3>
+              <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">أفضل المنتجات حسب تقييمات العملاء الحقيقية داخل المتجر.</p>
+            </div>
+          </div>
+
+          <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <RevealOnScroll v-for="(p, idx) in topRatedProducts.slice(0,4)" :key="p.id" :parity="idx % 2">
+              <ProductCard :p="p" />
+            </RevealOnScroll>
+          </div>
+        </div>
+
         <div class="category-showcase mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
           <RevealOnScroll
             v-for="(c, idx) in categoryCards"
@@ -253,14 +260,13 @@ const heroBrandBgSrc = heroImage
               class="group category-simple-card"
             >
               <div class="category-simple-card__inner" :class="`bg-gradient-to-br ${c.accent}`">
-                <div class="category-simple-card__icon">{{ c.icon }}</div>
+                <div class="category-simple-card__thumb">
+                  <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="h-full w-full object-cover" />
+                  <div v-else class="category-simple-card__fallback">{{ c.title?.slice(0,1) }}</div>
+                </div>
                 <div class="min-w-0 flex-1">
-                  <div class="truncate text-base font-black text-[rgb(var(--text))]">
-                    {{ t(c.labelKey) }}
-                  </div>
-                  <div class="mt-1 truncate text-xs text-[rgb(var(--muted))]">
-                    {{ t('home.tapToExplore') }}
-                  </div>
+                  <div class="truncate text-base font-black text-[rgb(var(--text))]">{{ c.title }}</div>
+                  <div class="mt-1 line-clamp-2 text-xs text-[rgb(var(--muted))]">{{ c.subtitle }}</div>
                   <div class="category-simple-card__meta">{{ c.key }}</div>
                 </div>
                 <div class="category-simple-card__arrow">→</div>
@@ -751,3 +757,7 @@ const heroBrandBgSrc = heroImage
   }
 }
 </style>
+
+.category-simple-card__thumb{ width:72px; height:72px; border-radius:22px; overflow:hidden; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.08); flex-shrink:0; }
+.category-simple-card__fallback{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:900; color:rgb(var(--text)); }
+@media (max-width: 640px){ .category-simple-card__thumb{ width:58px; height:58px; border-radius:18px; } }
