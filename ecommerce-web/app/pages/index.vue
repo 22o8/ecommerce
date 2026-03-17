@@ -74,7 +74,7 @@ const heroBrandBgSrc = heroImage
   <div class="min-h-screen home-page-shell">
     <section class="relative mx-auto max-w-6xl px-4 pt-4 sm:pt-6">
       <div class="hero-premium-shell hero-shimmer overflow-hidden rounded-[2rem] border border-app">
-        <div v-if="heroBrandBgSrc !== '#'" class="hero-brand-bg-wrap" aria-hidden="true">
+        <div v-if="heroBrandBgSrc !== '/'" class="hero-brand-bg-wrap" aria-hidden="true">
           <img :src="heroBrandBgSrc" alt="" class="hero-brand-bg-image" />
         </div>
         <div v-else class="hero-brand-bg-placeholder" aria-hidden="true">
@@ -462,12 +462,6 @@ const heroBrandBgSrc = heroImage
   background: rgba(var(--primary), .08);
   transform: translateX(2px);
 }
-:global(html.theme-light) .hero-premium-shell{
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.97), rgba(255,246,251,.96)),
-    linear-gradient(135deg, rgba(232, 91, 154, .10), transparent 35%, rgba(246, 180, 212, .12) 100%);
-  box-shadow: 0 36px 90px rgba(232, 91, 154, .10), 0 14px 30px rgba(22,22,22,.05);
-}
 :global(html.theme-light) .hero-mini-chip,
 :global(html.theme-light) .hero-stat-card,
 :global(html.theme-light) .home-section-panel,
@@ -554,15 +548,15 @@ const heroBrandBgSrc = heroImage
 }
 :global(html.theme-light) .home-section-panel{
   background:
-    linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,247,252,.95)),
-    linear-gradient(135deg, rgba(232,91,154,.05), transparent 35%, rgba(246,180,212,.06) 100%);
+    linear-gradient(180deg, rgba(255,255,255,.995), rgba(255,255,255,.985)),
+    linear-gradient(135deg, rgba(236,72,153,.018), transparent 42%, rgba(244,114,182,.026) 100%);
 }
 :global(html.theme-light) .category-simple-card{
-  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,247,252,.94));
+  background: linear-gradient(180deg, rgba(255,255,255,.995), rgba(255,255,255,.982));
 }
 :global(html.theme-light) .category-simple-card:hover{
-  background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,244,250,.98));
-  box-shadow: 0 24px 56px rgba(232, 91, 154, .12), 0 12px 28px rgba(24,24,24,.06);
+  background: linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,.99));
+  box-shadow: 0 18px 40px rgba(22,22,22,.06);
 }
 :global(html.theme-dark) .hero-premium-shell{
   background:
@@ -581,26 +575,44 @@ const heroBrandBgSrc = heroImage
 }
 @media (max-width: 640px){
   .hero-premium-shell{
-    border-radius: 26px;
     display:flex;
     flex-direction:column;
+    gap:0;
+    border-radius:26px;
     overflow:hidden;
+  }
+  .hero-premium-shell > .hero-brand-bg-wrap,
+  .hero-premium-shell > .hero-brand-bg-placeholder{
+    order:2;
+    position:relative;
+    inset:auto;
+    display:block;
+    width:100%;
+    height:260px;
+    min-height:260px;
+    margin-top:0;
+    pointer-events:none;
   }
   .hero-premium-shell > .relative.z-\[1\]{
     order:1;
     width:100%;
-    padding:1.15rem 1rem 0;
   }
+  .hero-premium-shell > .hero-aurora{ display:none; }
   .hero-content-panel{
     width:100%;
     max-width:none;
     margin:0;
-    padding:0;
+    padding:1.1rem 1rem 1rem;
     border-radius:0;
     text-align:center;
     background:transparent;
     border:0;
+    box-shadow:none;
     backdrop-filter:none;
+  }
+  :global(html.theme-light) .hero-content-panel{
+    background:transparent;
+    border-color:transparent;
     box-shadow:none;
   }
   .hero-mini-badges{
@@ -610,13 +622,21 @@ const heroBrandBgSrc = heroImage
   }
   .hero-mini-chip{ min-height:38px; padding:.55rem .8rem; font-size:.82rem; }
   .hero-stat-grid{
+    display:grid;
     grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:.75rem;
+    gap:.7rem;
     margin-top:1rem;
   }
-  .hero-stat-card{ padding:.85rem .8rem; border-radius:20px; }
-  .hero-stat-card__label{ font-size:.73rem; }
-  .hero-stat-card__value{ font-size: 1.55rem; }
+  .hero-stat-card{
+    padding:.8rem .6rem;
+    border-radius:18px;
+    text-align:center;
+  }
+  .hero-stat-card__label{
+    font-size:.74rem;
+    line-height:1.35;
+  }
+  .hero-stat-card__value{ font-size:1.55rem; }
   .home-section-panel{ padding: 1rem; border-radius: 24px; }
   .category-simple-card__inner{ min-height: 94px; padding: 16px; }
   .category-simple-card__icon{ width: 46px; height: 46px; border-radius: 16px; font-size: 22px; }
@@ -684,55 +704,32 @@ const heroBrandBgSrc = heroImage
   }
 }
 @media (max-width: 640px){
-  .hero-brand-bg-wrap,
-  .hero-brand-bg-placeholder{
-    position:relative;
-    inset:auto;
-    order:2;
-    width:100%;
-    min-height:0;
-    display:block;
-    padding:0 1rem 1rem;
-  }
   .hero-brand-bg-image{
     position:relative;
     inset:auto;
     top:auto;
     bottom:auto;
-    inset-inline-end:auto;
-    inset-inline-start:auto;
     transform:none;
     display:block;
-    width:100%;
+    width:calc(100% - 1.5rem);
+    height:100%;
     max-width:none;
-    aspect-ratio: 4 / 3;
-    margin:0;
+    margin:.25rem .75rem .9rem;
     opacity:1;
-    border-radius: 24px;
+    border-radius:24px;
     object-fit:cover;
     object-position:center top;
     filter:none;
   }
   .hero-brand-bg-placeholder{
     justify-content:center;
-    align-items:flex-end;
+    align-items:center;
+    padding:.75rem;
   }
   .hero-brand-bg-placeholder span{
-    width:100%;
-    min-height:160px;
+    width:calc(100% - 1.5rem);
+    min-height:180px;
     font-size:.82rem;
   }
-}
-</style>
-
-<style scoped>
-:global(html.theme-light) .hero-brand-bg-image{
-  opacity: .30;
-  filter: brightness(.44) contrast(1.05) saturate(.82) drop-shadow(0 18px 42px rgba(0,0,0,.12));
-}
-:global(html.theme-light) .hero-premium-shell::after{
-  background: none;
-  border: 1px solid rgba(228, 232, 239, .92);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.95);
 }
 </style>
