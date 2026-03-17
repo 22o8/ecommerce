@@ -13,19 +13,16 @@
 
     <AppFooter />
 
-    <Transition name="back-to-top-fade">
-      <button
-        v-if="showBackToTop"
-        type="button"
-        class="back-to-top-btn"
-        @click="scrollToTop"
-        :title="t('backToTop') || 'Back to top'"
-        :aria-label="t('backToTop') || 'Back to top'"
-      >
-        <span class="back-to-top-glow" aria-hidden="true"></span>
-        <Icon name="mdi:arrow-up-thin" class="back-to-top-icon" />
-      </button>
-    </Transition>
+    <button
+      v-show="showBackToTop"
+      type="button"
+      class="back-to-top-btn"
+      @click="scrollToTop"
+      :title="t('backToTop') || 'Back to top'"
+      :aria-label="t('backToTop') || 'Back to top'"
+    >
+      <Icon name="mdi:arrow-up" class="back-to-top-icon" />
+    </button>
 
     <!-- Floating WhatsApp -->
     <a
@@ -69,8 +66,7 @@ function handleScroll() {
   )
   const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0
   const distanceToBottom = docHeight - (scrollTop + viewportHeight)
-
-  showBackToTop.value = scrollTop > 520 || distanceToBottom <= 260
+  showBackToTop.value = distanceToBottom <= 160
 }
 
 function scrollToTop() {
@@ -93,80 +89,40 @@ onUnmounted(() => {
 <style scoped>
 .back-to-top-btn{
   position: fixed;
-  inset-inline-end: 1.15rem;
-  bottom: 6rem;
-  z-index: 80;
-  width: 4.5rem;
-  height: 4.5rem;
-  border: 0;
+  inset-inline-end: 1.25rem;
+  bottom: 5.85rem;
+  z-index: 55;
+  width: 4.15rem;
+  height: 4.15rem;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  isolation: isolate;
-  overflow: hidden;
-  cursor: pointer;
-  color: #ffffff;
-  background: linear-gradient(135deg, rgba(17, 24, 39, .96), rgba(59, 130, 246, .88));
-  box-shadow: 0 18px 44px rgba(15, 23, 42, .34), 0 0 0 1px rgba(255,255,255,.12) inset;
-  backdrop-filter: blur(12px);
-  transition: transform .22s ease, box-shadow .22s ease, opacity .22s ease, filter .22s ease;
-}
-.back-to-top-btn::after{
-  content: '';
-  position: absolute;
-  inset: 4px;
-  border-radius: inherit;
-  background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.02));
-  z-index: 0;
-}
-.back-to-top-glow{
-  position: absolute;
-  inset: -20%;
-  background: radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,0) 65%);
-  opacity: .9;
-  z-index: 0;
-  animation: backToTopPulse 2.2s ease-in-out infinite;
+  border: 1px solid rgba(var(--border), .9);
+  background: rgba(var(--panel), .97);
+  color: rgb(var(--text-strong));
+  box-shadow: 0 18px 42px rgba(0, 0, 0, .18);
+  backdrop-filter: blur(10px);
+  transition: transform .18s ease, opacity .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .back-to-top-btn:hover{
-  transform: translateY(-4px) scale(1.06);
-  box-shadow: 0 24px 52px rgba(15, 23, 42, .42), 0 0 0 1px rgba(255,255,255,.18) inset;
-  filter: saturate(1.08);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, .22);
 }
 .back-to-top-btn:active{
-  transform: scale(.97);
-}
-.back-to-top-btn:focus-visible{
-  outline: 3px solid rgba(59, 130, 246, .35);
-  outline-offset: 4px;
+  transform: scale(.98);
 }
 .back-to-top-icon{
-  position: relative;
-  z-index: 1;
-  font-size: 2.35rem;
+  font-size: 2rem;
   line-height: 1;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .28));
-}
-.back-to-top-fade-enter-active,
-.back-to-top-fade-leave-active{
-  transition: opacity .2s ease, transform .2s ease;
-}
-.back-to-top-fade-enter-from,
-.back-to-top-fade-leave-to{
-  opacity: 0;
-  transform: translateY(10px) scale(.92);
-}
-@keyframes backToTopPulse{
-  0%, 100% { transform: scale(.96); opacity: .82; }
-  50% { transform: scale(1.08); opacity: 1; }
 }
 @media (max-width: 768px){
   .back-to-top-btn{
-    inset-inline-end: .95rem;
-    bottom: 5.65rem;
-    width: 4.1rem;
-    height: 4.1rem;
+    inset-inline-end: 1rem;
+    bottom: 5.25rem;
+    width: 3.9rem;
+    height: 3.9rem;
   }
-  .back-to-top-icon{ font-size: 2.1rem; }
+  .back-to-top-icon{ font-size: 1.85rem; }
 }
 </style>
