@@ -7,6 +7,8 @@
     @click="goProduct"
     @keydown.enter.prevent="goProduct"
     @keydown.space.prevent="goProduct"
+    @touchstart.passive="warmProductRoute"
+    @pointerenter="warmProductRoute"
   >
     <div class="relative">
       <div class="relative aspect-[4/3] product-card-media">
@@ -62,8 +64,7 @@
             class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
             @pointerdown.stop
             @touchstart.stop
-            @touchend.stop.prevent
-            @click.stop.prevent="toggleFav"
+            @click.stop="toggleFav"
             :aria-label="t('wishlist.toggle')"
           >
             <Icon :name="fav ? 'mdi:heart' : 'mdi:heart-outline'" class="text-lg" />
@@ -74,8 +75,7 @@
             class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
             @pointerdown.stop
             @touchstart.stop
-            @touchend.stop.prevent
-            @click.stop.prevent="openPreview"
+            @click.stop="openPreview"
             :aria-label="t('products.quickPreview')"
           >
             <Icon name="mdi:eye-outline" class="text-lg" />
@@ -99,8 +99,7 @@
             class="product-card-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-app transition text-xs"
             @pointerdown.stop
             @touchstart.stop
-            @touchend.stop.prevent
-            @click.stop.prevent="addToCart"
+            @click.stop="addToCart"
             :disabled="isOutOfStock"
           >
             <Icon name="mdi:cart-plus" class="text-base" />
@@ -112,8 +111,7 @@
             class="product-card-btn inline-flex items-center px-2.5 py-1.5 rounded-xl border border-app transition text-xs"
             @pointerdown.stop
             @touchstart.stop
-            @touchend.stop.prevent
-            @click.stop.prevent="buyNow"
+            @click.stop="buyNow"
             :disabled="isOutOfStock"
           >
             <span class="rtl-text">{{ t('common.buy') }}</span>
@@ -137,6 +135,7 @@ const qp = useQuickPreview()
 const router = useRouter()
 const route = useRoute()
 const { buildAssetUrl } = useApi()
+let warmedProductHref = ''
 
 const p = computed(() => props.product ?? props.p ?? {})
 
@@ -187,6 +186,17 @@ function addToCart() {
   cart.add(p.value)
 }
 
+function warmProductRoute() {
+  const id = String(p.value?.id ?? '')
+  if (!id) return
+  const href = `/product/${id}`
+  if (warmedProductHref === href) return
+  warmedProductHref = href
+  if (import.meta.client) {
+    try { preloadRouteComponents(href) } catch {}
+  }
+}
+
 const { checkoutSingleProduct } = useWhatsappCheckout()
 
 async function buyNow() {
@@ -217,7 +227,11 @@ function openPreview() {
 function goProduct() {
   const id = String(p.value?.id ?? '')
   if (!id) return
-  navigateTo(`/product/${id}`)
+  const href = `/product/${id}`
+  if (import.meta.client) {
+    window.scrollTo({ top: 0, behavior: 'auto' })
+  }
+  navigateTo(href)
 }
 </script>
 
@@ -232,6 +246,15 @@ function goProduct() {
   background: rgb(var(--surface));
 }
 .product-card-btn:disabled{ opacity:.5; cursor:not-allowed; }
+.product-card-shell, .product-card-btn{
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.product-card-btn{
+  position: relative;
+  min-height: 2.75rem;
+}
+.product-card-btn:active{ transform: scale(.98); }
 :global(html.theme-light) .product-card-shell{
   background: linear-gradient(180deg, rgba(255,255,255,.99), rgba(255,247,252,.95));
   box-shadow: 0 22px 54px rgba(232, 91, 154, .08), 0 10px 24px rgba(24,24,24,.05);

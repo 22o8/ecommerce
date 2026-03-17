@@ -29,6 +29,13 @@ const images = computed(() => {
 
 const activeIndex = ref(0)
 watch(images, () => { activeIndex.value = 0 })
+watch(productId, () => {
+  activeIndex.value = 0
+  if (import.meta.client) {
+    window.scrollTo({ top: 0, behavior: 'auto' })
+  }
+}, { immediate: true })
+
 
 const activeImage = computed(() => {
   const im = images.value?.[activeIndex.value]
@@ -141,11 +148,11 @@ function fmt(v: any) {
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-              <button class="btn-cta-animated inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold touch-manipulation" @pointerdown.stop @touchstart.stop @click="addToCart" :disabled="isOutOfStock">
+              <button type="button" class="btn-cta-animated inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold touch-manipulation" @click="addToCart" :disabled="isOutOfStock">
                 <Icon name="mdi:cart-plus" class="text-lg" />
                 <span class="rtl-text">{{ t('common.addToCart') }}</span>
               </button>
-              <button class="btn-cta-animated btn-cta-secondary inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold touch-manipulation" @pointerdown.stop @touchstart.stop @click="buyNow" :disabled="isOutOfStock">
+              <button type="button" class="btn-cta-animated btn-cta-secondary inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold touch-manipulation" @click="buyNow" :disabled="isOutOfStock">
                 <span class="rtl-text">{{ t('common.buy') }}</span>
               </button>
             </div>
@@ -188,5 +195,13 @@ function fmt(v: any) {
 :global(html.theme-dark) .product-sheet{
   background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .90));
   box-shadow: 0 20px 52px rgba(0,0,0,.28);
+}
+button.touch-manipulation{
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-height: 2.9rem;
+}
+button.touch-manipulation:active{
+  transform: scale(.985);
 }
 </style>
