@@ -15,15 +15,15 @@
 
     <Transition name="back-to-top-fade">
       <button
-        v-show="showBackToTop"
+        v-if="showBackToTop"
         type="button"
         class="back-to-top-btn"
-        @click="scrollToTop"
+        @click.stop.prevent="scrollToTop"
         :title="t('backToTop') || 'Back to top'"
         :aria-label="t('backToTop') || 'Back to top'"
       >
-        <span class="back-to-top-btn__glow" aria-hidden="true"></span>
-        <span class="back-to-top-btn__inner">
+        <span class="back-to-top-ring" aria-hidden="true"></span>
+        <span class="back-to-top-content">
           <Icon name="mdi:arrow-up" class="back-to-top-icon" />
         </span>
       </button>
@@ -54,6 +54,7 @@ const { t } = useI18n()
 const config = useRuntimeConfig()
 const whats = String((config.public as any).whatsappNumber || '').trim()
 const showBackToTop = ref(false)
+const scrollThreshold = 260
 
 const waLink = computed(() => {
   const n = whats.replace(/[^0-9]/g, '')
@@ -62,13 +63,19 @@ const waLink = computed(() => {
 
 function handleScroll() {
   if (!import.meta.client) return
-  const scrollTop = window.scrollY || document.documentElement.scrollTop || 0
-  showBackToTop.value = scrollTop > 320
+  const scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
+  showBackToTop.value = scrollTop > scrollThreshold
 }
 
 function scrollToTop() {
   if (!import.meta.client) return
+
   window.scrollTo({ top: 0, behavior: 'smooth' })
+
+  window.requestAnimationFrame(() => {
+    document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
+    document.body.scrollTo({ top: 0, behavior: 'smooth' })
+  })
 }
 
 onMounted(() => {
@@ -86,69 +93,73 @@ onUnmounted(() => {
 <style scoped>
 .back-to-top-btn{
   position: fixed;
-  inset-inline-end: calc(1.25rem + 4.7rem + .9rem);
-  bottom: 1.35rem;
-  z-index: 58;
-  width: 3.9rem;
-  height: 3.9rem;
+  inset-inline-end: 7rem;
+  bottom: 1.75rem;
+  z-index: 90;
+  width: 4.4rem;
+  height: 4.4rem;
   border: 0;
   padding: 0;
   border-radius: 999px;
-  display: inline-grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  background: transparent;
+  background: linear-gradient(135deg, rgba(var(--panel), .96), rgba(var(--panel), .88));
   color: rgb(var(--text-strong));
-  transition: transform .22s ease, filter .22s ease, opacity .22s ease;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  overflow: hidden;
+  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
 }
-.back-to-top-btn__glow{
+.back-to-top-btn::before{
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  border: 1px solid rgba(var(--border), .72);
+  pointer-events: none;
+}
+.back-to-top-btn:hover{
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 24px 55px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .55);
+}
+.back-to-top-btn:active{
+  transform: translateY(0) scale(.97);
+}
+.back-to-top-btn:focus-visible{
+  outline: 3px solid rgba(var(--primary), .28);
+  outline-offset: 3px;
+}
+.back-to-top-ring{
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(255,255,255,.15) 34%, transparent 35%),
-    linear-gradient(180deg, rgba(var(--panel), .98), rgba(var(--panel), .88));
-  border: 1px solid rgba(var(--border), .88);
-  box-shadow:
-    0 14px 34px rgba(0,0,0,.16),
-    0 0 0 1px rgba(255,255,255,.18) inset,
-    0 -10px 22px rgba(255,255,255,.14) inset;
-  backdrop-filter: blur(16px);
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,.55), transparent 36%), linear-gradient(135deg, rgba(var(--primary), .16), transparent 58%);
+  pointer-events: none;
 }
-.back-to-top-btn__inner{
+.back-to-top-content{
   position: relative;
-  z-index: 1;
-  width: calc(100% - 10px);
-  height: calc(100% - 10px);
-  border-radius: inherit;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(180deg, rgba(255,255,255,.26), rgba(255,255,255,.06));
-  transition: transform .22s ease, background .22s ease;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.48);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
 }
-.back-to-top-btn:hover{
-  transform: translateY(-4px);
-  filter: saturate(1.05);
-}
-.back-to-top-btn:hover .back-to-top-btn__glow{
-  box-shadow:
-    0 18px 40px rgba(0,0,0,.2),
-    0 0 0 1px rgba(255,255,255,.24) inset,
-    0 -12px 24px rgba(255,255,255,.16) inset;
-}
-.back-to-top-btn:hover .back-to-top-btn__inner{
-  transform: scale(1.03);
-}
-.back-to-top-btn:active{
-  transform: translateY(-1px) scale(.97);
+.dark .back-to-top-content{
+  background: rgba(255,255,255,.08);
 }
 .back-to-top-icon{
-  font-size: 1.55rem;
+  font-size: 1.75rem;
   line-height: 1;
 }
 .back-to-top-fade-enter-active,
 .back-to-top-fade-leave-active{
-  transition: opacity .2s ease, transform .2s ease;
+  transition: opacity .18s ease, transform .18s ease;
 }
 .back-to-top-fade-enter-from,
 .back-to-top-fade-leave-to{
@@ -157,11 +168,15 @@ onUnmounted(() => {
 }
 @media (max-width: 768px){
   .back-to-top-btn{
-    inset-inline-end: calc(1rem + 4.25rem + .75rem);
+    inset-inline-end: 5.7rem;
     bottom: 1rem;
-    width: 3.55rem;
-    height: 3.55rem;
+    width: 4rem;
+    height: 4rem;
   }
-  .back-to-top-icon{ font-size: 1.4rem; }
+  .back-to-top-content{
+    width: 2.7rem;
+    height: 2.7rem;
+  }
+  .back-to-top-icon{ font-size: 1.55rem; }
 }
 </style>

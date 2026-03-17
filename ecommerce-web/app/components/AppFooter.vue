@@ -48,7 +48,6 @@
     <div class="mx-auto max-w-7xl px-4 py-6 text-xs text-muted flex items-center justify-between">
       <div class="rtl-text">© {{ new Date().getFullYear() }} ECOMMERCE</div>
       <button type="button" class="footer-top-btn keep-ltr" @click="toTop" aria-label="Back to top" title="Back to top">
-        <span class="footer-top-btn__label">Top</span>
         <Icon name="mdi:arrow-up" class="footer-top-btn__icon" />
       </button>
     </div>
@@ -70,31 +69,22 @@ function toTop(){ if (import.meta.client) window.scrollTo({ top: 0, behavior: 's
 
 <style scoped>
 .footer-top-btn{
-  min-width: 3.4rem;
+  width: 2.85rem;
   height: 2.85rem;
-  padding: 0 .9rem;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: .35rem;
   border: 1px solid rgba(var(--border), .85);
   background: rgba(var(--panel), .9);
   color: rgb(var(--text-strong));
-  box-shadow: 0 10px 24px rgba(0,0,0,.08);
-  transition: transform .18s ease, opacity .18s ease, box-shadow .18s ease;
+  transition: transform .18s ease, opacity .18s ease;
 }
 .footer-top-btn:hover{
   transform: translateY(-1px);
   opacity: 1;
-  box-shadow: 0 14px 28px rgba(0,0,0,.12);
-}
-.footer-top-btn__label{
-  font-size: .78rem;
-  font-weight: 800;
-  opacity: .82;
 }
 .footer-top-btn__icon{
-  font-size: 1.1rem;
+  font-size: 1.3rem;
 }
 </style>
