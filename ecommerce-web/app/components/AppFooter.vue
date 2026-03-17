@@ -48,8 +48,8 @@
     <div class="mx-auto max-w-7xl px-4 py-6 text-xs text-muted flex items-center justify-between">
       <div class="rtl-text">© {{ new Date().getFullYear() }} ECOMMERCE</div>
       <button type="button" class="footer-top-btn keep-ltr" @click="toTop" aria-label="Back to top" title="Back to top">
-        <span class="footer-top-btn__glow" aria-hidden="true"></span>
-        <Icon name="mdi:arrow-up-thin-circle-outline" class="footer-top-btn__icon" />
+        <span class="footer-top-btn__label">Top</span>
+        <Icon name="mdi:arrow-up" class="footer-top-btn__icon" />
       </button>
     </div>
   </footer>
@@ -70,52 +70,31 @@ function toTop(){ if (import.meta.client) window.scrollTo({ top: 0, behavior: 's
 
 <style scoped>
 .footer-top-btn{
-  position: relative;
-  width: 4.25rem;
-  height: 4.25rem;
+  min-width: 3.4rem;
+  height: 2.85rem;
+  padding: 0 .9rem;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(var(--primary), .28);
-  background:
-    radial-gradient(circle at 30% 30%, rgba(var(--primary), .18), transparent 58%),
-    linear-gradient(180deg, rgba(var(--panel), .98), rgba(var(--panel), .92));
+  gap: .35rem;
+  border: 1px solid rgba(var(--border), .85);
+  background: rgba(var(--panel), .9);
   color: rgb(var(--text-strong));
-  box-shadow: 0 14px 30px rgba(0, 0, 0, .12);
-  overflow: hidden;
-  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
+  box-shadow: 0 10px 24px rgba(0,0,0,.08);
+  transition: transform .18s ease, opacity .18s ease, box-shadow .18s ease;
 }
 .footer-top-btn:hover{
-  transform: translateY(-4px) scale(1.03);
-  border-color: rgba(var(--primary), .5);
-  box-shadow: 0 22px 40px rgba(0, 0, 0, .18);
+  transform: translateY(-1px);
+  opacity: 1;
+  box-shadow: 0 14px 28px rgba(0,0,0,.12);
 }
-.footer-top-btn:active{
-  transform: translateY(-1px) scale(.98);
-}
-.footer-top-btn__glow{
-  position: absolute;
-  inset: auto auto -18px -18px;
-  width: 3.4rem;
-  height: 3.4rem;
-  border-radius: 999px;
-  background: rgba(var(--primary), .18);
-  filter: blur(10px);
+.footer-top-btn__label{
+  font-size: .78rem;
+  font-weight: 800;
+  opacity: .82;
 }
 .footer-top-btn__icon{
-  position: relative;
-  z-index: 1;
-  font-size: 2rem;
-  line-height: 1;
-}
-@media (max-width: 768px){
-  .footer-top-btn{
-    width: 3.8rem;
-    height: 3.8rem;
-  }
-  .footer-top-btn__icon{
-    font-size: 1.8rem;
-  }
+  font-size: 1.1rem;
 }
 </style>
