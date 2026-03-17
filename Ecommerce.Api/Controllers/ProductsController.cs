@@ -209,13 +209,23 @@ public class ProductsController : ControllerBase
                 (p.Brand != null && p.Brand.ToLower().Contains(q)));
         }
 
-        baseQuery = (query.Sort ?? "new") switch
+        if ((query.Sort ?? "new").Equals("rating", StringComparison.OrdinalIgnoreCase) ||
+            (query.Sort ?? "new").Equals("topRated", StringComparison.OrdinalIgnoreCase))
         {
-            "price:asc" or "priceAsc" => baseQuery.OrderBy(p => p.PriceIqd),
-            "price:desc" or "priceDesc" => baseQuery.OrderByDescending(p => p.PriceIqd),
-            "rating" or "topRated" => baseQuery.OrderByDescending(p => p.RatingAvg).ThenByDescending(p => p.RatingCount).ThenByDescending(p => p.CreatedAt),
-            _ => baseQuery.OrderByDescending(p => p.CreatedAt),
-        };
+            baseQuery = baseQuery.Where(p => p.RatingCount > 0)
+                .OrderByDescending(p => p.RatingAvg)
+                .ThenByDescending(p => p.RatingCount)
+                .ThenByDescending(p => p.CreatedAt);
+        }
+        else
+        {
+            baseQuery = (query.Sort ?? "new") switch
+            {
+                "price:asc" or "priceAsc" => baseQuery.OrderBy(p => p.PriceIqd),
+                "price:desc" or "priceDesc" => baseQuery.OrderByDescending(p => p.PriceIqd),
+                _ => baseQuery.OrderByDescending(p => p.CreatedAt),
+            };
+        }
 
         var total = await baseQuery.CountAsync();
         var pagedQuery = baseQuery.Skip((page - 1) * pageSize).Take(pageSize);
@@ -246,18 +256,6 @@ public class ProductsController : ControllerBase
                 .ThenByDescending(p => p.CreatedAt)
                 .Take(safeTake)
         );
-
-        if (items.Count == 0)
-        {
-            items = await BuildProjectedProductsAsync(
-                _db.Products.AsNoTracking()
-                    .Where(p => p.IsPublished)
-                    .OrderByDescending(p => p.RatingAvg)
-                    .ThenByDescending(p => p.RatingCount)
-                    .ThenByDescending(p => p.CreatedAt)
-                    .Take(safeTake)
-            );
-        }
 
         return Ok(new { totalCount = items.Count, items });
     }
@@ -395,10 +393,6 @@ public class ProductsController : ControllerBase
         var rating = Math.Clamp(req.Rating, 1, 5);
         var comment = string.IsNullOrWhiteSpace(req.Comment) ? null : req.Comment.Trim();
         if (comment?.Length > 1500) comment = comment[..1500];
-
-        var hasPurchased = await _db.Orders.AnyAsync(o => o.UserId == userId && o.Items.Any(i => i.ProductId == id));
-        if (!hasPurchased)
-            return StatusCode(403, new { message = "يمكنك تقييم المنتج بعد شرائه فقط" });
 
         var existing = await _db.ProductReviews.FirstOrDefaultAsync(x => x.ProductId == id && x.UserId == userId);
         if (existing == null)

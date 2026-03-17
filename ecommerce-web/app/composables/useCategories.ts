@@ -10,15 +10,7 @@ export type AppCategory = {
   isActive?: boolean
 }
 
-const fallbackCategories: AppCategory[] = [
-  { key: 'serum', nameAr: 'السيروم', nameEn: 'Serum', descriptionAr: 'للاستكشاف والعناية اليومية.', sortOrder: 10 },
-  { key: 'moisturizer', nameAr: 'مرطب', nameEn: 'Moisturizer', descriptionAr: 'ترطيب يومي وملمس ناعم.', sortOrder: 20 },
-  { key: 'sunscreen', nameAr: 'واقي الشمس', nameEn: 'Sunscreen', descriptionAr: 'حماية يومية للبشرة.', sortOrder: 30 },
-  { key: 'cleanser', nameAr: 'غسول', nameEn: 'Cleanser', descriptionAr: 'تنظيف لطيف وفعّال.', sortOrder: 40 },
-  { key: 'toner', nameAr: 'تونر', nameEn: 'Toner', descriptionAr: 'انتعاش وتوازن بعد التنظيف.', sortOrder: 50 },
-  { key: 'mask', nameAr: 'ماسك', nameEn: 'Mask', descriptionAr: 'عناية مركزة ولمسات إضافية.', sortOrder: 60 },
-  { key: 'eye-care', nameAr: 'العناية بالعين', nameEn: 'Eye Care', descriptionAr: 'حلول خاصة لمنطقة العين.', sortOrder: 70 },
-]
+const fallbackCategories: AppCategory[] = []
 
 export function useCategories() {
   const api = useApi()
@@ -44,9 +36,9 @@ export function useCategories() {
             sortOrder: Number(x.sortOrder || x.SortOrder || 0),
             isActive: Boolean(x.isActive ?? x.IsActive ?? true),
           })).filter((x: AppCategory) => x.key && x.nameAr)
-        : [...fallbackCategories]
+        : []
     } catch {
-      categories.value = [...fallbackCategories]
+      categories.value = []
     } finally {
       loading.value = false
     }

@@ -69,7 +69,7 @@ const categoryCards = computed(() => {
     'from-pink-500/20 to-violet-500/10',
     'from-emerald-500/20 to-cyan-500/10',
   ]
-  const items = (categories.value || []).map((c: any, idx: number) => ({
+  return (categories.value || []).map((c: any, idx: number) => ({
     key: String(c.key || '').toLowerCase(),
     title: locale.value === 'en' ? (c.nameEn || c.nameAr || c.key) : (c.nameAr || c.nameEn || c.key),
     subtitle: locale.value === 'en' ? (c.descriptionEn || c.descriptionAr || t('home.tapToExplore')) : (c.descriptionAr || c.descriptionEn || t('home.tapToExplore')),
@@ -77,30 +77,15 @@ const categoryCards = computed(() => {
     to: `/categories/${encodeURIComponent(String(c.key || '').toLowerCase())}`,
     accent: accents[idx % accents.length],
   }))
-
-  return items
 })
 
 const heroHighlights = computed(() => {
-  const highlights = [] as Array<{ key: string; title: string; to: string }>
-
-  if (topRatedProducts.value?.length) {
-    highlights.push({
-      key: 'top-rated',
-      title: t('home.topRatedProducts'),
-      to: '/products?sort=topRated',
-    })
-  }
-
-  for (const item of (categoryCards.value || []).slice(0, 3)) {
-    highlights.push({
-      key: item.key,
-      title: item.title,
-      to: item.to,
-    })
-  }
-
-  return highlights.slice(0, 4)
+  if (!topRatedProducts.value?.length) return [] as Array<{ key: string; title: string; to: string }>
+  return [{
+    key: 'top-rated',
+    title: t('home.topRatedProducts'),
+    to: '/products?sort=topRated',
+  }]
 })
 const heroBrandBgSrc = heroImage
 const { buildAssetUrl } = useApi()
@@ -154,12 +139,12 @@ const { buildAssetUrl } = useApi()
                 {{ t('homeHero.products') }}
               </NuxtLink>
 
-              <a
-                href="#categories"
+              <NuxtLink
+                to="/products?sort=topRated"
                 class="btn-cta-animated btn-cta-secondary inline-flex items-center justify-center rounded-full px-7 py-3.5 text-sm font-semibold hover:opacity-95"
               >
-                {{ t('homeHero.categories') }}
-              </a>
+                {{ t('home.topRatedProducts') }}
+              </NuxtLink>
             </div>
 
             <div class="hero-stat-grid mt-10 grid gap-3 sm:grid-cols-3 lg:max-w-3xl">
@@ -245,7 +230,7 @@ const { buildAssetUrl } = useApi()
       </div>
     </section>
 
-    <section id="categories" class="mx-auto max-w-6xl px-4 pb-24 scroll-mt-24">
+    <section v-if="categoryCards.length" id="categories" class="mx-auto max-w-6xl px-4 pb-24 scroll-mt-24">
       <div class="home-section-panel home-section-panel--categories">
         <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>

@@ -7,9 +7,15 @@
           <div class="text-sm admin-muted rtl-text">{{ t('admin.ordersHint') }}</div>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
           <button class="admin-ghost" type="button" @click="fetchOrders()" :disabled="loading">
             {{ t('common.refresh') }}
+          </button>
+          <button class="admin-danger" type="button" @click="removeSelected" :disabled="loading || !selectedIds.length">
+            حذف المحدد
+          </button>
+          <button class="admin-danger" type="button" @click="removeAllOrders" :disabled="loading || !orders.length">
+            حذف الكل
           </button>
         </div>
       </div>
@@ -45,8 +51,8 @@
           <div class="text-sm admin-muted rtl-text">
             {{ (t('common.selected') || 'المحدد') }}: <span class="font-semibold">{{ selectedIds.length }}</span>
           </div>
-          <button class="admin-danger" type="button" @click="removeSelected" :disabled="loading">
-            {{ t('common.delete') }}
+          <button class="admin-danger" type="button" @click="removeSelected" :disabled="loading || !selectedIds.length">
+            حذف المحدد
           </button>
         </div>
 
@@ -147,16 +153,41 @@ async function removeOrder(id: string) {
 
 async function removeSelected() {
   if (!selectedIds.value.length) return
-  const ok = confirm((t('admin.confirmDeleteOrder') || t('common.confirmDelete') || 'Delete?') + ` (${selectedIds.value.length})`)
+  const count = selectedIds.value.length
+  const ok = confirm((t('admin.confirmDeleteOrder') || t('common.confirmDelete') || 'Delete?') + ` (${count})`)
   if (!ok) return
 
   loading.value = true
   error.value = ''
   try {
-    for (const id of selectedIds.value) {
-      await api.del(`/admin/orders/${id}`)
+    const ids = [...selectedIds.value]
+    const results = await Promise.allSettled(ids.map(id => api.del(`/admin/orders/${id}`)))
+    const failed = results.filter(r => r.status === 'rejected')
+    const successIds = ids.filter((_, i) => results[i].status === 'fulfilled')
+    orders.value = orders.value.filter(o => !successIds.includes(o.id))
+    selectedIds.value = selectedIds.value.filter(id => failed.length && !successIds.includes(id))
+    if (failed.length) {
+      error.value = `تعذر حذف ${failed.length} طلب`
+    } else {
+      selectedIds.value = []
     }
-    orders.value = orders.value.filter(o => !selectedIds.value.includes(o.id))
+  } catch (e: any) {
+    error.value = extractErr(e)
+  } finally {
+    loading.value = false
+  }
+}
+
+async function removeAllOrders() {
+  if (!orders.value.length) return
+  const ok = confirm(`سيتم حذف كل الطلبات (${orders.value.length})`)
+  if (!ok) return
+
+  loading.value = true
+  error.value = ''
+  try {
+    await api.del('/admin/orders/all')
+    orders.value = []
     selectedIds.value = []
   } catch (e: any) {
     error.value = extractErr(e)

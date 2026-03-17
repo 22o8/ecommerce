@@ -40,6 +40,7 @@ const priceIqd = computed(() => Number(product.value?.priceIqd ?? 0))
 const discountPercent = computed(() => Number(product.value?.discountPercent ?? 0))
 const finalPriceIqd = computed(() => Number(product.value?.finalPriceIqd ?? (discountPercent.value > 0 ? (priceIqd.value * (100 - discountPercent.value) / 100) : priceIqd.value)))
 const brand = computed(() => String(product.value?.brand ?? ''))
+const categoryKey = computed(() => String(product.value?.category ?? ''))
 const avgRating = computed(() => Number(product.value?.ratingAvg ?? 0))
 const ratingCount = computed(() => Number(product.value?.ratingCount ?? 0))
 const isOutOfStock = computed(() => Number(product.value?.stockQuantity ?? 0) <= 0)
@@ -52,14 +53,14 @@ watch(myReview, (v) => {
 }, { immediate: true })
 
 const { data: similar } = await useAsyncData(
-  () => `product-similar-${productId.value}-${brand.value}`,
+  () => `product-similar-${productId.value}-${categoryKey.value}`,
   async () => {
-    if (!brand.value) return []
-    const res = await api.get<any>('/Products', { page: 1, pageSize: 8, brand: brand.value, sort: 'new' })
+    if (!categoryKey.value) return []
+    const res = await api.get<any>('/Products', { page: 1, pageSize: 8, category: categoryKey.value, sort: 'new' })
     const items = Array.isArray(res?.items) ? res.items : []
-    return items.filter((x: any) => String(x?.id) !== String(productId.value))
+    return items.filter((x: any) => String(x?.id) !== String(productId.value)).slice(0, 4)
   },
-  { watch: [productId, brand] }
+  { watch: [productId, categoryKey] }
 )
 
 function addToCart() {
@@ -213,7 +214,7 @@ function starFill(n: number) {
         <div v-if="(similar?.length || 0) > 0" class="grid gap-3">
           <div class="flex items-center justify-between">
             <div class="text-lg font-extrabold rtl-text">{{ t('products.youMayAlsoLike') }}</div>
-            <NuxtLink :to="`/products?brand=${encodeURIComponent(brand)}`" class="text-sm text-[rgb(var(--primary))]">{{ t('home.viewAll') }}</NuxtLink>
+            <NuxtLink :to="`/products?category=${encodeURIComponent(categoryKey)}`" class="text-sm text-[rgb(var(--primary))]">{{ t('home.viewAll') }}</NuxtLink>
           </div>
           <div class="grid gap-4 sm:grid-cols-2">
             <ProductCard v-for="p in similar" :key="p.id" :p="p" />
