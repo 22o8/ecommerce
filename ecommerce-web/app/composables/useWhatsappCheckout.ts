@@ -52,7 +52,11 @@ export function useWhatsappCheckout() {
     const key = 'coupon_device_key'
     const existing = localStorage.getItem(key)
     if (existing) return existing
-    const value = `${Date.now()}-${Math.random().toString(36).slice(2)}-${navigator.userAgent}`
+
+    const value = (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`)
+      .replace(/[^a-zA-Z0-9_-]/g, '')
+      .slice(0, 64)
+
     localStorage.setItem(key, value)
     return value
   }

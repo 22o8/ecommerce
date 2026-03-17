@@ -36,6 +36,71 @@ public class CheckoutController : ControllerBase
         return Guid.TryParse(idStr, out userId);
     }
 
+    private static bool IsSchemaDrift(Exception ex, params string[] markers)
+    {
+        var text = ex.ToString();
+        return markers.Any(m => text.Contains(m, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task<bool?> TryCheckCouponUsageByDeviceAsync(Guid couponId, string? deviceKey)
+    {
+        var deviceHash = CouponsController.HashDeviceKey(deviceKey);
+        if (string.IsNullOrWhiteSpace(deviceHash)) return false;
+
+        try
+        {
+            return await _db.CouponUsages.AnyAsync(x => x.CouponId == couponId && x.DeviceKeyHash == deviceHash);
+        }
+        catch (Exception ex) when (IsSchemaDrift(ex, "CouponUsages", "relation 'CouponUsages' does not exist", "Invalid object name 'CouponUsages'"))
+        {
+            return null;
+        }
+    }
+
+    private async Task<bool?> TryCheckCouponUsageByUserAsync(Guid couponId, Guid userId)
+    {
+        try
+        {
+            return await _db.CouponUsages.AnyAsync(x => x.CouponId == couponId && x.UserId == userId);
+        }
+        catch (Exception ex) when (IsSchemaDrift(ex, "CouponUsages", "relation 'CouponUsages' does not exist", "Invalid object name 'CouponUsages'"))
+        {
+            return null;
+        }
+    }
+
+    private bool CanPersistCouponUsage()
+    {
+        try
+        {
+            return _db.Database.IsNpgsql() || _db.Database.IsSqlServer() || _db.Database.IsSqlite();
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    private void TryAttachCouponUsage(Coupon? coupon, Guid? userId, Guid orderId, string? deviceKey)
+    {
+        if (coupon == null || !CanPersistCouponUsage()) return;
+
+        try
+        {
+            _db.CouponUsages.Add(new CouponUsage
+            {
+                CouponId = coupon.Id,
+                UserId = userId,
+                OrderId = orderId,
+                DeviceKeyHash = CouponsController.HashDeviceKey(deviceKey)
+            });
+        }
+        catch
+        {
+            // ignore local model issues; coupon itself will still be counted.
+        }
+    }
+
     private async Task<(Coupon? coupon, decimal discountIqd, decimal discountUsd, IActionResult? error)> ResolveCouponAsync(string? code, decimal subtotalIqd, decimal subtotalUsd, Guid? userId = null, string? deviceKey = null, IEnumerable<Product>? products = null)
     {
         var normalized = (code ?? string.Empty).Trim().ToUpperInvariant();
@@ -58,17 +123,14 @@ public class CheckoutController : ControllerBase
         if (products != null && products.Any(p => !p.IsCouponAllowed))
             return (null, 0m, 0m, BadRequest(new { message = "Coupon cannot be applied to one or more products" }));
 
-        var deviceHash = CouponsController.HashDeviceKey(deviceKey);
-        if (!string.IsNullOrWhiteSpace(deviceHash))
-        {
-            var usedByDevice = await _db.CouponUsages.AnyAsync(x => x.CouponId == coupon.Id && x.DeviceKeyHash == deviceHash);
-            if (usedByDevice)
-                return (null, 0m, 0m, BadRequest(new { message = "Coupon already used on this device" }));
-        }
+        var usedByDevice = await TryCheckCouponUsageByDeviceAsync(coupon.Id, deviceKey);
+        if (usedByDevice == true)
+            return (null, 0m, 0m, BadRequest(new { message = "Coupon already used on this device" }));
+
         if (userId.HasValue)
         {
-            var usedByUser = await _db.CouponUsages.AnyAsync(x => x.CouponId == coupon.Id && x.UserId == userId.Value);
-            if (usedByUser)
+            var usedByUser = await TryCheckCouponUsageByUserAsync(coupon.Id, userId.Value);
+            if (usedByUser == true)
                 return (null, 0m, 0m, BadRequest(new { message = "Coupon already used by this account" }));
         }
 
@@ -135,11 +197,22 @@ public class CheckoutController : ControllerBase
         if (couponResult.coupon != null)
         {
             couponResult.coupon.UsedCount += 1;
-            _db.CouponUsages.Add(new CouponUsage { CouponId = couponResult.coupon.Id, UserId = userId, OrderId = order.Id, DeviceKeyHash = CouponsController.HashDeviceKey(req.DeviceKey) });
+            TryAttachCouponUsage(couponResult.coupon, userId, order.Id, req.DeviceKey);
         }
 
         _db.Orders.Add(order);
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (Exception ex) when (IsSchemaDrift(ex, "CouponUsages", "relation \"CouponUsages\" does not exist", "Invalid object name 'CouponUsages'"))
+        {
+            foreach (var entry in _db.ChangeTracker.Entries<CouponUsage>().ToList())
+            {
+                entry.State = EntityState.Detached;
+            }
+            await _db.SaveChangesAsync();
+        }
 
         return Ok(new
         {
@@ -227,10 +300,21 @@ public class CheckoutController : ControllerBase
         if (couponResult.coupon != null)
         {
             couponResult.coupon.UsedCount += 1;
-            _db.CouponUsages.Add(new CouponUsage { CouponId = couponResult.coupon.Id, UserId = userId, OrderId = order.Id, DeviceKeyHash = CouponsController.HashDeviceKey(req.DeviceKey) });
+            TryAttachCouponUsage(couponResult.coupon, userId, order.Id, req.DeviceKey);
         }
         _db.Orders.Add(order);
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (Exception ex) when (IsSchemaDrift(ex, "CouponUsages", "relation \"CouponUsages\" does not exist", "Invalid object name 'CouponUsages'"))
+        {
+            foreach (var entry in _db.ChangeTracker.Entries<CouponUsage>().ToList())
+            {
+                entry.State = EntityState.Detached;
+            }
+            await _db.SaveChangesAsync();
+        }
 
         return Ok(new
         {
@@ -325,10 +409,21 @@ public class CheckoutController : ControllerBase
         if (couponResult.coupon != null)
         {
             couponResult.coupon.UsedCount += 1;
-            _db.CouponUsages.Add(new CouponUsage { CouponId = couponResult.coupon.Id, UserId = userId, OrderId = order.Id, DeviceKeyHash = CouponsController.HashDeviceKey(req.DeviceKey) });
+            TryAttachCouponUsage(couponResult.coupon, userId, order.Id, req.DeviceKey);
         }
         _db.Orders.Add(order);
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (Exception ex) when (IsSchemaDrift(ex, "CouponUsages", "relation \"CouponUsages\" does not exist", "Invalid object name 'CouponUsages'"))
+        {
+            foreach (var entry in _db.ChangeTracker.Entries<CouponUsage>().ToList())
+            {
+                entry.State = EntityState.Detached;
+            }
+            await _db.SaveChangesAsync();
+        }
 
         return Ok(new { orderId = order.Id, status = order.Status, couponCode = order.CouponCode, discountAmountIqd = order.DiscountAmountIqd, amountIqd = order.TotalIqd });
     }
@@ -380,7 +475,18 @@ public class CheckoutController : ControllerBase
 
         order.Payments.Add(payment);
         _db.Orders.Add(order);
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (Exception ex) when (IsSchemaDrift(ex, "CouponUsages", "relation \"CouponUsages\" does not exist", "Invalid object name 'CouponUsages'"))
+        {
+            foreach (var entry in _db.ChangeTracker.Entries<CouponUsage>().ToList())
+            {
+                entry.State = EntityState.Detached;
+            }
+            await _db.SaveChangesAsync();
+        }
 
         return Ok(new { orderId = order.Id, status = order.Status, amountUsd = order.TotalUsd, amountIqd = order.TotalIqd, service = new { sr.Id, sr.Service.Title, package = sr.Package.Name }, payment = new { payment.Id, payment.Provider, payment.Status, payment.ProviderRef } });
     }

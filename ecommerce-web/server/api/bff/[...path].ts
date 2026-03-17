@@ -104,14 +104,23 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
+    const isLogout = routePath.toLowerCase() === 'auth/logout'
+
+    if (isLogout) {
+      const names = ['token', 'access', 'access_token', 'role', 'auth', 'user']
+      for (const n of names) {
+        try { deleteCookie(event, n, { path: '/' }) } catch {}
+      }
+      setResponseStatus(event, 200)
+      return { ok: true, message: 'Logged out successfully.' }
+    }
+
     const res = await fetch(targetUrl.toString(), {
       method,
       headers: { ...headers },
       body: body || undefined,
     })
-
-    const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
-    const isLogout = routePath.toLowerCase() === 'auth/logout'
 
     if (isLogin) {
       const json = await res.json().catch(() => null)
@@ -131,16 +140,6 @@ export default defineEventHandler(async (event) => {
 
       setResponseStatus(event, res.status)
       return json
-    }
-
-    if (isLogout) {
-      const json = await res.json().catch(() => null)
-      const names = ['token', 'access', 'access_token', 'role', 'auth', 'user']
-      for (const n of names) {
-        try { deleteCookie(event, n, { path: '/' }) } catch {}
-      }
-      setResponseStatus(event, res.status)
-      return json ?? { ok: res.ok }
     }
 
     setResponseStatus(event, res.status)
@@ -178,6 +177,6 @@ export default defineEventHandler(async (event) => {
   } catch (err: any) {
     console.error('BFF error:', err)
     setResponseStatus(event, 500)
-    return { error: err?.message || 'BFF failed' }
+    return { message: err?.message || 'BFF failed' }
   }
 })

@@ -1,6 +1,6 @@
 <template>
   <div class="mx-auto max-w-6xl w-full overflow-x-hidden px-3 sm:px-4 lg:px-0">
-    <div class="grid w-full gap-4 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+    <div class="grid w-full gap-4 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_360px] items-start">
       <div class="card-soft p-4 sm:p-5 md:p-8 min-w-0 overflow-hidden">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="min-w-0">
@@ -72,7 +72,7 @@
         </div>
       </div>
 
-      <div class="card-soft p-4 sm:p-5 md:p-8 h-fit lg:sticky lg:top-24 min-w-0 overflow-hidden">
+      <div class="card-soft order-first lg:order-none p-4 sm:p-5 md:p-8 h-fit lg:sticky lg:top-24 min-w-0 overflow-hidden">
         <h2 class="text-xl font-extrabold rtl-text">{{ t('checkout') }}</h2>
 
         <div class="mt-6 grid gap-3 text-sm">
@@ -121,7 +121,7 @@
         </div>
 
         <div class="mt-8 grid gap-3">
-          <UiButton class="w-full justify-center" :disabled="!cart.items.length || hasUnavailableItems" @click="openWhatsApp">
+          <UiButton class="w-full justify-center min-h-[50px] touch-manipulation" :disabled="!cart.items.length || hasUnavailableItems" @click="openWhatsApp">
             <Icon name="mdi:whatsapp" class="text-lg" />
             <span class="rtl-text">{{ t('buyNow') }}</span>
           </UiButton>
@@ -159,12 +159,17 @@ function fmtMoney(v: any) {
 }
 
 function getDeviceKey() {
+  if (!process.client) return ''
   const key = 'coupon_device_key'
   const existing = localStorage.getItem(key)
   if (existing) return existing
-  const value = `${Date.now()}-${Math.random().toString(36).slice(2)}-${navigator.userAgent}`
-  localStorage.setItem(key, value)
-  return value
+
+  const randomPart = (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`)
+    .replace(/[^a-zA-Z0-9_-]/g, '')
+    .slice(0, 64)
+
+  localStorage.setItem(key, randomPart)
+  return randomPart
 }
 
 function normalizeApiMessage(input: any, fallback: string) {
