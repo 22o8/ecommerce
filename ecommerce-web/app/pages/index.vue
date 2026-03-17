@@ -78,22 +78,30 @@ const categoryCards = computed(() => {
     accent: accents[idx % accents.length],
   }))
 
-  if (topRatedProducts.value?.length) {
-    const first = topRatedProducts.value[0] as any
-    items.unshift({
-      key: 'top-rated',
-      title: 'المنتجات الأكثر تقييماً',
-      subtitle: 'أفضل المنتجات حسب تقييمات العملاء داخل المتجر.',
-      imageUrl: first?.imageUrl || first?.coverImage || first?.images?.[0]?.url || '',
-      to: '/products?sort=topRated',
-      accent: 'from-yellow-500/25 to-amber-500/10',
-    })
-  }
-
   return items
 })
 
-const heroHighlights = computed(() => (categoryCards.value || []).slice(0, 4))
+const heroHighlights = computed(() => {
+  const highlights = [] as Array<{ key: string; title: string; to: string }>
+
+  if (topRatedProducts.value?.length) {
+    highlights.push({
+      key: 'top-rated',
+      title: 'المنتجات الأكثر تقييماً',
+      to: '/products?sort=topRated',
+    })
+  }
+
+  for (const item of (categoryCards.value || []).slice(0, 3)) {
+    highlights.push({
+      key: item.key,
+      title: item.title,
+      to: item.to,
+    })
+  }
+
+  return highlights.slice(0, 4)
+})
 const heroBrandBgSrc = heroImage
 const { buildAssetUrl } = useApi()
 
@@ -117,12 +125,15 @@ const { buildAssetUrl } = useApi()
           <div class="hero-content-panel me-auto max-w-[46rem] text-center lg:text-start lg:max-w-[42rem] lg:me-[38%] xl:me-[41%]">
             <div class="hero-mini-badges mb-6 flex flex-wrap items-center justify-center gap-3">
               <NuxtLink
-                v-for="item in heroHighlights"
+                v-for="(item, idx) in heroHighlights"
                 :key="item.key"
-                :to="`/categories/${encodeURIComponent(item.key)}`"
+                :to="item.to"
                 class="hero-mini-chip"
+                :class="{ 'hero-mini-chip--primary': idx === 0 }"
               >
-                <span>{{ item.title }}</span>
+                <span class="hero-mini-chip__dot" />
+                <span class="hero-mini-chip__label">{{ item.title }}</span>
+                <span class="hero-mini-chip__arrow">↗</span>
               </NuxtLink>
             </div>
 
@@ -352,25 +363,57 @@ const { buildAssetUrl } = useApi()
   background: radial-gradient(circle, rgba(var(--primary), .14), transparent 72%);
 }
 .hero-mini-chip{
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
-  min-height: 42px;
-  padding: .7rem 1rem;
-  border-radius: 999px;
-  border: 1px solid rgba(var(--border), .9);
-  background: rgba(var(--surface-rgb), .72);
-  box-shadow: 0 16px 36px rgba(0,0,0,.08);
-  backdrop-filter: blur(10px);
-  color: rgb(var(--text));
-  font-size: .9rem;
-  font-weight: 700;
-  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  display:inline-flex;
+  align-items:center;
+  gap:.7rem;
+  min-height:52px;
+  padding:.85rem 1rem;
+  border-radius:18px;
+  border:1px solid rgba(var(--border), .92);
+  background:linear-gradient(180deg, rgba(var(--surface-rgb), .84), rgba(var(--surface-2-rgb), .74));
+  box-shadow:0 18px 40px rgba(0,0,0,.12);
+  backdrop-filter:blur(12px);
+  color:rgb(var(--text));
+  font-size:.92rem;
+  font-weight:800;
+  transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease, background-color .22s ease;
+}
+.hero-mini-chip__dot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background:rgb(var(--primary));
+  box-shadow:0 0 0 6px rgba(var(--primary), .12);
+  flex:0 0 auto;
+}
+.hero-mini-chip__label{
+  white-space:nowrap;
+}
+.hero-mini-chip__arrow{
+  display:grid;
+  place-items:center;
+  width:28px;
+  height:28px;
+  margin-inline-start:.1rem;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  color:rgb(var(--muted));
+  font-size:.92rem;
+  flex:0 0 auto;
+}
+.hero-mini-chip--primary{
+  background:linear-gradient(135deg, rgba(var(--primary), .18), rgba(var(--surface-rgb), .84) 58%, rgba(var(--cta-glow-2), .16));
+  border-color:rgba(var(--primary), .34);
+  box-shadow:0 22px 48px rgba(var(--primary), .14);
 }
 .hero-mini-chip:hover{
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   border-color: rgba(var(--primary), .42);
-  box-shadow: 0 20px 42px rgba(var(--primary), .12);
+  box-shadow: 0 22px 46px rgba(var(--primary), .14);
+}
+.hero-mini-chip:hover .hero-mini-chip__arrow{
+  color:rgb(var(--primary));
+  transform:translateX(-2px);
 }
 .hero-stat-grid{
   align-items: stretch;
@@ -647,7 +690,9 @@ const { buildAssetUrl } = useApi()
     margin-bottom:1rem;
     justify-content:center;
   }
-  .hero-mini-chip{ min-height:38px; padding:.55rem .8rem; font-size:.82rem; }
+  .hero-mini-chip{ min-height:44px; padding:.7rem .85rem; font-size:.82rem; border-radius:16px; gap:.55rem; }
+  .hero-mini-chip__arrow{ width:24px; height:24px; font-size:.82rem; }
+  .hero-mini-chip__dot{ width:8px; height:8px; box-shadow:0 0 0 5px rgba(var(--primary), .1); }
   .hero-stat-grid{
     display:grid;
     grid-template-columns:repeat(3,minmax(0,1fr));
