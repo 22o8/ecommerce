@@ -1,6 +1,6 @@
 <template>
   <div class="mx-auto max-w-6xl w-full overflow-x-hidden px-3 sm:px-4 lg:px-0">
-    <div class="grid w-full gap-4 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_360px] items-start">
+    <div class="grid w-full gap-4 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
       <div class="card-soft p-4 sm:p-5 md:p-8 min-w-0 overflow-hidden">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="min-w-0">
@@ -72,7 +72,7 @@
         </div>
       </div>
 
-      <div class="card-soft order-first lg:order-none p-4 sm:p-5 md:p-8 h-fit lg:sticky lg:top-24 min-w-0 overflow-hidden">
+      <div class="card-soft p-4 sm:p-5 md:p-8 h-fit lg:sticky lg:top-24 min-w-0 overflow-hidden">
         <h2 class="text-xl font-extrabold rtl-text">{{ t('checkout') }}</h2>
 
         <div class="mt-6 grid gap-3 text-sm">
@@ -106,7 +106,7 @@
               :placeholder="t('cart.couponPlaceholder')"
               @keydown.enter.prevent="applyCoupon"
             />
-            <UiButton variant="secondary" class="w-full sm:w-auto justify-center" :disabled="couponLoading || !couponCode.trim()" @click="applyCoupon">
+            <UiButton variant="secondary" class="w-full sm:w-auto justify-center" :disabled="couponLoading || !couponCode.trim()" @pointerdown.stop @touchstart.stop @click="applyCoupon">
               {{ couponLoading ? t('common.loading') : t('cart.applyCoupon') }}
             </UiButton>
           </div>
@@ -114,14 +114,14 @@
           <div v-if="appliedCoupon" class="rounded-2xl border border-app bg-surface p-3 text-sm min-w-0">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div class="rtl-text break-words"><strong>{{ appliedCoupon.code }}</strong> - {{ appliedCoupon.title }}</div>
-              <button class="text-[rgb(var(--danger))] rtl-text text-start sm:text-end" @click="removeCoupon">{{ t('common.remove') }}</button>
+              <button class="text-[rgb(var(--danger))] rtl-text text-start sm:text-end" @pointerdown.stop @touchstart.stop @click="removeCoupon">{{ t('common.remove') }}</button>
             </div>
             <div class="mt-1 rtl-text text-muted break-words">{{ t('cart.couponDiscount') }}: {{ fmtMoney(appliedCoupon.discountAmountIqd || 0) }}</div>
           </div>
         </div>
 
         <div class="mt-8 grid gap-3">
-          <UiButton class="w-full justify-center min-h-[50px] touch-manipulation" :disabled="!cart.items.length || hasUnavailableItems" @click="openWhatsApp">
+          <UiButton class="w-full justify-center" :disabled="!cart.items.length || hasUnavailableItems" @pointerdown.stop @touchstart.stop @click="openWhatsApp">
             <Icon name="mdi:whatsapp" class="text-lg" />
             <span class="rtl-text">{{ t('buyNow') }}</span>
           </UiButton>
@@ -163,13 +163,9 @@ function getDeviceKey() {
   const key = 'coupon_device_key'
   const existing = localStorage.getItem(key)
   if (existing) return existing
-
-  const randomPart = (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`)
-    .replace(/[^a-zA-Z0-9_-]/g, '')
-    .slice(0, 64)
-
-  localStorage.setItem(key, randomPart)
-  return randomPart
+  const value = `${Date.now()}-${Math.random().toString(36).slice(2)}-${navigator.userAgent}`
+  localStorage.setItem(key, value)
+  return value
 }
 
 function normalizeApiMessage(input: any, fallback: string) {
@@ -263,7 +259,7 @@ async function applyCoupon() {
       code: couponCode.value.trim(),
       subtotalIqd: Number(cart.total || 0),
       deviceKey: process.client ? getDeviceKey() : '',
-      productIds: cart.items.map((x:any) => x.id).join(',')
+      productIds: cart.items.map((x:any) => x.id).filter(Boolean).join(',')
     })
     appliedCoupon.value = res
     couponError.value = ''
@@ -309,7 +305,7 @@ watch(() => cart.total, async (v) => {
       code: appliedCoupon.value.code,
       subtotalIqd: Number(v || 0),
       deviceKey: process.client ? getDeviceKey() : '',
-      productIds: cart.items.map((x:any) => x.id).join(',')
+      productIds: cart.items.map((x:any) => x.id).filter(Boolean).join(',')
     })
     appliedCoupon.value = res
   } catch {

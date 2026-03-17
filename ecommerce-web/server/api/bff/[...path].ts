@@ -1,5 +1,5 @@
 // ecommerce-web/server/api/bff/[...path].ts
-import { readMultipartFormData, readRawBody } from 'h3'
+import { deleteCookie, getCookie, getQuery, getRequestHeaders, getRouterParam, readMultipartFormData, readRawBody, setCookie, setResponseHeader, setResponseStatus } from 'h3'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -104,23 +104,14 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
-    const isLogout = routePath.toLowerCase() === 'auth/logout'
-
-    if (isLogout) {
-      const names = ['token', 'access', 'access_token', 'role', 'auth', 'user']
-      for (const n of names) {
-        try { deleteCookie(event, n, { path: '/' }) } catch {}
-      }
-      setResponseStatus(event, 200)
-      return { ok: true, message: 'Logged out successfully.' }
-    }
-
     const res = await fetch(targetUrl.toString(), {
       method,
       headers: { ...headers },
       body: body || undefined,
     })
+
+    const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
+    const isLogout = routePath.toLowerCase() === 'auth/logout'
 
     if (isLogin) {
       const json = await res.json().catch(() => null)
@@ -142,6 +133,16 @@ export default defineEventHandler(async (event) => {
       return json
     }
 
+    if (isLogout) {
+      const json = await res.json().catch(() => null)
+      const names = ['token', 'access', 'access_token', 'role', 'auth', 'user']
+      for (const n of names) {
+        try { deleteCookie(event, n, { path: '/' }) } catch {}
+      }
+      setResponseStatus(event, res.status)
+      return json ?? { ok: res.ok }
+    }
+
     setResponseStatus(event, res.status)
 
     const responseCt = String(res.headers.get('content-type') || '').toLowerCase()
@@ -152,12 +153,19 @@ export default defineEventHandler(async (event) => {
       try {
         return raw ? JSON.parse(raw) : null
       } catch {
-        return {
-          message: res.ok ? 'Upstream returned invalid JSON.' : 'تعذر إكمال الطلب من الخادم.',
-          status: res.status,
-          contentType: responseCt,
-          preview: raw.slice(0, 400),
-        }
+        return res.ok
+          ? {
+              message: 'Upstream returned invalid JSON.',
+              status: res.status,
+              contentType: responseCt,
+              preview: raw.slice(0, 400),
+            }
+          : {
+              error: 'Upstream request failed',
+              message: raw.slice(0, 400) || 'تعذر إكمال الطلب من الخادم.',
+              status: res.status,
+              contentType: responseCt,
+            }
       }
     }
 
@@ -177,6 +185,6 @@ export default defineEventHandler(async (event) => {
   } catch (err: any) {
     console.error('BFF error:', err)
     setResponseStatus(event, 500)
-    return { message: err?.message || 'BFF failed' }
+    return { error: err?.message || 'BFF failed' }
   }
 })

@@ -30,13 +30,23 @@ function openWhatsappUrl(url: string) {
   const isMobile = /android|iphone|ipad|ipod|mobile|iemobile|opera mini/.test(ua) || window.innerWidth < 768
 
   if (isMobile) {
-    window.location.href = url
-    return
+    try {
+      const target = new URL(url)
+      const number = target.pathname.replace(/\//g, '')
+      const text = target.searchParams.get('text') || ''
+      const deepLink = `whatsapp://send${number ? `?phone=${number}` : '?'}${number && text ? '&' : ''}${text ? `text=${text}` : ''}`
+      window.location.assign(deepLink)
+      window.setTimeout(() => window.location.assign(url), 900)
+      return
+    } catch {
+      window.location.assign(url)
+      return
+    }
   }
 
   const newTab = window.open(url, '_blank', 'noopener,noreferrer')
   if (!newTab) {
-    window.location.href = url
+    window.location.assign(url)
   }
 }
 
@@ -52,11 +62,7 @@ export function useWhatsappCheckout() {
     const key = 'coupon_device_key'
     const existing = localStorage.getItem(key)
     if (existing) return existing
-
-    const value = (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`)
-      .replace(/[^a-zA-Z0-9_-]/g, '')
-      .slice(0, 64)
-
+    const value = `${Date.now()}-${Math.random().toString(36).slice(2)}-${navigator.userAgent}`
     localStorage.setItem(key, value)
     return value
   }

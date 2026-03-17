@@ -16,41 +16,6 @@ public class CouponsController : ControllerBase
         _db = db;
     }
 
-    private static bool IsSchemaDrift(Exception ex, params string[] markers)
-    {
-        var text = ex.ToString();
-        return markers.Any(m => text.Contains(m, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private async Task<bool?> TryCheckDeviceUsageAsync(Guid couponId, string? deviceKey)
-    {
-        var deviceHash = HashDeviceKey(deviceKey);
-        if (string.IsNullOrWhiteSpace(deviceHash)) return false;
-
-        try
-        {
-            return await _db.CouponUsages.AsNoTracking().AnyAsync(x => x.CouponId == couponId && x.DeviceKeyHash == deviceHash);
-        }
-        catch (Exception ex) when (IsSchemaDrift(ex, "CouponUsages", "relation 'CouponUsages' does not exist", "Invalid object name 'CouponUsages'"))
-        {
-            return null;
-        }
-    }
-
-    private async Task<bool?> TryCheckProductEligibilityAsync(List<Guid> ids)
-    {
-        if (ids.Count == 0) return false;
-
-        try
-        {
-            return await _db.Products.AsNoTracking().AnyAsync(x => ids.Contains(x.Id) && !x.IsCouponAllowed);
-        }
-        catch (Exception ex) when (IsSchemaDrift(ex, "IsCouponAllowed", "column 'IsCouponAllowed' does not exist", "Invalid column name 'IsCouponAllowed'"))
-        {
-            return null;
-        }
-    }
-
     [HttpGet("validate")]
     public async Task<IActionResult> Validate([FromQuery] string code, [FromQuery] decimal subtotalIqd = 0, [FromQuery] string? deviceKey = null, [FromQuery] string? productIds = null)
     {
@@ -70,12 +35,19 @@ public class CouponsController : ControllerBase
         if (subtotalIqd < coupon.MinimumOrderIqd)
             return BadRequest(new { message = "Minimum order not reached", minimumOrderIqd = coupon.MinimumOrderIqd });
 
-        var usedByDevice = await TryCheckDeviceUsageAsync(coupon.Id, deviceKey);
-        if (usedByDevice == true) return BadRequest(new { message = "Coupon already used on this device" });
+        var deviceHash = HashDeviceKey(deviceKey);
+        if (!string.IsNullOrWhiteSpace(deviceHash))
+        {
+            var usedByDevice = await _db.CouponUsages.AsNoTracking().AnyAsync(x => x.CouponId == coupon.Id && x.DeviceKeyHash == deviceHash);
+            if (usedByDevice) return BadRequest(new { message = "Coupon already used on this device" });
+        }
 
         var ids = ParseProductIds(productIds);
-        var disallowedExists = await TryCheckProductEligibilityAsync(ids);
-        if (disallowedExists == true) return BadRequest(new { message = "Coupon cannot be applied to one or more products" });
+        if (ids.Count > 0)
+        {
+            var disallowedExists = await _db.Products.AsNoTracking().AnyAsync(x => ids.Contains(x.Id) && !x.IsCouponAllowed);
+            if (disallowedExists) return BadRequest(new { message = "Coupon cannot be applied to one or more products" });
+        }
 
         var percentDiscount = coupon.DiscountPercent > 0 ? Math.Round(subtotalIqd * coupon.DiscountPercent / 100m, 2) : 0m;
         var fixedDiscount = coupon.FixedDiscountIqd > 0 ? coupon.FixedDiscountIqd : 0m;

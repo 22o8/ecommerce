@@ -177,15 +177,17 @@ export function useApi() {
         e?.message ||
         'API Error'
 
-      const wrappedError: any = new Error(String(derivedMessage))
-      wrappedError.name = e?.name || 'ApiError'
-      wrappedError.cause = e
-      wrappedError.statusCode = typeof status === 'number' ? status : undefined
-      wrappedError.status = typeof status === 'number' ? status : undefined
-      wrappedError.response = e?.response
-      wrappedError.data = normalizedData
-      wrappedError.rawData = rawData
-      wrappedError.friendlyMessage = String(derivedMessage)
+      const wrappedError = {
+        name: e?.name || 'ApiError',
+        message: String(derivedMessage),
+        cause: e,
+        statusCode: typeof status === 'number' ? status : undefined,
+        status: typeof status === 'number' ? status : undefined,
+        response: e?.response,
+        data: normalizedData,
+        rawData,
+        friendlyMessage: String(derivedMessage),
+      }
 
       // سجل آخر خطأ API (للتشخيص على الأجهزة التي تفشل بصمت)
       try {
