@@ -23,6 +23,24 @@ function normalizePhone(v: any) {
   return String(v || '').replace(/\D/g, '')
 }
 
+function openWhatsappUrl(url: string) {
+  if (!import.meta.client) return
+
+  const ua = String(navigator.userAgent || '').toLowerCase()
+  const isMobile = /android|iphone|ipad|ipod|mobile|iemobile|opera mini/.test(ua) || window.innerWidth < 768
+
+  if (isMobile) {
+    window.location.href = url
+    return
+  }
+
+  const newTab = window.open(url, '_blank', 'noopener,noreferrer')
+  if (!newTab) {
+    window.location.href = url
+  }
+}
+
+
 export function useWhatsappCheckout() {
   const api = useApi()
   const config = useRuntimeConfig()
@@ -34,7 +52,11 @@ export function useWhatsappCheckout() {
     const key = 'coupon_device_key'
     const existing = localStorage.getItem(key)
     if (existing) return existing
-    const value = `${Date.now()}-${Math.random().toString(36).slice(2)}-${navigator.userAgent}`
+
+    const value = (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`)
+      .replace(/[^a-zA-Z0-9_-]/g, '')
+      .slice(0, 64)
+
     localStorage.setItem(key, value)
     return value
   }
@@ -96,9 +118,7 @@ export function useWhatsappCheckout() {
       ? `https://wa.me/${number}?text=${text}`
       : `https://wa.me/?text=${text}`
 
-    if (import.meta.client) {
-      window.open(url, '_blank')
-    }
+    openWhatsappUrl(url)
   }
 
   const checkoutSingleProduct = async (product: any, quantity = 1) => {
@@ -142,9 +162,7 @@ export function useWhatsappCheckout() {
       ? `https://wa.me/${number}?text=${text}`
       : `https://wa.me/?text=${text}`
 
-    if (import.meta.client) {
-      window.open(url, '_blank')
-    }
+    openWhatsappUrl(url)
   }
 
   return { openWhatsappForCart, checkoutSingleProduct }

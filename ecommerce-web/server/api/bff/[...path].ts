@@ -104,14 +104,23 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
+    const isLogout = routePath.toLowerCase() === 'auth/logout'
+
+    if (isLogout) {
+      const names = ['token', 'access', 'access_token', 'role', 'auth', 'user']
+      for (const n of names) {
+        try { deleteCookie(event, n, { path: '/' }) } catch {}
+      }
+      setResponseStatus(event, 200)
+      return { ok: true, message: 'Logged out successfully.' }
+    }
+
     const res = await fetch(targetUrl.toString(), {
       method,
       headers: { ...headers },
       body: body || undefined,
     })
-
-    const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
-    const isLogout = routePath.toLowerCase() === 'auth/logout'
 
     if (isLogin) {
       const json = await res.json().catch(() => null)
@@ -133,16 +142,6 @@ export default defineEventHandler(async (event) => {
       return json
     }
 
-    if (isLogout) {
-      const json = await res.json().catch(() => null)
-      const names = ['token', 'access', 'access_token', 'role', 'auth', 'user']
-      for (const n of names) {
-        try { deleteCookie(event, n, { path: '/' }) } catch {}
-      }
-      setResponseStatus(event, res.status)
-      return json ?? { ok: res.ok }
-    }
-
     setResponseStatus(event, res.status)
 
     const responseCt = String(res.headers.get('content-type') || '').toLowerCase()
@@ -154,7 +153,7 @@ export default defineEventHandler(async (event) => {
         return raw ? JSON.parse(raw) : null
       } catch {
         return {
-          error: 'Upstream returned invalid JSON.',
+          message: res.ok ? 'Upstream returned invalid JSON.' : 'تعذر إكمال الطلب من الخادم.',
           status: res.status,
           contentType: responseCt,
           preview: raw.slice(0, 400),
@@ -163,7 +162,14 @@ export default defineEventHandler(async (event) => {
     }
 
     if (responseCt.startsWith('text/')) {
-      return await res.text().catch(() => '')
+      const text = await res.text().catch(() => '')
+      if (!res.ok) {
+        return {
+          message: text?.trim() || 'تعذر إكمال الطلب من الخادم.',
+          status: res.status,
+        }
+      }
+      return text
     }
 
     const buf = new Uint8Array(await res.arrayBuffer())
@@ -171,6 +177,6 @@ export default defineEventHandler(async (event) => {
   } catch (err: any) {
     console.error('BFF error:', err)
     setResponseStatus(event, 500)
-    return { error: err?.message || 'BFF failed' }
+    return { message: err?.message || 'BFF failed' }
   }
 })

@@ -3,7 +3,7 @@
   <div
     role="button"
     tabindex="0"
-    class="group relative product-card-shell overflow-hidden transition duration-300 will-change-transform hover:-translate-y-1"
+    class="group relative product-card-shell overflow-hidden transition duration-300 will-change-transform hover:-translate-y-1 touch-manipulation select-none"
     @click="goProduct"
     @keydown.enter.prevent="goProduct"
     @keydown.space.prevent="goProduct"
@@ -56,10 +56,13 @@
         </div>
 
         <!-- أزرار (مفضلة/معاينة) -->
-        <div class="flex items-center justify-end gap-2 mt-2">
+        <div class="relative z-20 flex items-center justify-end gap-2 mt-2 touch-manipulation">
           <button
             type="button"
             class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
+            @pointerdown.stop
+            @touchstart.stop
+            @touchend.stop.prevent
             @click.stop.prevent="toggleFav"
             :aria-label="t('wishlist.toggle')"
           >
@@ -69,6 +72,9 @@
           <button
             type="button"
             class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
+            @pointerdown.stop
+            @touchstart.stop
+            @touchend.stop.prevent
             @click.stop.prevent="openPreview"
             :aria-label="t('products.quickPreview')"
           >
@@ -87,10 +93,13 @@
           </div>
         </div>
 
-        <div class="flex flex-row items-center gap-2">
+        <div class="relative z-20 flex flex-row items-center gap-2 touch-manipulation">
           <button
             type="button"
             class="product-card-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-app transition text-xs"
+            @pointerdown.stop
+            @touchstart.stop
+            @touchend.stop.prevent
             @click.stop.prevent="addToCart"
             :disabled="isOutOfStock"
           >
@@ -101,6 +110,9 @@
           <button
             type="button"
             class="product-card-btn inline-flex items-center px-2.5 py-1.5 rounded-xl border border-app transition text-xs"
+            @pointerdown.stop
+            @touchstart.stop
+            @touchend.stop.prevent
             @click.stop.prevent="buyNow"
             :disabled="isOutOfStock"
           >

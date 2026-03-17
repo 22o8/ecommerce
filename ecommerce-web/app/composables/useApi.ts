@@ -167,23 +167,41 @@ export function useApi() {
         body: opts.body,
       })) as unknown as T
     } catch (e: any) {
+      const status = e?.statusCode ?? e?.response?.status ?? e?.status
+      const rawData = e?.data ?? e?.response?._data ?? undefined
+      const normalizedData = typeof rawData === 'string' ? { message: rawData } : rawData
+      const derivedMessage =
+        normalizedData?.message ||
+        normalizedData?.error ||
+        (typeof rawData === 'string' ? rawData : '') ||
+        e?.message ||
+        'API Error'
+
+      const wrappedError: any = new Error(String(derivedMessage))
+      wrappedError.name = e?.name || 'ApiError'
+      wrappedError.cause = e
+      wrappedError.statusCode = typeof status === 'number' ? status : undefined
+      wrappedError.status = typeof status === 'number' ? status : undefined
+      wrappedError.response = e?.response
+      wrappedError.data = normalizedData
+      wrappedError.rawData = rawData
+      wrappedError.friendlyMessage = String(derivedMessage)
+
       // سجل آخر خطأ API (للتشخيص على الأجهزة التي تفشل بصمت)
       try {
         const ui = useUiStore()
-        const status = e?.statusCode ?? e?.response?.status ?? e?.status
-        const msg = String(e?.message || 'API Error')
         ui.setLastApiError({
           at: new Date().toISOString(),
           url,
           method: String(opts.method || 'GET'),
           status: typeof status === 'number' ? status : undefined,
-          message: msg,
-          data: e?.data ?? e?.response?._data ?? undefined,
+          message: String(derivedMessage),
+          data: normalizedData,
         } as any)
       } catch {
         // ignore
       }
-      throw e
+      throw wrappedError
     }
   }
 

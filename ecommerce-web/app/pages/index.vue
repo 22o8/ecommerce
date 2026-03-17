@@ -574,22 +574,73 @@ const heroBrandBgSrc = heroImage
   background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .86));
 }
 @media (max-width: 640px){
-  .hero-premium-shell{ border-radius: 26px; }
-  .hero-stat-card__value{ font-size: 1.55rem; }
+  .hero-premium-shell{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    border-radius:26px;
+    overflow:hidden;
+  }
+  .hero-premium-shell > .hero-brand-bg-wrap,
+  .hero-premium-shell > .hero-brand-bg-placeholder{
+    order:2;
+    position:relative;
+    inset:auto;
+    display:block;
+    width:100%;
+    height:260px;
+    min-height:260px;
+    margin-top:0;
+    pointer-events:none;
+  }
+  .hero-premium-shell > .relative.z-\[1\]{
+    order:1;
+    width:100%;
+  }
+  .hero-premium-shell > .hero-aurora{ display:none; }
+  .hero-content-panel{
+    width:100%;
+    max-width:none;
+    margin:0;
+    padding:1.1rem 1rem 1rem;
+    border-radius:0;
+    text-align:center;
+    background:transparent;
+    border:0;
+    box-shadow:none;
+    backdrop-filter:none;
+  }
+  :global(html.theme-light) .hero-content-panel{
+    background:transparent;
+    border-color:transparent;
+    box-shadow:none;
+  }
+  .hero-mini-badges{
+    gap:.55rem;
+    margin-bottom:1rem;
+    justify-content:center;
+  }
+  .hero-mini-chip{ min-height:38px; padding:.55rem .8rem; font-size:.82rem; }
+  .hero-stat-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:.7rem;
+    margin-top:1rem;
+  }
+  .hero-stat-card{
+    padding:.8rem .6rem;
+    border-radius:18px;
+    text-align:center;
+  }
+  .hero-stat-card__label{
+    font-size:.74rem;
+    line-height:1.35;
+  }
+  .hero-stat-card__value{ font-size:1.55rem; }
   .home-section-panel{ padding: 1rem; border-radius: 24px; }
   .category-simple-card__inner{ min-height: 94px; padding: 16px; }
   .category-simple-card__icon{ width: 46px; height: 46px; border-radius: 16px; font-size: 22px; }
   .category-simple-card__arrow{ width: 32px; height: 32px; }
-  .hero-content-panel{
-    width:100%;
-    padding:1rem 1rem 1.1rem;
-    border-radius:24px;
-    text-align:center;
-  }
-  .hero-mini-badges{ gap:.55rem; margin-bottom:1rem; }
-  .hero-mini-chip{ min-height:38px; padding:.55rem .8rem; font-size:.82rem; }
-  .hero-stat-grid{ gap:.75rem; }
-  .hero-stat-card{ padding:.85rem .95rem; border-radius:20px; }
 }
 </style>
 
@@ -612,8 +663,8 @@ const heroBrandBgSrc = heroImage
   object-fit:cover;
   object-position:center;
   border-radius: 28px;
-  opacity:.34;
-  filter: brightness(.50) contrast(1.04) saturate(.88) drop-shadow(0 22px 68px rgba(0,0,0,.26));
+  opacity:.86;
+  filter: grayscale(1) brightness(.96) contrast(1.06) drop-shadow(0 22px 68px rgba(0,0,0,.18));
 }
 .hero-brand-bg-placeholder{
   display:flex;
@@ -635,23 +686,12 @@ const heroBrandBgSrc = heroImage
   font-size:.95rem;
   font-weight:800;
 }
-
-:global(html.theme-light) .hero-brand-bg-image{
-  opacity:.50;
-  filter: brightness(.62) contrast(1.03) saturate(.90) drop-shadow(0 20px 56px rgba(0,0,0,.18));
-}
-
-:global(html.theme-dark) .hero-brand-bg-image{
-  opacity:.36;
-  filter: brightness(.46) contrast(1.04) saturate(.88) drop-shadow(0 22px 68px rgba(0,0,0,.30));
-}
-
 @media (max-width: 1024px){
   .hero-brand-bg-image{
     inset-inline-end:.8rem;
     width:min(42vw, 360px);
     max-width:42%;
-    opacity:.28;
+    opacity:.78;
   }
   .hero-brand-bg-placeholder{
     justify-content:center;
@@ -665,24 +705,30 @@ const heroBrandBgSrc = heroImage
 }
 @media (max-width: 640px){
   .hero-brand-bg-image{
-    inset-inline-end: .55rem;
-    inset-inline-start: auto;
+    position:relative;
+    inset:auto;
     top:auto;
-    bottom:.75rem;
+    bottom:auto;
     transform:none;
-    width:min(58vw, 240px);
+    display:block;
+    width:calc(100% - 1.5rem);
+    height:100%;
     max-width:none;
-    opacity:.22;
-    border-radius: 22px;
+    margin:.25rem .75rem .9rem;
+    opacity:1;
+    border-radius:24px;
+    object-fit:cover;
+    object-position:center top;
+    filter:none;
   }
   .hero-brand-bg-placeholder{
     justify-content:center;
-    align-items:flex-end;
-    padding:1rem;
+    align-items:center;
+    padding:.75rem;
   }
   .hero-brand-bg-placeholder span{
-    width:min(88vw, 320px);
-    min-height:110px;
+    width:calc(100% - 1.5rem);
+    min-height:180px;
     font-size:.82rem;
   }
 }
