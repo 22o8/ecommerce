@@ -1,19 +1,36 @@
 <script setup lang="ts">
-import { useHead, useCookie } from '#app'
+import { useHead, useCookie, useRoute } from '#app'
+import { nextTick, watch } from 'vue'
 
 type Locale = 'ar' | 'en'
 const localeCookie = useCookie<Locale>('locale', { default: () => 'ar' })
 const locale = localeCookie.value === 'en' ? 'en' : 'ar'
+const route = useRoute()
 
 useHead({
   htmlAttrs: {
-    // Keep layout stable: always LTR and do not change structural classes when locale changes.
     lang: locale,
     dir: 'ltr',
-    // ⚠️ لا نثبت class هنا حتى لا نمسح classes التي يطبّقها uiStore + appearance plugin
-    // (مثل theme-dark/theme-light + theme-ramadan/theme-blackFriday ...)
   },
 })
+
+if (import.meta.client) {
+  if ('scrollRestoration' in window.history) {
+    window.history.scrollRestoration = 'manual'
+  }
+
+  watch(
+    () => route.fullPath,
+    async (newPath) => {
+      await nextTick()
+      if (newPath.includes('#')) return
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    },
+    { flush: 'post' }
+  )
+}
 </script>
 
 <template>
