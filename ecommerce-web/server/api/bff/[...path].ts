@@ -154,7 +154,7 @@ export default defineEventHandler(async (event) => {
         return raw ? JSON.parse(raw) : null
       } catch {
         return {
-          error: 'Upstream returned invalid JSON.',
+          message: res.ok ? 'Upstream returned invalid JSON.' : 'تعذر إكمال الطلب من الخادم.',
           status: res.status,
           contentType: responseCt,
           preview: raw.slice(0, 400),
@@ -163,7 +163,14 @@ export default defineEventHandler(async (event) => {
     }
 
     if (responseCt.startsWith('text/')) {
-      return await res.text().catch(() => '')
+      const text = await res.text().catch(() => '')
+      if (!res.ok) {
+        return {
+          message: text?.trim() || 'تعذر إكمال الطلب من الخادم.',
+          status: res.status,
+        }
+      }
+      return text
     }
 
     const buf = new Uint8Array(await res.arrayBuffer())
