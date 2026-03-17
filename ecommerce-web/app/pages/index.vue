@@ -59,12 +59,8 @@ const topBrands = computed(() => {
   }
   return uniq.slice(0, 10)
 })
-const categoryCards = computed(() => (categories.value || []).map((c: any, idx: number) => ({
-  key: String(c.key || '').toLowerCase(),
-  title: locale.value === 'en' ? (c.nameEn || c.nameAr || c.key) : (c.nameAr || c.nameEn || c.key),
-  subtitle: locale.value === 'en' ? (c.descriptionEn || c.descriptionAr || t('home.tapToExplore')) : (c.descriptionAr || c.descriptionEn || t('home.tapToExplore')),
-  imageUrl: c.imageUrl || '',
-  accent: [
+const categoryCards = computed(() => {
+  const accents = [
     'from-cyan-500/25 to-indigo-500/10',
     'from-fuchsia-500/20 to-rose-500/10',
     'from-amber-500/25 to-orange-500/10',
@@ -72,8 +68,30 @@ const categoryCards = computed(() => (categories.value || []).map((c: any, idx: 
     'from-blue-500/20 to-cyan-500/10',
     'from-pink-500/20 to-violet-500/10',
     'from-emerald-500/20 to-cyan-500/10',
-  ][idx % 7],
-})))
+  ]
+  const items = (categories.value || []).map((c: any, idx: number) => ({
+    key: String(c.key || '').toLowerCase(),
+    title: locale.value === 'en' ? (c.nameEn || c.nameAr || c.key) : (c.nameAr || c.nameEn || c.key),
+    subtitle: locale.value === 'en' ? (c.descriptionEn || c.descriptionAr || t('home.tapToExplore')) : (c.descriptionAr || c.descriptionEn || t('home.tapToExplore')),
+    imageUrl: c.imageUrl || '',
+    to: `/categories/${encodeURIComponent(String(c.key || '').toLowerCase())}`,
+    accent: accents[idx % accents.length],
+  }))
+
+  if (topRatedProducts.value?.length) {
+    const first = topRatedProducts.value[0] as any
+    items.unshift({
+      key: 'top-rated',
+      title: 'المنتجات الأكثر تقييماً',
+      subtitle: 'أفضل المنتجات حسب تقييمات العملاء داخل المتجر.',
+      imageUrl: first?.imageUrl || first?.coverImage || first?.images?.[0]?.url || '',
+      to: '/products?sort=topRated',
+      accent: 'from-yellow-500/25 to-amber-500/10',
+    })
+  }
+
+  return items
+})
 
 const heroHighlights = computed(() => (categoryCards.value || []).slice(0, 4))
 const heroBrandBgSrc = heroImage
@@ -233,21 +251,6 @@ const { buildAssetUrl } = useApi()
           </NuxtLink>
         </div>
 
-        <div class="mt-10 rounded-[2rem] border border-app bg-[rgba(var(--surface),.42)] p-5 sm:p-6">
-          <div class="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-end">
-            <div>
-              <h3 class="text-xl font-extrabold text-[rgb(var(--text))] sm:text-3xl">المنتجات الأكثر تقييماً</h3>
-              <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">أفضل المنتجات حسب تقييمات العملاء الحقيقية داخل المتجر.</p>
-            </div>
-          </div>
-
-          <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <RevealOnScroll v-for="(p, idx) in topRatedProducts.slice(0,4)" :key="p.id" :parity="idx % 2">
-              <ProductCard :p="p" />
-            </RevealOnScroll>
-          </div>
-        </div>
-
         <div class="category-showcase mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
           <RevealOnScroll
             v-for="(c, idx) in categoryCards"
@@ -256,7 +259,7 @@ const { buildAssetUrl } = useApi()
             :delay="35 * idx"
           >
             <NuxtLink
-              :to="`/categories/${encodeURIComponent(c.key)}`"
+              :to="c.to"
               class="group category-simple-card"
             >
               <div class="category-simple-card__inner" :class="`bg-gradient-to-br ${c.accent}`">

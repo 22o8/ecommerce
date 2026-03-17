@@ -56,6 +56,7 @@
               <option value="new">{{ t('productsPage.sortNewest') }}</option>
               <option value="priceAsc">{{ t('productsPage.sortPriceAsc') }}</option>
               <option value="priceDesc">{{ t('productsPage.sortPriceDesc') }}</option>
+              <option value="topRated">المنتجات الأكثر تقييماً</option>
             </select>
           </div>
 

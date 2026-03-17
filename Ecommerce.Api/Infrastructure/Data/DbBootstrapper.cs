@@ -181,6 +181,27 @@ public static class DbBootstrapper
             @"CREATE INDEX IF NOT EXISTS ""IX_ProductReviews_ProductId_CreatedAt""
               ON ""ProductReviews"" (""ProductId"", ""CreatedAt"");",
 
+            @"CREATE TABLE IF NOT EXISTS ""Categories"" (
+                ""Id"" uuid NOT NULL,
+                ""Key"" character varying(80) NOT NULL,
+                ""NameAr"" character varying(120) NOT NULL,
+                ""NameEn"" character varying(120) NULL,
+                ""DescriptionAr"" character varying(300) NULL,
+                ""DescriptionEn"" character varying(300) NULL,
+                ""ImageUrl"" character varying(2000) NULL,
+                ""SortOrder"" integer NOT NULL DEFAULT 0,
+                ""IsActive"" boolean NOT NULL DEFAULT TRUE,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                CONSTRAINT ""PK_Categories"" PRIMARY KEY (""Id"")
+              );",
+
+            @"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Categories_Key""
+              ON ""Categories"" (""Key"");",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_Categories_SortOrder""
+              ON ""Categories"" (""SortOrder"");",
+
         };
 
         foreach (var sql in statements)
