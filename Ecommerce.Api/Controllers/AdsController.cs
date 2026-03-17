@@ -61,7 +61,9 @@ public class AdsController : ControllerBase
                 x.ImageUrl,
                 x.LinkUrl,
                 x.ProductId,
-                x.SortOrder
+                x.SortOrder,
+                x.UpdatedAt,
+                x.CreatedAt
             })
             .ToListAsync();
 

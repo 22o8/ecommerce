@@ -19,9 +19,16 @@ function emitAdsChanged() {
 const loading = ref(true)
 const items = ref<any[]>([])
 
+const placementOptions = [
+  { value: 'home_top_slider', label: 'سلايدر أعلى الرئيسية', hint: 'إذا أضفت أكثر من إعلان بنفس هذا الموضع سيظهر كسلايدر متحرك فوق واجهة الصفحة الرئيسية.' },
+  { value: 'home_top', label: 'بانر أعلى الرئيسية', hint: 'بانر ثابت واحد يظهر أعلى الصفحة الرئيسية.' },
+  { value: 'popup', label: 'إعلان منبثق بالرئيسية', hint: 'يظهر عند دخول الصفحة الرئيسية ويعود للظهور عند تحديث الصفحة أو العودة إليها.' },
+  { value: 'product_page', label: 'داخل صفحة المنتج', hint: 'يمكن استخدامه لاحقًا للإعلانات داخل صفحات المنتجات.' },
+] as const
+
 const form = reactive({
   type: 'banner',
-  placement: 'home_top',
+  placement: 'home_top_slider',
   title: '',
   subtitle: '',
   imageUrl: '',
@@ -139,7 +146,7 @@ onMounted(load)
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold">{{ t('admin.adsTitle') || 'الإعلانات' }}</h1>
-        <p class="text-sm text-white/70">{{ t('admin.adsHintTypes') || 'Popup / Banner / Product Ads' }}</p>
+        <p class="text-sm text-white/70">إدارة إعلانات ثابتة واحترافية. الإعلان يبقى ظاهرًا دائمًا حتى تقوم بحذفه أو استبداله يدويًا.</p>
       </div>
       <UiButton variant="secondary" :disabled="loading" @click="load">{{ t('common.refresh') || 'تحديث' }}</UiButton>
     </div>
@@ -162,7 +169,10 @@ onMounted(load)
 
             <div class="grid gap-2">
               <label class="text-sm font-medium">{{ t('admin.adPlacement') || 'الموضع' }}</label>
-              <UiInput v-model="form.placement" :placeholder="t('admin.adPlacementPlaceholder') || 'home_top'" dir="ltr" />
+              <select v-model="form.placement" class="h-10 w-full rounded-2xl border border-white/10 bg-white/5 px-3 text-sm outline-none">
+                <option v-for="option in placementOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+              </select>
+              <p class="text-xs leading-6 text-white/60">{{ placementOptions.find((option) => option.value === form.placement)?.hint }}</p>
             </div>
 
             <div class="grid gap-2">
@@ -205,6 +215,10 @@ onMounted(load)
               {{ t('common.enabled') || 'مفعل' }}
             </label>
 
+            <div class="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs leading-6 text-emerald-100">
+              ملاحظة: الإعلان لن يختفي من الموقع إلا إذا قمت بتعطيله أو حذفه أو استبدال صورته يدويًا من لوحة التحكم.
+            </div>
+
             <UiButton type="button" @click="create">{{ t('common.save') || 'حفظ' }}</UiButton>
           </div>
         </UiCardContent>
@@ -225,6 +239,7 @@ onMounted(load)
                   <div class="min-w-0">
                     <div class="font-extrabold truncate">{{ ad.title }}</div>
                     <div class="text-xs text-white/60 keep-ltr">{{ ad.type }} • {{ ad.placement }} • sort: {{ ad.sortOrder }}</div>
+                    <div class="mt-1 text-[11px] text-emerald-200/80">{{ ad.isEnabled ? 'ظاهر حاليًا في الموقع' : 'معطل حاليًا' }}</div>
                   </div>
                 </div>
 
