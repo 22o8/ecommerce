@@ -70,16 +70,16 @@ public class CheckoutController : ControllerBase
     }
 
     private bool CanPersistCouponUsage()
+{
+    try
     {
-        try
-        {
-            return _db.Database.IsNpgsql() || _db.Database.IsSqlServer() || _db.Database.IsSqlite();
-        }
-        catch
-        {
-            return true;
-        }
+        return _db.Database.IsNpgsql();
     }
+    catch
+    {
+        return true;
+    }
+}
 
     private void TryAttachCouponUsage(Coupon? coupon, Guid? userId, Guid orderId, string? deviceKey)
     {
