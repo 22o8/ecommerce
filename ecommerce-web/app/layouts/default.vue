@@ -13,21 +13,16 @@
 
     <AppFooter />
 
-    <Transition name="back-to-top-fade">
-      <button
-        v-if="showBackToTop"
-        type="button"
-        class="back-to-top-btn"
-        @click.stop.prevent="scrollToTop"
-        :title="t('backToTop') || 'Back to top'"
-        :aria-label="t('backToTop') || 'Back to top'"
-      >
-        <span class="back-to-top-ring" aria-hidden="true"></span>
-        <span class="back-to-top-content">
-          <Icon name="mdi:arrow-up" class="back-to-top-icon" />
-        </span>
-      </button>
-    </Transition>
+    <button
+      v-show="showBackToTop"
+      type="button"
+      class="back-to-top-btn"
+      @click="scrollToTop"
+      :title="t('backToTop') || 'Back to top'"
+      :aria-label="t('backToTop') || 'Back to top'"
+    >
+      <Icon name="mdi:arrow-up" class="back-to-top-icon" />
+    </button>
 
     <!-- Floating WhatsApp -->
     <a
@@ -54,7 +49,6 @@ const { t } = useI18n()
 const config = useRuntimeConfig()
 const whats = String((config.public as any).whatsappNumber || '').trim()
 const showBackToTop = ref(false)
-const scrollThreshold = 260
 
 const waLink = computed(() => {
   const n = whats.replace(/[^0-9]/g, '')
@@ -63,19 +57,27 @@ const waLink = computed(() => {
 
 function handleScroll() {
   if (!import.meta.client) return
-  const scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
-  showBackToTop.value = scrollTop > scrollThreshold
+
+  const scrollTop = window.scrollY || document.documentElement.scrollTop || 0
+  const docHeight = Math.max(
+    document.body.scrollHeight,
+    document.documentElement.scrollHeight,
+    document.body.offsetHeight,
+    document.documentElement.offsetHeight
+  )
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0
+  const distanceToBottom = docHeight - (scrollTop + viewportHeight)
+
+  // Show only when the user is very close to the end of the page.
+  const isNearPageEnd = distanceToBottom <= 24
+  const hasScrollablePage = docHeight > viewportHeight + 120
+
+  showBackToTop.value = hasScrollablePage && isNearPageEnd && scrollTop > 0
 }
 
 function scrollToTop() {
   if (!import.meta.client) return
-
   window.scrollTo({ top: 0, behavior: 'smooth' })
-
-  window.requestAnimationFrame(() => {
-    document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
-    document.body.scrollTo({ top: 0, behavior: 'smooth' })
-  })
 }
 
 onMounted(() => {
@@ -93,90 +95,40 @@ onUnmounted(() => {
 <style scoped>
 .back-to-top-btn{
   position: fixed;
-  inset-inline-end: 7rem;
-  bottom: 1.75rem;
-  z-index: 90;
-  width: 4.4rem;
-  height: 4.4rem;
-  border: 0;
-  padding: 0;
+  inset-inline-end: 1.25rem;
+  bottom: 5.85rem;
+  z-index: 55;
+  width: 4.15rem;
+  height: 4.15rem;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  background: linear-gradient(135deg, rgba(var(--panel), .96), rgba(var(--panel), .88));
+  border: 1px solid rgba(var(--border), .9);
+  background: rgba(var(--panel), .97);
   color: rgb(var(--text-strong));
-  box-shadow: 0 18px 45px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .45);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  overflow: hidden;
-  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
-}
-.back-to-top-btn::before{
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: inherit;
-  border: 1px solid rgba(var(--border), .72);
-  pointer-events: none;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, .18);
+  backdrop-filter: blur(10px);
+  transition: transform .18s ease, opacity .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .back-to-top-btn:hover{
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 24px 55px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .55);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, .22);
 }
 .back-to-top-btn:active{
-  transform: translateY(0) scale(.97);
-}
-.back-to-top-btn:focus-visible{
-  outline: 3px solid rgba(var(--primary), .28);
-  outline-offset: 3px;
-}
-.back-to-top-ring{
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,.55), transparent 36%), linear-gradient(135deg, rgba(var(--primary), .16), transparent 58%);
-  pointer-events: none;
-}
-.back-to-top-content{
-  position: relative;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255,255,255,.48);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
-}
-.dark .back-to-top-content{
-  background: rgba(255,255,255,.08);
+  transform: scale(.98);
 }
 .back-to-top-icon{
-  font-size: 1.75rem;
+  font-size: 2rem;
   line-height: 1;
-}
-.back-to-top-fade-enter-active,
-.back-to-top-fade-leave-active{
-  transition: opacity .18s ease, transform .18s ease;
-}
-.back-to-top-fade-enter-from,
-.back-to-top-fade-leave-to{
-  opacity: 0;
-  transform: translateY(10px) scale(.92);
 }
 @media (max-width: 768px){
   .back-to-top-btn{
-    inset-inline-end: 5.7rem;
-    bottom: 1rem;
-    width: 4rem;
-    height: 4rem;
+    inset-inline-end: 1rem;
+    bottom: 5.25rem;
+    width: 3.9rem;
+    height: 3.9rem;
   }
-  .back-to-top-content{
-    width: 2.7rem;
-    height: 2.7rem;
-  }
-  .back-to-top-icon{ font-size: 1.55rem; }
+  .back-to-top-icon{ font-size: 1.85rem; }
 }
 </style>
