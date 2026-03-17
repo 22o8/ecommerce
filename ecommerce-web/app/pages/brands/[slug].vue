@@ -1,48 +1,61 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <div class="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-      <aside class="products-filters card-soft p-4 sm:p-5 xl:sticky xl:top-24 h-fit">
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <div class="text-lg font-extrabold text-[rgb(var(--text))] rtl-text">{{ t('productsPage.filtersTitle') }}</div>
-            <div class="mt-1 text-xs text-[rgb(var(--muted))] rtl-text">{{ brand?.name || slug }}</div>
-          </div>
-          <button type="button" class="btn-secondary px-3 py-2 text-sm" @click="clearFilters" :disabled="products.loading">{{ t('common.clear') }}</button>
+    <!-- Brand hero -->
+    <div class="brand-hero overflow-hidden">
+      <div class="p-6 sm:p-8 lg:p-10 flex flex-col sm:flex-row gap-6 sm:items-center">
+        <div class="brand-logo-shell">
+          <SmartImage v-if="brandLogo" :src="brandLogo" :alt="brand?.name" class="w-full h-full object-contain p-2" />
+          <div v-else class="text-xs text-[rgba(var(--muted),0.85)]">Logo</div>
         </div>
 
-        <div class="mt-4 grid gap-3">
-          <div class="filter-field">
-            <label class="filter-label rtl-text">{{ t('brandPage.search') }}</label>
-            <input v-model="q" :placeholder="t('brandPage.search')" class="input" @input="debouncedLoad" />
-          </div>
-
-          <div class="filter-field">
-            <label class="filter-label rtl-text">{{ t('productsPage.sort') }}</label>
-            <select v-model="sort" class="input products-select" @change="load">
-              <option value="new">{{ t('products.sortNew') }}</option>
-              <option value="priceAsc">{{ t('products.sortPriceAsc') }}</option>
-              <option value="priceDesc">{{ t('products.sortPriceDesc') }}</option>
-            </select>
-          </div>
-
-          <div class="results-pill rtl-text">{{ t('productsPage.resultsCount', { count: products.items.length || 0 }) }}</div>
-        </div>
-      </aside>
-
-      <div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <ProductCard v-for="p in products.items" :key="p.id" :p="p" />
+        <div class="min-w-0">
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[rgb(var(--text))]">
+            {{ brand?.name || slug }}
+          </h1>
+          <p class="text-[rgba(var(--muted),0.9)] mt-2 max-w-2xl">
+            {{ brand?.description || t('brandPage.defaultDesc') }}
+          </p>
         </div>
 
-        <div v-if="!products.loading && products.items.length === 0" class="mt-10 rounded-2xl border border-[rgba(var(--border),1)] bg-[rgba(var(--surface),0.7)] p-10 text-center text-[rgba(var(--muted),0.95)]">
-          {{ t('brandPage.empty') }}
+        <div class="ms-auto flex gap-2 w-full sm:w-auto">
+          <div class="relative flex-1 sm:w-[320px]">
+            <input
+              v-model="q"
+              :placeholder="t('brandPage.search')"
+              class="input"
+            />
+            <button
+              v-if="q"
+              class="absolute right-2 top-1/2 -translate-y-1/2 icon-btn"
+              @click="q = ''"
+              aria-label="clear"
+            >
+              ✕
+            </button>
+          </div>
+
+          <select v-model="sort" class="select">
+            <option value="new">{{ t('products.sortNew') }}</option>
+            <option value="priceAsc">{{ t('products.sortPriceAsc') }}</option>
+            <option value="priceDesc">{{ t('products.sortPriceDesc') }}</option>
+          </select>
         </div>
       </div>
+    </div>
+
+    <!-- Products grid -->
+    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <ProductCard v-for="p in products.items" :key="p.id" :p="p" />
+    </div>
+
+    <div v-if="!products.loading && products.items.length === 0" class="mt-10 rounded-2xl border border-[rgba(var(--border),1)] bg-[rgba(var(--surface),0.7)] p-10 text-center text-[rgba(var(--muted),0.95)]">
+      {{ t('brandPage.empty') }}
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import SmartImage from '~/components/SmartImage.vue'
 import ProductCard from '~/components/ProductCard.vue'
 
 const { t } = useI18n()
@@ -51,6 +64,7 @@ const route = useRoute()
 const slug = computed(() => String(route.params.slug || '').toLowerCase())
 const brands = useBrandsStore()
 const products = useProductsStore()
+const { buildAssetUrl } = useApi()
 
 const q = ref('')
 const sort = ref<'new'|'priceAsc'|'priceDesc'>('new')
@@ -79,29 +93,42 @@ await useAsyncData(`brand-${slug.value}`, async () => {
   return true
 })
 
-let searchTimer: any = null
-function debouncedLoad() {
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => { load() }, 180)
-}
-
-watch(sort, async () => {
+watch([q, sort], async () => {
   await load()
 })
 
-function clearFilters() {
-  q.value = ''
-  sort.value = 'new'
-  load()
-}
+const brandLogo = computed(() => buildAssetUrl(brand.value?.logoUrl || ''))
 </script>
 
 
 <style scoped>
-.products-filters{ border: 1px solid rgba(var(--border), .92); }
-.filter-label{ display:block; margin-bottom: 8px; font-size: .85rem; font-weight: 800; color: rgb(var(--text)); }
-.products-select{ min-height: 52px; }
-.results-pill{ display:flex; align-items:center; justify-content:center; min-height: 46px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(var(--primary), .18); background: rgba(var(--primary), .08); color: rgb(var(--text)); font-size: .9rem; font-weight: 800; }
-:global(html.theme-light) .products-filters{ background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(252,247,250,.95)); border-color: rgba(228, 208, 221, .95); box-shadow: 0 16px 32px rgba(17,24,39,.04), 0 8px 22px rgba(236,72,153,.06); }
-@media (max-width: 1279px){ .products-filters{ position: static; } }
+.brand-hero{
+  border-radius: 32px;
+  border: 1px solid rgba(var(--border), .96);
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-2-rgb), .9));
+  box-shadow: 0 24px 64px rgba(0,0,0,.18);
+}
+.brand-logo-shell{
+  width: 104px;
+  height: 104px;
+  border-radius: 28px;
+  border: 1px solid rgba(var(--border), .96);
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .94), rgba(var(--surface-2-rgb), .86));
+  overflow: hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 18px 44px rgba(0,0,0,.16);
+  flex: 0 0 auto;
+}
+:global(html.theme-light) .brand-hero{
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,246,250,.94));
+  box-shadow: 0 22px 56px rgba(232,91,154,.10), 0 10px 24px rgba(17,24,39,.05);
+}
+:global(html.theme-light) .brand-logo-shell{
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,244,248,.94));
+}
+@media (max-width: 640px){
+  .brand-logo-shell{ width: 88px; height: 88px; border-radius: 24px; }
+}
 </style>

@@ -58,6 +58,7 @@ export const useProductsStore = defineStore('products', () => {
   // مفصوله عن items حتى ما تتداخل مع صفحات المنتجات/الفلاتر.
   const featuredItems = ref<any[]>([])
   const discountItems = ref<any[]>([])
+  const topRatedItems = ref<any[]>([])
   const totalCount = ref(0)
   const loading = ref(false)
 
@@ -120,7 +121,7 @@ export const useProductsStore = defineStore('products', () => {
     // ✅ نعتمد على Endpoint المخصص بالباك: /api/Products/featured?take=
     // ونسوي fallback ذكي إلى آخر المنتجات إذا رجع فاضي.
     try {
-      const res = await api.get<{ totalCount?: number; items?: ApiProduct[] }>('/Products/featured', { take })
+      const res = await api.get<{ totalCount?: number; items?: any[] }>('/Products/featured', { take })
       const list = (res?.items ?? []).map(normalizeProduct)
       if (list.length) {
         featuredItems.value = list
@@ -141,6 +142,12 @@ export const useProductsStore = defineStore('products', () => {
     return res
   }
 
+  async function fetchTopRated(take = 8) {
+    const res = await api.get<{ totalCount?: number; items?: any[] }>('/Products/top-rated', { take })
+    topRatedItems.value = (res?.items ?? []).map(normalizeProduct)
+    return res
+  }
+
   async function liveSearch(q: string, limit = 8) {
     const res = await api.get<any[]>('/Products/search', { q, limit })
     return (res ?? []).map(normalizeProduct)
@@ -155,7 +162,9 @@ export const useProductsStore = defineStore('products', () => {
     fetch,
     fetchFeatured,
     fetchDiscounts,
+    fetchTopRated,
     liveSearch,
     discountItems,
+    topRatedItems,
   }
 })

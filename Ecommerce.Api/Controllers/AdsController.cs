@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Ecommerce.Api.Domain.Entities;
 using Ecommerce.Api.Infrastructure.Data;
@@ -37,6 +39,7 @@ public class AdsController : ControllerBase
                 "popup" => q.Where(x => x.Type == AdType.Popup),
                 "banner" => q.Where(x => x.Type == AdType.Banner),
                 "product" or "productads" or "product_ad" => q.Where(x => x.Type == AdType.Product),
+                "slider" or "carousel" => q.Where(x => x.Type == AdType.Slider),
                 _ => q
             };
         }
@@ -59,14 +62,30 @@ public class AdsController : ControllerBase
                 x.Title,
                 x.Subtitle,
                 x.ImageUrl,
+                imageUrls = ParseImageUrls(x.ImageUrlsJson, x.ImageUrl),
                 x.LinkUrl,
                 x.ProductId,
                 x.SortOrder,
-                x.UpdatedAt,
-                x.CreatedAt
+                x.UpdatedAt
             })
             .ToListAsync();
 
         return Ok(items);
+    }
+
+    private static List<string> ParseImageUrls(string? json, string? fallbackImage)
+    {
+        try
+        {
+            var arr = string.IsNullOrWhiteSpace(json)
+                ? new List<string>()
+                : (JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>());
+            if (arr.Count == 0 && !string.IsNullOrWhiteSpace(fallbackImage)) arr.Add(fallbackImage);
+            return arr.Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+        }
+        catch
+        {
+            return string.IsNullOrWhiteSpace(fallbackImage) ? new List<string>() : new List<string> { fallbackImage! };
+        }
     }
 }

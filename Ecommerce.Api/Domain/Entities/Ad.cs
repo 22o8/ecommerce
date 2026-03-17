@@ -4,7 +4,8 @@ public enum AdType
 {
     Popup = 1,
     Banner = 2,
-    Product = 3
+    Product = 3,
+    Slider = 4
 }
 
 public class Ad
@@ -21,6 +22,7 @@ public class Ad
     public string Title { get; set; } = string.Empty;
     public string? Subtitle { get; set; }
     public string ImageUrl { get; set; } = string.Empty;
+    public string? ImageUrlsJson { get; set; }
     public string? LinkUrl { get; set; }
 
     // Product Ads

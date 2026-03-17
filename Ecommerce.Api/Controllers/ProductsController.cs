@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Ecommerce.Api.Domain.Entities;
 using Ecommerce.Api.Infrastructure.Data;
 using Ecommerce.Api.Models.Products;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +24,17 @@ public class ProductsController : ControllerBase
     }
 
     private static string N(string? value) => (value ?? string.Empty).Trim().ToLowerInvariant();
+
+    private Guid? CurrentUserId
+    {
+        get
+        {
+            var claim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                        ?? User?.FindFirst("sub")?.Value
+                        ?? User?.FindFirst("userId")?.Value;
+            return Guid.TryParse(claim, out var parsed) ? parsed : null;
+        }
+    }
 
     private static readonly Dictionary<string, string[]> CategoryKeywords = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -42,6 +57,8 @@ public class ProductsController : ControllerBase
         ["foam-cleanser"] = new[] { "foam", "رغوي", "foam cleanser" },
         ["oil-cleanser"] = new[] { "oil cleanser", "cleansing oil", "زيتي" },
     };
+
+    public record SaveRatingRequest(int Rating, string? Comment);
 
     private static bool ContainsAny(string haystack, IEnumerable<string> needles)
         => needles.Any(n => haystack.Contains(n, StringComparison.OrdinalIgnoreCase));
@@ -67,11 +84,9 @@ public class ProductsController : ControllerBase
             var storedCat = N((string?)p.Category);
             if (storedCat == normalizedCategory)
             {
-                // ok
             }
             else if (CategoryKeywords.TryGetValue(normalizedCategory, out var catWords) && ContainsAny(text, catWords))
             {
-                // inferred match
             }
             else
             {
@@ -84,11 +99,9 @@ public class ProductsController : ControllerBase
             var storedSub = N((string?)p.SubCategory);
             if (storedSub == normalizedSub)
             {
-                // ok
             }
             else if (SubCategoryKeywords.TryGetValue(normalizedSub, out var subWords) && ContainsAny(text, subWords))
             {
-                // inferred
             }
             else
             {
@@ -116,7 +129,7 @@ public class ProductsController : ControllerBase
         return true;
     }
 
-    private async Task<List<dynamic>> BuildProjectedProductsAsync(IQueryable<Domain.Entities.Product> query)
+    private async Task<List<dynamic>> BuildProjectedProductsAsync(IQueryable<Product> query)
     {
         return await query
             .Select(p => new
@@ -147,7 +160,26 @@ public class ProductsController : ControllerBase
             .ToListAsync();
     }
 
-        [HttpGet]
+    private async Task RefreshProductRatingAsync(Guid productId)
+    {
+        var stats = await _db.ProductReviews
+            .Where(x => x.ProductId == productId)
+            .GroupBy(x => x.ProductId)
+            .Select(g => new
+            {
+                Count = g.Count(),
+                Avg = g.Average(x => (decimal)x.Rating)
+            })
+            .FirstOrDefaultAsync();
+
+        var product = await _db.Products.FirstOrDefaultAsync(x => x.Id == productId);
+        if (product is null) return;
+
+        product.RatingCount = stats?.Count ?? 0;
+        product.RatingAvg = stats == null ? 0m : Math.Round(stats.Avg, 2);
+    }
+
+    [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] PublicProductQuery query)
     {
         var page = query.Page < 1 ? 1 : query.Page;
@@ -157,9 +189,7 @@ public class ProductsController : ControllerBase
         var category = N(query.Category);
         var subCategory = N(query.SubCategory);
 
-        var baseQuery = _db.Products
-            .AsNoTracking()
-            .Where(p => p.IsPublished);
+        var baseQuery = _db.Products.AsNoTracking().Where(p => p.IsPublished);
 
         if (!string.IsNullOrWhiteSpace(brand) && !brand.Equals("all", StringComparison.OrdinalIgnoreCase))
             baseQuery = baseQuery.Where(p => p.Brand != null && p.Brand.ToLower() == brand);
@@ -183,6 +213,7 @@ public class ProductsController : ControllerBase
         {
             "price:asc" or "priceAsc" => baseQuery.OrderBy(p => p.PriceIqd),
             "price:desc" or "priceDesc" => baseQuery.OrderByDescending(p => p.PriceIqd),
+            "rating" or "topRated" => baseQuery.OrderByDescending(p => p.RatingAvg).ThenByDescending(p => p.RatingCount).ThenByDescending(p => p.CreatedAt),
             _ => baseQuery.OrderByDescending(p => p.CreatedAt),
         };
 
@@ -203,19 +234,80 @@ public class ProductsController : ControllerBase
         return Ok(new { totalCount = items.Count, items });
     }
 
+    [HttpGet("top-rated")]
+    public async Task<IActionResult> GetTopRated([FromQuery] int take = 8)
+    {
+        var safeTake = take is < 1 or > 60 ? 8 : take;
+        var items = await BuildProjectedProductsAsync(
+            _db.Products.AsNoTracking()
+                .Where(p => p.IsPublished && p.RatingCount > 0)
+                .OrderByDescending(p => p.RatingAvg)
+                .ThenByDescending(p => p.RatingCount)
+                .ThenByDescending(p => p.CreatedAt)
+                .Take(safeTake)
+        );
+
+        if (items.Count == 0)
+        {
+            items = await BuildProjectedProductsAsync(
+                _db.Products.AsNoTracking()
+                    .Where(p => p.IsPublished)
+                    .OrderByDescending(p => p.RatingAvg)
+                    .ThenByDescending(p => p.RatingCount)
+                    .ThenByDescending(p => p.CreatedAt)
+                    .Take(safeTake)
+            );
+        }
+
+        return Ok(new { totalCount = items.Count, items });
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById([FromRoute] Guid id)
     {
+        var currentUserId = CurrentUserId;
         var p = await _db.Products.AsNoTracking().Where(x => x.IsPublished && x.Id == id)
             .Select(x => new
             {
-                x.Id, x.Title, x.Slug, x.Description, x.PriceIqd, x.DiscountPercent,
+                x.Id,
+                x.Title,
+                x.Slug,
+                x.Description,
+                x.PriceIqd,
+                x.DiscountPercent,
                 finalPriceIqd = x.DiscountPercent > 0 ? Math.Round(x.PriceIqd * (100m - x.DiscountPercent) / 100m, 2) : x.PriceIqd,
-                x.PriceUsd, x.RatingAvg, x.Brand, x.Category, x.SubCategory, x.StockQuantity, x.IsCouponAllowed, x.RatingCount, x.CreatedAt,
+                x.PriceUsd,
+                x.RatingAvg,
+                x.Brand,
+                x.Category,
+                x.SubCategory,
+                x.StockQuantity,
+                x.IsCouponAllowed,
+                x.RatingCount,
+                x.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
                 favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
-                images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList()
+                images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList(),
+                reviews = _db.ProductReviews.Where(r => r.ProductId == x.Id).OrderByDescending(r => r.UpdatedAt).Take(10).Select(r => new
+                {
+                    r.Id,
+                    r.Rating,
+                    r.Comment,
+                    r.CreatedAt,
+                    r.UpdatedAt,
+                    userId = r.UserId,
+                    userName = _db.Users.Where(u => u.Id == r.UserId).Select(u => u.FullName).FirstOrDefault()
+                }).ToList(),
+                myReview = currentUserId == null ? null : _db.ProductReviews.Where(r => r.ProductId == x.Id && r.UserId == currentUserId).Select(r => new
+                {
+                    r.Id,
+                    r.Rating,
+                    r.Comment,
+                    r.CreatedAt,
+                    r.UpdatedAt
+                }).FirstOrDefault()
             }).FirstOrDefaultAsync();
+
         if (p == null) return NotFound(new { message = "Product not found" });
         return Ok(p);
     }
@@ -236,9 +328,22 @@ public class ProductsController : ControllerBase
         var p = await _db.Products.AsNoTracking().Where(x => x.IsPublished && x.Slug.ToLower() == slug)
             .Select(x => new
             {
-                x.Id, x.Title, x.Slug, x.Description, x.PriceIqd, x.DiscountPercent,
+                x.Id,
+                x.Title,
+                x.Slug,
+                x.Description,
+                x.PriceIqd,
+                x.DiscountPercent,
                 finalPriceIqd = x.DiscountPercent > 0 ? Math.Round(x.PriceIqd * (100m - x.DiscountPercent) / 100m, 2) : x.PriceIqd,
-                x.PriceUsd, x.RatingAvg, x.Brand, x.Category, x.SubCategory, x.StockQuantity, x.IsCouponAllowed, x.RatingCount, x.CreatedAt,
+                x.PriceUsd,
+                x.RatingAvg,
+                x.Brand,
+                x.Category,
+                x.SubCategory,
+                x.StockQuantity,
+                x.IsCouponAllowed,
+                x.RatingCount,
+                x.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
                 favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
                 images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList()
@@ -266,22 +371,59 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/view")]
-    [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+    [AllowAnonymous]
     public async Task<IActionResult> TrackView(Guid id)
     {
         var exists = await _db.Products.AnyAsync(p => p.Id == id);
         if (!exists) return NotFound();
 
-        Guid? userId = null;
-        var claim = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                    ?? User?.FindFirst("sub")?.Value
-                    ?? User?.FindFirst("userId")?.Value;
-
-        if (!string.IsNullOrWhiteSpace(claim) && Guid.TryParse(claim, out var parsed))
-            userId = parsed;
-
-        _db.ProductViews.Add(new Domain.Entities.ProductView { ProductId = id, UserId = userId });
+        _db.ProductViews.Add(new ProductView { ProductId = id, UserId = CurrentUserId });
         await _db.SaveChangesAsync();
         return Ok(new { ok = true });
+    }
+
+    [HttpPost("{id:guid}/rate")]
+    [Authorize]
+    public async Task<IActionResult> SaveRating(Guid id, [FromBody] SaveRatingRequest req)
+    {
+        var userId = CurrentUserId;
+        if (userId == null) return Unauthorized(new { message = "يجب تسجيل الدخول أولاً" });
+
+        var product = await _db.Products.FirstOrDefaultAsync(x => x.Id == id && x.IsPublished);
+        if (product == null) return NotFound(new { message = "المنتج غير موجود" });
+
+        var rating = Math.Clamp(req.Rating, 1, 5);
+        var comment = string.IsNullOrWhiteSpace(req.Comment) ? null : req.Comment.Trim();
+        if (comment?.Length > 1500) comment = comment[..1500];
+
+        var hasPurchased = await _db.Orders.AnyAsync(o => o.UserId == userId && o.Items.Any(i => i.ProductId == id));
+        if (!hasPurchased)
+            return StatusCode(403, new { message = "يمكنك تقييم المنتج بعد شرائه فقط" });
+
+        var existing = await _db.ProductReviews.FirstOrDefaultAsync(x => x.ProductId == id && x.UserId == userId);
+        if (existing == null)
+        {
+            _db.ProductReviews.Add(new ProductReview
+            {
+                ProductId = id,
+                UserId = userId.Value,
+                Rating = rating,
+                Comment = comment,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            existing.Rating = rating;
+            existing.Comment = comment;
+            existing.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await _db.SaveChangesAsync();
+        await RefreshProductRatingAsync(id);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = existing == null ? "تم إضافة التقييم بنجاح" : "تم تحديث التقييم بنجاح" });
     }
 }

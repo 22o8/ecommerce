@@ -17,6 +17,7 @@ await useAsyncData(
       brandsStore.fetchPublic(),
       productsStore.fetchFeatured(8),
       productsStore.fetchDiscounts(8),
+      productsStore.fetchTopRated(8),
       productsStore.fetch({ page: 1, pageSize: 8, sort: 'newest' }),
     ])
     return true
@@ -42,6 +43,7 @@ const displayedFeatured = computed(() => tab.value === 'featured'
   : (productsStore.discountItems ?? []).slice(0, 8)
 )
 
+const topRatedProducts = computed(() => productsStore.topRatedItems ?? [])
 const brands = computed(() => brandsStore.publicItems)
 const topBrands = computed(() => {
   const seen = new Set<string>()
@@ -186,6 +188,22 @@ const heroBrandBgSrc = heroImage
       </div>
     </section>
 
+
+    <section class="mx-auto max-w-6xl px-4 pb-16">
+      <div class="home-section-panel">
+        <div class="flex flex-col items-center justify-center gap-3 text-center">
+          <div class="section-kicker" />
+          <h2 class="text-2xl font-extrabold text-[rgb(var(--text))] sm:text-4xl">المنتجات الأكثر تقييماً</h2>
+          <p class="max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">أفضل المنتجات حسب تقييمات العملاء الحقيقية داخل المتجر.</p>
+        </div>
+
+        <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <RevealOnScroll v-for="(p, idx) in topRatedProducts" :key="p.id" :parity="idx % 2">
+            <ProductCard :p="p" />
+          </RevealOnScroll>
+        </div>
+      </div>
+    </section>
     <section class="mx-auto max-w-6xl px-4 pb-20">
       <div class="home-section-panel home-section-panel--brands">
         <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Ecommerce.Api.Domain.Entities;
 using Ecommerce.Api.Infrastructure.Data;
@@ -46,6 +48,7 @@ public class AdminAdsController : ControllerBase
                 x.Title,
                 x.Subtitle,
                 x.ImageUrl,
+                imageUrls = ParseImageUrls(x.ImageUrlsJson, x.ImageUrl),
                 x.LinkUrl,
                 x.ProductId,
                 x.SortOrder,
@@ -74,6 +77,7 @@ public class AdminAdsController : ControllerBase
             x.Title,
             x.Subtitle,
             x.ImageUrl,
+            imageUrls = ParseImageUrls(x.ImageUrlsJson, x.ImageUrl),
             x.LinkUrl,
             x.ProductId,
             x.SortOrder,
@@ -91,6 +95,7 @@ public class AdminAdsController : ControllerBase
         string Title,
         string? Subtitle,
         string ImageUrl,
+        List<string>? ImageUrls,
         string? LinkUrl,
         Guid? ProductId,
         int SortOrder,
@@ -109,7 +114,8 @@ public class AdminAdsController : ControllerBase
             Placement = string.IsNullOrWhiteSpace(req.Placement) ? "home_top" : req.Placement.Trim(),
             Title = req.Title ?? string.Empty,
             Subtitle = req.Subtitle,
-            ImageUrl = req.ImageUrl ?? string.Empty,
+            ImageUrl = ResolvePrimaryImage(req.ImageUrl, req.ImageUrls),
+            ImageUrlsJson = SerializeImageUrls(req.ImageUrl, req.ImageUrls),
             LinkUrl = req.LinkUrl,
             ProductId = req.ProductId,
             SortOrder = req.SortOrder,
@@ -135,7 +141,8 @@ public class AdminAdsController : ControllerBase
         ad.Placement = string.IsNullOrWhiteSpace(req.Placement) ? ad.Placement : req.Placement.Trim();
         ad.Title = req.Title ?? string.Empty;
         ad.Subtitle = req.Subtitle;
-        ad.ImageUrl = req.ImageUrl ?? string.Empty;
+        ad.ImageUrl = ResolvePrimaryImage(req.ImageUrl, req.ImageUrls);
+        ad.ImageUrlsJson = SerializeImageUrls(req.ImageUrl, req.ImageUrls);
         ad.LinkUrl = req.LinkUrl;
         ad.ProductId = req.ProductId;
         ad.SortOrder = req.SortOrder;
@@ -188,7 +195,53 @@ public class AdminAdsController : ControllerBase
             "popup" => AdType.Popup,
             "banner" => AdType.Banner,
             "product" or "productads" or "product_ad" => AdType.Product,
+            "slider" or "carousel" => AdType.Slider,
             _ => AdType.Banner
         };
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteAll([FromQuery] string? placement = null, [FromQuery] string? type = null)
+    {
+        var q = _db.Ads.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(placement)) q = q.Where(x => x.Placement == placement.Trim());
+        if (!string.IsNullOrWhiteSpace(type)) q = q.Where(x => x.Type == ParseType(type));
+
+        var items = await q.ToListAsync();
+        if (items.Count == 0) return Ok(new { deleted = 0 });
+
+        _db.Ads.RemoveRange(items);
+        await _db.SaveChangesAsync();
+        return Ok(new { deleted = items.Count });
+    }
+
+    private static string ResolvePrimaryImage(string? imageUrl, List<string>? imageUrls)
+    {
+        var list = (imageUrls ?? new List<string>()).Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()).Distinct().ToList();
+        if (list.Count > 0) return list[0];
+        return imageUrl?.Trim() ?? string.Empty;
+    }
+
+    private static string? SerializeImageUrls(string? imageUrl, List<string>? imageUrls)
+    {
+        var list = (imageUrls ?? new List<string>()).Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()).Distinct().ToList();
+        if (list.Count == 0 && !string.IsNullOrWhiteSpace(imageUrl)) list.Add(imageUrl.Trim());
+        return list.Count == 0 ? null : JsonSerializer.Serialize(list);
+    }
+
+    private static List<string> ParseImageUrls(string? json, string? fallbackImage)
+    {
+        try
+        {
+            var arr = string.IsNullOrWhiteSpace(json)
+                ? new List<string>()
+                : (JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>());
+            if (arr.Count == 0 && !string.IsNullOrWhiteSpace(fallbackImage)) arr.Add(fallbackImage);
+            return arr.Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
+        }
+        catch
+        {
+            return string.IsNullOrWhiteSpace(fallbackImage) ? new List<string>() : new List<string> { fallbackImage! };
+        }
     }
 }

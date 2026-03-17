@@ -60,6 +60,9 @@
           <button
             type="button"
             class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
+            @pointerdown.stop
+            @touchstart.stop
+            @touchend.stop.prevent
             @click.stop.prevent="toggleFav"
             :aria-label="t('wishlist.toggle')"
           >
@@ -69,6 +72,9 @@
           <button
             type="button"
             class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
+            @pointerdown.stop
+            @touchstart.stop
+            @touchend.stop.prevent
             @click.stop.prevent="openPreview"
             :aria-label="t('products.quickPreview')"
           >
@@ -91,6 +97,9 @@
           <button
             type="button"
             class="product-card-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-app transition text-xs"
+            @pointerdown.stop
+            @touchstart.stop
+            @touchend.stop.prevent
             @click.stop.prevent="addToCart"
             :disabled="isOutOfStock"
           >
@@ -101,6 +110,9 @@
           <button
             type="button"
             class="product-card-btn inline-flex items-center px-2.5 py-1.5 rounded-xl border border-app transition text-xs"
+            @pointerdown.stop
+            @touchstart.stop
+            @touchend.stop.prevent
             @click.stop.prevent="buyNow"
             :disabled="isOutOfStock"
           >
@@ -124,7 +136,6 @@ const { isInWishlist, toggle } = useWishlist()
 const qp = useQuickPreview()
 const router = useRouter()
 const route = useRoute()
-const toast = useToast()
 const { buildAssetUrl } = useApi()
 
 const p = computed(() => props.product ?? props.p ?? {})
@@ -174,7 +185,6 @@ function formatPrice(v: any) {
 function addToCart() {
   if (isOutOfStock.value) return
   cart.add(p.value)
-  toast.success('تمت إضافة المنتج إلى السلة')
 }
 
 const { checkoutSingleProduct } = useWhatsappCheckout()
@@ -185,7 +195,7 @@ async function buyNow() {
     await checkoutSingleProduct(p.value, 1)
   } catch (e) {
     cart.add(p.value)
-    await router.push('/cart')
+    navigateTo('/cart')
   }
 }
 
@@ -204,11 +214,10 @@ function openPreview() {
   }
 }
 
-async function goProduct() {
+function goProduct() {
   const id = String(p.value?.id ?? '')
   if (!id) return
-  await router.push(`/product/${id}`)
-  if (import.meta.client) window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  navigateTo(`/product/${id}`)
 }
 </script>
 

@@ -156,8 +156,30 @@ public static class DbBootstrapper
                 CONSTRAINT ""PK_Ads"" PRIMARY KEY (""Id"")
               );",
 
+            @"ALTER TABLE IF EXISTS ""Ads""
+              ADD COLUMN IF NOT EXISTS ""ImageUrlsJson"" jsonb NULL;",
+
             @"CREATE INDEX IF NOT EXISTS ""IX_Ads_Type_Placement_SortOrder""
               ON ""Ads"" (""Type"", ""Placement"", ""SortOrder"");",
+
+            @"CREATE TABLE IF NOT EXISTS ""ProductReviews"" (
+                ""Id"" uuid NOT NULL,
+                ""ProductId"" uuid NOT NULL,
+                ""UserId"" uuid NOT NULL,
+                ""Rating"" integer NOT NULL DEFAULT 5,
+                ""Comment"" character varying(1500) NULL,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                CONSTRAINT ""PK_ProductReviews"" PRIMARY KEY (""Id""),
+                CONSTRAINT ""FK_ProductReviews_Products_ProductId"" FOREIGN KEY (""ProductId"") REFERENCES ""Products""(""Id"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_ProductReviews_Users_UserId"" FOREIGN KEY (""UserId"") REFERENCES ""Users""(""Id"") ON DELETE CASCADE
+              );",
+
+            @"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_ProductReviews_ProductId_UserId""
+              ON ""ProductReviews"" (""ProductId"", ""UserId"");",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_ProductReviews_ProductId_CreatedAt""
+              ON ""ProductReviews"" (""ProductId"", ""CreatedAt"");",
 
         };
 

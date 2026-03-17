@@ -37,6 +37,7 @@ public class AppDbContext : DbContext
     public DbSet<Ad> Ads => Set<Ad>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
     public DbSet<CouponUsage> CouponUsages => Set<CouponUsage>();
+    public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -179,7 +180,34 @@ public class AppDbContext : DbContext
             .HasMaxLength(1000);
 
         modelBuilder.Entity<Ad>()
+            .Property(x => x.ImageUrlsJson)
+            .HasColumnType("jsonb");
+
+        modelBuilder.Entity<Ad>()
             .HasIndex(x => new { x.Type, x.Placement, x.SortOrder });
+
+        modelBuilder.Entity<ProductReview>()
+            .Property(x => x.Comment)
+            .HasMaxLength(1500);
+
+        modelBuilder.Entity<ProductReview>()
+            .HasIndex(x => new { x.ProductId, x.UserId })
+            .IsUnique();
+
+        modelBuilder.Entity<ProductReview>()
+            .HasIndex(x => new { x.ProductId, x.CreatedAt });
+
+        modelBuilder.Entity<ProductReview>()
+            .HasOne(x => x.Product)
+            .WithMany()
+            .HasForeignKey(x => x.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProductReview>()
+            .HasOne(x => x.User)
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Coupon>()
             .HasIndex(x => x.Code)
