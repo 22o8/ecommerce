@@ -156,34 +156,77 @@ public class AdminOrdersController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var order = await _db.Orders
-            .Include(o => o.Items)
-            .Include(o => o.Payments)
-            .FirstOrDefaultAsync(o => o.Id == id);
+        try
+        {
+            var order = await _db.Orders
+                .Include(o => o.Items)
+                .Include(o => o.Payments)
+                .FirstOrDefaultAsync(o => o.Id == id);
 
-        if (order is null) return NotFound(new { message = "Order not found." });
+            if (order is null) return NotFound(new { message = "Order not found." });
 
-        _db.OrderItems.RemoveRange(order.Items);
-        _db.Payments.RemoveRange(order.Payments);
-        _db.Orders.Remove(order);
+            // مهم: توجد جداول مرتبطة بالطلب لا تحذف تلقائياً دائماً مثل CouponUsages
+            // لذلك نحذفها يدويًا قبل حذف الطلب لتجنب خطأ FK و 500.
+            var couponUsages = await _db.CouponUsages
+                .Where(x => x.OrderId == id)
+                .ToListAsync();
 
-        await _db.SaveChangesAsync();
-        return Ok(new { message = "Order deleted.", id });
+            var downloadTokens = await _db.DownloadTokens
+                .Where(x => x.OrderId == id)
+                .ToListAsync();
+
+            if (couponUsages.Count > 0) _db.CouponUsages.RemoveRange(couponUsages);
+            if (downloadTokens.Count > 0) _db.DownloadTokens.RemoveRange(downloadTokens);
+            if (order.Items.Count > 0) _db.OrderItems.RemoveRange(order.Items);
+            if (order.Payments.Count > 0) _db.Payments.RemoveRange(order.Payments);
+
+            _db.Orders.Remove(order);
+
+            await _db.SaveChangesAsync();
+            return Ok(new { message = "Order deleted.", id });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to delete order.", detail = ex.Message });
+        }
     }
 
     [HttpDelete("all")]
     public async Task<IActionResult> DeleteAll()
     {
-        var orders = await _db.Orders
-            .Include(o => o.Items)
-            .Include(o => o.Payments)
-            .ToListAsync();
+        try
+        {
+            var orders = await _db.Orders
+                .Include(o => o.Items)
+                .Include(o => o.Payments)
+                .ToListAsync();
 
-        _db.OrderItems.RemoveRange(orders.SelectMany(o => o.Items));
-        _db.Payments.RemoveRange(orders.SelectMany(o => o.Payments));
-        _db.Orders.RemoveRange(orders);
+            var orderIds = orders.Select(o => o.Id).ToList();
 
-        await _db.SaveChangesAsync();
-        return Ok(new { message = "All orders deleted.", count = orders.Count });
+            if (orderIds.Count > 0)
+            {
+                var couponUsages = await _db.CouponUsages
+                    .Where(x => x.OrderId != null && orderIds.Contains(x.OrderId.Value))
+                    .ToListAsync();
+
+                var downloadTokens = await _db.DownloadTokens
+                    .Where(x => orderIds.Contains(x.OrderId))
+                    .ToListAsync();
+
+                if (couponUsages.Count > 0) _db.CouponUsages.RemoveRange(couponUsages);
+                if (downloadTokens.Count > 0) _db.DownloadTokens.RemoveRange(downloadTokens);
+            }
+
+            _db.OrderItems.RemoveRange(orders.SelectMany(o => o.Items));
+            _db.Payments.RemoveRange(orders.SelectMany(o => o.Payments));
+            _db.Orders.RemoveRange(orders);
+
+            await _db.SaveChangesAsync();
+            return Ok(new { message = "All orders deleted.", count = orders.Count });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to delete all orders.", detail = ex.Message });
+        }
     }
 }
