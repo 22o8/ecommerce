@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
-import heroImage from '~/assets/img/hero-brand-bg.jpg'
 
 const { t, locale } = useI18n()
 const { categories, fetchCategories } = useCategories()
@@ -39,11 +38,12 @@ const homeFeatured = computed(() => {
 })
 const featuredList = homeFeatured
 
-const tab = ref<'featured' | 'discounts'>('featured')
-const displayedFeatured = computed(() => tab.value === 'featured'
-  ? homeFeatured.value
-  : (productsStore.discountItems ?? []).slice(0, 8)
-)
+const tab = ref<'featured' | 'discounts' | 'topRated'>('featured')
+const displayedFeatured = computed(() => {
+  if (tab.value === 'discounts') return (productsStore.discountItems ?? []).slice(0, 8)
+  if (tab.value === 'topRated') return (productsStore.topRatedItems ?? []).slice(0, 8)
+  return homeFeatured.value
+})
 
 const topRatedProducts = computed(() => productsStore.topRatedItems ?? [])
 const brands = computed(() => brandsStore.publicItems)
@@ -79,158 +79,13 @@ const categoryCards = computed(() => {
   }))
 })
 
-const heroHighlights = computed(() => {
-  if (!topRatedProducts.value?.length) return [] as Array<{ key: string; title: string; to: string }>
-  return [{
-    key: 'top-rated',
-    title: t('home.topRatedProducts'),
-    to: '/products?sort=topRated',
-  }]
-})
-const heroBrandBgSrc = heroImage
 const { buildAssetUrl } = useApi()
 
 </script>
 
 <template>
   <div class="min-h-screen home-page-shell">
-    <section class="relative mx-auto max-w-6xl px-4 pt-4 sm:pt-6">
-      <div class="hero-premium-shell hero-shimmer overflow-hidden rounded-[2rem] border border-app">
-        <div v-if="heroBrandBgSrc !== '/'" class="hero-brand-bg-wrap" aria-hidden="true">
-          <img :src="heroBrandBgSrc" alt="" class="hero-brand-bg-image" />
-        </div>
-        <div v-else class="hero-brand-bg-placeholder" aria-hidden="true">
-          <span>ضع صورة الخلفية هنا</span>
-        </div>
-        <div class="hero-aurora hero-aurora--one" />
-        <div class="hero-aurora hero-aurora--two" />
-        <div class="hero-aurora hero-aurora--three" />
-
-        <div class="relative z-[1] mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-18 lg:px-10 lg:py-20">
-          <div class="hero-content-panel me-auto max-w-[46rem] text-center lg:text-start lg:max-w-[42rem] lg:me-[38%] xl:me-[41%]">
-            <div class="hero-mini-badges mb-6 flex flex-wrap items-center justify-center gap-3">
-              <NuxtLink
-                v-for="(item, idx) in heroHighlights"
-                :key="item.key"
-                :to="item.to"
-                class="hero-mini-chip"
-                :class="{ 'hero-mini-chip--primary': idx === 0 }"
-              >
-                <span class="hero-mini-chip__dot" />
-                <span class="hero-mini-chip__label">{{ item.title }}</span>
-                <span class="hero-mini-chip__arrow">↗</span>
-              </NuxtLink>
-            </div>
-
-            <h1 class="text-4xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-6xl xl:text-7xl">
-              {{ t('homeHero.title1') }}
-              <span class="hero-title-accent">{{ t('homeHero.title2') }}</span>
-            </h1>
-
-            <p class="mx-auto mt-6 max-w-2xl text-base leading-8 text-[rgb(var(--muted))] sm:text-lg">
-              {{ t('homeHero.subtitle') }}
-            </p>
-
-            <div class="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:justify-start">
-              <NuxtLink
-                to="/products"
-                class="btn-cta-animated inline-flex items-center justify-center rounded-full px-7 py-3.5 text-sm font-semibold hover:opacity-95"
-              >
-                {{ t('homeHero.products') }}
-              </NuxtLink>
-
-              <NuxtLink
-                to="/products?sort=topRated"
-                class="btn-cta-animated btn-cta-secondary inline-flex items-center justify-center rounded-full px-7 py-3.5 text-sm font-semibold hover:opacity-95"
-              >
-                {{ t('home.topRatedProducts') }}
-              </NuxtLink>
-            </div>
-
-            <div class="hero-stat-grid mt-10 grid gap-3 sm:grid-cols-3 lg:max-w-3xl">
-              <div class="hero-stat-card">
-                <div class="hero-stat-card__glow" />
-                <div class="hero-stat-card__label">{{ t('homeHero.featuredProducts') }}</div>
-                <div class="hero-stat-card__value">{{ featuredList.length }}</div>
-              </div>
-              <div class="hero-stat-card">
-                <div class="hero-stat-card__glow" />
-                <div class="hero-stat-card__label">{{ t('home.brands') }}</div>
-                <div class="hero-stat-card__value">{{ topBrands.length }}</div>
-              </div>
-              <div class="hero-stat-card">
-                <div class="hero-stat-card__glow" />
-                <div class="hero-stat-card__label">{{ t('homeHero.categories') }}</div>
-                <div class="hero-stat-card__value">{{ categoryCards.length }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="mx-auto max-w-6xl px-4 pb-16 pt-12 sm:pt-14">
-      <div class="home-section-panel">
-        <div class="flex flex-col items-center justify-center gap-4 text-center">
-          <div class="section-kicker" />
-          <h2 class="text-2xl font-extrabold text-[rgb(var(--text))] sm:text-4xl">{{ t('homeHero.featuredProducts') }}</h2>
-
-          <div class="inline-flex items-center rounded-full border border-app bg-surface p-1 shadow-soft">
-            <button
-              type="button"
-              class="px-4 py-2 rounded-full text-sm font-bold transition"
-              :class="tab === 'featured' ? 'bg-[rgb(var(--primary))] text-black shadow-[0_10px_24px_rgba(var(--primary),0.25)]' : 'text-[rgb(var(--text))] hover:bg-surface-2'"
-              @click="tab = 'featured'"
-            >
-              {{ t('home.featuredTab') }}
-            </button>
-            <button
-              type="button"
-              class="px-4 py-2 rounded-full text-sm font-bold transition"
-              :class="tab === 'discounts' ? 'bg-[rgb(var(--primary))] text-black shadow-[0_10px_24px_rgba(var(--primary),0.25)]' : 'text-[rgb(var(--text))] hover:bg-surface-2'"
-              @click="tab = 'discounts'"
-            >
-              {{ t('home.discountsTab') }}
-            </button>
-            <NuxtLink to="/products" class="px-4 py-2 rounded-full text-sm font-bold text-[rgb(var(--text))] hover:bg-surface-2 transition">
-              {{ t('home.viewAll') }}
-            </NuxtLink>
-          </div>
-        </div>
-
-        <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <RevealOnScroll
-            v-for="(p, idx) in displayedFeatured"
-            :key="p.id"
-            :parity="idx % 2"
-          >
-            <ProductCard :p="p" />
-          </RevealOnScroll>
-        </div>
-      </div>
-    </section>
-
-    <section class="mx-auto max-w-6xl px-4 pb-20">
-      <div class="home-section-panel home-section-panel--brands">
-        <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-          <div>
-            <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">{{ t('home.brands') }}</h2>
-            <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">{{ t('home.brandsSubtitle') }}</p>
-          </div>
-          <NuxtLink
-            to="/brands"
-            class="btn inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-soft"
-          >
-            {{ t('nav.brands') }}
-            <span aria-hidden="true">→</span>
-          </NuxtLink>
-        </div>
-
-        <BrandMarquee :brands="topBrands" />
-      </div>
-    </section>
-
-    <section v-if="categoryCards.length" id="categories" class="mx-auto max-w-6xl px-4 pb-24 scroll-mt-24">
+    <section v-if="categoryCards.length" id="categories" class="mx-auto max-w-6xl px-4 pb-16 pt-8 scroll-mt-24">
       <div class="home-section-panel home-section-panel--categories">
         <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
@@ -275,193 +130,78 @@ const { buildAssetUrl } = useApi()
         </div>
       </div>
     </section>
+
+
+    <section class="mx-auto max-w-6xl px-4 pb-16 pt-12 sm:pt-14">
+      <div class="home-section-panel">
+        <div class="flex flex-col items-center justify-center gap-4 text-center">
+          <div class="section-kicker" />
+          <h2 class="text-2xl font-extrabold text-[rgb(var(--text))] sm:text-4xl">{{ t('homeHero.featuredProducts') }}</h2>
+
+          <div class="inline-flex items-center rounded-full border border-app bg-surface p-1 shadow-soft flex-wrap justify-center gap-1">
+            <button
+              type="button"
+              class="px-4 py-2 rounded-full text-sm font-bold transition"
+              :class="tab === 'featured' ? 'bg-[rgb(var(--primary))] text-black shadow-[0_10px_24px_rgba(var(--primary),0.25)]' : 'text-[rgb(var(--text))] hover:bg-surface-2'"
+              @click="tab = 'featured'"
+            >
+              {{ t('home.featuredTab') }}
+            </button>
+            <button
+              type="button"
+              class="px-4 py-2 rounded-full text-sm font-bold transition"
+              :class="tab === 'discounts' ? 'bg-[rgb(var(--primary))] text-black shadow-[0_10px_24px_rgba(var(--primary),0.25)]' : 'text-[rgb(var(--text))] hover:bg-surface-2'"
+              @click="tab = 'discounts'"
+            >
+              {{ t('home.discountsTab') }}
+            </button>
+            <button
+              type="button"
+              class="px-4 py-2 rounded-full text-sm font-bold transition"
+              :class="tab === 'topRated' ? 'bg-[rgb(var(--primary))] text-black shadow-[0_10px_24px_rgba(var(--primary),0.25)]' : 'text-[rgb(var(--text))] hover:bg-surface-2'"
+              @click="tab = 'topRated'"
+            >
+              {{ t('home.topRatedProducts') }}
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <RevealOnScroll
+            v-for="(p, idx) in displayedFeatured"
+            :key="p.id"
+            :parity="idx % 2"
+          >
+            <ProductCard :p="p" />
+          </RevealOnScroll>
+        </div>
+      </div>
+    </section>
+
+    <section class="mx-auto max-w-6xl px-4 pb-20">
+      <div class="home-section-panel home-section-panel--brands">
+        <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">{{ t('home.brands') }}</h2>
+            <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">{{ t('home.brandsSubtitle') }}</p>
+          </div>
+          <NuxtLink
+            to="/brands"
+            class="btn inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-soft"
+          >
+            {{ t('nav.brands') }}
+            <span aria-hidden="true">→</span>
+          </NuxtLink>
+        </div>
+
+        <BrandMarquee :brands="topBrands" />
+      </div>
+    </section>
+
   </div>
 </template>
 
 <style scoped>
-.hero-content-panel{
-  position: relative;
-  width: min(100%, 42rem);
-  padding: 1.6rem 1.4rem;
-  border-radius: 30px;
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .78), rgba(var(--surface-2-rgb), .64));
-  border: 1px solid rgba(var(--border), .78);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 24px 60px rgba(5, 10, 20, .16);
-}
-:global(html.theme-light) .hero-content-panel{
-  background: linear-gradient(180deg, rgba(255,255,255,.90), rgba(249,250,252,.84));
-  border-color: rgba(214, 218, 228, .95);
-  box-shadow: 0 26px 60px rgba(15, 20, 35, .08);
-}
-.home-page-shell{
-  position: relative;
-}
-.hero-premium-shell{
-  position: relative;
-  background:
-    linear-gradient(180deg, rgba(var(--surface-rgb), .94), rgba(var(--surface-rgb), .82)),
-    linear-gradient(135deg, rgba(var(--primary), .10), transparent 32%, rgba(var(--cta-glow-2), .08) 72%, transparent 100%);
-  box-shadow: 0 34px 90px rgba(10, 10, 20, .10);
-}
-.hero-premium-shell::after{
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: calc(2rem - 1px);
-  border: 1px solid rgba(255,255,255,.18);
-  pointer-events: none;
-}
-.hero-title-accent{
-  display: inline-block;
-  margin-inline-start: .35rem;
-  color: rgb(var(--primary));
-  text-shadow: 0 12px 34px rgba(var(--primary), .24);
-}
-.hero-aurora{
-  position: absolute;
-  border-radius: 999px;
-  filter: blur(18px);
-  opacity: .9;
-  pointer-events: none;
-}
-.hero-aurora--one{
-  width: 300px;
-  height: 300px;
-  top: -80px;
-  inset-inline-start: -50px;
-  background: radial-gradient(circle, rgba(var(--primary), .22), transparent 70%);
-}
-.hero-aurora--two{
-  width: 340px;
-  height: 340px;
-  top: 15%;
-  inset-inline-end: -60px;
-  background: radial-gradient(circle, rgba(var(--cta-glow-2), .20), transparent 70%);
-}
-.hero-aurora--three{
-  width: 360px;
-  height: 180px;
-  bottom: -50px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: radial-gradient(circle, rgba(var(--primary), .14), transparent 72%);
-}
-.hero-mini-chip{
-  display:inline-flex;
-  align-items:center;
-  gap:.7rem;
-  min-height:52px;
-  padding:.85rem 1rem;
-  border-radius:18px;
-  border:1px solid rgba(var(--border), .92);
-  background:linear-gradient(180deg, rgba(var(--surface-rgb), .84), rgba(var(--surface-2-rgb), .74));
-  box-shadow:0 18px 40px rgba(0,0,0,.12);
-  backdrop-filter:blur(12px);
-  color:rgb(var(--text));
-  font-size:.92rem;
-  font-weight:800;
-  transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease, background-color .22s ease;
-}
-.hero-mini-chip__dot{
-  width:10px;
-  height:10px;
-  border-radius:999px;
-  background:rgb(var(--primary));
-  box-shadow:0 0 0 6px rgba(var(--primary), .12);
-  flex:0 0 auto;
-}
-.hero-mini-chip__label{
-  white-space:nowrap;
-}
-.hero-mini-chip__arrow{
-  display:grid;
-  place-items:center;
-  width:28px;
-  height:28px;
-  margin-inline-start:.1rem;
-  border-radius:999px;
-  background:rgba(255,255,255,.08);
-  color:rgb(var(--muted));
-  font-size:.92rem;
-  flex:0 0 auto;
-}
-.hero-mini-chip--primary{
-  background:linear-gradient(135deg, rgba(var(--primary), .18), rgba(var(--surface-rgb), .84) 58%, rgba(var(--cta-glow-2), .16));
-  border-color:rgba(var(--primary), .34);
-  box-shadow:0 22px 48px rgba(var(--primary), .14);
-}
-.hero-mini-chip:hover{
-  transform: translateY(-3px);
-  border-color: rgba(var(--primary), .42);
-  box-shadow: 0 22px 46px rgba(var(--primary), .14);
-}
-.hero-mini-chip:hover .hero-mini-chip__arrow{
-  color:rgb(var(--primary));
-  transform:translateX(-2px);
-}
-.hero-stat-grid{
-  align-items: stretch;
-}
-.hero-stat-card{
-  position: relative;
-  overflow: hidden;
-  border-radius: 24px;
-  border: 1px solid rgba(var(--border), .92);
-  background: linear-gradient(180deg, rgba(var(--surface-rgb), .88), rgba(var(--surface-2-rgb), .82));
-  padding: 1rem 1.1rem;
-  box-shadow: 0 18px 44px rgba(0,0,0,.10);
-}
-.hero-stat-card__glow{
-  position: absolute;
-  inset-inline-start: 12px;
-  top: -18px;
-  width: 84px;
-  height: 84px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(var(--primary), .22), transparent 72%);
-  pointer-events: none;
-}
-.hero-stat-card__label{
-  position: relative;
-  z-index: 1;
-  font-size: .82rem;
-  color: rgb(var(--muted));
-  font-weight: 700;
-}
-.hero-stat-card__value{
-  position: relative;
-  z-index: 1;
-  margin-top: .45rem;
-  font-size: 1.9rem;
-  line-height: 1;
-  font-weight: 900;
-  color: rgb(var(--text));
-}
-.home-section-panel{
-  position: relative;
-  overflow: hidden;
-  border-radius: 30px;
-  border: 1px solid rgba(var(--border), .92);
-  background:
-    linear-gradient(180deg, rgba(var(--surface-rgb), .94), rgba(var(--surface-rgb), .86)),
-    linear-gradient(135deg, rgba(var(--primary), .05), transparent 35%, rgba(var(--cta-glow-2), .05) 100%);
-  padding: 1.5rem;
-  box-shadow: 0 24px 70px rgba(15, 15, 25, .08);
-}
-.home-section-panel::before{
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(420px 160px at 10% 0%, rgba(var(--primary), .08), transparent 65%);
-}
-.home-section-panel--brands::before{
-  background: radial-gradient(420px 160px at 85% 0%, rgba(var(--primary), .10), transparent 65%);
-}
-.home-section-panel--categories::before{
-  background: radial-gradient(420px 160px at 50% 0%, rgba(var(--primary), .09), transparent 65%);
-}
 .section-kicker{
   width: 88px;
   height: 6px;
