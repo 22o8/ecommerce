@@ -140,6 +140,47 @@
         </div>
       </div>
 
+      <!-- Mobile search bar -->
+      <div class="lg:hidden border-t border-app/80 bg-app/90 backdrop-blur-sm">
+        <div class="mx-auto max-w-7xl px-3 sm:px-4 py-3">
+          <form class="mobile-search-shell" @submit.prevent="goSearch">
+            <button type="submit" class="mobile-search-shell__icon" :aria-label="t('productsPage.searchPlaceholder')">
+              <Icon name="mdi:magnify" class="text-[22px]" />
+            </button>
+            <input
+              v-model="q"
+              class="mobile-search-shell__input rtl-text"
+              :placeholder="t('productsPage.searchPlaceholder')"
+              @focus="openSearch = true"
+            />
+          </form>
+
+          <div
+            v-if="openSearch && liveItems.length"
+            class="mt-2 overflow-hidden rounded-[22px] border border-app bg-surface shadow-2xl"
+          >
+            <button
+              v-for="item in liveItems"
+              :key="item.id"
+              type="button"
+              class="flex w-full items-center gap-3 px-3 py-3 text-left transition hover:bg-surface-2"
+              @click="openLive(item)"
+            >
+              <img
+                class="h-11 w-11 rounded-2xl object-cover border border-app"
+                :src="item.imageUrl || '/hero-placeholder.svg'"
+                :alt="item.name"
+              />
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-sm font-extrabold keep-ltr">{{ item.name }}</div>
+                <div class="truncate text-xs text-muted">{{ item.brand }}</div>
+              </div>
+              <div class="text-sm font-black keep-ltr">{{ formatIqd(item.finalPriceIqd ?? item.priceIqd) }}</div>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Mobile drawer -->
       <div v-if="open" class="md:hidden border-t border-app bg-surface">
         <div class="mx-auto max-w-7xl px-3 sm:px-4 py-4 grid gap-3">
@@ -284,3 +325,37 @@ async function logout(){
   if (route.path.startsWith('/admin')) router.push('/')
 }
 </script>
+
+
+<style scoped>
+.mobile-search-shell{
+  display:flex;
+  align-items:center;
+  gap:.55rem;
+  min-height:58px;
+  border-radius:24px;
+  border:1px solid rgba(var(--border), .92);
+  background:linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .9));
+  padding:.5rem .8rem;
+  box-shadow:0 16px 38px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.05);
+}
+.mobile-search-shell__icon{
+  display:grid;
+  place-items:center;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  color:rgb(var(--primary));
+  background:rgba(var(--primary), .08);
+}
+.mobile-search-shell__input{
+  width:100%;
+  background:transparent;
+  outline:none;
+  border:none;
+  color:rgb(var(--text));
+  font-size:.98rem;
+  font-weight:700;
+}
+.mobile-search-shell__input::placeholder{ color:rgb(var(--muted)); opacity:.95; }
+</style>

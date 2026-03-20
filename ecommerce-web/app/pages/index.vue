@@ -99,7 +99,22 @@ const { buildAssetUrl } = useApi()
           </NuxtLink>
         </div>
 
-        <div class="category-showcase mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+        <div class="category-mobile-rail mt-8 md:hidden">
+          <NuxtLink
+            v-for="c in categoryCards"
+            :key="c.key"
+            :to="c.to"
+            class="category-mobile-pill"
+          >
+            <div class="category-mobile-pill__image-wrap" :class="`bg-gradient-to-br ${c.accent}`">
+              <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="category-mobile-pill__image" />
+              <div v-else class="category-mobile-pill__fallback">{{ c.title?.slice(0,1) }}</div>
+            </div>
+            <div class="category-mobile-pill__title">{{ c.title }}</div>
+          </NuxtLink>
+        </div>
+
+        <div class="category-showcase mt-8 hidden gap-4 md:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
           <RevealOnScroll
             v-for="(c, idx) in categoryCards"
             :key="c.key"
@@ -208,6 +223,60 @@ const { buildAssetUrl } = useApi()
 }
 .shadow-soft{
   box-shadow:0 16px 38px rgba(0,0,0,.08);
+}
+.category-mobile-rail{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:116px;
+  gap:1rem;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:.2rem .15rem .4rem;
+  scroll-snap-type:x proximity;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.category-mobile-rail::-webkit-scrollbar{ display:none; }
+.category-mobile-pill{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.7rem;
+  scroll-snap-align:start;
+}
+.category-mobile-pill__image-wrap{
+  width:110px;
+  height:110px;
+  border-radius:999px;
+  overflow:hidden;
+  border:1px solid rgba(var(--border), .9);
+  background:linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .92));
+  box-shadow:0 18px 40px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.08);
+  display:grid;
+  place-items:center;
+}
+.category-mobile-pill__image{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.category-mobile-pill__fallback{
+  font-size:2rem;
+  font-weight:900;
+  color:rgb(var(--text));
+}
+.category-mobile-pill__title{
+  width:100%;
+  color:rgb(var(--text));
+  text-align:center;
+  font-size:.98rem;
+  line-height:1.35;
+  font-weight:900;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  min-height:2.65em;
 }
 .category-showcase{
   align-items:stretch;
@@ -366,7 +435,6 @@ const { buildAssetUrl } = useApi()
   .category-showcase{ grid-template-columns:repeat(2, minmax(0,1fr)); }
 }
 @media (max-width: 768px){
-  .category-showcase{ grid-template-columns:1fr; }
   .category-simple-card{ min-height:148px; border-radius:28px; }
   .category-simple-card__inner{ grid-template-columns:84px minmax(0,1fr) 40px; min-height:148px; padding:1rem .95rem; gap:.85rem; }
   .category-simple-card__thumb{ width:84px; height:84px; border-radius:24px; }
