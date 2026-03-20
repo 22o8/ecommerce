@@ -223,7 +223,7 @@ function starFill(n: number) {
         </div>
       </div>
 
-      <div v-if="(similar?.length || 0) > 0" class="product-related-section product-sheet rounded-[2rem] p-5 sm:p-6">
+            <div v-if="(similar?.length || 0) > 0" class="product-related-section product-sheet rounded-[2rem] p-5 sm:p-6">
         <div class="flex items-center justify-between gap-3 flex-wrap mb-4">
           <div class="text-lg sm:text-xl font-extrabold rtl-text">{{ t('products.youMayAlsoLike') }}</div>
           <NuxtLink :to="`/products?category=${encodeURIComponent(subCategoryKey || categoryKey)}`" class="text-sm text-[rgb(var(--primary))]">{{ t('home.viewAll') }}</NuxtLink>
@@ -233,6 +233,7 @@ function starFill(n: number) {
         </div>
       </div>
     </div>
+  </div>
 </template>
 
 <style scoped>
