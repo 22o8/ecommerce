@@ -99,7 +99,7 @@ const { buildAssetUrl } = useApi()
           </NuxtLink>
         </div>
 
-        <div class="category-mobile-rail mt-8 md:hidden">
+        <div class="category-unified-rail mt-8">
           <NuxtLink
             v-for="c in categoryCards"
             :key="c.key"
@@ -114,33 +114,7 @@ const { buildAssetUrl } = useApi()
           </NuxtLink>
         </div>
 
-        <div class="category-showcase mt-8 hidden gap-4 md:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
-          <RevealOnScroll
-            v-for="(c, idx) in categoryCards"
-            :key="c.key"
-            :parity="(idx % 2) as 0 | 1"
-            :delay="35 * idx"
-          >
-            <NuxtLink
-              :to="c.to"
-              class="group category-simple-card"
-            >
-              <div class="category-simple-card__inner" :class="`bg-gradient-to-br ${c.accent}`">
-                <div class="category-simple-card__thumb">
-                  <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="category-simple-card__img" />
-                  <div v-else class="category-simple-card__fallback">{{ c.title?.slice(0,1) }}</div>
-                </div>
-                <div class="category-simple-card__body">
-                  <div class="category-simple-card__title">{{ c.title }}</div>
-                  <div class="category-simple-card__subtitle">{{ c.subtitle }}</div>
-                  <div class="category-simple-card__meta">{{ c.key }}</div>
-                </div>
-                <div class="category-simple-card__arrow">→</div>
               </div>
-            </NuxtLink>
-          </RevealOnScroll>
-        </div>
-      </div>
     </section>
 
 
@@ -198,7 +172,7 @@ const { buildAssetUrl } = useApi()
           </div>
         </div>
 
-        <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
           <RevealOnScroll
             v-for="(p, idx) in displayedFeatured"
             :key="p.id"
@@ -224,29 +198,29 @@ const { buildAssetUrl } = useApi()
 .shadow-soft{
   box-shadow:0 16px 38px rgba(0,0,0,.08);
 }
-.category-mobile-rail{
+.category-unified-rail{
   display:grid;
   grid-auto-flow:column;
-  grid-auto-columns:116px;
+  grid-auto-columns:120px;
   gap:1rem;
   overflow-x:auto;
   overflow-y:hidden;
-  padding:.2rem .15rem .4rem;
+  padding:.2rem .15rem .55rem;
   scroll-snap-type:x proximity;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
 }
-.category-mobile-rail::-webkit-scrollbar{ display:none; }
+.category-unified-rail::-webkit-scrollbar{ display:none; }
 .category-mobile-pill{
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:.7rem;
+  gap:.72rem;
   scroll-snap-align:start;
 }
 .category-mobile-pill__image-wrap{
-  width:110px;
-  height:110px;
+  width:112px;
+  height:112px;
   border-radius:999px;
   overflow:hidden;
   border:1px solid rgba(var(--border), .9);
@@ -269,15 +243,16 @@ const { buildAssetUrl } = useApi()
   width:100%;
   color:rgb(var(--text));
   text-align:center;
-  font-size:.98rem;
+  font-size:1rem;
   line-height:1.35;
   font-weight:900;
   display:-webkit-box;
   -webkit-line-clamp:2;
   -webkit-box-orient:vertical;
   overflow:hidden;
-  min-height:2.65em;
+  min-height:2.7em;
 }
+
 .category-showcase{
   align-items:stretch;
 }

@@ -55,7 +55,7 @@ watch(
         </NuxtLink>
       </div>
 
-      <div v-else class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div v-else class="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
         <ProductCard v-for="p in items" :key="p.id" :product="p" />
       </div>
     </div>

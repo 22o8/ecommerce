@@ -34,7 +34,7 @@ const items = computed(() => productsStore.discountItems)
       <div class="text-muted">{{ t('discounts.empty') || 'حالياً ماكو منتجات عليها تخفيض.' }}</div>
     </div>
 
-    <div v-else class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div v-else class="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
       <RevealOnScroll v-for="(p, idx) in items" :key="p.id" :parity="idx % 2">
         <ProductCard :p="p" />
       </RevealOnScroll>

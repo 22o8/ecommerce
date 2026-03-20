@@ -108,7 +108,7 @@
         </div>
 
         <div v-if="products.loading && products.items.length === 0" class="mt-6">
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
             <div v-for="n in 6" :key="n" class="skeleton-card products-skeleton" />
           </div>
           <div class="mt-6 flex items-center justify-center text-sm text-[rgb(var(--muted))] rtl-text">
@@ -117,7 +117,7 @@
           </div>
         </div>
 
-        <div v-else class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div v-else class="mt-6 grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
           <RevealOnScroll
             v-for="(p, idx) in products.items"
             :key="p.id"
@@ -181,15 +181,7 @@ await useAsyncData(productsPageKey, async () => {
 }, { watch: [() => route.fullPath] })
 
 const brandOptions = computed(() => (brandsStore.publicItems || []).map((b: any) => ({ name: b.name, slug: b.slug })))
-const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [
-  { key: 'moisturizer', nameAr: t('productsPage.categoryMoisturizer') },
-  { key: 'eye-care', nameAr: t('productsPage.categoryEyeCare') },
-  { key: 'cleanser', nameAr: t('productsPage.categoryCleanser') },
-  { key: 'serum', nameAr: t('productsPage.categorySerum') },
-  { key: 'sunscreen', nameAr: t('productsPage.categorySunscreen') },
-  { key: 'toner', nameAr: t('productsPage.categoryToner') },
-  { key: 'mask', nameAr: t('productsPage.categoryMask') },
-]).map((c:any) => ({ value: String(c.key || c.value || ''), label: String(c.nameAr || c.label || c.key || '') })))
+const categoryOptions = computed(() => (categories.value || []).map((c:any) => ({ value: String(c.key || c.value || ''), label: String(c.nameAr || c.nameEn || c.label || c.key || '') })))
 const subCategoryMap: Record<string, Array<{value:string,label:string}>> = {
   'eye-care': [
     { value: 'eye-serum', label: t('productsPage.subEyeSerum') },

@@ -216,7 +216,7 @@ function starFill(n: number) {
             <div class="text-lg font-extrabold rtl-text">{{ t('products.youMayAlsoLike') }}</div>
             <NuxtLink :to="`/products?category=${encodeURIComponent(categoryKey)}`" class="text-sm text-[rgb(var(--primary))]">{{ t('home.viewAll') }}</NuxtLink>
           </div>
-          <div class="grid gap-4 sm:grid-cols-2">
+          <div class="grid grid-cols-2 gap-3 sm:gap-4">
             <ProductCard v-for="p in similar" :key="p.id" :p="p" />
           </div>
         </div>

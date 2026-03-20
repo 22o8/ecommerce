@@ -3,7 +3,7 @@
   <div
     role="button"
     tabindex="0"
-    class="group relative product-card-shell overflow-hidden transition duration-300 will-change-transform hover:-translate-y-1 touch-manipulation select-none"
+    class="group relative product-card-shell overflow-hidden rounded-2xl transition duration-300 will-change-transform hover:-translate-y-1 touch-manipulation select-none"
     @click="goProduct"
     @keydown.enter.prevent="goProduct"
     @keydown.space.prevent="goProduct"
@@ -46,12 +46,12 @@
       </div>
     </div>
 
-    <div class="p-4 grid gap-3">
+    <div class="p-2.5 sm:p-4 grid gap-2 sm:gap-3">
       <div class="min-w-0">
         <div class="flex items-start justify-between gap-3">
-          <div class="font-extrabold line-clamp-1 rtl-text min-w-0">{{ displayName }}</div>
+          <div class="font-extrabold line-clamp-2 rtl-text min-w-0 text-sm sm:text-base leading-6">{{ displayName }}</div>
         </div>
-        <div v-if="displayDescription" class="text-sm text-muted line-clamp-2 rtl-text">
+        <div v-if="displayDescription" class="hidden sm:block text-sm text-muted line-clamp-2 rtl-text">
           {{ displayDescription }}
         </div>
 
@@ -59,33 +59,33 @@
         <div class="relative z-20 flex items-center justify-end gap-2 mt-2 touch-manipulation">
           <button
             type="button"
-            class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
+            class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-1.5 sm:p-2"
             @pointerdown.stop
             @touchstart.stop
             @touchend.stop.prevent
             @click.stop.prevent="toggleFav"
             :aria-label="t('wishlist.toggle')"
           >
-            <Icon :name="fav ? 'mdi:heart' : 'mdi:heart-outline'" class="text-lg" />
+            <Icon :name="fav ? 'mdi:heart' : 'mdi:heart-outline'" class="text-base sm:text-lg" />
           </button>
 
           <button
             type="button"
-            class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-2"
+            class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-1.5 sm:p-2"
             @pointerdown.stop
             @touchstart.stop
             @touchend.stop.prevent
             @click.stop.prevent="openPreview"
             :aria-label="t('products.quickPreview')"
           >
-            <Icon name="mdi:eye-outline" class="text-lg" />
+            <Icon name="mdi:eye-outline" class="text-base sm:text-lg" />
           </button>
         </div>
       </div>
 
       <div class="flex items-center justify-between gap-3">
         <div class="min-w-0">
-          <div class="text-lg font-black keep-ltr">
+          <div class="text-base sm:text-lg font-black keep-ltr">
             {{ formatPrice(displayFinalPrice) }}
           </div>
           <div v-if="discountPercent > 0" class="text-xs text-muted keep-ltr">
@@ -93,10 +93,10 @@
           </div>
         </div>
 
-        <div class="relative z-20 flex flex-row items-center gap-2 touch-manipulation">
+        <div class="relative z-20 flex flex-row items-center gap-1.5 sm:gap-2 touch-manipulation">
           <button
             type="button"
-            class="product-card-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-app transition text-xs"
+            class="product-card-btn inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl border border-app transition text-[11px] sm:text-xs min-w-0 flex-1"
             @pointerdown.stop
             @touchstart.stop
             @touchend.stop.prevent
@@ -109,7 +109,7 @@
 
           <button
             type="button"
-            class="product-card-btn inline-flex items-center px-2.5 py-1.5 rounded-xl border border-app transition text-xs"
+            class="product-card-btn inline-flex items-center justify-center px-2 py-1.5 rounded-xl border border-app transition text-[11px] sm:text-xs min-w-0"
             @pointerdown.stop
             @touchstart.stop
             @touchend.stop.prevent
@@ -250,4 +250,11 @@ function goProduct() {
   background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .88));
   box-shadow: 0 18px 50px rgba(0,0,0,.28);
 }
+
+@media (max-width: 640px){
+  .product-card-shell{ border-radius:20px; }
+  .product-card-media{ aspect-ratio: 1 / 1; }
+  .product-card-shell :deep(img){ padding:.55rem !important; }
+}
+
 </style>
