@@ -345,6 +345,8 @@
     "category": "التصنيف",
     "subCategory": "النوع الدقيق",
     "subCategoryPlaceholder": "مثال: eye-serum",
+    "preciseCategory": "التصنيف الدقيق",
+    "preciseCategoryPlaceholder": "اختر تصنيفًا دقيقًا",
     "stockQuantity": "الكمية",
     "couponAllowed": "يسمح بالكوبون",
     "lowStockThreshold": "حد التنبيه",

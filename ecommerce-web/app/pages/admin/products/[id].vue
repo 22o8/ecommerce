@@ -80,8 +80,11 @@
               </div>
 
               <div class="grid gap-2">
-                <label class="text-sm font-medium">{{ t('admin.subCategory') }}</label>
-                <UiInput v-model="form.subCategory" :placeholder="t('admin.subCategoryPlaceholder')" />
+                <label class="text-sm font-medium">{{ t('admin.preciseCategory') || 'التصنيف الدقيق' }}</label>
+                <select v-model="form.subCategory" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
+                <option value="">{{ t('admin.preciseCategoryPlaceholder') || 'اختر تصنيفًا دقيقًا' }}</option>
+                <option v-for="c in preciseCategoryOptions" :key="c.key" :value="c.key">{{ c.nameAr }}</option>
+              </select>
               </div>
 
               <div class="grid gap-2">
@@ -251,6 +254,11 @@ const finalPrice = computed(() => {
 
 const slugTouched = ref(false)
 const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام' }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
+const preciseCategoryOptions = computed(() => categoryOptions.value.filter((c:any) => c.key && c.key !== String(form.category || '')))
+
+watch(() => form.category, () => {
+  if (form.subCategory && form.subCategory === form.category) form.subCategory = ''
+})
 
 const autoSlugBase = ref('')
 

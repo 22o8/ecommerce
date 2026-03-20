@@ -318,6 +318,8 @@
     "category": "Category",
     "subCategory": "Precise type",
     "subCategoryPlaceholder": "Example: eye-serum",
+    "preciseCategory": "Precise category",
+    "preciseCategoryPlaceholder": "Choose a precise category",
     "stockQuantity": "Stock quantity",
     "couponAllowed": "Coupon allowed",
     "lowStockThreshold": "Low stock threshold",

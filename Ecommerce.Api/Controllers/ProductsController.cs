@@ -195,7 +195,9 @@ public class ProductsController : ControllerBase
             baseQuery = baseQuery.Where(p => p.Brand != null && p.Brand.ToLower() == brand);
 
         if (!string.IsNullOrWhiteSpace(category) && !category.Equals("all", StringComparison.OrdinalIgnoreCase))
-            baseQuery = baseQuery.Where(p => p.Category != null && p.Category.ToLower() == category);
+            baseQuery = baseQuery.Where(p =>
+                (p.Category != null && p.Category.ToLower() == category) ||
+                (p.SubCategory != null && p.SubCategory.ToLower() == category));
 
         if (!string.IsNullOrWhiteSpace(subCategory) && !subCategory.Equals("all", StringComparison.OrdinalIgnoreCase))
             baseQuery = baseQuery.Where(p => p.SubCategory != null && p.SubCategory.ToLower() == subCategory);
