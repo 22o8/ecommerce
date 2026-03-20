@@ -223,7 +223,7 @@ function starFill(n: number) {
         </div>
       </div>
 
-            <div v-if="(similar?.length || 0) > 0" class="product-related-section product-sheet rounded-[2rem] p-5 sm:p-6">
+      <div v-if="(similar?.length || 0) > 0" class="product-related-section product-sheet rounded-[2rem] p-5 sm:p-6">
         <div class="flex items-center justify-between gap-3 flex-wrap mb-4">
           <div class="text-lg sm:text-xl font-extrabold rtl-text">{{ t('products.youMayAlsoLike') }}</div>
           <NuxtLink :to="`/products?category=${encodeURIComponent(subCategoryKey || categoryKey)}`" class="text-sm text-[rgb(var(--primary))]">{{ t('home.viewAll') }}</NuxtLink>
@@ -331,11 +331,35 @@ function starFill(n: number) {
   box-shadow:0 16px 34px rgba(var(--primary), .22);
 }
 .product-action-btn--secondary{
-  background:rgba(255,255,255,.05);
+  background:linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .92));
   color:rgb(var(--text));
+  box-shadow:0 12px 26px rgba(0,0,0,.14);
 }
 .product-action-btn--review{ width:auto; min-width:170px; }
 .review-textarea{ resize:vertical; min-height:120px; }
+:global(html.theme-light) .product-action-btn--primary{
+  color:#fff;
+  box-shadow:0 18px 36px rgba(var(--primary), .18);
+}
+:global(html.theme-light) .product-action-btn--secondary{
+  background: linear-gradient(180deg, #ffffff, #f6f1f7);
+  color:#161616;
+  border-color: rgba(24,24,24,.12);
+  box-shadow: 0 14px 30px rgba(24,24,24,.10), 0 4px 12px rgba(232,91,154,.08);
+}
+:global(html.theme-light) .product-action-btn--secondary:hover{
+  background: linear-gradient(180deg, #fff, #f2eaf3);
+}
+:global(html.theme-light) .product-price-card{
+  background: linear-gradient(180deg, #ffffff, #f8f3f8);
+  border-color: rgba(24,24,24,.08);
+}
+:global(html.theme-light) .review-textarea{
+  background:#fff;
+  border-color:rgba(24,24,24,.12);
+  color:#161616;
+}
+
 .product-related-grid{
   display:grid;
   grid-template-columns:repeat(2, minmax(0, 1fr));

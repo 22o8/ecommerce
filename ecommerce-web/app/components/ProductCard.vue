@@ -60,9 +60,7 @@
           <button
             type="button"
             class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-1.5 sm:p-2"
-            @pointerdown.stop
-            @touchstart.stop
-            @touchend.stop.prevent
+            @mousedown.stop
             @click.stop.prevent="toggleFav"
             :aria-label="t('wishlist.toggle')"
           >
@@ -72,9 +70,7 @@
           <button
             type="button"
             class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-1.5 sm:p-2"
-            @pointerdown.stop
-            @touchstart.stop
-            @touchend.stop.prevent
+            @mousedown.stop
             @click.stop.prevent="openPreview"
             :aria-label="t('products.quickPreview')"
           >
@@ -97,9 +93,7 @@
           <button
             type="button"
             class="product-card-btn inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl border border-app transition text-[11px] sm:text-xs min-w-0 flex-1" :class="props.compact ? 'product-card-btn--compact' : ''"
-            @pointerdown.stop
-            @touchstart.stop
-            @touchend.stop.prevent
+            @mousedown.stop
             @click.stop.prevent="addToCart"
             :disabled="isOutOfStock"
           >
@@ -110,9 +104,7 @@
           <button
             type="button"
             class="product-card-btn inline-flex items-center justify-center px-2 py-1.5 rounded-xl border border-app transition text-[11px] sm:text-xs min-w-0" :class="props.compact ? 'product-card-btn--compact' : ''"
-            @pointerdown.stop
-            @touchstart.stop
-            @touchend.stop.prevent
+            @mousedown.stop
             @click.stop.prevent="buyNow"
             :disabled="isOutOfStock"
           >
@@ -229,7 +221,16 @@ function goProduct() {
 }
 .product-card-media{ background: rgba(0,0,0,.08); }
 .product-card-btn{
-  background: rgb(var(--surface));
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-2-rgb), .92));
+  color: rgb(var(--text));
+  box-shadow: 0 10px 22px rgba(0,0,0,.14);
+}
+.product-card-btn:hover{ transform: translateY(-1px); }
+.product-card-btn:first-of-type{
+  background: linear-gradient(135deg, rgba(var(--primary), .98), rgba(var(--primary), .78));
+  color:#fff;
+  border-color: rgba(var(--primary), .55);
+  box-shadow:0 16px 34px rgba(var(--primary), .22);
 }
 .product-card-btn:disabled{ opacity:.5; cursor:not-allowed; }
 .product-card-shell--compact{ border-radius:18px; }
@@ -248,8 +249,16 @@ function goProduct() {
   background: linear-gradient(180deg, rgba(252,248,251,.95), rgba(245,239,245,.9));
 }
 :global(html.theme-light) .product-card-btn{
-  background: rgba(255,255,255,.92);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+  background: linear-gradient(180deg, #ffffff, #f5eff4);
+  color:#1a1a1a;
+  border-color: rgba(24,24,24,.12);
+  box-shadow: 0 12px 26px rgba(24,24,24,.08), inset 0 1px 0 rgba(255,255,255,.8);
+}
+:global(html.theme-light) .product-card-btn:first-of-type{
+  background: linear-gradient(135deg, rgba(var(--primary), .98), rgba(var(--primary), .82));
+  color:#fff;
+  border-color: rgba(var(--primary), .45);
+  box-shadow: 0 18px 34px rgba(var(--primary), .2);
 }
 :global(html.theme-dark) .product-card-shell{
   background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .88));
