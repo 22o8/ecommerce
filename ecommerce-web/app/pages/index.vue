@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
@@ -76,7 +76,45 @@ const categoryCards = computed(() => {
   }))
 })
 
+
 const { buildAssetUrl } = useApi()
+const categoryRail = ref<HTMLElement | null>(null)
+const dragState = { active: false, startX: 0, startScroll: 0 }
+
+function onRailPointerDown(event: PointerEvent) {
+  if (!categoryRail.value || window.innerWidth < 768) return
+  dragState.active = true
+  dragState.startX = event.clientX
+  dragState.startScroll = categoryRail.value.scrollLeft
+  categoryRail.value.setPointerCapture?.(event.pointerId)
+  categoryRail.value.classList.add('is-dragging')
+}
+
+function onRailPointerMove(event: PointerEvent) {
+  if (!dragState.active || !categoryRail.value) return
+  const delta = event.clientX - dragState.startX
+  categoryRail.value.scrollLeft = dragState.startScroll - delta
+}
+
+function endRailDrag() {
+  dragState.active = false
+  categoryRail.value?.classList.remove('is-dragging')
+}
+
+function onRailWheel(event: WheelEvent) {
+  if (!categoryRail.value || window.innerWidth < 768) return
+  if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
+  event.preventDefault()
+  categoryRail.value.scrollLeft += event.deltaY
+}
+
+onMounted(() => {
+  categoryRail.value?.addEventListener('wheel', onRailWheel, { passive: false })
+})
+
+onBeforeUnmount(() => {
+  categoryRail.value?.removeEventListener('wheel', onRailWheel as any)
+})
 
 </script>
 
@@ -99,7 +137,7 @@ const { buildAssetUrl } = useApi()
           </NuxtLink>
         </div>
 
-        <div class="category-unified-rail mt-8">
+        <div ref="categoryRail" class="category-unified-rail mt-8" @pointerdown="onRailPointerDown" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
           <NuxtLink
             v-for="c in categoryCards"
             :key="c.key"
@@ -209,6 +247,15 @@ const { buildAssetUrl } = useApi()
   scroll-snap-type:x proximity;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
+
+  cursor:grab;
+  user-select:none;
+}
+.category-unified-rail.is-dragging{
+  cursor:grabbing;
+}
+.category-unified-rail > *{
+  user-select:none;
 }
 .category-unified-rail::-webkit-scrollbar{ display:none; }
 .category-mobile-pill{

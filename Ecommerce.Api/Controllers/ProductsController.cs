@@ -194,13 +194,43 @@ public class ProductsController : ControllerBase
         if (!string.IsNullOrWhiteSpace(brand) && !brand.Equals("all", StringComparison.OrdinalIgnoreCase))
             baseQuery = baseQuery.Where(p => p.Brand != null && p.Brand.ToLower() == brand);
 
-        if (!string.IsNullOrWhiteSpace(category) && !category.Equals("all", StringComparison.OrdinalIgnoreCase))
-            baseQuery = baseQuery.Where(p =>
-                (p.Category != null && p.Category.ToLower() == category) ||
-                (p.SubCategory != null && p.SubCategory.ToLower() == category));
+        async Task<List<string>> ResolveCategoryAliasesAsync(string? raw)
+        {
+            var normalized = N(raw);
+            if (string.IsNullOrWhiteSpace(normalized) || normalized.Equals("all", StringComparison.OrdinalIgnoreCase))
+                return new List<string>();
 
-        if (!string.IsNullOrWhiteSpace(subCategory) && !subCategory.Equals("all", StringComparison.OrdinalIgnoreCase))
-            baseQuery = baseQuery.Where(p => p.SubCategory != null && p.SubCategory.ToLower() == subCategory);
+            var aliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { normalized };
+            var defs = await _db.Categories
+                .AsNoTracking()
+                .Where(c => c.IsActive &&
+                    (c.Key.ToLower() == normalized ||
+                     c.NameAr.ToLower() == normalized ||
+                     (c.NameEn != null && c.NameEn.ToLower() == normalized)))
+                .Select(c => new { c.Key, c.NameAr, c.NameEn })
+                .ToListAsync();
+
+            foreach (var def in defs)
+            {
+                if (!string.IsNullOrWhiteSpace(def.Key)) aliases.Add(N(def.Key));
+                if (!string.IsNullOrWhiteSpace(def.NameAr)) aliases.Add(N(def.NameAr));
+                if (!string.IsNullOrWhiteSpace(def.NameEn)) aliases.Add(N(def.NameEn));
+            }
+
+            return aliases.ToList();
+        }
+
+        var categoryAliases = await ResolveCategoryAliasesAsync(category);
+        var subCategoryAliases = await ResolveCategoryAliasesAsync(subCategory);
+
+        if (categoryAliases.Count > 0)
+            baseQuery = baseQuery.Where(p =>
+                (p.Category != null && categoryAliases.Contains(p.Category.ToLower())) ||
+                (p.SubCategory != null && categoryAliases.Contains(p.SubCategory.ToLower())));
+
+        if (subCategoryAliases.Count > 0)
+            baseQuery = baseQuery.Where(p =>
+                p.SubCategory != null && subCategoryAliases.Contains(p.SubCategory.ToLower()));
 
         if (!string.IsNullOrWhiteSpace(q))
         {
