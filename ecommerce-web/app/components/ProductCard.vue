@@ -3,7 +3,7 @@
   <div
     role="button"
     tabindex="0"
-    class="group relative product-card-shell overflow-hidden rounded-2xl transition duration-300 will-change-transform hover:-translate-y-1 touch-manipulation select-none"
+    class="group relative product-card-shell overflow-hidden rounded-2xl transition duration-300 will-change-transform hover:-translate-y-1 touch-manipulation select-none" :class="props.compact ? 'product-card-shell--compact' : ''"
     @click="goProduct"
     @keydown.enter.prevent="goProduct"
     @keydown.space.prevent="goProduct"
@@ -46,12 +46,12 @@
       </div>
     </div>
 
-    <div class="p-2.5 sm:p-4 grid gap-2 sm:gap-3">
+    <div class="p-2.5 sm:p-4 grid gap-2 sm:gap-3" :class="props.compact ? 'product-card-content--compact' : ''">
       <div class="min-w-0">
         <div class="flex items-start justify-between gap-3">
-          <div class="font-extrabold line-clamp-2 rtl-text min-w-0 text-sm sm:text-base leading-6">{{ displayName }}</div>
+          <div class="font-extrabold line-clamp-2 rtl-text min-w-0 text-sm sm:text-base leading-6" :class="props.compact ? 'text-[13px] sm:text-sm leading-5' : ''">{{ displayName }}</div>
         </div>
-        <div v-if="displayDescription" class="hidden sm:block text-sm text-muted line-clamp-2 rtl-text">
+        <div v-if="displayDescription && !props.compact" class="hidden sm:block text-sm text-muted line-clamp-2 rtl-text">
           {{ displayDescription }}
         </div>
 
@@ -85,7 +85,7 @@
 
       <div class="flex items-center justify-between gap-3">
         <div class="min-w-0">
-          <div class="text-base sm:text-lg font-black keep-ltr">
+          <div class="text-base sm:text-lg font-black keep-ltr" :class="props.compact ? 'text-sm sm:text-base' : ''">
             {{ formatPrice(displayFinalPrice) }}
           </div>
           <div v-if="discountPercent > 0" class="text-xs text-muted keep-ltr">
@@ -96,7 +96,7 @@
         <div class="relative z-20 flex flex-row items-center gap-1.5 sm:gap-2 touch-manipulation">
           <button
             type="button"
-            class="product-card-btn inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl border border-app transition text-[11px] sm:text-xs min-w-0 flex-1"
+            class="product-card-btn inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl border border-app transition text-[11px] sm:text-xs min-w-0 flex-1" :class="props.compact ? 'product-card-btn--compact' : ''"
             @pointerdown.stop
             @touchstart.stop
             @touchend.stop.prevent
@@ -109,7 +109,7 @@
 
           <button
             type="button"
-            class="product-card-btn inline-flex items-center justify-center px-2 py-1.5 rounded-xl border border-app transition text-[11px] sm:text-xs min-w-0"
+            class="product-card-btn inline-flex items-center justify-center px-2 py-1.5 rounded-xl border border-app transition text-[11px] sm:text-xs min-w-0" :class="props.compact ? 'product-card-btn--compact' : ''"
             @pointerdown.stop
             @touchstart.stop
             @touchend.stop.prevent
@@ -129,7 +129,7 @@
 import SmartImage from '~/components/SmartImage.vue'
 import { formatIqd } from '~/composables/useMoney'
 
-const props = defineProps<{ product?: any; p?: any }>()
+const props = defineProps<{ product?: any; p?: any; compact?: boolean }>()
 const { t } = useI18n()
 const cart = useCartStore()
 const { isInWishlist, toggle } = useWishlist()
@@ -232,6 +232,11 @@ function goProduct() {
   background: rgb(var(--surface));
 }
 .product-card-btn:disabled{ opacity:.5; cursor:not-allowed; }
+.product-card-shell--compact{ border-radius:18px; }
+.product-card-shell--compact .product-card-media{ aspect-ratio: 1 / 1; }
+.product-card-content--compact{ gap:.55rem; padding:.75rem; }
+.product-card-btn--compact{ padding:.42rem .55rem; font-size:11px; }
+
 :global(html.theme-light) .product-card-shell{
   background: linear-gradient(180deg, rgba(255,255,255,.99), rgba(255,247,252,.95));
   box-shadow: 0 22px 54px rgba(232, 91, 154, .08), 0 10px 24px rgba(24,24,24,.05);

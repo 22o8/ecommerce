@@ -120,117 +120,119 @@ function starFill(n: number) {
       <button class="mt-3 btn" @click="refresh">{{ t('common.retry') }}</button>
     </div>
 
-    <div v-else class="product-layout-grid gap-6 lg:gap-8">
-      <div class="grid gap-3 product-media-col">
-        <div class="relative overflow-hidden product-gallery-shell rounded-[2rem]">
-          <div class="group relative aspect-[1/1] md:aspect-[1.02/1]">
-            <SmartImage :src="activeImage" :alt="product.title" fit="cover" wrapper-class="w-full h-full" img-class="w-full h-full object-cover transition duration-500 group-hover:scale-110" />
-            <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/30 via-black/5 to-transparent pointer-events-none"></div>
-            <div v-if="discountPercent > 0" class="absolute top-4 right-4">
-              <div class="product-badge-hero keep-ltr">-{{ discountPercent }}%</div>
+    <div v-else class="grid gap-8 lg:gap-10">
+      <div class="product-layout-grid gap-6 lg:gap-8">
+        <div class="grid gap-4 product-media-col self-start">
+          <div class="relative overflow-hidden product-gallery-shell rounded-[2rem]">
+            <div class="group relative product-hero-media">
+              <SmartImage :src="activeImage" :alt="product.title" fit="contain" wrapper-class="w-full h-full bg-white/5" img-class="w-full h-full object-contain transition duration-500 group-hover:scale-[1.03]" />
+              <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/10 via-black/0 to-transparent pointer-events-none"></div>
+              <div v-if="discountPercent > 0" class="absolute top-4 right-4">
+                <div class="product-badge-hero keep-ltr">-{{ discountPercent }}%</div>
+              </div>
             </div>
+          </div>
+
+          <div v-if="images.length" class="product-thumbs-row">
+            <button v-for="(im, idx) in images" :key="im.id || idx" class="product-thumb-btn" :class="idx === activeIndex ? 'is-active' : ''" @click="activeIndex = idx" type="button">
+              <img class="h-full w-full object-cover" :src="api.buildAssetUrl(String(im.url || im))" :alt="product.title" />
+            </button>
           </div>
         </div>
 
-        <div v-if="images.length" class="product-thumbs-row">
-          <button v-for="(im, idx) in images" :key="im.id || idx" class="product-thumb-btn" :class="idx === activeIndex ? 'is-active' : ''" @click="activeIndex = idx" type="button">
-            <img class="h-full w-full object-cover" :src="api.buildAssetUrl(String(im.url || im))" :alt="product.title" />
-          </button>
+        <div class="grid gap-5 product-info-col self-start">
+          <div class="product-sheet rounded-[2rem] p-5 sm:p-6">
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+              <span v-if="brand" class="product-meta-pill">{{ brand }}</span>
+              <span v-if="categoryKey" class="product-meta-pill product-meta-pill--ghost">{{ categoryKey }}</span>
+              <span v-if="subCategoryKey" class="product-meta-pill product-meta-pill--ghost">{{ subCategoryKey }}</span>
+            </div>
+
+            <h1 class="product-title text-2xl sm:text-3xl lg:text-[2.1rem] font-extrabold leading-[1.35] rtl-text text-balance break-words">{{ product.title }}</h1>
+
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <div class="flex items-center gap-1 text-amber-400">
+                <Icon v-for="n in 5" :key="n" :name="starFill(n) ? 'mdi:star' : 'mdi:star-outline'" class="text-lg" />
+              </div>
+              <div class="text-sm text-white/75">{{ avgRating.toFixed(1) }} / 5</div>
+              <div class="text-sm text-white/55">({{ ratingCount }} تقييم)</div>
+            </div>
+
+            <div class="product-price-card mt-5">
+              <div>
+                <div class="text-3xl sm:text-[2.2rem] font-black keep-ltr">{{ fmt(finalPriceIqd) }}</div>
+                <div v-if="discountPercent > 0" class="mt-1 text-sm text-muted keep-ltr"><span class="line-through opacity-70">{{ fmt(priceIqd) }}</span></div>
+              </div>
+              <div v-if="isOutOfStock" class="inline-flex rounded-full bg-[rgb(var(--danger))]/15 px-4 py-2 text-sm font-bold text-[rgb(var(--danger))] rtl-text">{{ t('common.unavailable') }}</div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button class="product-action-btn product-action-btn--primary" @click="addToCart" :disabled="isOutOfStock">
+                <Icon name="mdi:cart-plus" class="text-lg" />
+                <span class="rtl-text">{{ t('common.addToCart') }}</span>
+              </button>
+              <button class="product-action-btn product-action-btn--secondary" @click="buyNow" :disabled="isOutOfStock">
+                <Icon name="mdi:flash" class="text-lg" />
+                <span class="rtl-text">{{ t('common.buy') }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="product-sheet rounded-[2rem] p-5 sm:p-6">
+            <div class="font-extrabold mb-3 rtl-text text-lg">{{ t('products.description') }}</div>
+            <div class="product-description text-sm sm:text-[15px] text-muted whitespace-pre-line rtl-text leading-8">{{ product.description }}</div>
+          </div>
+
+          <div class="product-sheet rounded-[2rem] p-5 sm:p-6 grid gap-4">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div class="font-extrabold rtl-text">إضافة تقييم</div>
+              <div class="text-sm text-white/60">يمكنك تعديل تقييمك لاحقًا</div>
+            </div>
+
+            <div class="flex items-center gap-2 text-amber-400">
+              <button v-for="n in 5" :key="n" type="button" class="transition hover:scale-110" @click="reviewForm.rating = n">
+                <Icon :name="reviewForm.rating >= n ? 'mdi:star' : 'mdi:star-outline'" class="text-2xl" />
+              </button>
+            </div>
+
+            <textarea v-model="reviewForm.comment" rows="4" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none review-textarea" placeholder="اكتب رأيك عن المنتج"></textarea>
+
+            <div class="flex flex-wrap items-center gap-3">
+              <button class="product-action-btn product-action-btn--primary product-action-btn--review" :disabled="reviewSubmitting" @click="submitReview">
+                {{ myReview ? 'تحديث التقييم' : 'إرسال التقييم' }}
+              </button>
+              <div v-if="!auth.isAuthed" class="text-sm text-amber-300">يجب تسجيل الدخول أولاً</div>
+            </div>
+          </div>
+
+          <div class="product-sheet rounded-3xl p-5 grid gap-4">
+            <div class="font-extrabold rtl-text">التقييمات</div>
+            <div v-if="!reviews.length" class="text-sm text-white/60">لا توجد تقييمات بعد</div>
+            <div v-else class="grid gap-3">
+              <div v-for="r in reviews" :key="r.id" class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                  <div class="font-bold">{{ r.userName || 'مستخدم' }}</div>
+                  <div class="flex items-center gap-1 text-amber-400">
+                    <Icon v-for="n in 5" :key="n" :name="Number(r.rating) >= n ? 'mdi:star' : 'mdi:star-outline'" class="text-base" />
+                  </div>
+                </div>
+                <div v-if="r.comment" class="mt-2 text-sm text-white/80 whitespace-pre-line rtl-text">{{ r.comment }}</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="grid gap-5 product-info-col lg:sticky lg:top-24 self-start">
-        <div class="product-sheet rounded-[2rem] p-5 sm:p-6">
-          <div class="flex flex-wrap items-center gap-2 mb-3">
-            <span v-if="brand" class="product-meta-pill">{{ brand }}</span>
-            <span v-if="categoryKey" class="product-meta-pill product-meta-pill--ghost">{{ categoryKey }}</span>
-            <span v-if="subCategoryKey" class="product-meta-pill product-meta-pill--ghost">{{ subCategoryKey }}</span>
-          </div>
-
-          <h1 class="text-2xl sm:text-3xl lg:text-[2.1rem] font-extrabold leading-tight rtl-text text-balance">{{ product.title }}</h1>
-
-          <div class="mt-4 flex flex-wrap items-center gap-3">
-            <div class="flex items-center gap-1 text-amber-400">
-              <Icon v-for="n in 5" :key="n" :name="starFill(n) ? 'mdi:star' : 'mdi:star-outline'" class="text-lg" />
-            </div>
-            <div class="text-sm text-white/75">{{ avgRating.toFixed(1) }} / 5</div>
-            <div class="text-sm text-white/55">({{ ratingCount }} تقييم)</div>
-          </div>
-
-          <div class="product-price-card mt-5">
-            <div>
-              <div class="text-3xl sm:text-[2.2rem] font-black keep-ltr">{{ fmt(finalPriceIqd) }}</div>
-              <div v-if="discountPercent > 0" class="mt-1 text-sm text-muted keep-ltr"><span class="line-through opacity-70">{{ fmt(priceIqd) }}</span></div>
-            </div>
-            <div v-if="isOutOfStock" class="inline-flex rounded-full bg-[rgb(var(--danger))]/15 px-4 py-2 text-sm font-bold text-[rgb(var(--danger))] rtl-text">{{ t('common.unavailable') }}</div>
-          </div>
-
-          <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button class="btn-cta-animated product-primary-action inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold" @click="addToCart" :disabled="isOutOfStock">
-              <Icon name="mdi:cart-plus" class="text-lg" />
-              <span class="rtl-text">{{ t('common.addToCart') }}</span>
-            </button>
-            <button class="btn-cta-animated btn-cta-secondary product-secondary-action inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold" @click="buyNow" :disabled="isOutOfStock">
-              <span class="rtl-text">{{ t('common.buy') }}</span>
-            </button>
-          </div>
+      <div v-if="(similar?.length || 0) > 0" class="product-related-section product-sheet rounded-[2rem] p-5 sm:p-6">
+        <div class="flex items-center justify-between gap-3 flex-wrap mb-4">
+          <div class="text-lg sm:text-xl font-extrabold rtl-text">{{ t('products.youMayAlsoLike') }}</div>
+          <NuxtLink :to="`/products?category=${encodeURIComponent(subCategoryKey || categoryKey)}`" class="text-sm text-[rgb(var(--primary))]">{{ t('home.viewAll') }}</NuxtLink>
         </div>
-
-        <div class="product-sheet rounded-[2rem] p-5 sm:p-6">
-          <div class="font-extrabold mb-3 rtl-text text-lg">{{ t('products.description') }}</div>
-          <div class="text-sm sm:text-[15px] text-muted whitespace-pre-line rtl-text leading-8">{{ product.description }}</div>
-        </div>
-
-        <div class="product-sheet rounded-[2rem] p-5 sm:p-6 grid gap-4">
-          <div class="flex items-center justify-between gap-3 flex-wrap">
-            <div class="font-extrabold rtl-text">إضافة تقييم</div>
-            <div class="text-sm text-white/60">يمكنك تعديل تقييمك لاحقًا</div>
-          </div>
-
-          <div class="flex items-center gap-2 text-amber-400">
-            <button v-for="n in 5" :key="n" type="button" class="transition hover:scale-110" @click="reviewForm.rating = n">
-              <Icon :name="reviewForm.rating >= n ? 'mdi:star' : 'mdi:star-outline'" class="text-2xl" />
-            </button>
-          </div>
-
-          <textarea v-model="reviewForm.comment" rows="4" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none" placeholder="اكتب رأيك عن المنتج"></textarea>
-
-          <div class="flex flex-wrap items-center gap-3">
-            <button class="btn-cta-animated inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold" :disabled="reviewSubmitting" @click="submitReview">
-              {{ myReview ? 'تحديث التقييم' : 'إرسال التقييم' }}
-            </button>
-            <div v-if="!auth.isAuthed" class="text-sm text-amber-300">يجب تسجيل الدخول أولاً</div>
-          </div>
-        </div>
-
-        <div class="product-sheet rounded-3xl p-5 grid gap-4">
-          <div class="font-extrabold rtl-text">التقييمات</div>
-          <div v-if="!reviews.length" class="text-sm text-white/60">لا توجد تقييمات بعد</div>
-          <div v-else class="grid gap-3">
-            <div v-for="r in reviews" :key="r.id" class="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div class="flex items-center justify-between gap-3 flex-wrap">
-                <div class="font-bold">{{ r.userName || 'مستخدم' }}</div>
-                <div class="flex items-center gap-1 text-amber-400">
-                  <Icon v-for="n in 5" :key="n" :name="Number(r.rating) >= n ? 'mdi:star' : 'mdi:star-outline'" class="text-base" />
-                </div>
-              </div>
-              <div v-if="r.comment" class="mt-2 text-sm text-white/80 whitespace-pre-line rtl-text">{{ r.comment }}</div>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="(similar?.length || 0) > 0" class="grid gap-3 pt-1">
-          <div class="flex items-center justify-between">
-            <div class="text-lg font-extrabold rtl-text">{{ t('products.youMayAlsoLike') }}</div>
-            <NuxtLink :to="`/products?category=${encodeURIComponent(subCategoryKey || categoryKey)}`" class="text-sm text-[rgb(var(--primary))]">{{ t('home.viewAll') }}</NuxtLink>
-          </div>
-          <div class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-            <ProductCard v-for="p in similar" :key="p.id" :p="p" />
-          </div>
+        <div class="product-related-grid">
+          <ProductCard v-for="p in similar" :key="p.id" :p="p" compact />
         </div>
       </div>
     </div>
-  </div>
 </template>
 
 <style scoped>
@@ -242,7 +244,12 @@ function starFill(n: number) {
 
 .product-layout-grid{
   display:grid;
-  grid-template-columns:minmax(0,1.02fr) minmax(0,.92fr);
+  grid-template-columns:minmax(0,1.04fr) minmax(420px,.96fr);
+  align-items:start;
+}
+.product-hero-media{
+  min-height: 560px;
+  aspect-ratio: 1 / 1;
 }
 .product-thumbs-row{
   display:flex;
@@ -253,12 +260,12 @@ function starFill(n: number) {
 .product-thumbs-row::-webkit-scrollbar{ display:none; }
 .product-thumb-btn{
   flex:0 0 auto;
-  width:84px;
-  height:84px;
+  width:88px;
+  height:88px;
   overflow:hidden;
   border-radius:1.15rem;
   border:1px solid rgba(var(--border), .9);
-  opacity:.78;
+  opacity:.82;
   transition:transform .2s ease, opacity .2s ease, border-color .2s ease, box-shadow .2s ease;
   box-shadow:0 10px 24px rgba(0,0,0,.12);
 }
@@ -288,10 +295,8 @@ function starFill(n: number) {
   font-size:.78rem;
   font-weight:800;
 }
-.product-meta-pill--ghost{
-  background:rgba(255,255,255,.06);
-  border-color:rgba(var(--border), .9);
-}
+.product-meta-pill--ghost{ background:rgba(255,255,255,.06); border-color:rgba(var(--border), .9); }
+.product-title{ letter-spacing:-.01em; }
 .product-price-card{
   display:flex;
   justify-content:space-between;
@@ -303,18 +308,55 @@ function starFill(n: number) {
   background:linear-gradient(180deg, rgba(var(--surface-2-rgb), .92), rgba(var(--surface-rgb), .84));
   border:1px solid rgba(var(--border), .85);
 }
-.product-primary-action, .product-secondary-action{ min-height:52px; }
+.product-description{ word-break: break-word; overflow-wrap:anywhere; }
+.product-action-btn{
+  min-height:56px;
+  border-radius:999px;
+  border:1px solid rgba(var(--border), .95);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.6rem;
+  width:100%;
+  padding:.95rem 1.25rem;
+  font-weight:800;
+  transition:transform .2s ease, box-shadow .2s ease, opacity .2s ease, background .2s ease;
+}
+.product-action-btn:hover{ transform:translateY(-1px); }
+.product-action-btn:disabled{ opacity:.55; cursor:not-allowed; }
+.product-action-btn--primary{
+  background:linear-gradient(135deg, rgba(var(--primary), .98), rgba(var(--primary), .78));
+  color:#fff;
+  box-shadow:0 16px 34px rgba(var(--primary), .22);
+}
+.product-action-btn--secondary{
+  background:rgba(255,255,255,.05);
+  color:rgb(var(--text));
+}
+.product-action-btn--review{ width:auto; min-width:170px; }
+.review-textarea{ resize:vertical; min-height:120px; }
+.product-related-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:1rem;
+}
 .text-balance{ text-wrap:balance; }
+
+@media (max-width: 1280px){
+  .product-layout-grid{ grid-template-columns:minmax(0,1fr) minmax(360px,.9fr); }
+  .product-hero-media{ min-height:500px; }
+}
 @media (max-width: 1024px){
   .product-layout-grid{ grid-template-columns:1fr; }
+  .product-hero-media{ min-height:420px; }
 }
 @media (max-width: 640px){
-  .product-page{ padding-top:1.25rem; padding-bottom:2rem; }
-  .product-gallery-shell{ border-radius:1.6rem; }
-  .product-sheet{ border-radius:1.4rem; }
-  .product-thumb-btn{ width:72px; height:72px; border-radius:1rem; }
+  .product-page{ padding-top:1rem; padding-bottom:2rem; }
+  .product-gallery-shell{ border-radius:1.35rem; }
+  .product-sheet{ border-radius:1.25rem; }
+  .product-hero-media{ min-height:320px; }
+  .product-thumb-btn{ width:68px; height:68px; border-radius:1rem; }
   .product-price-card{ padding:.95rem 1rem; }
-  .product-primary-action, .product-secondary-action{ width:100%; }
+  .product-related-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:.75rem; }
 }
-
 </style>
