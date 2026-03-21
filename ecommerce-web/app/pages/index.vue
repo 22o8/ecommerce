@@ -226,14 +226,8 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div v-if="displayedFeatured.length" class="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-          <RevealOnScroll
-            v-for="(p, idx) in displayedFeatured"
-            :key="p.id"
-            :parity="idx % 2"
-          >
-            <ProductCard :p="p" />
-          </RevealOnScroll>
+        <div v-if="displayedFeatured.length" class="mt-10 product-featured-rail">
+          <ProductCard v-for="p in displayedFeatured" :key="p.id" :p="p" compact class="product-featured-rail__item" />
         </div>
         <div v-else class="mt-10 rounded-[1.75rem] border border-app bg-surface p-8 text-center text-sm text-[rgb(var(--muted))]">
           {{ tab === 'topRated' ? t('home.noTopRatedProducts') : t('products.empty') }}
@@ -482,5 +476,23 @@ onBeforeUnmount(() => {
   .category-simple-card__title{ font-size:1rem; }
   .category-simple-card__subtitle{ font-size:.78rem; }
   .category-simple-card__arrow{ width:40px; height:40px; }
+}
+
+.product-featured-rail{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:minmax(250px, 270px);
+  gap:1.25rem;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:.2rem .15rem .55rem;
+  scroll-snap-type:x proximity;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.product-featured-rail::-webkit-scrollbar{ display:none; }
+.product-featured-rail__item{ scroll-snap-align:start; }
+@media (max-width: 640px){
+  .product-featured-rail{ grid-auto-columns:minmax(220px, 230px); gap:1rem; }
 }
 </style>
