@@ -349,24 +349,28 @@ watch(() => auth.isAuthed, async (v) => {
 .review-textarea{ resize:vertical; min-height:120px; }
 .product-related-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:1rem; }
 
-:global(html.theme-light) .product-action-btn--main{
+:global(html.theme-light) .product-action-btn--main,
+:global(html.theme-light) .product-favorite-btn{
   background:#111;
   color:#fff;
-  border-color:rgba(17,17,17,.88);
-  box-shadow:0 14px 30px rgba(24,24,24,.18), 0 4px 12px rgba(24,24,24,.10);
+  border-color:rgba(17,17,17,.82);
+  box-shadow:0 14px 30px rgba(24,24,24,.16), 0 4px 12px rgba(24,24,24,.10);
 }
-:global(html.theme-light) .product-action-btn--main:hover{
+:global(html.theme-light) .product-action-btn--main:hover,
+:global(html.theme-light) .product-favorite-btn:hover{
   background:#000;
 }
 :global(html.theme-light) .product-price-card{ background:linear-gradient(180deg, #ffffff, #f8f3f8); border-color:rgba(24,24,24,.08); }
 :global(html.theme-light) .review-textarea{ background:#fff; border-color:rgba(24,24,24,.12); color:#161616; }
-:global(html.theme-dark) .product-action-btn--main{
+:global(html.theme-dark) .product-action-btn--main,
+:global(html.theme-dark) .product-favorite-btn{
   background:#fff;
   color:#111;
-  border-color:rgba(255,255,255,.88);
+  border-color:rgba(255,255,255,.84);
   box-shadow:0 16px 34px rgba(255,255,255,.10), 0 10px 22px rgba(0,0,0,.18);
 }
-:global(html.theme-dark) .product-action-btn--main:hover{
+:global(html.theme-dark) .product-action-btn--main:hover,
+:global(html.theme-dark) .product-favorite-btn:hover{
   background:#f5f5f5;
 }
 
