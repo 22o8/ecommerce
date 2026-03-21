@@ -1,9 +1,20 @@
 <script setup lang="ts">
 import { useHead, useCookie } from '#app'
+import { watch } from 'vue'
 
 type Locale = 'ar' | 'en'
 const localeCookie = useCookie<Locale>('locale', { default: () => 'ar' })
 const locale = localeCookie.value === 'en' ? 'en' : 'ar'
+
+const auth = useAuthStore()
+const fav = useFavoritesStore()
+
+auth.initFromCookies()
+
+watch(() => auth.isAuthed, async (v) => {
+  if (v) await fav.load()
+  else fav.items = []
+}, { immediate: true })
 
 useHead({
   htmlAttrs: {
