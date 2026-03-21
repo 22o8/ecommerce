@@ -337,16 +337,14 @@ function starFill(n: number) {
 }
 .product-action-btn--review{ width:auto; min-width:170px; }
 .review-textarea{ resize:vertical; min-height:120px; }
-:global(html.theme-light) .product-action-btn--primary{
-  color:#fff;
-  box-shadow:0 18px 36px rgba(var(--primary), .18);
-}
+:global(html.theme-light) .product-action-btn--primary,
 :global(html.theme-light) .product-action-btn--secondary{
   background: linear-gradient(180deg, #ffffff, #f6f1f7);
   color:#161616;
   border-color: rgba(24,24,24,.12);
   box-shadow: 0 14px 30px rgba(24,24,24,.10), 0 4px 12px rgba(232,91,154,.08);
 }
+:global(html.theme-light) .product-action-btn--primary:hover,
 :global(html.theme-light) .product-action-btn--secondary:hover{
   background: linear-gradient(180deg, #fff, #f2eaf3);
 }

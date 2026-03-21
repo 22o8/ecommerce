@@ -59,8 +59,10 @@
         <div class="relative z-20 flex items-center justify-end gap-2 mt-2 touch-manipulation">
           <button
             type="button"
-            class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-1.5 sm:p-2"
-            @mousedown.stop
+            class="product-card-icon-btn rounded-full border border-app transition p-2 sm:p-2.5 touch-manipulation"
+            @pointerdown.stop.prevent
+            @touchstart.stop.prevent
+            @mousedown.stop.prevent
             @click.stop.prevent="toggleFav"
             :aria-label="t('wishlist.toggle')"
           >
@@ -69,8 +71,10 @@
 
           <button
             type="button"
-            class="rounded-full border border-app bg-[rgba(var(--surface),.72)] hover:bg-[rgba(var(--surface),.95)] transition p-1.5 sm:p-2"
-            @mousedown.stop
+            class="product-card-icon-btn rounded-full border border-app transition p-2 sm:p-2.5 touch-manipulation"
+            @pointerdown.stop.prevent
+            @touchstart.stop.prevent
+            @mousedown.stop.prevent
             @click.stop.prevent="openPreview"
             :aria-label="t('products.quickPreview')"
           >
@@ -93,7 +97,9 @@
           <button
             type="button"
             class="product-card-btn inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl border border-app transition text-[11px] sm:text-xs min-w-0 flex-1" :class="props.compact ? 'product-card-btn--compact' : ''"
-            @mousedown.stop
+            @pointerdown.stop.prevent
+            @touchstart.stop.prevent
+            @mousedown.stop.prevent
             @click.stop.prevent="addToCart"
             :disabled="isOutOfStock"
           >
@@ -104,7 +110,9 @@
           <button
             type="button"
             class="product-card-btn inline-flex items-center justify-center px-2 py-1.5 rounded-xl border border-app transition text-[11px] sm:text-xs min-w-0" :class="props.compact ? 'product-card-btn--compact' : ''"
-            @mousedown.stop
+            @pointerdown.stop.prevent
+            @touchstart.stop.prevent
+            @mousedown.stop.prevent
             @click.stop.prevent="buyNow"
             :disabled="isOutOfStock"
           >
@@ -237,6 +245,16 @@ function goProduct() {
 .product-card-shell--compact .product-card-media{ aspect-ratio: 1 / 1; }
 .product-card-content--compact{ gap:.55rem; padding:.75rem; }
 .product-card-btn--compact{ padding:.42rem .55rem; font-size:11px; }
+.product-card-icon-btn{
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .92));
+  color: rgb(var(--text));
+  box-shadow: 0 10px 22px rgba(0,0,0,.12);
+  min-width: 42px;
+  min-height: 42px;
+  position: relative;
+  z-index: 30;
+}
+.product-card-icon-btn:hover{ transform: translateY(-1px); }
 
 :global(html.theme-light) .product-card-shell{
   background: linear-gradient(180deg, rgba(255,255,255,.99), rgba(255,247,252,.95));
@@ -255,6 +273,18 @@ function goProduct() {
   box-shadow: 0 12px 26px rgba(24,24,24,.08), inset 0 1px 0 rgba(255,255,255,.8);
 }
 :global(html.theme-light) .product-card-btn:first-of-type{
+  background: linear-gradient(180deg, #ffffff, #f5eff4);
+  color:#1a1a1a;
+  border-color: rgba(24,24,24,.12);
+  box-shadow: 0 12px 26px rgba(24,24,24,.08), inset 0 1px 0 rgba(255,255,255,.8);
+}
+:global(html.theme-light) .product-card-icon-btn{
+  background: linear-gradient(180deg, #ffffff, #f5eff4);
+  color:#1a1a1a;
+  border-color: rgba(24,24,24,.12);
+  box-shadow: 0 12px 26px rgba(24,24,24,.08), inset 0 1px 0 rgba(255,255,255,.8);
+}
+:global(html.theme-light) .product-card-btn:last-of-type{
   background: linear-gradient(135deg, rgba(var(--primary), .98), rgba(var(--primary), .82));
   color:#fff;
   border-color: rgba(var(--primary), .45);
