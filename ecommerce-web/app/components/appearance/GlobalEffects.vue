@@ -30,8 +30,9 @@
             <span class="leg leg-4"></span>
           </div>
           <div class="min-w-0 text-center sm:text-start">
-            <div class="text-xs font-semibold tracking-[0.2em] text-[rgb(var(--muted))] uppercase"></div>
+            <div class="text-xs font-semibold tracking-[0.2em] text-[rgb(var(--muted))] uppercase">Eid</div>
             <div class="text-base font-black text-[rgb(var(--text))] sm:text-lg">{{ t('seasonal.eidAdhaTitle') }}</div>
+            <div class="text-xs text-[rgb(var(--muted))] sm:text-sm">{{ t('seasonal.eidAdhaSubtitle') }}</div>
           </div>
         </div>
       </div>
@@ -39,6 +40,7 @@
 
     <HeartsEffect v-if="resolvedEffects.valentines" />
     <BlackFridayEffect v-if="resolvedEffects.blackFriday" />
+    <RosesEdgeEffect v-if="resolvedEffects.rosesEdge" />
   </div>
 </template>
 
@@ -47,6 +49,7 @@ import SnowEffect from '~/components/appearance/effects/SnowEffect.vue'
 import Sparkles from '~/components/appearance/effects/Sparkles.vue'
 import HeartsEffect from '~/components/appearance/effects/HeartsEffect.vue'
 import BlackFridayEffect from '~/components/appearance/effects/BlackFridayEffect.vue'
+import RosesEdgeEffect from '~/components/appearance/effects/RosesEdgeEffect.vue'
 import MoonIcon from '~/components/appearance/icons/MoonIcon.vue'
 import LanternIcon from '~/components/appearance/icons/LanternIcon.vue'
 

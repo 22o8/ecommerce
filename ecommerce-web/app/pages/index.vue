@@ -169,43 +169,40 @@ onBeforeUnmount(() => {
   <div class="min-h-screen home-page-shell">
     <section v-if="categoryCards.length" id="categories" class="mx-auto max-w-6xl px-4 pb-16 pt-8 scroll-mt-24">
       <div class="home-section-panel home-section-panel--categories">
-        <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-          <div>
-            <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">
-              {{ t('home.spotlightTitle') }}
-            </h2>
-            <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">
-              {{ t('home.spotlightSubtitle') }}
-            </p>
-          </div>
-          <div class="hidden lg:flex items-center gap-2">
-            <button type="button" class="rail-arrow-btn" @click="scrollRail('prev', categoryRail)" aria-label="السابق">
-              <Icon name="mdi:chevron-right" class="text-xl" />
-            </button>
-            <button type="button" class="rail-arrow-btn" @click="scrollRail('next', categoryRail)" aria-label="التالي">
-              <Icon name="mdi:chevron-left" class="text-xl" />
-            </button>
-          </div>
+        <div>
+          <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">
+            {{ t('home.spotlightTitle') }}
+          </h2>
+          <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">
+            {{ t('home.spotlightSubtitle') }}
+          </p>
         </div>
 
-        <div ref="categoryRail" class="category-unified-rail mt-8" @pointerdown="(e) => onRailPointerDown(e, categoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
-          <NuxtLink
-            v-for="c in categoryCards"
-            :key="c.key"
-            :to="c.to"
-            class="category-mobile-pill"
-          >
-            <div class="category-mobile-pill__image-wrap" :class="`bg-gradient-to-br ${c.accent}`">
-              <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="category-mobile-pill__image" />
-              <div v-else class="category-mobile-pill__fallback">{{ c.title?.slice(0,1) }}</div>
-            </div>
-            <div class="category-mobile-pill__title">{{ c.title }}</div>
-          </NuxtLink>
-        </div>
+        <div class="rail-wrap mt-8">
+          <button type="button" class="rail-arrow-btn rail-arrow-btn--prev hidden lg:inline-flex" @click="scrollRail('prev', categoryRail)" aria-label="السابق">
+            <Icon name="mdi:chevron-right" class="text-xl" />
+          </button>
+          <button type="button" class="rail-arrow-btn rail-arrow-btn--next hidden lg:inline-flex" @click="scrollRail('next', categoryRail)" aria-label="التالي">
+            <Icon name="mdi:chevron-left" class="text-xl" />
+          </button>
 
+          <div ref="categoryRail" class="category-unified-rail" @pointerdown="(e) => onRailPointerDown(e, categoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
+            <NuxtLink
+              v-for="c in categoryCards"
+              :key="c.key"
+              :to="c.to"
+              class="category-mobile-pill"
+            >
+              <div class="category-mobile-pill__image-wrap" :class="`bg-gradient-to-br ${c.accent}`">
+                <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="category-mobile-pill__image" />
+                <div v-else class="category-mobile-pill__fallback">{{ c.title?.slice(0,1) }}</div>
               </div>
+              <div class="category-mobile-pill__title">{{ c.title }}</div>
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
     </section>
-
 
     <section class="mx-auto max-w-6xl px-4 pb-20">
       <div class="home-section-panel home-section-panel--brands">
@@ -229,32 +226,29 @@ onBeforeUnmount(() => {
 
     <section v-if="problemCards.length" class="mx-auto max-w-6xl px-4 pb-16">
       <div class="home-section-panel home-section-panel--categories">
-        <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-          <div>
-            <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">{{ t('home.problemCategoriesTitle') || 'حلول المشاكل' }}</h2>
-            <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">{{ t('home.problemCategoriesSubtitle') || 'تسوق حسب المشكلة التي تريد حلها بسرعة.' }}</p>
-          </div>
-          <div class="hidden lg:flex items-center gap-2">
-            <button type="button" class="rail-arrow-btn" @click="scrollRail('prev', problemCategoryRail)" aria-label="السابق">
-              <Icon name="mdi:chevron-right" class="text-xl" />
-            </button>
-            <button type="button" class="rail-arrow-btn" @click="scrollRail('next', problemCategoryRail)" aria-label="التالي">
-              <Icon name="mdi:chevron-left" class="text-xl" />
-            </button>
-          </div>
+        <div>
+          <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">{{ t('home.problemCategoriesTitle') || 'حلول المشاكل' }}</h2>
+          <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">{{ t('home.problemCategoriesSubtitle') || 'تسوق حسب المشكلة التي تريد حلها بسرعة.' }}</p>
         </div>
-        <div ref="problemCategoryRail" class="category-unified-rail mt-8" @pointerdown="(e) => onRailPointerDown(e, problemCategoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
-          <NuxtLink v-for="c in problemCards" :key="c.key" :to="c.to" class="category-mobile-pill">
-            <div class="category-mobile-pill__image-wrap" :class="`bg-gradient-to-br ${c.accent}`">
-              <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="category-mobile-pill__image" />
-              <div v-else class="category-mobile-pill__fallback">{{ c.title?.slice(0,1) }}</div>
-            </div>
-            <div class="category-mobile-pill__title">{{ c.title }}</div>
-          </NuxtLink>
+        <div class="rail-wrap mt-8">
+          <button type="button" class="rail-arrow-btn rail-arrow-btn--prev hidden lg:inline-flex" @click="scrollRail('prev', problemCategoryRail)" aria-label="السابق">
+            <Icon name="mdi:chevron-right" class="text-xl" />
+          </button>
+          <button type="button" class="rail-arrow-btn rail-arrow-btn--next hidden lg:inline-flex" @click="scrollRail('next', problemCategoryRail)" aria-label="التالي">
+            <Icon name="mdi:chevron-left" class="text-xl" />
+          </button>
+          <div ref="problemCategoryRail" class="category-unified-rail" @pointerdown="(e) => onRailPointerDown(e, problemCategoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
+            <NuxtLink v-for="c in problemCards" :key="c.key" :to="c.to" class="category-mobile-pill">
+              <div class="category-mobile-pill__image-wrap" :class="`bg-gradient-to-br ${c.accent}`">
+                <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="category-mobile-pill__image" />
+                <div v-else class="category-mobile-pill__fallback">{{ c.title?.slice(0,1) }}</div>
+              </div>
+              <div class="category-mobile-pill__title">{{ c.title }}</div>
+            </NuxtLink>
+          </div>
         </div>
       </div>
     </section>
-
     <section class="mx-auto max-w-6xl px-4 pb-16 pt-12 sm:pt-14">
       <div class="home-section-panel">
         <div class="flex flex-col items-center justify-center gap-4 text-center">
@@ -318,6 +312,9 @@ onBeforeUnmount(() => {
 .shadow-soft{
   box-shadow:0 16px 38px rgba(0,0,0,.08);
 }
+.rail-wrap{
+  position: relative;
+}
 .rail-arrow-btn{
   width: 3rem;
   height: 3rem;
@@ -325,16 +322,24 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  border: 1px solid rgba(var(--border), .9);
-  background: rgba(var(--surface), .92);
+  border: 1px solid rgba(var(--border), .95);
+  background: rgba(var(--surface), .96);
   color: rgb(var(--text));
-  box-shadow: 0 10px 24px rgba(0,0,0,.16);
-  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+  box-shadow: 0 16px 34px rgba(0,0,0,.18);
+  transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  transform: translateY(-50%);
+  backdrop-filter: blur(10px);
 }
+.rail-arrow-btn--prev{ left: .45rem; }
+.rail-arrow-btn--next{ right: .45rem; }
 .rail-arrow-btn:hover{
-  transform: translateY(-1px);
+  transform: translateY(-50%) scale(1.04);
   border-color: rgba(var(--primary), .55);
-  background: rgba(var(--surface-2), .96);
+  background: rgba(var(--surface-2), .98);
+  box-shadow: 0 18px 38px rgba(0,0,0,.22);
 }
 .category-unified-rail{
   display:grid;
@@ -343,7 +348,7 @@ onBeforeUnmount(() => {
   gap:1rem;
   overflow-x:auto;
   overflow-y:hidden;
-  padding:.2rem .15rem .55rem;
+  padding:.2rem 3.7rem .55rem;
   scroll-snap-type:x proximity;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
@@ -565,3 +570,7 @@ onBeforeUnmount(() => {
   .category-simple-card__arrow{ width:40px; height:40px; }
 }
 </style>
+
+@media (max-width: 1279px){
+  .rail-arrow-btn{ display:none !important; }
+}

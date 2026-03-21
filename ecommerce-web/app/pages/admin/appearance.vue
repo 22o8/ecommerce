@@ -43,8 +43,8 @@
             <div class="flex items-center gap-3">
               <input type="checkbox" class="h-5 w-5" v-model="draft.effects[e.key]" />
               <div>
-                <div class="font-semibold text-zinc-900 dark:text-zinc-100">{{ t(e.labelKey) }}</div>
-                <div class="text-xs text-zinc-600 dark:text-zinc-400">{{ t(e.hintKey) }}</div>
+                <div class="font-semibold text-zinc-900 dark:text-zinc-100">{{ e.label || t(e.labelKey) }}</div>
+                <div class="text-xs text-zinc-600 dark:text-zinc-400">{{ e.hint || t(e.hintKey) }}</div>
               </div>
             </div>
           </label>
@@ -81,6 +81,7 @@ const effectOptions = [
   { key: 'christmas', labelKey: 'season.christmas', hintKey: 'seasonHints.christmasEffect' },
   { key: 'valentines', labelKey: 'season.valentines', hintKey: 'seasonHints.valentinesEffect' },
   { key: 'blackFriday', labelKey: 'season.blackFriday', hintKey: 'seasonHints.blackFridayEffect' },
+  { key: 'rosesEdge', label: 'الشكل الثاني', hint: 'ورود وردية ثابتة على أطراف الصفحة في الثيمين.' },
 ]
 
 type Draft = {

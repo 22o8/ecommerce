@@ -31,6 +31,7 @@ const DEFAULT: AppearanceState = {
     christmas: false,
     valentines: false,
     blackFriday: false,
+    rosesEdge: false,
   },
   ads: [],
 }
