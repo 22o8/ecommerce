@@ -30,13 +30,15 @@
     <!-- Floating WhatsApp -->
     <a
       v-if="whats"
-      class="fixed bottom-5 right-5 z-40 rounded-full border border-app bg-surface p-4 shadow-card hover:opacity-95 transition"
+      class="wa-fab"
+      :class="{ 'wa-fab--label-visible': showWaLabel }"
       :href="waLink"
       target="_blank"
       rel="noreferrer"
       :title="t('whatsappOrder')"
     >
-      <Icon name="mdi:whatsapp" class="text-2xl" />
+      <span class="wa-fab__label">استشارة</span>
+      <span class="wa-fab__icon-wrap"><Icon name="mdi:whatsapp" class="text-2xl" /></span>
     </a>
   </div>
 </template>
@@ -51,6 +53,9 @@ const { t } = useI18n()
 const config = useRuntimeConfig()
 const whats = String((config.public as any).whatsappNumber || '').trim()
 const showBackToTop = ref(false)
+const showWaLabel = ref(true)
+let waTimer: ReturnType<typeof setInterval> | null = null
+let waHideTimer: ReturnType<typeof setTimeout> | null = null
 
 const waLink = computed(() => {
   const n = whats.replace(/[^0-9]/g, '')
@@ -86,11 +91,20 @@ onMounted(() => {
   handleScroll()
   window.addEventListener('scroll', handleScroll, { passive: true })
   window.addEventListener('resize', handleScroll)
+  const flashWaLabel = () => {
+    showWaLabel.value = true
+    if (waHideTimer) clearTimeout(waHideTimer)
+    waHideTimer = setTimeout(() => { showWaLabel.value = false }, 4200)
+  }
+  flashWaLabel()
+  waTimer = setInterval(flashWaLabel, 60000)
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
   window.removeEventListener('resize', handleScroll)
+  if (waTimer) clearInterval(waTimer)
+  if (waHideTimer) clearTimeout(waHideTimer)
 })
 </script>
 
@@ -169,4 +183,60 @@ onUnmounted(() => {
   }
   .back-to-top-icon{ font-size: 2.05rem; }
 }
+
+.wa-fab{
+  position: fixed;
+  right: 1.15rem;
+  bottom: 1.25rem;
+  z-index: 52;
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--border), .85);
+  background: rgb(var(--surface));
+  color: rgb(var(--text));
+  box-shadow: 0 18px 40px rgba(0,0,0,.16);
+  padding: .42rem;
+  transition: transform .22s ease, box-shadow .22s ease, opacity .22s ease;
+}
+.wa-fab:hover{ transform: translateY(-2px); box-shadow: 0 22px 48px rgba(0,0,0,.2); }
+.wa-fab__icon-wrap{
+  width: 3.3rem;
+  height: 3.3rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #25D366;
+  color: #fff;
+  box-shadow: 0 0 0 0 rgba(37,211,102,.38);
+  animation: waPulse 60s infinite;
+}
+.wa-fab__label{
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-weight: 800;
+  opacity: 0;
+  transform: translateX(.2rem);
+  transition: max-width .28s ease, opacity .2s ease, transform .2s ease, padding .28s ease;
+  padding: 0;
+}
+.wa-fab--label-visible .wa-fab__label{
+  max-width: 8rem;
+  opacity: 1;
+  transform: translateX(0);
+  padding-inline-start: .55rem;
+}
+@keyframes waPulse{
+  0%, 93%, 100%{ box-shadow: 0 0 0 0 rgba(37,211,102,.0); }
+  94%{ box-shadow: 0 0 0 0 rgba(37,211,102,.38); }
+  96%{ box-shadow: 0 0 0 14px rgba(37,211,102,0); }
+}
+@media (max-width: 768px){
+  .wa-fab{ right: .95rem; bottom: .95rem; }
+  .wa-fab__icon-wrap{ width: 3rem; height: 3rem; }
+}
+
 </style>
