@@ -166,13 +166,9 @@ onBeforeUnmount(() => {
               {{ t('home.spotlightSubtitle') }}
             </p>
           </div>
-
-          <NuxtLink to="/products" class="btn inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold shadow-soft">
-            {{ t('home.viewAll') }}
-          </NuxtLink>
         </div>
 
-        <div ref="categoryRail" class="category-unified-rail mt-8" @pointerdown="onRailPointerDown" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
+        <div ref="categoryRail" class="category-unified-rail mt-8">
           <NuxtLink
             v-for="c in categoryCards"
             :key="c.key"
@@ -218,7 +214,6 @@ onBeforeUnmount(() => {
             <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">{{ t('home.problemCategoriesTitle') || 'حلول المشاكل' }}</h2>
             <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">{{ t('home.problemCategoriesSubtitle') || 'تسوق حسب المشكلة التي تريد حلها بسرعة.' }}</p>
           </div>
-          <NuxtLink to="/products" class="btn inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold shadow-soft">{{ t('home.viewAll') }}</NuxtLink>
         </div>
         <div class="category-unified-rail mt-8">
           <NuxtLink v-for="c in problemCards" :key="c.key" :to="c.to" class="category-mobile-pill">

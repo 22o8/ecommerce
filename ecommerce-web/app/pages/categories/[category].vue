@@ -99,7 +99,7 @@
         </div>
 
         <div v-if="products.loading && products.items.length === 0" class="mt-6">
-          <div class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
+          <div class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
             <div v-for="n in 6" :key="n" class="skeleton-card products-skeleton" />
           </div>
           <div class="mt-6 flex items-center justify-center text-sm text-[rgb(var(--muted))] rtl-text">
@@ -108,7 +108,7 @@
           </div>
         </div>
 
-        <div v-else class="mt-6 grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
+        <div v-else class="mt-6 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
           <RevealOnScroll
             v-for="(p, idx) in products.items"
             :key="p.id"

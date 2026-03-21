@@ -44,7 +44,7 @@
     </div>
 
     <!-- Products grid -->
-    <div class="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+    <div class="mt-6 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
       <ProductCard v-for="p in products.items" :key="p.id" :p="p" />
     </div>
 
