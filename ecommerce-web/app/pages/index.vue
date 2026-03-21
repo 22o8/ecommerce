@@ -5,7 +5,7 @@ import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
 
 const { t, locale } = useI18n()
-const { categories, fetchCategories } = useCategories()
+const { categories, problemCategories, fetchCategories } = useCategories()
 
 const brandsStore = useBrandsStore()
 const productsStore = useProductsStore()
@@ -19,7 +19,8 @@ await useAsyncData(
       productsStore.fetchDiscounts(8),
       productsStore.fetchTopRated(8),
       productsStore.fetch({ page: 1, pageSize: 8, sort: 'newest' }),
-      fetchCategories(),
+      fetchCategories(false, 'regular'),
+      fetchCategories(false, 'problem'),
     ])
     return true
   },
@@ -91,6 +92,24 @@ const categoryCards = computed(() => {
   }))
 })
 
+
+
+const problemCards = computed(() => {
+  const accents = [
+    'from-rose-500/25 to-fuchsia-500/10',
+    'from-amber-500/25 to-orange-500/10',
+    'from-sky-500/20 to-indigo-500/10',
+    'from-emerald-500/20 to-cyan-500/10',
+  ]
+  return (problemCategories.value || []).map((c: any, idx: number) => ({
+    key: String(c.key || '').toLowerCase(),
+    title: locale.value === 'en' ? (c.nameEn || c.nameAr || c.key) : (c.nameAr || c.nameEn || c.key),
+    subtitle: locale.value === 'en' ? (c.descriptionEn || c.descriptionAr || t('home.tapToExplore')) : (c.descriptionAr || c.descriptionEn || t('home.tapToExplore')),
+    imageUrl: c.imageUrl || '',
+    to: `/categories/${encodeURIComponent(String(c.key || '').toLowerCase())}`,
+    accent: accents[idx % accents.length],
+  }))
+})
 
 const { buildAssetUrl } = useApi()
 const categoryRail = ref<HTMLElement | null>(null)
@@ -192,6 +211,27 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
+    <section v-if="problemCards.length" class="mx-auto max-w-6xl px-4 pb-16">
+      <div class="home-section-panel home-section-panel--categories">
+        <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">{{ t('home.problemCategoriesTitle') || 'حلول المشاكل' }}</h2>
+            <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">{{ t('home.problemCategoriesSubtitle') || 'تسوق حسب المشكلة التي تريد حلها بسرعة.' }}</p>
+          </div>
+          <NuxtLink to="/products" class="btn inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold shadow-soft">{{ t('home.viewAll') }}</NuxtLink>
+        </div>
+        <div class="category-unified-rail mt-8">
+          <NuxtLink v-for="c in problemCards" :key="c.key" :to="c.to" class="category-mobile-pill">
+            <div class="category-mobile-pill__image-wrap" :class="`bg-gradient-to-br ${c.accent}`">
+              <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="category-mobile-pill__image" />
+              <div v-else class="category-mobile-pill__fallback">{{ c.title?.slice(0,1) }}</div>
+            </div>
+            <div class="category-mobile-pill__title">{{ c.title }}</div>
+          </NuxtLink>
+        </div>
+      </div>
+    </section>
+
     <section class="mx-auto max-w-6xl px-4 pb-16 pt-12 sm:pt-14">
       <div class="home-section-panel">
         <div class="flex flex-col items-center justify-center gap-4 text-center">
@@ -226,8 +266,14 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div v-if="displayedFeatured.length" class="mt-10 product-featured-rail">
-          <ProductCard v-for="p in displayedFeatured" :key="p.id" :p="p" compact class="product-featured-rail__item" />
+        <div v-if="displayedFeatured.length" class="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+          <RevealOnScroll
+            v-for="(p, idx) in displayedFeatured"
+            :key="p.id"
+            :parity="idx % 2"
+          >
+            <ProductCard :p="p" />
+          </RevealOnScroll>
         </div>
         <div v-else class="mt-10 rounded-[1.75rem] border border-app bg-surface p-8 text-center text-sm text-[rgb(var(--muted))]">
           {{ tab === 'topRated' ? t('home.noTopRatedProducts') : t('products.empty') }}
@@ -476,23 +522,5 @@ onBeforeUnmount(() => {
   .category-simple-card__title{ font-size:1rem; }
   .category-simple-card__subtitle{ font-size:.78rem; }
   .category-simple-card__arrow{ width:40px; height:40px; }
-}
-
-.product-featured-rail{
-  display:grid;
-  grid-auto-flow:column;
-  grid-auto-columns:minmax(250px, 270px);
-  gap:1.25rem;
-  overflow-x:auto;
-  overflow-y:hidden;
-  padding:.2rem .15rem .55rem;
-  scroll-snap-type:x proximity;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
-}
-.product-featured-rail::-webkit-scrollbar{ display:none; }
-.product-featured-rail__item{ scroll-snap-align:start; }
-@media (max-width: 640px){
-  .product-featured-rail{ grid-auto-columns:minmax(220px, 230px); gap:1rem; }
 }
 </style>

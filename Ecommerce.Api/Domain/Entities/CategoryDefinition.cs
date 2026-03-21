@@ -9,6 +9,7 @@ public class CategoryDefinition
     public string? DescriptionAr { get; set; }
     public string? DescriptionEn { get; set; }
     public string? ImageUrl { get; set; }
+    public string Section { get; set; } = "regular";
     public int SortOrder { get; set; } = 0;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

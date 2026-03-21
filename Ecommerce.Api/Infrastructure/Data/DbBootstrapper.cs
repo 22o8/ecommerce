@@ -37,6 +37,9 @@ public static class DbBootstrapper
             @"ALTER TABLE IF EXISTS ""Products""
               ADD COLUMN IF NOT EXISTS ""RatingCount"" integer NOT NULL DEFAULT 0;",
 
+            @"ALTER TABLE IF EXISTS ""Products""
+              ADD COLUMN IF NOT EXISTS ""ProblemCategory"" character varying(80) NOT NULL DEFAULT "";",
+
             // ProductImages table (admin/product details rely on it)
             @"CREATE TABLE IF NOT EXISTS ""ProductImages"" (
                 ""Id"" uuid NOT NULL,
@@ -189,6 +192,7 @@ public static class DbBootstrapper
                 ""DescriptionAr"" character varying(300) NULL,
                 ""DescriptionEn"" character varying(300) NULL,
                 ""ImageUrl"" character varying(2000) NULL,
+                ""Section"" character varying(30) NOT NULL DEFAULT 'regular',
                 ""SortOrder"" integer NOT NULL DEFAULT 0,
                 ""IsActive"" boolean NOT NULL DEFAULT TRUE,
                 ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
@@ -201,6 +205,12 @@ public static class DbBootstrapper
 
             @"CREATE INDEX IF NOT EXISTS ""IX_Categories_SortOrder""
               ON ""Categories"" (""SortOrder"");",
+
+            @"ALTER TABLE IF EXISTS ""Categories""
+              ADD COLUMN IF NOT EXISTS ""Section"" character varying(30) NOT NULL DEFAULT 'regular';",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_Categories_Section_SortOrder""
+              ON ""Categories"" (""Section"", ""SortOrder"");",
 
         };
 

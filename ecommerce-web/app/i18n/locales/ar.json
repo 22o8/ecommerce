@@ -404,7 +404,10 @@
     "totalUses": "إجمالي الاستخدامات",
     "couponCountFrom": "من أصل",
     "analyticsAndInsights": "التحليلات / الإحصائيات",
-    "dashboardDesignHint": "لوحة أوضح مع بطاقات مرتبة وخطوط تنظيمية واختصارات سريعة."
+    "dashboardDesignHint": "لوحة أوضح مع بطاقات مرتبة وخطوط تنظيمية واختصارات سريعة.",
+    "problemCategory": "تصنيف حل المشكلة",
+    "problemCategoryPlaceholder": "اختر تصنيف حل المشكلة",
+    "problemCategoriesLabel": "تصنيفات حل المشاكل"
   },
   "nav": {
     "brands": "البراندات",
@@ -454,7 +457,9 @@
     "discountsTab": "التخفيضات",
     "catToner": "تونر",
     "catMask": "ماسك",
-    "catEyeCare": "العناية بالعين"
+    "catEyeCare": "العناية بالعين",
+    "problemCategoriesTitle": "حلول المشاكل",
+    "problemCategoriesSubtitle": "تسوق حسب المشكلة التي تريد حلها بسرعة."
   },
   "productsPage": {
     "title": "المنتجات",

@@ -146,6 +146,7 @@ const links = computed(() => [
   { to: '/admin/coupons', label: t('admin.couponsLabel') || 'Coupons', icon: 'mdi:ticket-percent-outline' },
   { to: '/admin/ads', label: t('admin.adsLabel') || 'Ads', icon: 'mdi:bullhorn-outline' },
   { to: '/admin/categories', label: t('admin.categoriesLabel') || 'التصنيفات', icon: 'mdi:shape-outline' },
+  { to: '/admin/problem-categories', label: t('admin.problemCategoriesLabel') || 'تصنيفات حل المشاكل', icon: 'mdi:medical-bag' },
   { to: '/admin/appearance', label: t('admin.appearanceLabel'), icon: 'mdi:palette-outline' },
   { to: '/admin/users', label: t('admin.users.title'), icon: 'mdi:account-multiple-outline' },
 ])

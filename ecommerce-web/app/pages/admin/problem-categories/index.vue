@@ -2,8 +2,8 @@
   <div class="space-y-6">
     <div class="flex items-center justify-between gap-3">
       <div>
-        <h1 class="text-2xl font-bold rtl-text">إدارة التصنيفات</h1>
-        <p class="text-sm text-white/70 rtl-text">أضف التصنيفات مع الصورة، وستظهر مباشرة في الصفحة الرئيسية وفي نماذج إضافة وتعديل المنتجات.</p>
+        <h1 class="text-2xl font-bold rtl-text">إدارة تصنيفات حل المشاكل</h1>
+        <p class="text-sm text-white/70 rtl-text">أضف تصنيفات حل المشاكل مع الصورة، وستظهر تحت البراندات وفوق المنتجات المميزة، وكذلك في نماذج المنتجات.</p>
       </div>
       <UiButton variant="secondary" @click="load">تحديث</UiButton>
     </div>
@@ -98,7 +98,7 @@ import UiInput from '~/components/ui/UiInput.vue'
 const toast = useToast()
 const { buildAssetUrl } = useApi()
 const items = ref<any[]>([])
-const section = 'regular'
+const section = 'problem'
 const loading = ref(false)
 const editingId = ref<string>('')
 const form = reactive({ key: '', nameAr: '', nameEn: '', descriptionAr: '', descriptionEn: '', imageUrl: '', sortOrder: 0, isActive: true, section })

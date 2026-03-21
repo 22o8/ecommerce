@@ -84,6 +84,14 @@
             </div>
 
             <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.problemCategory') || 'تصنيف حل المشكلة' }}</label>
+              <select v-model="form.problemCategory" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
+                <option value="">{{ t('admin.problemCategoryPlaceholder') || 'اختر تصنيف حل المشكلة' }}</option>
+                <option v-for="c in problemCategoryOptions" :key="c.key" :value="c.key">{{ c.nameAr }}</option>
+              </select>
+            </div>
+
+            <div>
               <label class="mb-1 block text-sm text-white/80">{{ t('admin.stockQuantity') }}</label>
               <UiInput v-model.number="form.stockQuantity" type="number" min="0" step="1" />
             </div>
@@ -182,7 +190,7 @@
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const { t } = useI18n()
-const { categories, fetchCategories } = useCategories()
+const { categories, problemCategories, fetchCategories } = useCategories()
 const toast = useToast()
 const { listBrands, createProduct, uploadProductImages } = useAdminApi()
 
@@ -202,6 +210,7 @@ const form = reactive({
   brand: '',
   category: 'general',
   subCategory: '',
+  problemCategory: '',
   stockQuantity: 100,
   lowStockThreshold: 5,
   isCouponAllowed: true,
@@ -212,6 +221,7 @@ const form = reactive({
 const slugTouched = ref(false)
 const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام' }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 const preciseCategoryOptions = computed(() => categoryOptions.value.filter((c:any) => c.key && c.key !== String(form.category || '')))
+const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
 watch(() => form.category, () => {
   if (form.subCategory && form.subCategory === form.category) form.subCategory = ''
@@ -252,7 +262,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 
 onMounted(async () => {
   try {
-    const [res] = await Promise.all([listBrands(), fetchCategories()])
+    const [res] = await Promise.all([listBrands(), fetchCategories(false, 'regular'), fetchCategories(false, 'problem')])
     brands.value = (res?.items || res || []) as BrandItem[]
   } catch (e: any) {
     toast.error(e?.message || t('common.error'))
@@ -295,6 +305,7 @@ async function onCreate() {
       brand: form.brand,
       category: form.category,
       subCategory: form.subCategory,
+      problemCategory: form.problemCategory,
       stockQuantity: Number(form.stockQuantity ?? 0),
       lowStockThreshold: Number(form.lowStockThreshold ?? 0),
       isCouponAllowed: !!form.isCouponAllowed,

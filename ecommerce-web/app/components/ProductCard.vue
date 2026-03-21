@@ -26,6 +26,12 @@
         >
           {{ t('common.unavailable') }}
         </div>
+        <div
+          v-else-if="isNew"
+          class="px-3 py-1 rounded-full bg-surface-2/95 backdrop-blur border border-app text-[11px] sm:text-xs font-bold"
+        >
+          <span class="rtl-text">{{ t('common.new') }}</span>
+        </div>
       </div>
 
       <div v-if="discountPercent > 0" class="absolute top-3 right-3">
@@ -45,6 +51,25 @@
         </p>
       </div>
 
+      <div class="product-card-top-actions relative z-20">
+        <button
+          type="button"
+          class="product-card-icon-btn"
+          @click.stop="toggleFav"
+          :aria-label="t('wishlist.toggle')"
+        >
+          <Icon :name="fav ? 'mdi:heart' : 'mdi:heart-outline'" class="text-[1.05rem] sm:text-lg" />
+        </button>
+
+        <button
+          type="button"
+          class="product-card-icon-btn"
+          @click.stop="openPreview"
+          :aria-label="t('products.quickPreview')"
+        >
+          <Icon name="mdi:eye-outline" class="text-[1.05rem] sm:text-lg" />
+        </button>
+      </div>
 
       <div class="product-card-bottom">
         <div class="product-card-price">
@@ -91,6 +116,10 @@ import { formatIqd } from '~/composables/useMoney'
 const props = defineProps<{ product?: any; p?: any; compact?: boolean }>()
 const { t } = useI18n()
 const cart = useCartStore()
+const { isInWishlist, toggle } = useWishlist()
+const qp = useQuickPreview()
+const router = useRouter()
+const route = useRoute()
 const { buildAssetUrl } = useApi()
 
 const p = computed(() => props.product ?? props.p ?? {})
@@ -122,7 +151,16 @@ const mainImage = computed(() => {
   return resolved || '/hero-placeholder.svg'
 })
 
+const isNew = computed(() => {
+  const raw = p.value?.createdAt ?? p.value?.CreatedAt ?? p.value?.created_on ?? p.value?.createdOn
+  const created = raw ? new Date(raw).getTime() : 0
+  if (!created || Number.isNaN(created)) return false
+  const days = (Date.now() - created) / (1000 * 60 * 60 * 24)
+  return days >= 0 && days < 30
+})
 
+const wishlistKey = computed(() => String((p.value as any)?.id ?? (p.value as any)?.productId ?? p.value?.slug ?? ''))
+const fav = computed(() => isInWishlist(wishlistKey.value))
 const adding = ref(false)
 const buying = ref(false)
 
@@ -155,7 +193,18 @@ async function buyNow() {
   }
 }
 
+async function toggleFav() {
+  await toggle(wishlistKey.value)
+}
 
+function openPreview() {
+  qp.show(p.value)
+  const id = String(p.value?.id ?? p.value?.slug ?? '')
+  if (id) {
+    const q: Record<string, any> = { ...route.query, p: id }
+    router.replace({ query: q })
+  }
+}
 
 function goProduct() {
   const id = String(p.value?.id ?? '')
@@ -167,27 +216,45 @@ function goProduct() {
 <style scoped>
 .product-card-shell{
   background: rgb(var(--surface));
-  box-shadow: 0 16px 34px rgba(0,0,0,.16);
+  box-shadow: 0 20px 46px rgba(0,0,0,.18);
   display:flex;
   flex-direction:column;
   min-height:100%;
-  border-radius: 1.5rem;
 }
 .product-card-shell:hover{ transform: translateY(-2px); }
 .product-card-media{
   aspect-ratio: 1 / 1;
-  background: rgba(255,255,255,.04);
+  background: rgba(0,0,0,.06);
 }
 .product-card-content{
   display:grid;
-  gap:.72rem;
+  gap:.8rem;
   flex:1;
 }
 .product-card-title{
   font-weight:900;
   font-size: .98rem;
-  line-height:1.5;
+  line-height:1.55;
 }
+.product-card-top-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:.6rem;
+}
+.product-card-icon-btn{
+  width:46px;
+  height:46px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.18);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  color:#111;
+  box-shadow:0 12px 24px rgba(0,0,0,.18);
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+}
+.product-card-icon-btn:hover{ transform:translateY(-1px); }
 .product-card-bottom{
   display:grid;
   gap:.8rem;
@@ -196,53 +263,73 @@ function goProduct() {
 .product-card-actions{
   display:grid;
   grid-template-columns:repeat(2, minmax(0, 1fr));
-  gap:.65rem;
+  gap:.6rem;
 }
 .product-card-btn{
-  min-height:46px;
-  border-radius:14px;
+  min-height:48px;
+  border-radius:999px;
   border:1px solid rgba(var(--border), .95);
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:.45rem;
-  padding:.72rem .8rem;
+  padding:.78rem .85rem;
   font-weight:900;
-  font-size:.83rem;
+  font-size:.84rem;
   transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease, background .18s ease;
   white-space:nowrap;
 }
 .product-card-btn--main{
-  background:#fff;
-  color:#111;
-  border-color:rgba(255,255,255,.84);
-  box-shadow:0 12px 24px rgba(255,255,255,.08);
+  background:linear-gradient(135deg, rgba(var(--primary), .98), rgba(var(--primary), .78));
+  color:#fff;
+  border-color:rgba(var(--primary), .28);
+  box-shadow:0 14px 30px rgba(var(--primary), .20);
 }
-.product-card-btn--main:hover{ transform:translateY(-1px); box-shadow:0 16px 28px rgba(255,255,255,.12); }
+.product-card-btn--main:hover{ transform:translateY(-1px); box-shadow:0 18px 34px rgba(var(--primary), .24); }
 .product-card-btn:disabled{ opacity:.5; cursor:not-allowed; }
 .product-card-shell--compact{ border-radius:1.25rem; }
-.product-card-shell--compact .product-card-title{ font-size:.88rem; line-height:1.4; }
-.product-card-shell--compact .product-card-content{ padding:.78rem; gap:.62rem; }
-.product-card-shell--compact .product-card-btn{ min-height:42px; padding:.62rem .65rem; font-size:.76rem; }
+.product-card-shell--compact .product-card-title{ font-size:.88rem; line-height:1.45; }
+.product-card-shell--compact .product-card-content{ padding:.75rem; gap:.65rem; }
+.product-card-shell--compact .product-card-btn{ min-height:44px; padding:.68rem .72rem; font-size:.78rem; }
+.product-card-shell--compact .product-card-icon-btn{ width:42px; height:42px; }
+
 :global(html.theme-light) .product-card-shell{
-  background:linear-gradient(180deg, rgba(255,255,255,.995), rgba(250,250,250,.98));
-  box-shadow:0 18px 38px rgba(24,24,24,.08);
+  background:linear-gradient(180deg, rgba(255,255,255,.99), rgba(255,247,252,.96));
+  box-shadow:0 20px 48px rgba(24,24,24,.06), 0 10px 24px rgba(232,91,154,.08);
 }
 :global(html.theme-light) .product-card-media{
-  background:#efefef;
+  background:linear-gradient(180deg, rgba(252,248,251,.95), rgba(245,239,245,.9));
 }
+:global(html.theme-light) .product-card-icon-btn,
 :global(html.theme-light) .product-card-btn--main{
   background:#111;
   color:#fff;
-  border-color:rgba(17,17,17,.86);
-  box-shadow:0 12px 24px rgba(17,17,17,.14);
+  border-color:rgba(17,17,17,.82);
+  box-shadow:0 14px 30px rgba(24,24,24,.16), 0 4px 12px rgba(24,24,24,.10);
 }
-:global(html.theme-light) .product-card-btn--main:hover{ background:#000; }
+:global(html.theme-light) .product-card-btn--main:hover,
+:global(html.theme-light) .product-card-icon-btn:hover{
+  background:#000;
+}
+:global(html.theme-dark) .product-card-btn--main,
+:global(html.theme-dark) .product-card-icon-btn{
+  background:#fff;
+  color:#111;
+  border-color:rgba(255,255,255,.84);
+  box-shadow:0 16px 34px rgba(255,255,255,.08), 0 10px 20px rgba(0,0,0,.18);
+}
+:global(html.theme-dark) .product-card-btn--main:hover,
+:global(html.theme-dark) .product-card-icon-btn:hover{
+  background:#f5f5f5;
+}
+
 @media (max-width: 640px){
-  .product-card-shell{ border-radius:1.25rem; }
-  .product-card-content{ padding:.8rem; gap:.6rem; }
-  .product-card-title{ font-size:.86rem; line-height:1.45; }
+  .product-card-shell{ border-radius:1.35rem; }
+  .product-card-content{ padding:.85rem; gap:.7rem; }
+  .product-card-title{ font-size:.9rem; line-height:1.5; }
+  .product-card-top-actions{ gap:.5rem; }
+  .product-card-icon-btn{ width:44px; height:44px; }
   .product-card-price{ display:flex; align-items:flex-end; justify-content:space-between; gap:.75rem; }
-  .product-card-btn{ min-height:42px; font-size:.76rem; padding:.62rem .42rem; }
+  .product-card-btn{ min-height:46px; font-size:.82rem; padding:.72rem .55rem; }
 }
 </style>

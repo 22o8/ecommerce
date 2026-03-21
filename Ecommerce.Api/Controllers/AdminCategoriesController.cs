@@ -30,14 +30,19 @@ public class AdminCategoriesController : ControllerBase
         string? DescriptionEn,
         string? ImageUrl,
         int SortOrder,
-        bool IsActive
+        bool IsActive,
+        string? Section
     );
 
     [HttpGet]
-    public async Task<IActionResult> List()
+    public async Task<IActionResult> List([FromQuery] string? section = null)
     {
-        var items = await _db.Categories
-            .AsNoTracking()
+        var normalizedSection = string.IsNullOrWhiteSpace(section) ? null : section.Trim().ToLowerInvariant();
+        var query = _db.Categories.AsNoTracking();
+        if (!string.IsNullOrWhiteSpace(normalizedSection))
+            query = query.Where(x => x.Section.ToLower() == normalizedSection);
+
+        var items = await query
             .OrderBy(x => x.SortOrder)
             .ThenBy(x => x.NameAr)
             .ToListAsync();
@@ -51,6 +56,7 @@ public class AdminCategoriesController : ControllerBase
             x.DescriptionAr,
             x.DescriptionEn,
             x.ImageUrl,
+            x.Section,
             x.SortOrder,
             x.IsActive,
             x.CreatedAt,
@@ -77,6 +83,7 @@ public class AdminCategoriesController : ControllerBase
             DescriptionAr = req.DescriptionAr?.Trim(),
             DescriptionEn = req.DescriptionEn?.Trim(),
             ImageUrl = req.ImageUrl?.Trim(),
+            Section = NormalizeSection(req.Section),
             SortOrder = req.SortOrder,
             IsActive = req.IsActive,
             CreatedAt = DateTime.UtcNow,
@@ -104,6 +111,7 @@ public class AdminCategoriesController : ControllerBase
         entity.DescriptionAr = req.DescriptionAr?.Trim();
         entity.DescriptionEn = req.DescriptionEn?.Trim();
         entity.ImageUrl = req.ImageUrl?.Trim();
+        entity.Section = NormalizeSection(req.Section);
         entity.SortOrder = req.SortOrder;
         entity.IsActive = req.IsActive;
         entity.UpdatedAt = DateTime.UtcNow;
@@ -141,6 +149,13 @@ public class AdminCategoriesController : ControllerBase
         var stored = await _storage.UploadAsync(stream, key, file.ContentType);
 
         return Ok(new { url = stored.Url, key = stored.Key });
+    }
+
+
+    private static string NormalizeSection(string? value)
+    {
+        var v = (value ?? string.Empty).Trim().ToLowerInvariant();
+        return v == "problem" ? "problem" : "regular";
     }
 
     private static string Slugify(string? value)

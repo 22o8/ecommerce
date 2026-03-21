@@ -88,6 +88,14 @@
               </div>
 
               <div class="grid gap-2">
+                <label class="text-sm font-medium">{{ t('admin.problemCategory') || 'تصنيف حل المشكلة' }}</label>
+                <select v-model="form.problemCategory" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
+                  <option value="">{{ t('admin.problemCategoryPlaceholder') || 'اختر تصنيف حل المشكلة' }}</option>
+                  <option v-for="c in problemCategoryOptions" :key="c.key" :value="c.key">{{ c.nameAr }}</option>
+                </select>
+              </div>
+
+              <div class="grid gap-2">
                 <label class="text-sm font-medium">{{ t('admin.stockQuantity') }}</label>
                 <UiInput v-model.number="form.stockQuantity" type="number" min="0" step="1" />
               </div>
@@ -213,7 +221,7 @@ import { formatIqd } from '~/composables/useMoney'
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
-const { categories, fetchCategories } = useCategories()
+const { categories, problemCategories, fetchCategories } = useCategories()
 const toast = useToast()
 const api = useApi()
 const imgVer = ref(0)
@@ -241,6 +249,7 @@ const form = reactive({
   isFeatured: false,
   category: 'general',
   subCategory: '',
+  problemCategory: '',
   stockQuantity: 0,
   lowStockThreshold: 5,
   isCouponAllowed: true,
@@ -255,6 +264,7 @@ const finalPrice = computed(() => {
 const slugTouched = ref(false)
 const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام' }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 const preciseCategoryOptions = computed(() => categoryOptions.value.filter((c:any) => c.key && c.key !== String(form.category || '')))
+const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
 watch(() => form.category, () => {
   if (form.subCategory && form.subCategory === form.category) form.subCategory = ''
@@ -291,6 +301,7 @@ function resetForm() {
   form.brandSlug = product.value.brand || product.value.brandSlug || ''
   form.category = product.value.category || 'general'
   form.subCategory = product.value.subCategory || ''
+  form.problemCategory = product.value.problemCategory || ''
   form.stockQuantity = Number(product.value.stockQuantity ?? 0)
   form.lowStockThreshold = Number(product.value.lowStockThreshold ?? 5)
   form.isCouponAllowed = Boolean(product.value.isCouponAllowed ?? true)
@@ -430,6 +441,7 @@ async function onSave() {
       brand: match?.slug || form.brandSlug,
       category: form.category,
       subCategory: form.subCategory,
+      problemCategory: form.problemCategory,
       stockQuantity: Number(form.stockQuantity ?? 0),
       lowStockThreshold: Number(form.lowStockThreshold ?? 0),
       isCouponAllowed: Boolean(form.isCouponAllowed),
@@ -437,7 +449,7 @@ async function onSave() {
       isFeatured: Boolean(form.isFeatured),
     })
     toast.success(t('common.saved'))
-    await Promise.all([loadProduct(), fetchCategories()])
+    await Promise.all([loadProduct(), fetchCategories(false, 'regular'), fetchCategories(false, 'problem')])
   } catch (e: any) {
     toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
   } finally {

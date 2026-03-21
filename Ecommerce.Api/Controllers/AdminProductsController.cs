@@ -48,6 +48,7 @@ public class AdminProductsController : ControllerBase
                     p.Brand,
                     p.Category,
                     p.SubCategory,
+                    p.ProblemCategory,
                     p.StockQuantity,
                     p.LowStockThreshold,
                     p.IsCouponAllowed,
@@ -84,6 +85,7 @@ public class AdminProductsController : ControllerBase
                 x.Brand,
                 x.Category,
                 x.SubCategory,
+                x.ProblemCategory,
                 x.StockQuantity,
                 x.LowStockThreshold,
                 x.IsCouponAllowed,
@@ -136,6 +138,7 @@ public class AdminProductsController : ControllerBase
             Brand = brandSlug,
             Category = NormalizeCategory(req.Category),
             SubCategory = NormalizeSubCategory(req.SubCategory),
+            ProblemCategory = NormalizeSubCategory(req.ProblemCategory),
             StockQuantity = Math.Max(0, req.StockQuantity),
             LowStockThreshold = Math.Max(0, req.LowStockThreshold),
             IsCouponAllowed = req.IsCouponAllowed,
@@ -182,6 +185,7 @@ public class AdminProductsController : ControllerBase
         p.Brand = brandSlug;
         p.Category = NormalizeCategory(req.Category);
         p.SubCategory = NormalizeSubCategory(req.SubCategory);
+        p.ProblemCategory = NormalizeSubCategory(req.ProblemCategory);
         p.StockQuantity = Math.Max(0, req.StockQuantity);
         p.LowStockThreshold = Math.Max(0, req.LowStockThreshold);
         p.IsCouponAllowed = req.IsCouponAllowed;
@@ -406,6 +410,7 @@ public class UpsertProductRequest
     public bool IsFeatured { get; set; }
     public string? Category { get; set; }
     public string? SubCategory { get; set; }
+    public string? ProblemCategory { get; set; }
     [Range(0, 999999)]
     public int StockQuantity { get; set; } = 100;
     [Range(0, 999999)]
