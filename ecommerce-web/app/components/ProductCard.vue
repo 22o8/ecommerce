@@ -85,7 +85,7 @@
           <button
             type="button"
             class="product-card-btn product-card-btn--main"
-            :class="props.compact ? 'product-card-btn--compact' : ''"
+            :class="[props.compact ? 'product-card-btn--compact' : '', inverseThemeBtnClass]"
             @click.stop="addToCart"
             :disabled="isOutOfStock || adding"
           >
@@ -96,7 +96,7 @@
           <button
             type="button"
             class="product-card-btn product-card-btn--main"
-            :class="props.compact ? 'product-card-btn--compact' : ''"
+            :class="[props.compact ? 'product-card-btn--compact' : '', inverseThemeBtnClass]"
             @click.stop="buyNow"
             :disabled="isOutOfStock || buying"
           >
@@ -115,6 +115,7 @@ import { formatIqd } from '~/composables/useMoney'
 
 const props = defineProps<{ product?: any; p?: any; compact?: boolean }>()
 const { t } = useI18n()
+const ui = useUiStore()
 const cart = useCartStore()
 const { isInWishlist, toggle } = useWishlist()
 const qp = useQuickPreview()
@@ -163,6 +164,12 @@ const wishlistKey = computed(() => String((p.value as any)?.id ?? (p.value as an
 const fav = computed(() => isInWishlist(wishlistKey.value))
 const adding = ref(false)
 const buying = ref(false)
+
+const inverseThemeBtnClass = computed(() =>
+  ui.theme === 'dark'
+    ? 'bg-white text-black border-white shadow-[0_16px_34px_rgba(255,255,255,0.08),0_10px_20px_rgba(0,0,0,0.18)] hover:bg-neutral-100'
+    : 'bg-black text-white border-black shadow-[0_14px_30px_rgba(24,24,24,0.16),0_4px_12px_rgba(24,24,24,0.10)] hover:bg-neutral-950'
+)
 
 function formatPrice(v: any) {
   return formatIqd(v)
@@ -276,7 +283,7 @@ function goProduct() {
   padding:.78rem .85rem;
   font-weight:900;
   font-size:.84rem;
-  transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease, background .18s ease;
+  transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
   white-space:nowrap;
 }
 .product-card-btn--main{
@@ -300,25 +307,21 @@ function goProduct() {
 :global(html.theme-light) .product-card-media{
   background:linear-gradient(180deg, rgba(252,248,251,.95), rgba(245,239,245,.9));
 }
-:global(html.theme-light) .product-card-icon-btn,
-:global(html.theme-light) .product-card-btn--main{
+:global(html.theme-light) .product-card-icon-btn{
   background:#111;
   color:#fff;
   border-color:rgba(17,17,17,.82);
   box-shadow:0 14px 30px rgba(24,24,24,.16), 0 4px 12px rgba(24,24,24,.10);
 }
-:global(html.theme-light) .product-card-btn--main:hover,
 :global(html.theme-light) .product-card-icon-btn:hover{
   background:#000;
 }
-:global(html.theme-dark) .product-card-btn--main,
 :global(html.theme-dark) .product-card-icon-btn{
   background:#fff;
   color:#111;
   border-color:rgba(255,255,255,.84);
   box-shadow:0 16px 34px rgba(255,255,255,.08), 0 10px 20px rgba(0,0,0,.18);
 }
-:global(html.theme-dark) .product-card-btn--main:hover,
 :global(html.theme-dark) .product-card-icon-btn:hover{
   background:#f5f5f5;
 }
