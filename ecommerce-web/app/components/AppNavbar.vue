@@ -2,10 +2,16 @@
   <header class="sticky top-0 z-50">
     <div class="bg-app/80 backdrop-blur supports-[backdrop-filter]:bg-app/70 border-b border-app">
       <div class="mx-auto max-w-7xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3">
-        <NuxtLink to="/" class="flex items-center min-w-0 shrink-0" aria-label="Home">
+        <NuxtLink to="/" class="flex items-center gap-2 sm:gap-3 min-w-0">
           <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black overflow-hidden">
+            <!-- ضع رابط شعار الموقع هنا بدل # -->
             <img v-if="siteLogoSrc !== '#'" :src="siteLogoSrc" alt="Site logo" class="h-full w-full object-cover" />
             <Icon v-else name="mdi:shopping-outline" class="text-xl animate-floaty" />
+          </div>
+          <div class="leading-tight min-w-0">
+            <!-- خلّ الاسم يبين أوضح باللايت بدون ما ينقص بسرعة -->
+            <div class="font-extrabold tracking-wide text-sm sm:text-base max-w-[92px] sm:max-w-[120px] md:max-w-none truncate md:overflow-visible md:text-clip">ECOMMERCE</div>
+            <div class="hidden md:block text-xs text-muted -mt-0.5 rtl-text">{{ t('tagline') }}</div>
           </div>
         </NuxtLink>
 
@@ -193,13 +199,6 @@
               <div class="flex items-center gap-2">
                 <Icon name="mdi:home-outline" class="text-lg" />
                 <span class="rtl-text">{{ t('nav.home') }}</span>
-              </div>
-            </NuxtLink>
-
-            <NuxtLink to="/products" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
-              <div class="flex items-center gap-2">
-                <Icon name="mdi:view-grid-outline" class="text-lg" />
-                <span class="rtl-text">{{ t('nav.products') }}</span>
               </div>
             </NuxtLink>
 

@@ -4,8 +4,13 @@
       <div class="grid gap-3">
         <div class="flex items-center gap-3">
           <div class="h-10 w-10 rounded-2xl bg-[rgb(var(--primary))] text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black overflow-hidden">
+            <!-- ضع رابط شعار الموقع هنا بدل # -->
             <img v-if="siteLogoSrc !== '#'" :src="siteLogoSrc" alt="Site logo" class="h-full w-full object-cover" />
             <Icon v-else name="mdi:storefront-outline" class="text-xl" />
+          </div>
+          <div>
+            <div class="font-extrabold">ECOMMERCE</div>
+            <div class="text-sm text-muted rtl-text">{{ t('tagline') }}</div>
           </div>
         </div>
         <p class="text-sm text-muted rtl-text">

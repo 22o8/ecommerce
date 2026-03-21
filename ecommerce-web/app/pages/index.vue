@@ -113,70 +113,42 @@ const problemCards = computed(() => {
 
 const { buildAssetUrl } = useApi()
 const categoryRail = ref<HTMLElement | null>(null)
-const problemRail = ref<HTMLElement | null>(null)
+const dragState = { active: false, startX: 0, startScroll: 0 }
 
-const dragState = { active: false, startX: 0, startScroll: 0, rail: null as HTMLElement | null }
-
-function startRailDrag(rail: HTMLElement | null, event: PointerEvent) {
-  if (!rail || window.innerWidth < 768) return
+function onRailPointerDown(event: PointerEvent) {
+  if (!categoryRail.value || window.innerWidth < 768) return
   dragState.active = true
   dragState.startX = event.clientX
-  dragState.startScroll = rail.scrollLeft
-  dragState.rail = rail
-  rail.setPointerCapture?.(event.pointerId)
-  rail.classList.add('is-dragging')
+  dragState.startScroll = categoryRail.value.scrollLeft
+  categoryRail.value.setPointerCapture?.(event.pointerId)
+  categoryRail.value.classList.add('is-dragging')
 }
 
-function moveRailDrag(event: PointerEvent) {
-  if (!dragState.active || !dragState.rail) return
+function onRailPointerMove(event: PointerEvent) {
+  if (!dragState.active || !categoryRail.value) return
   const delta = event.clientX - dragState.startX
-  dragState.rail.scrollLeft = dragState.startScroll - delta
+  categoryRail.value.scrollLeft = dragState.startScroll - delta
 }
 
 function endRailDrag() {
   dragState.active = false
-  dragState.rail?.classList.remove('is-dragging')
-  dragState.rail = null
+  categoryRail.value?.classList.remove('is-dragging')
 }
 
-function onCategoryRailPointerDown(event: PointerEvent) {
-  startRailDrag(categoryRail.value, event)
-}
-
-function onProblemRailPointerDown(event: PointerEvent) {
-  startRailDrag(problemRail.value, event)
-}
-
-function onRailPointerMove(event: PointerEvent) {
-  moveRailDrag(event)
-}
-
-function bindWheelToRail(rail: HTMLElement | null) {
-  if (!rail) return
-  const handler = (event: WheelEvent) => {
-    if (window.innerWidth < 768) return
-    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
-    event.preventDefault()
-    rail.scrollLeft += event.deltaY
-  }
-  rail.addEventListener('wheel', handler, { passive: false })
-  ;(rail as any).__wheelHandler = handler
-}
-
-function unbindWheelFromRail(rail: HTMLElement | null) {
-  const handler = rail && (rail as any).__wheelHandler
-  if (rail && handler) rail.removeEventListener('wheel', handler)
+function onRailWheel(event: WheelEvent) {
+  if (!categoryRail.value || window.innerWidth < 768) return
+  if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
+  event.preventDefault()
+  categoryRail.value.scrollLeft += event.deltaY
 }
 
 onMounted(() => {
-  bindWheelToRail(categoryRail.value)
-  bindWheelToRail(problemRail.value)
+  categoryRail.value?.addEventListener('wheel', onRailWheel, { passive: false })
   ensureTopRatedLoaded()
 })
 
 onBeforeUnmount(() => {
-  unbindWheelFromRail(categoryRail.value)
-  unbindWheelFromRail(problemRail.value)
+  categoryRail.value?.removeEventListener('wheel', onRailWheel as any)
 })
 
 </script>
@@ -196,7 +168,7 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div ref="categoryRail" class="category-unified-rail mt-8" @pointerdown="onCategoryRailPointerDown" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointerleave="endRailDrag" @pointercancel="endRailDrag">
+        <div ref="categoryRail" class="category-unified-rail mt-8">
           <NuxtLink
             v-for="c in categoryCards"
             :key="c.key"
@@ -243,7 +215,7 @@ onBeforeUnmount(() => {
             <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">{{ t('home.problemCategoriesSubtitle') || 'تسوق حسب المشكلة التي تريد حلها بسرعة.' }}</p>
           </div>
         </div>
-        <div ref="problemRail" class="category-unified-rail mt-8" @pointerdown="onProblemRailPointerDown" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointerleave="endRailDrag" @pointercancel="endRailDrag">
+        <div class="category-unified-rail mt-8">
           <NuxtLink v-for="c in problemCards" :key="c.key" :to="c.to" class="category-mobile-pill">
             <div class="category-mobile-pill__image-wrap" :class="`bg-gradient-to-br ${c.accent}`">
               <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="category-mobile-pill__image" />
@@ -321,7 +293,7 @@ onBeforeUnmount(() => {
 .category-unified-rail{
   display:grid;
   grid-auto-flow:column;
-  grid-auto-columns:minmax(110px, 120px);
+  grid-auto-columns:120px;
   gap:1rem;
   overflow-x:auto;
   overflow-y:hidden;

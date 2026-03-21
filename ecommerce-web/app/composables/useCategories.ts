@@ -18,6 +18,8 @@ export function useCategories() {
   const categories = useState<AppCategory[]>('app-categories', () => [])
   const problemCategories = useState<AppCategory[]>('app-problem-categories', () => [])
   const loading = useState<boolean>('app-categories-loading', () => false)
+  const regularLoading = useState<boolean>('app-categories-loading-regular', () => false)
+  const problemLoading = useState<boolean>('app-categories-loading-problem', () => false)
 
   function normalize(arr: any[]): AppCategory[] {
     return arr.map((x: any) => ({
@@ -36,9 +38,11 @@ export function useCategories() {
 
   async function fetchCategories(force = false, section: 'regular' | 'problem' = 'regular') {
     const target = section === 'problem' ? problemCategories : categories
-    if (loading.value) return target.value
+    const targetLoading = section === 'problem' ? problemLoading : regularLoading
+    if (targetLoading.value) return target.value
     if (!force && target.value.length) return target.value
-    loading.value = true
+    targetLoading.value = true
+    loading.value = regularLoading.value || problemLoading.value || true
     try {
       const res: any = await api.get<any[]>('/categories/active', { _ts: Date.now(), section })
       const arr = Array.isArray(res) ? res : []
@@ -46,7 +50,8 @@ export function useCategories() {
     } catch {
       target.value = []
     } finally {
-      loading.value = false
+      targetLoading.value = false
+      loading.value = regularLoading.value || problemLoading.value
     }
     return target.value
   }
