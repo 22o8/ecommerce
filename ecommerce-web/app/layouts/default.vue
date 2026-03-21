@@ -31,14 +31,17 @@
     <a
       v-if="whats"
       class="wa-fab"
-      :class="{ 'wa-fab--label-visible': showWaLabel }"
+      :class="{ 'wa-fab--hint': showWaHint }"
       :href="waLink"
       target="_blank"
       rel="noreferrer"
       :title="t('whatsappOrder')"
+      :aria-label="t('whatsappOrder')"
     >
-      <span class="wa-fab__label">استشارة</span>
-      <span class="wa-fab__icon-wrap"><Icon name="mdi:whatsapp" class="text-2xl" /></span>
+      <span class="wa-fab__label rtl-text" :class="{ 'wa-fab__label--visible': showWaHint }">استشارة</span>
+      <span class="wa-fab__icon-wrap" aria-hidden="true">
+        <Icon name="mdi:whatsapp" class="wa-fab__icon" />
+      </span>
     </a>
   </div>
 </template>
@@ -53,9 +56,9 @@ const { t } = useI18n()
 const config = useRuntimeConfig()
 const whats = String((config.public as any).whatsappNumber || '').trim()
 const showBackToTop = ref(false)
-const showWaLabel = ref(true)
-let waTimer: ReturnType<typeof setInterval> | null = null
-let waHideTimer: ReturnType<typeof setTimeout> | null = null
+const showWaHint = ref(false)
+let waInterval: ReturnType<typeof setInterval> | null = null
+let waHideTimeout: ReturnType<typeof setTimeout> | null = null
 
 const waLink = computed(() => {
   const n = whats.replace(/[^0-9]/g, '')
@@ -87,24 +90,27 @@ function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+function triggerWaHint() {
+  showWaHint.value = true
+  if (waHideTimeout) clearTimeout(waHideTimeout)
+  waHideTimeout = setTimeout(() => {
+    showWaHint.value = false
+  }, 4200)
+}
+
 onMounted(() => {
   handleScroll()
+  triggerWaHint()
+  waInterval = setInterval(triggerWaHint, 30000)
   window.addEventListener('scroll', handleScroll, { passive: true })
   window.addEventListener('resize', handleScroll)
-  const flashWaLabel = () => {
-    showWaLabel.value = true
-    if (waHideTimer) clearTimeout(waHideTimer)
-    waHideTimer = setTimeout(() => { showWaLabel.value = false }, 4200)
-  }
-  flashWaLabel()
-  waTimer = setInterval(flashWaLabel, 60000)
 })
 
 onUnmounted(() => {
+  if (waInterval) clearInterval(waInterval)
+  if (waHideTimeout) clearTimeout(waHideTimeout)
   window.removeEventListener('scroll', handleScroll)
   window.removeEventListener('resize', handleScroll)
-  if (waTimer) clearInterval(waTimer)
-  if (waHideTimer) clearTimeout(waHideTimer)
 })
 </script>
 
@@ -186,57 +192,62 @@ onUnmounted(() => {
 
 .wa-fab{
   position: fixed;
-  right: 1.15rem;
-  bottom: 1.25rem;
-  z-index: 52;
+  inset-inline-end: 1.15rem;
+  bottom: 1.15rem;
+  z-index: 56;
   display: inline-flex;
   align-items: center;
-  gap: .65rem;
-  border-radius: 999px;
-  border: 1px solid rgba(var(--border), .85);
-  background: rgb(var(--surface));
-  color: rgb(var(--text));
-  box-shadow: 0 18px 40px rgba(0,0,0,.16);
-  padding: .42rem;
-  transition: transform .22s ease, box-shadow .22s ease, opacity .22s ease;
+  gap: .6rem;
+  text-decoration: none;
+  color: #fff;
 }
-.wa-fab:hover{ transform: translateY(-2px); box-shadow: 0 22px 48px rgba(0,0,0,.2); }
+.wa-fab__label{
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(8,10,18,.92);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 18px 36px rgba(0,0,0,.18);
+  transition: max-width .35s ease, opacity .25s ease, padding .35s ease, transform .35s ease;
+  transform: translateX(.35rem);
+  font-weight: 900;
+  font-size: .96rem;
+}
+.wa-fab__label--visible{
+  max-width: 8rem;
+  opacity: 1;
+  padding: .78rem 1rem;
+  transform: translateX(0);
+}
 .wa-fab__icon-wrap{
-  width: 3.3rem;
-  height: 3.3rem;
+  width: 3.9rem;
+  height: 3.9rem;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #25D366;
-  color: #fff;
-  box-shadow: 0 0 0 0 rgba(37,211,102,.38);
-  animation: waPulse 60s infinite;
+  background: linear-gradient(135deg, #25D366, #1faa52);
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 18px 34px rgba(10,20,14,.24);
 }
-.wa-fab__label{
-  max-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  font-weight: 800;
-  opacity: 0;
-  transform: translateX(.2rem);
-  transition: max-width .28s ease, opacity .2s ease, transform .2s ease, padding .28s ease;
-  padding: 0;
+.wa-fab--hint .wa-fab__icon-wrap{
+  animation: waPulse 1.35s ease-in-out 3;
 }
-.wa-fab--label-visible .wa-fab__label{
-  max-width: 8rem;
-  opacity: 1;
-  transform: translateX(0);
-  padding-inline-start: .55rem;
-}
+.wa-fab__icon{ font-size: 2rem; line-height: 1; }
 @keyframes waPulse{
-  0%, 93%, 100%{ box-shadow: 0 0 0 0 rgba(37,211,102,.0); }
-  94%{ box-shadow: 0 0 0 0 rgba(37,211,102,.38); }
-  96%{ box-shadow: 0 0 0 14px rgba(37,211,102,0); }
+  0%{ transform: scale(1); box-shadow: 0 18px 34px rgba(10,20,14,.24), 0 0 0 0 rgba(37,211,102,.36); }
+  50%{ transform: scale(1.06); box-shadow: 0 18px 34px rgba(10,20,14,.24), 0 0 0 12px rgba(37,211,102,0); }
+  100%{ transform: scale(1); box-shadow: 0 18px 34px rgba(10,20,14,.24), 0 0 0 0 rgba(37,211,102,0); }
 }
 @media (max-width: 768px){
-  .wa-fab{ right: .95rem; bottom: .95rem; }
-  .wa-fab__icon-wrap{ width: 3rem; height: 3rem; }
+  .wa-fab{ inset-inline-end: .95rem; bottom: .95rem; }
+  .wa-fab__icon-wrap{ width: 3.5rem; height: 3.5rem; }
+  .wa-fab__icon{ font-size: 1.8rem; }
+  .wa-fab__label--visible{ padding: .72rem .95rem; font-size: .9rem; }
 }
 
 </style>

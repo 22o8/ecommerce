@@ -1,7 +1,7 @@
 <template>
   <div class="products-page container mx-auto px-4 py-8 sm:py-10">
     <section class="products-hero card-soft overflow-hidden p-6 sm:p-8">
-      <div>
+      <div class="grid gap-6 lg:grid-cols-[1.25fr_.95fr] lg:items-end">
         <div>
           <div class="inline-flex items-center gap-2 rounded-full border border-app bg-surface px-3 py-1 text-xs font-bold text-[rgb(var(--muted))]">
             <span class="h-2 w-2 rounded-full bg-[rgb(var(--primary))]" />
