@@ -113,42 +113,54 @@ const problemCards = computed(() => {
 
 const { buildAssetUrl } = useApi()
 const categoryRail = ref<HTMLElement | null>(null)
-const dragState = { active: false, startX: 0, startScroll: 0 }
+const problemCategoryRail = ref<HTMLElement | null>(null)
+const dragState = { active: false, startX: 0, startScroll: 0, target: null as HTMLElement | null }
 
-function onRailPointerDown(event: PointerEvent) {
-  if (!categoryRail.value || window.innerWidth < 768) return
+function onRailPointerDown(event: PointerEvent, rail: HTMLElement | null = categoryRail.value) {
+  if (!rail || window.innerWidth < 768) return
   dragState.active = true
+  dragState.target = rail
   dragState.startX = event.clientX
-  dragState.startScroll = categoryRail.value.scrollLeft
-  categoryRail.value.setPointerCapture?.(event.pointerId)
-  categoryRail.value.classList.add('is-dragging')
+  dragState.startScroll = rail.scrollLeft
+  rail.setPointerCapture?.(event.pointerId)
+  rail.classList.add('is-dragging')
 }
 
 function onRailPointerMove(event: PointerEvent) {
-  if (!dragState.active || !categoryRail.value) return
+  if (!dragState.active || !dragState.target) return
   const delta = event.clientX - dragState.startX
-  categoryRail.value.scrollLeft = dragState.startScroll - delta
+  dragState.target.scrollLeft = dragState.startScroll - delta
 }
 
 function endRailDrag() {
   dragState.active = false
-  categoryRail.value?.classList.remove('is-dragging')
+  dragState.target?.classList.remove('is-dragging')
+  dragState.target = null
 }
 
 function onRailWheel(event: WheelEvent) {
-  if (!categoryRail.value || window.innerWidth < 768) return
+  const rail = event.currentTarget as HTMLElement | null
+  if (!rail || window.innerWidth < 768) return
   if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
   event.preventDefault()
-  categoryRail.value.scrollLeft += event.deltaY
+  rail.scrollLeft += event.deltaY
+}
+
+function scrollRail(direction: 'prev' | 'next', rail: HTMLElement | null) {
+  if (!rail) return
+  const amount = Math.max(rail.clientWidth * 0.72, 240)
+  rail.scrollBy({ left: direction === 'next' ? amount : -amount, behavior: 'smooth' })
 }
 
 onMounted(() => {
   categoryRail.value?.addEventListener('wheel', onRailWheel, { passive: false })
+  problemCategoryRail.value?.addEventListener('wheel', onRailWheel, { passive: false })
   ensureTopRatedLoaded()
 })
 
 onBeforeUnmount(() => {
   categoryRail.value?.removeEventListener('wheel', onRailWheel as any)
+  problemCategoryRail.value?.removeEventListener('wheel', onRailWheel as any)
 })
 
 </script>
@@ -166,9 +178,17 @@ onBeforeUnmount(() => {
               {{ t('home.spotlightSubtitle') }}
             </p>
           </div>
+          <div class="hidden lg:flex items-center gap-2">
+            <button type="button" class="rail-arrow-btn" @click="scrollRail('prev', categoryRail)" aria-label="السابق">
+              <Icon name="mdi:chevron-right" class="text-xl" />
+            </button>
+            <button type="button" class="rail-arrow-btn" @click="scrollRail('next', categoryRail)" aria-label="التالي">
+              <Icon name="mdi:chevron-left" class="text-xl" />
+            </button>
+          </div>
         </div>
 
-        <div ref="categoryRail" class="category-unified-rail mt-8">
+        <div ref="categoryRail" class="category-unified-rail mt-8" @pointerdown="(e) => onRailPointerDown(e, categoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
           <NuxtLink
             v-for="c in categoryCards"
             :key="c.key"
@@ -214,8 +234,16 @@ onBeforeUnmount(() => {
             <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">{{ t('home.problemCategoriesTitle') || 'حلول المشاكل' }}</h2>
             <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">{{ t('home.problemCategoriesSubtitle') || 'تسوق حسب المشكلة التي تريد حلها بسرعة.' }}</p>
           </div>
+          <div class="hidden lg:flex items-center gap-2">
+            <button type="button" class="rail-arrow-btn" @click="scrollRail('prev', problemCategoryRail)" aria-label="السابق">
+              <Icon name="mdi:chevron-right" class="text-xl" />
+            </button>
+            <button type="button" class="rail-arrow-btn" @click="scrollRail('next', problemCategoryRail)" aria-label="التالي">
+              <Icon name="mdi:chevron-left" class="text-xl" />
+            </button>
+          </div>
         </div>
-        <div class="category-unified-rail mt-8">
+        <div ref="problemCategoryRail" class="category-unified-rail mt-8" @pointerdown="(e) => onRailPointerDown(e, problemCategoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
           <NuxtLink v-for="c in problemCards" :key="c.key" :to="c.to" class="category-mobile-pill">
             <div class="category-mobile-pill__image-wrap" :class="`bg-gradient-to-br ${c.accent}`">
               <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="category-mobile-pill__image" />
@@ -289,6 +317,24 @@ onBeforeUnmount(() => {
 }
 .shadow-soft{
   box-shadow:0 16px 38px rgba(0,0,0,.08);
+}
+.rail-arrow-btn{
+  width: 3rem;
+  height: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--border), .9);
+  background: rgba(var(--surface), .92);
+  color: rgb(var(--text));
+  box-shadow: 0 10px 24px rgba(0,0,0,.16);
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+.rail-arrow-btn:hover{
+  transform: translateY(-1px);
+  border-color: rgba(var(--primary), .55);
+  background: rgba(var(--surface-2), .96);
 }
 .category-unified-rail{
   display:grid;

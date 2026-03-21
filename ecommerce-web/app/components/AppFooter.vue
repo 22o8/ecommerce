@@ -4,18 +4,10 @@
       <div class="grid gap-3">
         <div class="flex items-center gap-3">
           <div class="h-10 w-10 rounded-2xl bg-[rgb(var(--primary))] text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black overflow-hidden">
-            <!-- ضع رابط شعار الموقع هنا بدل # -->
             <img v-if="siteLogoSrc !== '#'" :src="siteLogoSrc" alt="Site logo" class="h-full w-full object-cover" />
             <Icon v-else name="mdi:storefront-outline" class="text-xl" />
           </div>
-          <div>
-            <div class="font-extrabold">ECOMMERCE</div>
-            <div class="text-sm text-muted rtl-text">{{ t('tagline') }}</div>
-          </div>
         </div>
-        <p class="text-sm text-muted rtl-text">
-          {{ t('homeHero.subtitle') }}
-        </p>
       </div>
 
       <div class="grid gap-2 text-sm">
@@ -46,7 +38,7 @@
 
     <div class="grad-line mx-auto max-w-7xl" />
     <div class="mx-auto max-w-7xl px-4 py-6 text-xs text-muted flex items-center justify-between">
-      <div class="rtl-text">© {{ new Date().getFullYear() }} ECOMMERCE</div>
+      <div class="rtl-text">© {{ new Date().getFullYear() }}</div>
       <div class="footer-end-mark" aria-hidden="true"></div>
     </div>
   </footer>
