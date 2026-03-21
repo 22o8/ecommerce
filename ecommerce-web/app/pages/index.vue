@@ -180,10 +180,10 @@ onBeforeUnmount(() => {
 
         <div class="rail-wrap mt-8">
           <button type="button" class="rail-arrow-btn rail-arrow-btn--prev hidden lg:inline-flex" @click="scrollRail('prev', categoryRail)" aria-label="السابق">
-            <Icon name="mdi:chevron-right" class="text-xl" />
+            <Icon name="mdi:chevron-left" class="text-xl" />
           </button>
           <button type="button" class="rail-arrow-btn rail-arrow-btn--next hidden lg:inline-flex" @click="scrollRail('next', categoryRail)" aria-label="التالي">
-            <Icon name="mdi:chevron-left" class="text-xl" />
+            <Icon name="mdi:chevron-right" class="text-xl" />
           </button>
 
           <div ref="categoryRail" class="category-unified-rail" @pointerdown="(e) => onRailPointerDown(e, categoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
@@ -232,10 +232,10 @@ onBeforeUnmount(() => {
         </div>
         <div class="rail-wrap mt-8">
           <button type="button" class="rail-arrow-btn rail-arrow-btn--prev hidden lg:inline-flex" @click="scrollRail('prev', problemCategoryRail)" aria-label="السابق">
-            <Icon name="mdi:chevron-right" class="text-xl" />
+            <Icon name="mdi:chevron-left" class="text-xl" />
           </button>
           <button type="button" class="rail-arrow-btn rail-arrow-btn--next hidden lg:inline-flex" @click="scrollRail('next', problemCategoryRail)" aria-label="التالي">
-            <Icon name="mdi:chevron-left" class="text-xl" />
+            <Icon name="mdi:chevron-right" class="text-xl" />
           </button>
           <div ref="problemCategoryRail" class="category-unified-rail" @pointerdown="(e) => onRailPointerDown(e, problemCategoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
             <NuxtLink v-for="c in problemCards" :key="c.key" :to="c.to" class="category-mobile-pill">
