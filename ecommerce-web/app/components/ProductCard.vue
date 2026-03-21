@@ -26,6 +26,12 @@
         >
           {{ t('common.unavailable') }}
         </div>
+        <div
+          v-else-if="isNew"
+          class="px-3 py-1 rounded-full bg-surface-2/95 backdrop-blur border border-app text-[11px] sm:text-xs font-bold"
+        >
+          <span class="rtl-text">{{ t('common.new') }}</span>
+        </div>
       </div>
 
       <div v-if="discountPercent > 0" class="absolute top-3 right-3">
@@ -110,8 +116,6 @@ import { formatIqd } from '~/composables/useMoney'
 const props = defineProps<{ product?: any; p?: any; compact?: boolean }>()
 const { t } = useI18n()
 const cart = useCartStore()
-const auth = useAuthStore()
-const toast = useToast()
 const { isInWishlist, toggle } = useWishlist()
 const qp = useQuickPreview()
 const router = useRouter()
@@ -147,6 +151,13 @@ const mainImage = computed(() => {
   return resolved || '/hero-placeholder.svg'
 })
 
+const isNew = computed(() => {
+  const raw = p.value?.createdAt ?? p.value?.CreatedAt ?? p.value?.created_on ?? p.value?.createdOn
+  const created = raw ? new Date(raw).getTime() : 0
+  if (!created || Number.isNaN(created)) return false
+  const days = (Date.now() - created) / (1000 * 60 * 60 * 24)
+  return days >= 0 && days < 30
+})
 
 const wishlistKey = computed(() => String((p.value as any)?.id ?? (p.value as any)?.productId ?? p.value?.slug ?? ''))
 const fav = computed(() => isInWishlist(wishlistKey.value))
@@ -183,16 +194,7 @@ async function buyNow() {
 }
 
 async function toggleFav() {
-  if (!auth.isAuthed) {
-    toast.error('يجب تسجيل الدخول أولاً')
-    return
-  }
-  try {
-    await toggle(wishlistKey.value)
-    toast.success(fav.value ? 'تمت إزالة المنتج من المفضلة' : 'تمت إضافة المنتج إلى المفضلة')
-  } catch (e:any) {
-    toast.error(e?.data?.message || e?.message || 'تعذر تحديث المفضلة')
-  }
+  await toggle(wishlistKey.value)
 }
 
 function openPreview() {
@@ -243,14 +245,14 @@ function goProduct() {
   width:46px;
   height:46px;
   border-radius:999px;
-  border:1px solid rgba(var(--border), .95);
+  border:1px solid rgba(255,255,255,.18);
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  background:rgba(255,255,255,.06);
-  color:#fff;
-  box-shadow:0 12px 24px rgba(0,0,0,.14);
-  transition:transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
+  background:#fff;
+  color:#111;
+  box-shadow:0 12px 24px rgba(0,0,0,.18);
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
 }
 .product-card-icon-btn:hover{ transform:translateY(-1px); }
 .product-card-bottom{
@@ -278,12 +280,12 @@ function goProduct() {
   white-space:nowrap;
 }
 .product-card-btn--main{
-  background:#fff;
-  color:#0f1117;
-  border-color:rgba(255,255,255,.24);
-  box-shadow:0 14px 30px rgba(0,0,0,.16);
+  background:linear-gradient(135deg, rgba(var(--primary), .98), rgba(var(--primary), .78));
+  color:#fff;
+  border-color:rgba(var(--primary), .28);
+  box-shadow:0 14px 30px rgba(var(--primary), .20);
 }
-.product-card-btn--main:hover{ transform:translateY(-1px); box-shadow:0 18px 34px rgba(0,0,0,.20); }
+.product-card-btn--main:hover{ transform:translateY(-1px); box-shadow:0 18px 34px rgba(var(--primary), .24); }
 .product-card-btn:disabled{ opacity:.5; cursor:not-allowed; }
 .product-card-shell--compact{ border-radius:1.25rem; }
 .product-card-shell--compact .product-card-title{ font-size:.88rem; line-height:1.45; }
@@ -298,41 +300,31 @@ function goProduct() {
 :global(html.theme-light) .product-card-media{
   background:linear-gradient(180deg, rgba(252,248,251,.95), rgba(245,239,245,.9));
 }
-:global(html.theme-light) .product-card-icon-btn{
-  background:#111319;
-  color:#fff;
-  border-color:rgba(17,19,25,.15);
-  box-shadow:0 14px 30px rgba(17,19,25,.12);
-}
+:global(html.theme-light) .product-card-icon-btn,
 :global(html.theme-light) .product-card-btn--main{
-  background:#111319;
+  background:#111;
   color:#fff;
-  border-color:rgba(17,19,25,.14);
-  box-shadow:0 14px 30px rgba(17,19,25,.14);
+  border-color:rgba(17,17,17,.82);
+  box-shadow:0 14px 30px rgba(24,24,24,.16), 0 4px 12px rgba(24,24,24,.10);
 }
 :global(html.theme-light) .product-card-btn--main:hover,
 :global(html.theme-light) .product-card-icon-btn:hover{
-  background:#0b0d12;
+  background:#000;
 }
+:global(html.theme-dark) .product-card-btn--main,
 :global(html.theme-dark) .product-card-icon-btn{
   background:#fff;
-  color:#0f1117;
-  border-color:rgba(255,255,255,.14);
+  color:#111;
+  border-color:rgba(255,255,255,.84);
+  box-shadow:0 16px 34px rgba(255,255,255,.08), 0 10px 20px rgba(0,0,0,.18);
 }
-:global(html.theme-dark) .product-card-btn--main{
-  background:#fff;
-  color:#0f1117;
-  border-color:rgba(255,255,255,.18);
+:global(html.theme-dark) .product-card-btn--main:hover,
+:global(html.theme-dark) .product-card-icon-btn:hover{
+  background:#f5f5f5;
 }
 
 @media (max-width: 640px){
   .product-card-shell{ border-radius:1.35rem; }
-  .product-card-content{ gap:.7rem; }
-  .product-card-title{ font-size:.9rem; line-height:1.45; }
-  .product-card-top-actions{ justify-content:flex-end; }
-  .product-card-icon-btn{ width:42px; height:42px; }
-  .product-card-actions{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:.5rem; }
-  .product-card-btn{ min-height:44px; font-size:.8rem; padding:.7rem .5rem; }
   .product-card-content{ padding:.85rem; gap:.7rem; }
   .product-card-title{ font-size:.9rem; line-height:1.5; }
   .product-card-top-actions{ gap:.5rem; }

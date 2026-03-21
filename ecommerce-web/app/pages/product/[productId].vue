@@ -339,34 +339,39 @@ watch(() => auth.isAuthed, async (v) => {
 .product-action-btn:disabled{ opacity:.55; cursor:not-allowed; }
 .product-action-btn--main{
   background:#fff;
-  color:#0f1117;
-  box-shadow:0 16px 34px rgba(0,0,0,.18);
-  border-color:rgba(255,255,255,.22);
+  color:#111;
+  box-shadow:0 16px 34px rgba(255,255,255,.10), 0 10px 22px rgba(0,0,0,.18);
+  border-color:rgba(255,255,255,.84);
 }
 .product-action-btn--review{ width:auto; min-width:170px; }
-.product-favorite-btn{ min-height:56px; min-width:56px; border-radius:999px; border:1px solid rgba(var(--border), .95); display:inline-flex; align-items:center; justify-content:center; background:#fff; color:#0f1117; box-shadow:0 12px 26px rgba(0,0,0,.16); transition:transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease; }
+.product-favorite-btn{ min-height:56px; min-width:56px; border-radius:999px; border:1px solid rgba(255,255,255,.84); display:inline-flex; align-items:center; justify-content:center; background:#fff; color:#111; box-shadow:0 12px 26px rgba(255,255,255,.08), 0 10px 18px rgba(0,0,0,.18); transition:transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease; }
 .product-favorite-btn:hover{ transform:translateY(-1px); }
 .review-textarea{ resize:vertical; min-height:120px; }
 .product-related-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:1rem; }
 
 :global(html.theme-light) .product-action-btn--main,
 :global(html.theme-light) .product-favorite-btn{
-  background:#111319;
+  background:#111;
   color:#fff;
-  border-color:rgba(17,19,25,.14);
-  box-shadow:0 14px 30px rgba(17,19,25,.12);
+  border-color:rgba(17,17,17,.82);
+  box-shadow:0 14px 30px rgba(24,24,24,.16), 0 4px 12px rgba(24,24,24,.10);
 }
 :global(html.theme-light) .product-action-btn--main:hover,
 :global(html.theme-light) .product-favorite-btn:hover{
-  background:#0b0d12;
+  background:#000;
 }
 :global(html.theme-light) .product-price-card{ background:linear-gradient(180deg, #ffffff, #f8f3f8); border-color:rgba(24,24,24,.08); }
 :global(html.theme-light) .review-textarea{ background:#fff; border-color:rgba(24,24,24,.12); color:#161616; }
 :global(html.theme-dark) .product-action-btn--main,
 :global(html.theme-dark) .product-favorite-btn{
   background:#fff;
-  color:#0f1117;
-  border-color:rgba(255,255,255,.14);
+  color:#111;
+  border-color:rgba(255,255,255,.84);
+  box-shadow:0 16px 34px rgba(255,255,255,.10), 0 10px 22px rgba(0,0,0,.18);
+}
+:global(html.theme-dark) .product-action-btn--main:hover,
+:global(html.theme-dark) .product-favorite-btn:hover{
+  background:#f5f5f5;
 }
 
 @media (max-width: 1180px){
