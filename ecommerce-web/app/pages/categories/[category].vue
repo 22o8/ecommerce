@@ -1,7 +1,7 @@
 <template>
   <div class="products-page container mx-auto px-4 py-8 sm:py-10">
     <section class="products-hero card-soft overflow-hidden p-6 sm:p-8">
-      <div class="grid gap-6 lg:grid-cols-[1.25fr_.95fr] lg:items-end">
+      <div>
         <div>
           <div class="inline-flex items-center gap-2 rounded-full border border-app bg-surface px-3 py-1 text-xs font-bold text-[rgb(var(--muted))]">
             <span class="h-2 w-2 rounded-full bg-[rgb(var(--primary))]" />
@@ -13,21 +13,6 @@
           <p class="mt-3 max-w-2xl text-sm leading-7 text-[rgb(var(--muted))] sm:text-base rtl-text">
             {{ categorySubtitle }}
           </p>
-        </div>
-
-        <div class="products-summary grid gap-3 sm:grid-cols-3">
-          <div class="summary-chip">
-            <div class="summary-chip__label rtl-text">{{ t('productsPage.resultsLabel') }}</div>
-            <div class="summary-chip__value keep-ltr">{{ products.totalCount || products.items.length || 0 }}</div>
-          </div>
-          <div class="summary-chip">
-            <div class="summary-chip__label rtl-text">{{ t('productsPage.activeSortLabel') }}</div>
-            <div class="summary-chip__value rtl-text">{{ activeSortLabel }}</div>
-          </div>
-          <div class="summary-chip">
-            <div class="summary-chip__label rtl-text">{{ t('productsPage.brandFilterLabel') }}</div>
-            <div class="summary-chip__value rtl-text truncate">{{ activeBrandLabel }}</div>
-          </div>
         </div>
       </div>
     </section>
