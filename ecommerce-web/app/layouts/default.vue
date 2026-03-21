@@ -8,8 +8,6 @@
       <slot />
     </main>
 
-    <!-- Global product quick preview (so pop-up works on Home + any page) -->
-    <ProductQuickPreviewModal />
 
     <AppFooter />
 
@@ -47,7 +45,6 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import AppNavbar from '~/components/AppNavbar.vue'
 import AppFooter from '~/components/AppFooter.vue'
-import ProductQuickPreviewModal from '~/components/ProductQuickPreviewModal.vue'
 import GlobalEffects from '~/components/appearance/GlobalEffects.vue'
 import GlobalAds from '~/components/appearance/GlobalAds.vue'
 const { t } = useI18n()
