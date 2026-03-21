@@ -2,79 +2,54 @@
   <article
     role="button"
     tabindex="0"
-    class="group relative product-card-shell overflow-hidden rounded-[1.6rem] border border-app transition duration-300 select-none"
+    class="group product-card-shell"
     :class="props.compact ? 'product-card-shell--compact' : ''"
     @click="goProduct"
     @keydown.enter.prevent="goProduct"
     @keydown.space.prevent="goProduct"
   >
-    <div class="relative product-card-media">
-      <SmartImage
-        :src="mainImage || ''"
-        :alt="displayName"
-        fit="contain"
-        wrapper-class="w-full h-full"
-        img-class="w-full h-full object-contain p-4 sm:p-5 transition duration-300 group-hover:scale-[1.02]"
-      />
-
-      <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/10 via-black/0 to-transparent pointer-events-none"></div>
-
-      <div v-if="isOutOfStock" class="absolute top-3 left-3 flex items-center gap-2">
-        <div class="px-3 py-1 rounded-full bg-[rgb(var(--danger))]/90 text-white text-[11px] sm:text-xs font-black shadow-lg rtl-text">
-          {{ t('common.unavailable') }}
-        </div>
-      </div>
-
-      <div v-if="discountPercent > 0" class="absolute top-3 right-3">
-        <div class="px-3 py-1 rounded-full bg-red-500/95 text-white text-[11px] sm:text-xs font-black keep-ltr shadow-lg">
-          -{{ discountPercent }}%
-        </div>
+    <div class="product-card-media-wrap">
+      <div class="product-card-media">
+        <SmartImage
+          :src="mainImage || ''"
+          :alt="displayName"
+          fit="contain"
+          wrapper-class="w-full h-full"
+          img-class="w-full h-full object-contain p-4 sm:p-5 transition duration-300 group-hover:scale-[1.02]"
+        />
       </div>
     </div>
 
-    <div class="product-card-content p-4 sm:p-5">
-      <div class="min-w-0">
-        <h3 class="product-card-title rtl-text line-clamp-2 min-w-0">
-          {{ displayName }}
-        </h3>
-        <p v-if="displayDescription && !props.compact" class="text-sm text-muted rtl-text line-clamp-2 mt-2">
-          {{ displayDescription }}
-        </p>
+    <div class="product-card-content">
+      <div class="product-card-heading">
+        <h3 class="product-card-title rtl-text line-clamp-1 min-w-0">{{ displayName }}</h3>
+        <div class="product-card-price-line keep-ltr">{{ formatPrice(displayFinalPrice) }}</div>
       </div>
 
-      <div class="product-card-bottom">
-        <div class="product-card-price">
-          <div class="text-xl sm:text-2xl font-black keep-ltr">
-            {{ formatPrice(displayFinalPrice) }}
-          </div>
-          <div v-if="discountPercent > 0" class="text-xs text-muted keep-ltr mt-1">
-            <span class="line-through opacity-70">{{ formatPrice(priceValue) }}</span>
-          </div>
-        </div>
+      <p v-if="displayDescription && !props.compact" class="product-card-desc rtl-text line-clamp-2">
+        {{ displayDescription }}
+      </p>
 
-        <div class="product-card-actions relative z-20">
-          <button
-            type="button"
-            class="product-card-btn product-card-btn--secondary"
-            :class="props.compact ? 'product-card-btn--compact' : ''"
-            @click.stop="addToCart"
-            :disabled="isOutOfStock || adding"
-          >
-            <Icon name="mdi:cart-plus" class="text-base" />
-            <span class="rtl-text">{{ t('common.addToCart') }}</span>
-          </button>
+      <div class="product-card-actions" @click.stop>
+        <button
+          type="button"
+          class="product-card-btn product-card-btn--cart"
+          :class="props.compact ? 'product-card-btn--compact' : ''"
+          @click.stop="addToCart"
+          :disabled="isOutOfStock || adding"
+        >
+          <span class="rtl-text">{{ t('common.addToCart') }}</span>
+        </button>
 
-          <button
-            type="button"
-            class="product-card-btn product-card-btn--primary"
-            :class="props.compact ? 'product-card-btn--compact' : ''"
-            @click.stop="buyNow"
-            :disabled="isOutOfStock || buying"
-          >
-            <Icon name="mdi:flash" class="text-base" />
-            <span class="rtl-text">{{ t('common.buy') }}</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          class="product-card-btn product-card-btn--buy"
+          :class="props.compact ? 'product-card-btn--compact' : ''"
+          @click.stop="buyNow"
+          :disabled="isOutOfStock || buying"
+        >
+          <span class="rtl-text">{{ t('common.buy') }}</span>
+        </button>
       </div>
     </div>
   </article>
@@ -115,14 +90,6 @@ const mainImage = computed(() => {
     ''
   const resolved = raw ? buildAssetUrl(String(raw)) : ''
   return resolved || '/hero-placeholder.svg'
-})
-
-const isNew = computed(() => {
-  const raw = p.value?.createdAt ?? p.value?.CreatedAt ?? p.value?.created_on ?? p.value?.createdOn
-  const created = raw ? new Date(raw).getTime() : 0
-  if (!created || Number.isNaN(created)) return false
-  const days = (Date.now() - created) / (1000 * 60 * 60 * 24)
-  return days >= 0 && days < 30
 })
 
 const adding = ref(false)
@@ -166,85 +133,102 @@ function goProduct() {
 
 <style scoped>
 .product-card-shell{
-  background: rgb(var(--surface));
-  box-shadow: 0 18px 42px rgba(0,0,0,.14);
   display:flex;
   flex-direction:column;
   min-height:100%;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  overflow: visible;
+  transition: transform .18s ease, opacity .18s ease;
 }
 .product-card-shell:hover{ transform: translateY(-2px); }
-.product-card-media{
-  aspect-ratio: 1 / 1;
-  background: rgba(0,0,0,.04);
+
+.product-card-media-wrap{
+  background: rgba(255,255,255,.04);
 }
+.product-card-media{
+  aspect-ratio: 1 / 1.18;
+  border-radius: 0;
+  overflow: hidden;
+  background: rgba(255,255,255,.03);
+}
+
 .product-card-content{
   display:grid;
-  gap:1rem;
-  flex:1;
+  gap:.7rem;
+  padding-top: .9rem;
+}
+.product-card-heading{
+  display:grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: .75rem;
+  align-items:start;
 }
 .product-card-title{
-  font-weight:900;
+  font-weight: 500;
+  font-size: 1.02rem;
+  line-height: 1.45;
+  color: rgb(var(--text-strong));
+}
+.product-card-price-line{
+  font-weight: 500;
   font-size: 1rem;
-  line-height:1.6;
+  white-space: nowrap;
+  color: rgb(var(--text-strong));
 }
-.product-card-bottom{
-  display:grid;
-  gap:1rem;
-  margin-top:auto;
-}
-.product-card-price{
-  display:grid;
-  gap:.15rem;
+.product-card-desc{
+  font-size: .95rem;
+  line-height: 1.5;
+  color: rgb(var(--text-soft));
 }
 .product-card-actions{
   display:grid;
   grid-template-columns: 1fr 1fr;
-  gap:.75rem;
+  gap: .8rem;
+  margin-top: .15rem;
 }
 .product-card-btn{
-  min-height:46px;
-  border-radius:14px;
+  min-height: 44px;
+  border-radius: 0;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap:.5rem;
-  font-weight:800;
-  border:1px solid transparent;
-  transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
-  padding:.8rem 1rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: transform .18s ease, opacity .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+  padding: .7rem 1rem;
 }
-.product-card-btn:hover{ transform:translateY(-1px); }
+.product-card-btn:hover{ transform: translateY(-1px); }
 .product-card-btn:disabled{ opacity:.55; cursor:not-allowed; }
-.product-card-btn--primary{
-  background:#fff;
-  color:#111;
-  box-shadow:0 12px 22px rgba(0,0,0,.12);
+.product-card-btn--cart,
+.product-card-btn--buy{
+  background: #ffffff;
+  color: #111111;
+  border-color: rgba(255,255,255,.9);
 }
-.product-card-btn--secondary{
-  background:transparent;
-  color:#fff;
-  border-color:rgba(255,255,255,.22);
+:global(html.theme-light) .product-card-btn--cart,
+:global(html.theme-light) .product-card-btn--buy{
+  background: #111111;
+  color: #ffffff;
+  border-color: rgba(17,17,17,.9);
 }
-:global(html.theme-light) .product-card-btn--primary{
-  background:#111;
-  color:#fff;
-}
-:global(html.theme-light) .product-card-btn--secondary{
-  background:transparent;
-  color:#111;
-  border-color:rgba(17,17,17,.18);
-}
-.product-card-shell--compact .product-card-content{ padding:.9rem; gap:.8rem; }
-.product-card-shell--compact .product-card-actions{ gap:.55rem; }
-.product-card-shell--compact .product-card-btn{
-  min-height:42px;
-  padding:.72rem .8rem;
-  font-size:.92rem;
-}
+.product-card-shell--compact .product-card-media{ aspect-ratio: 1 / 1.12; }
+.product-card-shell--compact .product-card-content{ gap:.58rem; padding-top:.75rem; }
+.product-card-shell--compact .product-card-title{ font-size:.97rem; }
+.product-card-shell--compact .product-card-price-line{ font-size:.96rem; }
+.product-card-shell--compact .product-card-btn{ min-height:40px; padding:.62rem .8rem; font-size:.92rem; }
+
 @media (max-width: 640px){
-  .product-card-title{ font-size:.96rem; }
-  .product-card-content{ gap:.85rem; }
+  .product-card-media{ aspect-ratio: 1 / 1.08; }
+  .product-card-title{ font-size:.94rem; }
+  .product-card-price-line{ font-size:.95rem; }
+  .product-card-desc{ font-size:.84rem; }
   .product-card-actions{ gap:.55rem; }
-  .product-card-btn{ min-height:42px; padding:.72rem .85rem; font-size:.92rem; }
+  .product-card-btn{ min-height:40px; padding:.62rem .7rem; font-size:.9rem; }
 }
 </style>
