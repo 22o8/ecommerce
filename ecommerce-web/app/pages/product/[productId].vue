@@ -5,7 +5,6 @@ import { formatIqd } from '~/composables/useMoney'
 
 const route = useRoute()
 const { t } = useI18n()
-const ui = useUiStore()
 const api = useApi()
 const cart = useCartStore()
 const auth = useAuthStore()
@@ -55,12 +54,6 @@ const isFavorite = computed(() => favoriteKey.value ? isInWishlist(favoriteKey.v
 const reviewForm = reactive({ rating: 5, comment: '' })
 const reviewSubmitting = ref(false)
 const actionBusy = ref(false)
-
-const inverseThemeBtnClass = computed(() =>
-  ui.theme === 'dark'
-    ? 'bg-white text-black border-white shadow-[0_16px_34px_rgba(255,255,255,0.10),0_10px_22px_rgba(0,0,0,0.18)] hover:bg-neutral-100'
-    : 'bg-black text-white border-black shadow-[0_14px_30px_rgba(24,24,24,0.16),0_4px_12px_rgba(24,24,24,0.10)] hover:bg-neutral-950'
-)
 
 watch(myReview, (v) => {
   reviewForm.rating = Number(v?.rating ?? 5)
@@ -230,11 +223,11 @@ watch(() => auth.isAuthed, async (v) => {
             </div>
 
             <div class="mt-4 sm:mt-5 product-main-actions">
-              <button class="product-action-btn product-action-btn--main" :class="inverseThemeBtnClass" @click="addToCart" :disabled="isOutOfStock || actionBusy">
+              <button class="product-action-btn product-action-btn--main" @click="addToCart" :disabled="isOutOfStock || actionBusy">
                 <Icon name="mdi:cart-plus" class="text-lg" />
                 <span class="rtl-text">{{ t('common.addToCart') }}</span>
               </button>
-              <button class="product-action-btn product-action-btn--main" :class="inverseThemeBtnClass" @click="buyNow" :disabled="isOutOfStock || actionBusy">
+              <button class="product-action-btn product-action-btn--main" @click="buyNow" :disabled="isOutOfStock || actionBusy">
                 <Icon name="mdi:flash" class="text-lg" />
                 <span class="rtl-text">{{ t('common.buy') }}</span>
               </button>
@@ -356,23 +349,27 @@ watch(() => auth.isAuthed, async (v) => {
 .review-textarea{ resize:vertical; min-height:120px; }
 .product-related-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:1rem; }
 
+:global(html.theme-light) .product-action-btn--main,
 :global(html.theme-light) .product-favorite-btn{
   background:#111;
   color:#fff;
   border-color:rgba(17,17,17,.82);
   box-shadow:0 14px 30px rgba(24,24,24,.16), 0 4px 12px rgba(24,24,24,.10);
 }
+:global(html.theme-light) .product-action-btn--main:hover,
 :global(html.theme-light) .product-favorite-btn:hover{
   background:#000;
 }
 :global(html.theme-light) .product-price-card{ background:linear-gradient(180deg, #ffffff, #f8f3f8); border-color:rgba(24,24,24,.08); }
 :global(html.theme-light) .review-textarea{ background:#fff; border-color:rgba(24,24,24,.12); color:#161616; }
+:global(html.theme-dark) .product-action-btn--main,
 :global(html.theme-dark) .product-favorite-btn{
   background:#fff;
   color:#111;
   border-color:rgba(255,255,255,.84);
   box-shadow:0 16px 34px rgba(255,255,255,.10), 0 10px 22px rgba(0,0,0,.18);
 }
+:global(html.theme-dark) .product-action-btn--main:hover,
 :global(html.theme-dark) .product-favorite-btn:hover{
   background:#f5f5f5;
 }
