@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
@@ -41,6 +41,21 @@ const displayedFeatured = computed(() => {
   if (tab.value === 'discounts') return (productsStore.discountItems ?? []).slice(0, 8)
   if (tab.value === 'topRated') return (productsStore.topRatedItems ?? []).slice(0, 8)
   return homeFeatured.value
+})
+
+const topRatedLoading = ref(false)
+async function ensureTopRatedLoaded() {
+  if (topRatedLoading.value) return
+  if ((productsStore.topRatedItems ?? []).length > 0) return
+  topRatedLoading.value = true
+  try {
+    await productsStore.fetchTopRated(8)
+  } finally {
+    topRatedLoading.value = false
+  }
+}
+watch(tab, async (value) => {
+  if (value === 'topRated') await ensureTopRatedLoaded()
 })
 
 const brands = computed(() => brandsStore.publicItems)
@@ -110,6 +125,7 @@ function onRailWheel(event: WheelEvent) {
 
 onMounted(() => {
   categoryRail.value?.addEventListener('wheel', onRailWheel, { passive: false })
+  ensureTopRatedLoaded()
 })
 
 onBeforeUnmount(() => {
@@ -210,7 +226,7 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div class="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+        <div v-if="displayedFeatured.length" class="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
           <RevealOnScroll
             v-for="(p, idx) in displayedFeatured"
             :key="p.id"
@@ -218,6 +234,9 @@ onBeforeUnmount(() => {
           >
             <ProductCard :p="p" />
           </RevealOnScroll>
+        </div>
+        <div v-else class="mt-10 rounded-[1.75rem] border border-app bg-surface p-8 text-center text-sm text-[rgb(var(--muted))]">
+          {{ tab === 'topRated' ? t('home.noTopRatedProducts') : t('products.empty') }}
         </div>
       </div>
     </section>

@@ -60,10 +60,7 @@
           <button
             type="button"
             class="product-card-icon-btn rounded-full border border-app transition p-2 sm:p-2.5 touch-manipulation"
-            @pointerdown.stop.prevent
-            @touchstart.stop.prevent
-            @mousedown.stop.prevent
-            @click.stop.prevent="toggleFav"
+            @click.stop="toggleFav"
             :aria-label="t('wishlist.toggle')"
           >
             <Icon :name="fav ? 'mdi:heart' : 'mdi:heart-outline'" class="text-base sm:text-lg" />
@@ -72,10 +69,7 @@
           <button
             type="button"
             class="product-card-icon-btn rounded-full border border-app transition p-2 sm:p-2.5 touch-manipulation"
-            @pointerdown.stop.prevent
-            @touchstart.stop.prevent
-            @mousedown.stop.prevent
-            @click.stop.prevent="openPreview"
+            @click.stop="openPreview"
             :aria-label="t('products.quickPreview')"
           >
             <Icon name="mdi:eye-outline" class="text-base sm:text-lg" />
@@ -96,12 +90,9 @@
         <div class="relative z-20 flex flex-row items-center gap-1.5 sm:gap-2 touch-manipulation">
           <button
             type="button"
-            class="product-card-btn inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl border border-app transition text-[11px] sm:text-xs min-w-0 flex-1" :class="props.compact ? 'product-card-btn--compact' : ''"
-            @pointerdown.stop.prevent
-            @touchstart.stop.prevent
-            @mousedown.stop.prevent
-            @click.stop.prevent="addToCart"
-            :disabled="isOutOfStock"
+            class="product-card-btn product-card-btn--cta inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl border border-app transition text-[11px] sm:text-xs min-w-0 flex-1" :class="props.compact ? 'product-card-btn--compact' : ''"
+            @click.stop="addToCart"
+            :disabled="isOutOfStock || adding"
           >
             <Icon name="mdi:cart-plus" class="text-base" />
             <span class="rtl-text">{{ t('common.addToCart') }}</span>
@@ -109,13 +100,11 @@
 
           <button
             type="button"
-            class="product-card-btn inline-flex items-center justify-center px-2 py-1.5 rounded-xl border border-app transition text-[11px] sm:text-xs min-w-0" :class="props.compact ? 'product-card-btn--compact' : ''"
-            @pointerdown.stop.prevent
-            @touchstart.stop.prevent
-            @mousedown.stop.prevent
-            @click.stop.prevent="buyNow"
-            :disabled="isOutOfStock"
+            class="product-card-btn product-card-btn--cta inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl border border-app transition text-[11px] sm:text-xs min-w-0" :class="props.compact ? 'product-card-btn--compact' : ''"
+            @click.stop="buyNow"
+            :disabled="isOutOfStock || buying"
           >
+            <Icon name="mdi:lightning-bolt-outline" class="text-base" />
             <span class="rtl-text">{{ t('common.buy') }}</span>
           </button>
         </div>
@@ -177,25 +166,35 @@ const isNew = computed(() => {
 
 const wishlistKey = computed(() => String((p.value as any)?.id ?? (p.value as any)?.productId ?? p.value?.slug ?? ''))
 const fav = computed(() => isInWishlist(wishlistKey.value))
+const adding = ref(false)
+const buying = ref(false)
 
 function formatPrice(v: any) {
   return formatIqd(v)
 }
 
 function addToCart() {
-  if (isOutOfStock.value) return
-  cart.add(p.value)
+  if (isOutOfStock.value || adding.value) return
+  adding.value = true
+  try {
+    cart.add(p.value)
+  } finally {
+    setTimeout(() => { adding.value = false }, 180)
+  }
 }
 
 const { checkoutSingleProduct } = useWhatsappCheckout()
 
 async function buyNow() {
-  if (isOutOfStock.value) return
+  if (isOutOfStock.value || buying.value) return
+  buying.value = true
   try {
     await checkoutSingleProduct(p.value, 1)
   } catch (e) {
     cart.add(p.value)
     navigateTo('/cart')
+  } finally {
+    setTimeout(() => { buying.value = false }, 220)
   }
 }
 
@@ -234,12 +233,15 @@ function goProduct() {
   box-shadow: 0 10px 22px rgba(0,0,0,.14);
 }
 .product-card-btn:hover{ transform: translateY(-1px); }
-.product-card-btn:first-of-type{
-  background: linear-gradient(135deg, rgba(var(--primary), .98), rgba(var(--primary), .78));
-  color:#fff;
-  border-color: rgba(var(--primary), .55);
-  box-shadow:0 16px 34px rgba(var(--primary), .22);
+.product-card-btn--cta{
+  min-height: 44px;
+  padding-inline: .85rem;
+  border-radius: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 14px 28px rgba(0,0,0,.12);
 }
+.product-card-btn--cta:active{ transform: translateY(0); }
 .product-card-btn:disabled{ opacity:.5; cursor:not-allowed; }
 .product-card-shell--compact{ border-radius:18px; }
 .product-card-shell--compact .product-card-media{ aspect-ratio: 1 / 1; }
@@ -249,8 +251,9 @@ function goProduct() {
   background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .92));
   color: rgb(var(--text));
   box-shadow: 0 10px 22px rgba(0,0,0,.12);
-  min-width: 42px;
-  min-height: 42px;
+  min-width: 44px;
+  min-height: 44px;
+  backdrop-filter: blur(8px);
   position: relative;
   z-index: 30;
 }
@@ -272,11 +275,11 @@ function goProduct() {
   border-color: rgba(24,24,24,.12);
   box-shadow: 0 12px 26px rgba(24,24,24,.08), inset 0 1px 0 rgba(255,255,255,.8);
 }
-:global(html.theme-light) .product-card-btn:first-of-type{
-  background: linear-gradient(180deg, #ffffff, #f5eff4);
-  color:#1a1a1a;
-  border-color: rgba(24,24,24,.12);
-  box-shadow: 0 12px 26px rgba(24,24,24,.08), inset 0 1px 0 rgba(255,255,255,.8);
+:global(html.theme-light) .product-card-btn--cta{
+  background: linear-gradient(135deg, rgba(var(--primary), .98), rgba(var(--primary), .82));
+  color:#fff;
+  border-color: rgba(var(--primary), .32);
+  box-shadow: 0 18px 34px rgba(var(--primary), .18);
 }
 :global(html.theme-light) .product-card-icon-btn{
   background: linear-gradient(180deg, #ffffff, #f5eff4);
@@ -284,11 +287,12 @@ function goProduct() {
   border-color: rgba(24,24,24,.12);
   box-shadow: 0 12px 26px rgba(24,24,24,.08), inset 0 1px 0 rgba(255,255,255,.8);
 }
-:global(html.theme-light) .product-card-btn:last-of-type{
-  background: linear-gradient(135deg, rgba(var(--primary), .98), rgba(var(--primary), .82));
+
+:global(html.theme-dark) .product-card-btn--cta{
+  background: linear-gradient(135deg, rgba(var(--primary), .98), rgba(var(--primary), .80));
   color:#fff;
-  border-color: rgba(var(--primary), .45);
-  box-shadow: 0 18px 34px rgba(var(--primary), .2);
+  border-color: rgba(var(--primary), .38);
+  box-shadow: 0 18px 34px rgba(var(--primary), .20);
 }
 :global(html.theme-dark) .product-card-shell{
   background: linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .88));
@@ -299,6 +303,8 @@ function goProduct() {
   .product-card-shell{ border-radius:20px; }
   .product-card-media{ aspect-ratio: 1 / 1; }
   .product-card-shell :deep(img){ padding:.55rem !important; }
+  .product-card-btn--cta{ min-height: 42px; padding-inline: .72rem; font-size: 12px; }
+  .product-card-icon-btn{ min-width: 42px; min-height: 42px; }
 }
 
 </style>
