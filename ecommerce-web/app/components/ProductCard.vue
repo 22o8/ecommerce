@@ -300,26 +300,22 @@ function goProduct() {
 :global(html.theme-light) .product-card-media{
   background:linear-gradient(180deg, rgba(252,248,251,.95), rgba(245,239,245,.9));
 }
-:global(html.theme-light) .product-card-icon-btn,
 :global(html.theme-light) .product-card-btn--main{
   background:#111;
   color:#fff;
-  border-color:rgba(17,17,17,.82);
-  box-shadow:0 14px 30px rgba(24,24,24,.16), 0 4px 12px rgba(24,24,24,.10);
+  border-color:rgba(17,17,17,.88);
+  box-shadow:0 14px 30px rgba(24,24,24,.18), 0 4px 12px rgba(24,24,24,.10);
 }
-:global(html.theme-light) .product-card-btn--main:hover,
-:global(html.theme-light) .product-card-icon-btn:hover{
+:global(html.theme-light) .product-card-btn--main:hover{
   background:#000;
 }
-:global(html.theme-dark) .product-card-btn--main,
-:global(html.theme-dark) .product-card-icon-btn{
+:global(html.theme-dark) .product-card-btn--main{
   background:#fff;
   color:#111;
-  border-color:rgba(255,255,255,.84);
-  box-shadow:0 16px 34px rgba(255,255,255,.08), 0 10px 20px rgba(0,0,0,.18);
+  border-color:rgba(255,255,255,.88);
+  box-shadow:0 16px 34px rgba(255,255,255,.10), 0 10px 20px rgba(0,0,0,.18);
 }
-:global(html.theme-dark) .product-card-btn--main:hover,
-:global(html.theme-dark) .product-card-icon-btn:hover{
+:global(html.theme-dark) .product-card-btn--main:hover{
   background:#f5f5f5;
 }
 
