@@ -338,31 +338,36 @@ watch(() => auth.isAuthed, async (v) => {
 .product-action-btn:hover{ transform:translateY(-1px); }
 .product-action-btn:disabled{ opacity:.55; cursor:not-allowed; }
 .product-action-btn--main{
-  background:linear-gradient(135deg, rgba(var(--primary), .98), rgba(var(--primary), .78));
-  color:#fff;
-  box-shadow:0 16px 34px rgba(var(--primary), .22);
-  border-color:rgba(var(--primary), .28);
+  background:#fff;
+  color:#0f1117;
+  box-shadow:0 16px 34px rgba(0,0,0,.18);
+  border-color:rgba(255,255,255,.22);
 }
 .product-action-btn--review{ width:auto; min-width:170px; }
-.product-favorite-btn{ min-height:56px; min-width:56px; border-radius:999px; border:1px solid rgba(var(--border), .95); display:inline-flex; align-items:center; justify-content:center; background:linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .92)); color:rgb(var(--text)); box-shadow:0 12px 26px rgba(0,0,0,.14); transition:transform .2s ease, box-shadow .2s ease, background .2s ease; }
+.product-favorite-btn{ min-height:56px; min-width:56px; border-radius:999px; border:1px solid rgba(var(--border), .95); display:inline-flex; align-items:center; justify-content:center; background:#fff; color:#0f1117; box-shadow:0 12px 26px rgba(0,0,0,.16); transition:transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease; }
 .product-favorite-btn:hover{ transform:translateY(-1px); }
 .review-textarea{ resize:vertical; min-height:120px; }
 .product-related-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:1rem; }
 
 :global(html.theme-light) .product-action-btn--main,
 :global(html.theme-light) .product-favorite-btn{
-  background:linear-gradient(180deg, #ffffff, #f6f1f7);
-  color:#161616;
-  border-color:rgba(24,24,24,.12);
-  box-shadow:0 14px 30px rgba(24,24,24,.10), 0 4px 12px rgba(232,91,154,.08);
+  background:#111319;
+  color:#fff;
+  border-color:rgba(17,19,25,.14);
+  box-shadow:0 14px 30px rgba(17,19,25,.12);
 }
 :global(html.theme-light) .product-action-btn--main:hover,
 :global(html.theme-light) .product-favorite-btn:hover{
-  background:linear-gradient(180deg, #fff, #f2eaf3);
+  background:#0b0d12;
 }
 :global(html.theme-light) .product-price-card{ background:linear-gradient(180deg, #ffffff, #f8f3f8); border-color:rgba(24,24,24,.08); }
 :global(html.theme-light) .review-textarea{ background:#fff; border-color:rgba(24,24,24,.12); color:#161616; }
-:global(html.theme-dark) .product-action-btn--main{ color:#fff; }
+:global(html.theme-dark) .product-action-btn--main,
+:global(html.theme-dark) .product-favorite-btn{
+  background:#fff;
+  color:#0f1117;
+  border-color:rgba(255,255,255,.14);
+}
 
 @media (max-width: 1180px){
   .product-layout-grid{ grid-template-columns:1fr; }
