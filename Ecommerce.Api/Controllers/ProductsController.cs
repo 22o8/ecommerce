@@ -74,6 +74,7 @@ public class ProductsController : ControllerBase
             (string?)p.Category,
             (string?)p.SubCategory,
             (string?)p.ProblemCategory,
+            (string?)p.ProblemSubCategory,
         }.Where(x => !string.IsNullOrWhiteSpace(x))).ToLowerInvariant();
 
         var normalizedCategory = N(category);
@@ -150,6 +151,7 @@ public class ProductsController : ControllerBase
                 p.Category,
                 p.SubCategory,
                 p.ProblemCategory,
+                p.ProblemSubCategory,
                 p.StockQuantity,
                 p.IsCouponAllowed,
                 p.RatingCount,
@@ -191,6 +193,7 @@ public class ProductsController : ControllerBase
         var category = N(query.Category);
         var subCategory = N(query.SubCategory);
         var problemCategory = N(query.ProblemCategory);
+        var problemSubCategory = N(query.ProblemSubCategory);
 
         var baseQuery = _db.Products.AsNoTracking().Where(p => p.IsPublished);
 
@@ -226,6 +229,7 @@ public class ProductsController : ControllerBase
         var categoryAliases = await ResolveCategoryAliasesAsync(category);
         var subCategoryAliases = await ResolveCategoryAliasesAsync(subCategory);
         var problemCategoryAliases = await ResolveCategoryAliasesAsync(problemCategory);
+        var problemSubCategoryAliases = await ResolveCategoryAliasesAsync(problemSubCategory);
 
         if (categoryAliases.Count > 0)
             baseQuery = baseQuery.Where(p =>
@@ -241,6 +245,10 @@ public class ProductsController : ControllerBase
             baseQuery = baseQuery.Where(p =>
                 p.ProblemCategory != null && problemCategoryAliases.Contains(p.ProblemCategory.ToLower()));
 
+        if (problemSubCategoryAliases.Count > 0)
+            baseQuery = baseQuery.Where(p =>
+                p.ProblemSubCategory != null && problemSubCategoryAliases.Contains(p.ProblemSubCategory.ToLower()));
+
         if (!string.IsNullOrWhiteSpace(q))
         {
             baseQuery = baseQuery.Where(p =>
@@ -248,7 +256,8 @@ public class ProductsController : ControllerBase
                 (p.Description != null && p.Description.ToLower().Contains(q)) ||
                 (p.Slug != null && p.Slug.ToLower().Contains(q)) ||
                 (p.Brand != null && p.Brand.ToLower().Contains(q)) ||
-                (p.ProblemCategory != null && p.ProblemCategory.ToLower().Contains(q)));
+                (p.ProblemCategory != null && p.ProblemCategory.ToLower().Contains(q)) ||
+                (p.ProblemSubCategory != null && p.ProblemSubCategory.ToLower().Contains(q)));
         }
 
         if ((query.Sort ?? "new").Equals("rating", StringComparison.OrdinalIgnoreCase) ||
@@ -322,6 +331,7 @@ public class ProductsController : ControllerBase
                 x.Category,
                 x.SubCategory,
                 x.ProblemCategory,
+                x.ProblemSubCategory,
                 x.StockQuantity,
                 x.IsCouponAllowed,
                 x.RatingCount,
@@ -382,6 +392,7 @@ public class ProductsController : ControllerBase
                 x.Category,
                 x.SubCategory,
                 x.ProblemCategory,
+                x.ProblemSubCategory,
                 x.StockQuantity,
                 x.IsCouponAllowed,
                 x.RatingCount,

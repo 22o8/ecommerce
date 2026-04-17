@@ -31,16 +31,23 @@ public class AdminCategoriesController : ControllerBase
         string? ImageUrl,
         int SortOrder,
         bool IsActive,
-        string? Section
+        string? Section,
+        Guid? ParentId,
+        bool HasDetailSections
     );
 
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] string? section = null)
+    public async Task<IActionResult> List([FromQuery] string? section = null, [FromQuery] Guid? parentId = null, [FromQuery] bool rootsOnly = false)
     {
         var normalizedSection = string.IsNullOrWhiteSpace(section) ? null : section.Trim().ToLowerInvariant();
         var query = _db.Categories.AsNoTracking();
         if (!string.IsNullOrWhiteSpace(normalizedSection))
             query = query.Where(x => x.Section.ToLower() == normalizedSection);
+
+        if (parentId.HasValue)
+            query = query.Where(x => x.ParentId == parentId.Value);
+        else if (rootsOnly)
+            query = query.Where(x => x.ParentId == null);
 
         var items = await query
             .OrderBy(x => x.SortOrder)
@@ -57,6 +64,9 @@ public class AdminCategoriesController : ControllerBase
             x.DescriptionEn,
             x.ImageUrl,
             x.Section,
+            x.ParentId,
+            x.HasDetailSections,
+            ChildCount = _db.Categories.Count(c => c.ParentId == x.Id),
             x.SortOrder,
             x.IsActive,
             x.CreatedAt,
@@ -74,6 +84,17 @@ public class AdminCategoriesController : ControllerBase
         if (await _db.Categories.AnyAsync(x => x.Key.ToLower() == key))
             return BadRequest(new { message = "Category already exists" });
 
+        var normalizedSection = NormalizeSection(req.Section);
+        Guid? normalizedParentId = null;
+        if (req.ParentId.HasValue)
+        {
+            var parent = await _db.Categories.AsNoTracking().FirstOrDefaultAsync(x => x.Id == req.ParentId.Value);
+            if (parent is null) return BadRequest(new { message = "Parent category not found" });
+            if (parent.Section.ToLower() != normalizedSection)
+                return BadRequest(new { message = "Parent section mismatch" });
+            normalizedParentId = parent.Id;
+        }
+
         var entity = new CategoryDefinition
         {
             Id = Guid.NewGuid(),
@@ -83,7 +104,9 @@ public class AdminCategoriesController : ControllerBase
             DescriptionAr = req.DescriptionAr?.Trim(),
             DescriptionEn = req.DescriptionEn?.Trim(),
             ImageUrl = req.ImageUrl?.Trim(),
-            Section = NormalizeSection(req.Section),
+            Section = normalizedSection,
+            ParentId = normalizedParentId,
+            HasDetailSections = normalizedParentId == null && normalizedSection == "problem" && req.HasDetailSections,
             SortOrder = req.SortOrder,
             IsActive = req.IsActive,
             CreatedAt = DateTime.UtcNow,
@@ -105,16 +128,38 @@ public class AdminCategoriesController : ControllerBase
         if (await _db.Categories.AnyAsync(x => x.Id != id && x.Key.ToLower() == key))
             return BadRequest(new { message = "Category already exists" });
 
+        var normalizedSection = NormalizeSection(req.Section);
+        Guid? normalizedParentId = null;
+        if (req.ParentId.HasValue)
+        {
+            if (req.ParentId.Value == id) return BadRequest(new { message = "Category cannot be its own parent" });
+            var parent = await _db.Categories.AsNoTracking().FirstOrDefaultAsync(x => x.Id == req.ParentId.Value);
+            if (parent is null) return BadRequest(new { message = "Parent category not found" });
+            if (parent.Section.ToLower() != normalizedSection)
+                return BadRequest(new { message = "Parent section mismatch" });
+            normalizedParentId = parent.Id;
+        }
+
         entity.Key = key;
         entity.NameAr = string.IsNullOrWhiteSpace(req.NameAr) ? entity.NameAr : req.NameAr.Trim();
         entity.NameEn = req.NameEn?.Trim();
         entity.DescriptionAr = req.DescriptionAr?.Trim();
         entity.DescriptionEn = req.DescriptionEn?.Trim();
         entity.ImageUrl = req.ImageUrl?.Trim();
-        entity.Section = NormalizeSection(req.Section);
+        entity.Section = normalizedSection;
+        entity.ParentId = normalizedParentId;
+        entity.HasDetailSections = normalizedParentId == null && normalizedSection == "problem" && req.HasDetailSections;
         entity.SortOrder = req.SortOrder;
         entity.IsActive = req.IsActive;
         entity.UpdatedAt = DateTime.UtcNow;
+
+        if (!entity.HasDetailSections)
+        {
+            var children = await _db.Categories.Where(x => x.ParentId == entity.Id).ToListAsync();
+            foreach (var child in children)
+                child.IsActive = false;
+        }
+
         await _db.SaveChangesAsync();
         return Ok(new { entity.Id });
     }
@@ -124,6 +169,11 @@ public class AdminCategoriesController : ControllerBase
     {
         var entity = await _db.Categories.FirstOrDefaultAsync(x => x.Id == id);
         if (entity is null) return NotFound();
+
+        var hasChildren = await _db.Categories.AnyAsync(x => x.ParentId == id);
+        if (hasChildren)
+            return BadRequest(new { message = "Delete child sections first" });
+
         _db.Categories.Remove(entity);
         await _db.SaveChangesAsync();
         return Ok();
@@ -150,7 +200,6 @@ public class AdminCategoriesController : ControllerBase
 
         return Ok(new { url = stored.Url, key = stored.Key });
     }
-
 
     private static string NormalizeSection(string? value)
     {

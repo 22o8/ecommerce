@@ -16,12 +16,19 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("active")]
-    public async Task<IActionResult> Active([FromQuery] string? section = null)
+    public async Task<IActionResult> Active([FromQuery] string? section = null, [FromQuery] Guid? parentId = null, [FromQuery] bool rootsOnly = false)
     {
         var normalizedSection = string.IsNullOrWhiteSpace(section) ? "regular" : section.Trim().ToLowerInvariant();
-        var items = await _db.Categories
+        var query = _db.Categories
             .AsNoTracking()
-            .Where(x => x.IsActive && x.Section.ToLower() == normalizedSection)
+            .Where(x => x.IsActive && x.Section.ToLower() == normalizedSection);
+
+        if (parentId.HasValue)
+            query = query.Where(x => x.ParentId == parentId.Value);
+        else if (rootsOnly)
+            query = query.Where(x => x.ParentId == null);
+
+        var items = await query
             .OrderBy(x => x.SortOrder)
             .ThenBy(x => x.NameAr)
             .Select(x => new
@@ -34,6 +41,9 @@ public class CategoriesController : ControllerBase
                 descriptionEn = x.DescriptionEn,
                 imageUrl = x.ImageUrl,
                 section = x.Section,
+                x.ParentId,
+                x.HasDetailSections,
+                childCount = _db.Categories.Count(c => c.IsActive && c.ParentId == x.Id),
                 x.SortOrder,
                 x.IsActive,
                 x.CreatedAt,

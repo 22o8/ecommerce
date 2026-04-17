@@ -7,6 +7,9 @@ export type AppCategory = {
   descriptionEn?: string | null
   imageUrl?: string | null
   section?: string | null
+  parentId?: string | null
+  hasDetailSections?: boolean
+  childCount?: number
   sortOrder?: number
   isActive?: boolean
 }
@@ -31,6 +34,9 @@ export function useCategories() {
       descriptionEn: x.descriptionEn || x.DescriptionEn || null,
       imageUrl: x.imageUrl || x.ImageUrl || null,
       section: x.section || x.Section || 'regular',
+      parentId: x.parentId || x.ParentId || null,
+      hasDetailSections: Boolean(x.hasDetailSections ?? x.HasDetailSections ?? false),
+      childCount: Number(x.childCount ?? x.ChildCount ?? 0),
       sortOrder: Number(x.sortOrder || x.SortOrder || 0),
       isActive: Boolean(x.isActive ?? x.IsActive ?? true),
     })).filter((x: AppCategory) => x.key && x.nameAr)
@@ -44,7 +50,7 @@ export function useCategories() {
     targetLoading.value = true
     loading.value = regularLoading.value || problemLoading.value || true
     try {
-      const res: any = await api.get<any[]>('/categories/active', { _ts: Date.now(), section })
+      const res: any = await api.get<any[]>('/categories/active', { _ts: Date.now(), section, rootsOnly: true })
       const arr = Array.isArray(res) ? res : []
       target.value = arr.length ? normalize(arr) : []
     } catch {
@@ -56,5 +62,15 @@ export function useCategories() {
     return target.value
   }
 
-  return { categories, problemCategories, loading, fetchCategories, fallbackCategories }
+  async function fetchProblemChildren(parentId: string) {
+    if (!parentId) return [] as AppCategory[]
+    try {
+      const res: any = await api.get<any[]>('/categories/active', { _ts: Date.now(), section: 'problem', parentId })
+      return normalize(Array.isArray(res) ? res : [])
+    } catch {
+      return [] as AppCategory[]
+    }
+  }
+
+  return { categories, problemCategories, loading, fetchCategories, fetchProblemChildren, fallbackCategories }
 }

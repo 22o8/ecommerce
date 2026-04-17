@@ -87,7 +87,7 @@ const categoryCards = computed(() => {
     title: locale.value === 'en' ? (c.nameEn || c.nameAr || c.key) : (c.nameAr || c.nameEn || c.key),
     subtitle: locale.value === 'en' ? (c.descriptionEn || c.descriptionAr || t('home.tapToExplore')) : (c.descriptionAr || c.descriptionEn || t('home.tapToExplore')),
     imageUrl: c.imageUrl || '',
-    to: `/categories/${encodeURIComponent(String(c.key || '').toLowerCase())}`,
+    to: `/problems/${encodeURIComponent(String(c.key || '').toLowerCase())}`,
     accent: accents[idx % accents.length],
   }))
 })
@@ -106,7 +106,7 @@ const problemCards = computed(() => {
     title: locale.value === 'en' ? (c.nameEn || c.nameAr || c.key) : (c.nameAr || c.nameEn || c.key),
     subtitle: locale.value === 'en' ? (c.descriptionEn || c.descriptionAr || t('home.tapToExplore')) : (c.descriptionAr || c.descriptionEn || t('home.tapToExplore')),
     imageUrl: c.imageUrl || '',
-    to: `/categories/${encodeURIComponent(String(c.key || '').toLowerCase())}`,
+    to: `/problems/${encodeURIComponent(String(c.key || '').toLowerCase())}`,
     accent: accents[idx % accents.length],
   }))
 })

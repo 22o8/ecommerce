@@ -28,6 +28,7 @@ public class Product
     public string Category { get; set; } = "general";
     public string SubCategory { get; set; } = "";
     public string ProblemCategory { get; set; } = "";
+    public string ProblemSubCategory { get; set; } = "";
     public int StockQuantity { get; set; } = 100;
     public int LowStockThreshold { get; set; } = 5;
     public bool IsCouponAllowed { get; set; } = true;

@@ -10,4 +10,5 @@ public class PublicProductQuery
     public string? Category { get; set; }
     public string? SubCategory { get; set; }
     public string? ProblemCategory { get; set; }
+    public string? ProblemSubCategory { get; set; }
 }

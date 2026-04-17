@@ -95,6 +95,14 @@
                 </select>
               </div>
 
+              <div v-if="problemSubCategoryOptions.length" class="grid gap-2">
+                <label class="text-sm font-medium">القسم الدقيق لحل المشكلة</label>
+                <select v-model="form.problemSubCategory" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
+                  <option value="">اختر القسم الدقيق</option>
+                  <option v-for="c in problemSubCategoryOptions" :key="c.key" :value="c.key">{{ c.nameAr }}</option>
+                </select>
+              </div>
+
               <div class="grid gap-2">
                 <label class="text-sm font-medium">{{ t('admin.stockQuantity') }}</label>
                 <UiInput v-model.number="form.stockQuantity" type="number" min="0" step="1" />
@@ -250,6 +258,7 @@ const form = reactive({
   category: 'general',
   subCategory: '',
   problemCategory: '',
+  problemSubCategory: '',
   stockQuantity: 0,
   lowStockThreshold: 5,
   isCouponAllowed: true,
@@ -264,11 +273,33 @@ const finalPrice = computed(() => {
 const slugTouched = ref(false)
 const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام' }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 const preciseCategoryOptions = computed(() => categoryOptions.value.filter((c:any) => c.key && c.key !== String(form.category || '')))
-const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
+const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || '') })))
+const problemSubCategoryItems = ref<any[]>([])
+const problemSubCategoryOptions = computed(() => (problemSubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
 watch(() => form.category, () => {
   if (form.subCategory && form.subCategory === form.category) form.subCategory = ''
 })
+
+async function loadProblemSubCategories() {
+  form.problemSubCategory = problemSubCategoryOptions.value.some((x:any) => x.key === form.problemSubCategory) ? form.problemSubCategory : ''
+  const selected = (problemCategories.value || []).find((x:any) => String(x.key || '') === String(form.problemCategory || ''))
+  if (!selected?.id) {
+    problemSubCategoryItems.value = []
+    form.problemSubCategory = ''
+    return
+  }
+  try {
+    const res: any = await $fetch('/api/bff/categories/active', { query: { section: 'problem', parentId: selected.id, _ts: Date.now() } })
+    problemSubCategoryItems.value = Array.isArray(res) ? res : []
+    if (!problemSubCategoryItems.value.some((x:any) => String(x.key || '') === String(form.problemSubCategory || ''))) form.problemSubCategory = ''
+  } catch {
+    problemSubCategoryItems.value = []
+    form.problemSubCategory = ''
+  }
+}
+
+watch(() => form.problemCategory, () => { loadProblemSubCategories() })
 
 const autoSlugBase = ref('')
 
@@ -302,6 +333,7 @@ function resetForm() {
   form.category = product.value.category || 'general'
   form.subCategory = product.value.subCategory || ''
   form.problemCategory = product.value.problemCategory || ''
+  form.problemSubCategory = product.value.problemSubCategory || ''
   form.stockQuantity = Number(product.value.stockQuantity ?? 0)
   form.lowStockThreshold = Number(product.value.lowStockThreshold ?? 5)
   form.isCouponAllowed = Boolean(product.value.isCouponAllowed ?? true)
@@ -401,10 +433,12 @@ async function reloadAll() {
     })
   )
 
-  tasks.push(fetchCategories().catch(() => {}))
+  tasks.push(fetchCategories(false, 'regular').catch(() => {}))
+  tasks.push(fetchCategories(false, 'problem').catch(() => {}))
 
   // ننتظر أولاً المنتج حتى يصير عندنا id صحيح للصور
   await Promise.all(tasks)
+  await loadProblemSubCategories()
 
   await loadImages().catch((e) => {
     console.warn('[admin] loadImages failed', e)
@@ -442,6 +476,7 @@ async function onSave() {
       category: form.category,
       subCategory: form.subCategory,
       problemCategory: form.problemCategory,
+      problemSubCategory: form.problemSubCategory,
       stockQuantity: Number(form.stockQuantity ?? 0),
       lowStockThreshold: Number(form.lowStockThreshold ?? 0),
       isCouponAllowed: Boolean(form.isCouponAllowed),
@@ -450,6 +485,7 @@ async function onSave() {
     })
     toast.success(t('common.saved'))
     await Promise.all([loadProduct(), fetchCategories(false, 'regular'), fetchCategories(false, 'problem')])
+    await loadProblemSubCategories()
   } catch (e: any) {
     toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
   } finally {

@@ -17,6 +17,8 @@ type FetchParams = {
   brand?: string
   category?: string
   subCategory?: string
+  problemCategory?: string
+  problemSubCategory?: string
 }
 
 export const useProductsStore = defineStore('products', () => {
@@ -47,9 +49,11 @@ export const useProductsStore = defineStore('products', () => {
 
     const category = p.category ?? p.Category ?? ''
     const subCategory = p.subCategory ?? p.SubCategory ?? ''
+    const problemCategory = p.problemCategory ?? p.ProblemCategory ?? ''
+    const problemSubCategory = p.problemSubCategory ?? p.ProblemSubCategory ?? ''
     const stockQuantity = Number(p.stockQuantity ?? p.StockQuantity ?? 0)
     const isCouponAllowed = Boolean(p.isCouponAllowed ?? p.IsCouponAllowed ?? true)
-    return { ...p, name, priceIqd, priceUsd, price: priceIqd, discountPercent, finalPriceIqd, imageUrl, slug, images: normImages, description, category, subCategory, stockQuantity, isCouponAllowed }
+    return { ...p, name, priceIqd, priceUsd, price: priceIqd, discountPercent, finalPriceIqd, imageUrl, slug, images: normImages, description, category, subCategory, problemCategory, problemSubCategory, stockQuantity, isCouponAllowed }
 }
 
 
@@ -91,6 +95,8 @@ export const useProductsStore = defineStore('products', () => {
 					brand: params.brand || undefined,
 					category: params.category || undefined,
 					subCategory: params.subCategory || undefined,
+					problemCategory: params.problemCategory || undefined,
+					problemSubCategory: params.problemSubCategory || undefined,
 				}
 			)
 

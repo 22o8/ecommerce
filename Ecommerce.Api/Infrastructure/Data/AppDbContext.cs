@@ -83,6 +83,11 @@ public class AppDbContext : DbContext
             .HasDefaultValue("");
 
         modelBuilder.Entity<Product>()
+            .Property(p => p.ProblemSubCategory)
+            .HasMaxLength(120)
+            .HasDefaultValue("");
+
+        modelBuilder.Entity<Product>()
             .Property(p => p.StockQuantity)
             .HasDefaultValue(100);
 
@@ -96,6 +101,9 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Product>()
             .HasIndex(p => new { p.Category, p.SubCategory, p.IsPublished });
+
+        modelBuilder.Entity<Product>()
+            .HasIndex(p => new { p.ProblemCategory, p.ProblemSubCategory, p.IsPublished });
 
         modelBuilder.Entity<Product>()
             .Property(x => x.RatingAvg)
@@ -241,10 +249,6 @@ public class AppDbContext : DbContext
             .ToTable("Categories");
 
         modelBuilder.Entity<CategoryDefinition>()
-            .HasIndex(x => x.Key)
-            .IsUnique();
-
-        modelBuilder.Entity<CategoryDefinition>()
             .Property(x => x.Key)
             .HasMaxLength(80);
 
@@ -267,6 +271,23 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<CategoryDefinition>()
             .Property(x => x.ImageUrl)
             .HasMaxLength(2000);
+
+        modelBuilder.Entity<CategoryDefinition>()
+            .Property(x => x.Section)
+            .HasMaxLength(30)
+            .HasDefaultValue("regular");
+
+        modelBuilder.Entity<CategoryDefinition>()
+            .Property(x => x.HasDetailSections)
+            .HasDefaultValue(false);
+
+        modelBuilder.Entity<CategoryDefinition>()
+            .HasIndex(x => x.Key)
+            .IsUnique();
+
+        modelBuilder.Entity<CategoryDefinition>()
+            .HasIndex(x => new { x.Section, x.ParentId, x.SortOrder });
+
 
     }
 }
