@@ -114,28 +114,41 @@ const problemCards = computed(() => {
 const { buildAssetUrl } = useApi()
 const categoryRail = ref<HTMLElement | null>(null)
 const problemCategoryRail = ref<HTMLElement | null>(null)
-const dragState = { active: false, startX: 0, startScroll: 0, target: null as HTMLElement | null }
+const dragState = { active: false, moved: false, startX: 0, startScroll: 0, target: null as HTMLElement | null }
 
 function onRailPointerDown(event: PointerEvent, rail: HTMLElement | null = categoryRail.value) {
   if (!rail || window.innerWidth < 768) return
   dragState.active = true
+  dragState.moved = false
   dragState.target = rail
   dragState.startX = event.clientX
   dragState.startScroll = rail.scrollLeft
-  rail.setPointerCapture?.(event.pointerId)
-  rail.classList.add('is-dragging')
 }
 
 function onRailPointerMove(event: PointerEvent) {
   if (!dragState.active || !dragState.target) return
   const delta = event.clientX - dragState.startX
+  if (Math.abs(delta) > 6) {
+    dragState.moved = true
+    dragState.target.classList.add('is-dragging')
+  }
+  if (!dragState.moved) return
   dragState.target.scrollLeft = dragState.startScroll - delta
+}
+
+function onRailLinkClick(event: MouseEvent) {
+  if (!dragState.moved) return
+  event.preventDefault()
+  event.stopPropagation()
 }
 
 function endRailDrag() {
   dragState.active = false
   dragState.target?.classList.remove('is-dragging')
-  dragState.target = null
+  setTimeout(() => {
+    dragState.moved = false
+    dragState.target = null
+  }, 0)
 }
 
 function onRailWheel(event: WheelEvent) {
@@ -192,6 +205,7 @@ onBeforeUnmount(() => {
               :key="c.key"
               :to="c.to"
               class="category-mobile-pill"
+              @click="onRailLinkClick"
             >
               <div class="category-mobile-pill__image-wrap" :class="`bg-gradient-to-br ${c.accent}`">
                 <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="category-mobile-pill__image" />
@@ -238,7 +252,7 @@ onBeforeUnmount(() => {
             <Icon name="mdi:chevron-right" class="text-xl" />
           </button>
           <div ref="problemCategoryRail" class="category-unified-rail" @pointerdown="(e) => onRailPointerDown(e, problemCategoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
-            <NuxtLink v-for="c in problemCards" :key="c.key" :to="c.to" class="category-mobile-pill">
+            <NuxtLink v-for="c in problemCards" :key="c.key" :to="c.to" class="category-mobile-pill" @click="onRailLinkClick">
               <div class="category-mobile-pill__image-wrap" :class="`bg-gradient-to-br ${c.accent}`">
                 <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="category-mobile-pill__image" />
                 <div v-else class="category-mobile-pill__fallback">{{ c.title?.slice(0,1) }}</div>

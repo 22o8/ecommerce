@@ -1,5 +1,6 @@
 <template>
   <div class="container mx-auto px-4 py-8 sm:py-10">
+    <template v-if="!hasActiveDetailRoute">
     <section class="card-soft overflow-hidden p-6 sm:p-8">
       <div class="grid gap-6 lg:grid-cols-[1.2fr_.8fr] lg:items-end">
         <div>
@@ -32,7 +33,7 @@
           <NuxtLink
             v-for="child in childSections"
             :key="child.id || child.key"
-            :to="`/problems/${encodeURIComponent(categoryKey)}/${encodeURIComponent(child.key)}`"
+            :to="`/problems/${encodeURIComponent(categoryKey)}/${encodeURIComponent(String(child.key || "").toLowerCase())}`"
             class="group overflow-hidden rounded-[1.75rem] border border-app bg-surface transition hover:-translate-y-1 hover:shadow-soft"
           >
             <div class="aspect-square overflow-hidden bg-surface-2">
@@ -69,6 +70,9 @@
         </div>
       </div>
     </section>
+    </template>
+
+    <NuxtPage v-else :page-key="route.fullPath" />
   </div>
 </template>
 
@@ -83,6 +87,7 @@ const products = useProductsStore()
 const { buildAssetUrl } = useApi()
 
 const categoryKey = computed(() => String(route.params.category || '').toLowerCase())
+const hasActiveDetailRoute = computed(() => typeof route.params.detail === 'string' && String(route.params.detail).length > 0)
 const loadingChildren = ref(true)
 const childSections = ref<any[]>([])
 
@@ -96,6 +101,7 @@ const categoryLabel = computed(() => categoryItem.value?.nameAr || categoryKey.v
 const categoryDescription = computed(() => categoryItem.value?.descriptionAr || 'اختر القسم المناسب لتظهر لك الحلول الدقيقة الخاصة بهذه المشكلة.')
 
 async function loadChildren() {
+  if (hasActiveDetailRoute.value) return
   loadingChildren.value = true
   try {
     const parentId = String(categoryItem.value?.id || '')
