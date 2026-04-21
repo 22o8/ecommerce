@@ -271,14 +271,16 @@ const finalPrice = computed(() => {
 })
 
 const slugTouched = ref(false)
-const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام', id: '', hasDetailSections: false }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false) })))
+const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام', id: '', hasDetailSections: false, childCount: 0 }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false), childCount: Number(c.childCount ?? 0) })))
+const selectedCategoryMeta = computed(() => categoryOptions.value.find((x:any) => x.key === String(form.category || '')) || null)
+const selectedCategoryHasDetailSections = computed(() => Boolean(selectedCategoryMeta.value?.hasDetailSections || Number(selectedCategoryMeta.value?.childCount || 0) > 0))
 const categorySubCategoryItems = ref<any[]>([])
 const categorySubCategoryOptions = computed(() => (categorySubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
 async function loadCategorySubCategories() {
   form.subCategory = categorySubCategoryOptions.value.some((x:any) => x.key === form.subCategory) ? form.subCategory : ''
   const selected = (categories.value || []).find((x:any) => String(x.key || '') === String(form.category || ''))
-  if (!selected?.id || !selected?.hasDetailSections) {
+  if (!selected?.id || (!selected?.hasDetailSections && Number(selected?.childCount || 0) <= 0)) {
     categorySubCategoryItems.value = []
     form.subCategory = ''
     return
@@ -294,7 +296,9 @@ async function loadCategorySubCategories() {
 }
 
 watch(() => form.category, () => { loadCategorySubCategories() })
-const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || '') })))
+const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false), childCount: Number(c.childCount ?? 0) })))
+const selectedProblemCategoryMeta = computed(() => problemCategoryOptions.value.find((x:any) => x.key === String(form.problemCategory || '')) || null)
+const selectedProblemCategoryHasDetailSections = computed(() => Boolean(selectedProblemCategoryMeta.value?.hasDetailSections || Number(selectedProblemCategoryMeta.value?.childCount || 0) > 0))
 const problemSubCategoryItems = ref<any[]>([])
 const problemSubCategoryOptions = computed(() => (problemSubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
@@ -302,7 +306,7 @@ const problemSubCategoryOptions = computed(() => (problemSubCategoryItems.value 
 async function loadProblemSubCategories() {
   form.problemSubCategory = problemSubCategoryOptions.value.some((x:any) => x.key === form.problemSubCategory) ? form.problemSubCategory : ''
   const selected = (problemCategories.value || []).find((x:any) => String(x.key || '') === String(form.problemCategory || ''))
-  if (!selected?.id) {
+  if (!selected?.id || (!selected?.hasDetailSections && Number(selected?.childCount || 0) <= 0)) {
     problemSubCategoryItems.value = []
     form.problemSubCategory = ''
     return
@@ -338,7 +342,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const imagesLoading = ref(false)
 const images = ref<any[]>([])
 
-async function resetForm() {
+function resetForm() {
   if (!product.value) return
   // backend (ASP.NET) returns camelCase: title, priceIqd, brand, isPublished, isFeatured
   form.name = product.value.title || product.value.name || ''
