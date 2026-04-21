@@ -83,7 +83,7 @@
                 <label class="text-sm font-medium">{{ t('admin.preciseCategory') || 'التصنيف الدقيق' }}</label>
                 <select v-model="form.subCategory" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
                 <option value="">{{ t('admin.preciseCategoryPlaceholder') || 'اختر تصنيفًا دقيقًا' }}</option>
-                <option v-for="c in preciseCategoryOptions" :key="c.key" :value="c.key">{{ c.nameAr }}</option>
+                <option v-for="c in categorySubCategoryOptions" :key="c.key" :value="c.key">{{ c.nameAr }}</option>
               </select>
               </div>
 
@@ -271,15 +271,33 @@ const finalPrice = computed(() => {
 })
 
 const slugTouched = ref(false)
-const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام' }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
-const preciseCategoryOptions = computed(() => categoryOptions.value.filter((c:any) => c.key && c.key !== String(form.category || '')))
+const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام', id: '', hasDetailSections: false }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false) })))
+const categorySubCategoryItems = ref<any[]>([])
+const categorySubCategoryOptions = computed(() => (categorySubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
+
+async function loadCategorySubCategories() {
+  form.subCategory = categorySubCategoryOptions.value.some((x:any) => x.key === form.subCategory) ? form.subCategory : ''
+  const selected = (categories.value || []).find((x:any) => String(x.key || '') === String(form.category || ''))
+  if (!selected?.id || !selected?.hasDetailSections) {
+    categorySubCategoryItems.value = []
+    form.subCategory = ''
+    return
+  }
+  try {
+    const res: any = await $fetch('/api/bff/categories/active', { query: { section: 'regular', parentId: selected.id, _ts: Date.now() } })
+    categorySubCategoryItems.value = Array.isArray(res) ? res : []
+    if (!categorySubCategoryItems.value.some((x:any) => String(x.key || '') === String(form.subCategory || ''))) form.subCategory = ''
+  } catch {
+    categorySubCategoryItems.value = []
+    form.subCategory = ''
+  }
+}
+
+watch(() => form.category, () => { loadCategorySubCategories() })
 const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || '') })))
 const problemSubCategoryItems = ref<any[]>([])
 const problemSubCategoryOptions = computed(() => (problemSubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
-watch(() => form.category, () => {
-  if (form.subCategory && form.subCategory === form.category) form.subCategory = ''
-})
 
 async function loadProblemSubCategories() {
   form.problemSubCategory = problemSubCategoryOptions.value.some((x:any) => x.key === form.problemSubCategory) ? form.problemSubCategory : ''
@@ -334,6 +352,7 @@ function resetForm() {
   form.subCategory = product.value.subCategory || ''
   form.problemCategory = product.value.problemCategory || ''
   form.problemSubCategory = product.value.problemSubCategory || ''
+  await loadCategorySubCategories()
   form.stockQuantity = Number(product.value.stockQuantity ?? 0)
   form.lowStockThreshold = Number(product.value.lowStockThreshold ?? 5)
   form.isCouponAllowed = Boolean(product.value.isCouponAllowed ?? true)
@@ -485,6 +504,7 @@ async function onSave() {
     })
     toast.success(t('common.saved'))
     await Promise.all([loadProduct(), fetchCategories(false, 'regular'), fetchCategories(false, 'problem')])
+    await loadCategorySubCategories()
     await loadProblemSubCategories()
   } catch (e: any) {
     toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))

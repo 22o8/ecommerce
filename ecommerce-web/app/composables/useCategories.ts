@@ -62,10 +62,10 @@ export function useCategories() {
     return target.value
   }
 
-  async function fetchProblemChildren(parentId: string) {
+  async function fetchProblemChildren(parentId: string, section: 'regular' | 'problem' = 'problem') {
     if (!parentId) return [] as AppCategory[]
     try {
-      const res: any = await api.get<any[]>('/categories/active', { _ts: Date.now(), section: 'problem', parentId })
+      const res: any = await api.get<any[]>('/categories/active', { _ts: Date.now(), section, parentId })
       return normalize(Array.isArray(res) ? res : [])
     } catch {
       return [] as AppCategory[]

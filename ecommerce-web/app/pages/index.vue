@@ -5,7 +5,7 @@ import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
 
 const { t, locale } = useI18n()
-const { categories, problemCategories, fetchCategories } = useCategories()
+const { categories, problemCategories, fetchCategories, fetchProblemChildren } = useCategories()
 
 const brandsStore = useBrandsStore()
 const productsStore = useProductsStore()
@@ -90,17 +90,24 @@ const categoryCards = computed(() => {
     to: `/categories/${encodeURIComponent(String(c.key || '').toLowerCase())}`,
     accent: accents[idx % accents.length],
     index: idx + 1,
+    id: String(c.id || ''),
+    hasDetailSections: Boolean(c.hasDetailSections ?? false),
+    childCount: Number(c.childCount ?? 0),
   }))
 })
 
 const activeCategoryKey = ref('')
 const categoriesMenuOpen = ref(false)
+const categoryChildrenMap = ref<Record<string, any[]>>({})
 const activeCategory = computed(() => {
   const list = categoryCards.value || []
   if (!list.length) return null
   return list.find((item: any) => item.key === activeCategoryKey.value) || list[0]
 })
-const featuredCategoryCards = computed(() => (categoryCards.value || []).slice(0, 8))
+const activeCategoryChildren = computed(() => {
+  const key = activeCategoryKey.value
+  return key ? (categoryChildrenMap.value[key] || []) : []
+})
 const categoryQuickLinks = computed(() => {
   const list = categoryCards.value || []
   return list.map((item: any) => ({
@@ -108,10 +115,24 @@ const categoryQuickLinks = computed(() => {
     to: item.to,
   }))
 })
-function openCategoriesMenu(key?: string) {
-  categoriesMenuOpen.value = true
-  if (key) activeCategoryKey.value = key
-  else if (!activeCategoryKey.value && categoryCards.value.length) activeCategoryKey.value = categoryCards.value[0].key
+async function ensureCategoryChildren(item: any) {
+  if (!item?.hasDetailSections || !item?.id) return []
+  if (categoryChildrenMap.value[item.key]) return categoryChildrenMap.value[item.key]
+  const children = await fetchProblemChildren(item.id, 'regular')
+  categoryChildrenMap.value = { ...categoryChildrenMap.value, [item.key]: children }
+  return children
+}
+async function openCategoriesMenu(key?: string) {
+  const list = categoryCards.value || []
+  const item = list.find((x: any) => x.key === (key || activeCategoryKey.value)) || list[0]
+  if (!item) return
+  activeCategoryKey.value = item.key
+  if (item.hasDetailSections) {
+    await ensureCategoryChildren(item)
+    categoriesMenuOpen.value = true
+  } else {
+    categoriesMenuOpen.value = false
+  }
 }
 function closeCategoriesMenu() {
   categoriesMenuOpen.value = false
@@ -125,7 +146,6 @@ watch(categoryCards, (list) => {
     activeCategoryKey.value = list[0].key
   }
 }, { immediate: true })
-
 
 const problemCards = computed(() => {
   const accents = [
@@ -213,106 +233,100 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="min-h-screen home-page-shell">
-    <section v-if="categoryCards.length" id="categories" class="category-nav-shell border-b border-app/80 bg-[rgba(var(--surface),0.88)] backdrop-blur-xl">
-      <div class="mx-auto max-w-7xl px-4">
-        <div class="category-nav-row hidden lg:flex" @mouseleave="closeCategoriesMenu()">
-          <div class="category-nav-brand">
-            <span class="category-nav-brand__dot" />
-            <div>
-              <div class="category-nav-brand__label">تسوق حسب التصنيف</div>
-              <div class="category-nav-brand__sub">مرر أو حدّد أي قسم لتظهر لك المعاينة والروابط بسرعة.</div>
+    <section v-if="categoryCards.length" id="categories" class="mx-auto max-w-[92rem] px-4 pb-12 pt-3 scroll-mt-24">
+      <div class="home-section-panel home-section-panel--categories category-command-center category-command-center--raised">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div class="inline-flex items-center gap-2 rounded-full border border-app bg-surface/80 px-3 py-1 text-[11px] font-bold text-[rgb(var(--muted))] backdrop-blur rtl-text">
+              <span class="h-2 w-2 rounded-full bg-[rgb(var(--primary))]" />
+              أقسام المتجر
             </div>
+            <h2 class="mt-4 text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl rtl-text">
+              {{ t('home.spotlightTitle') }}
+            </h2>
+            <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base rtl-text">
+              تجربة أقرب للمتاجر العالمية: اختر التصنيف من الشريط، وعلى الحاسبة تظهر لك معاينة منظمة تساعدك تصل بسرعة.
+            </p>
           </div>
 
-          <div class="category-nav-links" @mouseenter="openCategoriesMenu()">
-            <NuxtLink
-              v-for="c in categoryCards"
-              :key="c.key"
-              :to="c.to"
-              class="category-nav-link"
-              :class="activeCategory?.key === c.key ? 'is-active' : ''"
-              @mouseenter="openCategoriesMenu(c.key)"
-              @focus="openCategoriesMenu(c.key)"
-            >
-              <span>{{ c.title }}</span>
-              <Icon name="mdi:chevron-down" class="text-sm opacity-60" />
-            </NuxtLink>
-          </div>
+
         </div>
 
-        <Transition name="fade-slide">
-          <div v-if="categoriesMenuOpen && activeCategory" class="category-dropdown hidden lg:block" @mouseenter="openCategoriesMenu(activeCategory.key)">
-            <div class="category-dropdown__panel">
-              <div class="category-dropdown__main">
-                <div class="category-dropdown__eyebrow">{{ activeCategory.title }}</div>
-                <h3 class="category-dropdown__title rtl-text">{{ activeCategory.title }}</h3>
-                <p class="category-dropdown__desc rtl-text">{{ activeCategory.subtitle }}</p>
+        <div class="mt-4 hidden lg:block" @mouseleave="closeCategoriesMenu()">
+          <div class="category-secondary-bar">
+            <div class="category-secondary-bar__scroll">
+              <template v-for="c in categoryCards" :key="c.key">
+                <button
+                  v-if="c.hasDetailSections"
+                  type="button"
+                  class="category-secondary-bar__item"
+                  :class="activeCategory?.key === c.key ? 'is-active' : ''"
+                  @mouseenter="openCategoriesMenu(c.key)"
+                  @focus="openCategoriesMenu(c.key)"
+                >
+                  <span>{{ c.title }}</span>
+                  <Icon name="mdi:chevron-down" class="text-sm opacity-70" />
+                </button>
+                <NuxtLink
+                  v-else
+                  :to="c.to"
+                  class="category-secondary-bar__item"
+                >
+                  <span>{{ c.title }}</span>
+                </NuxtLink>
+              </template>
+            </div>
+          </div>
 
-                <div class="category-dropdown__actions">
-                  <NuxtLink :to="activeCategory.to" class="category-dropdown__cta">
-                    ادخل إلى التصنيف
-                    <Icon name="mdi:arrow-left" class="text-base" />
-                  </NuxtLink>
+          <Transition name="fade-slide">
+            <div v-if="categoriesMenuOpen && activeCategory && activeCategoryChildren.length" class="category-dropdown-panel" @mouseenter="openCategoriesMenu(activeCategory.key)">
+              <div class="category-dropdown-panel__head">
+                <div>
+                  <div class="text-xs font-bold uppercase tracking-[0.24em] text-[rgb(var(--muted))]">{{ activeCategory.title }}</div>
+                  <div class="mt-2 text-lg font-extrabold text-[rgb(var(--text))] rtl-text">اختر التصنيف الدقيق</div>
                 </div>
-
-                <div class="category-dropdown__list-wrap">
-                  <div class="category-dropdown__list-title">التصنيفات المتاحة</div>
-                  <div class="category-dropdown__list">
-                    <NuxtLink
-                      v-for="link in categoryQuickLinks"
-                      :key="link.to"
-                      :to="link.to"
-                      class="category-dropdown__list-item"
-                      @mouseenter="openCategoriesMenu(link.to.split('/').pop())"
-                    >
-                      <span class="truncate">{{ link.label }}</span>
-                      <Icon name="mdi:arrow-top-left" class="text-base opacity-70" />
-                    </NuxtLink>
-                  </div>
-                </div>
+                <NuxtLink :to="activeCategory.to" class="category-dropdown-panel__all">عرض الكل</NuxtLink>
               </div>
-
-              <NuxtLink :to="activeCategory.to" class="category-dropdown__preview" :class="`bg-gradient-to-br ${activeCategory.accent}`">
-                <div class="category-dropdown__preview-media">
-                  <img
-                    v-if="activeCategory.imageUrl"
-                    :src="buildAssetUrl(activeCategory.imageUrl)"
-                    :alt="activeCategory.title"
-                    class="h-full w-full object-cover"
-                  >
-                  <div v-else class="flex h-full w-full items-center justify-center text-6xl font-black text-white/90">
-                    {{ activeCategory.title?.slice(0, 1) }}
+              <div class="category-dropdown-panel__grid">
+                <NuxtLink
+                  v-for="child in activeCategoryChildren"
+                  :key="child.id || child.key"
+                  :to="`/categories/${encodeURIComponent(activeCategory.key)}/${encodeURIComponent(String(child.key || '').toLowerCase())}`"
+                  class="category-dropdown-panel__link"
+                >
+                  <div class="category-dropdown-panel__icon">
+                    <img v-if="child.imageUrl" :src="buildAssetUrl(child.imageUrl)" :alt="child.nameAr" class="h-full w-full object-cover" />
+                    <span v-else>{{ child.nameAr?.slice(0,1) }}</span>
                   </div>
-                </div>
-                <div class="category-dropdown__preview-overlay">
-                  <div class="text-xs font-bold uppercase tracking-[0.22em] text-white/70">Category spotlight</div>
-                  <div class="mt-2 text-2xl font-extrabold text-white rtl-text">{{ activeCategory.title }}</div>
-                </div>
-              </NuxtLink>
+                  <div class="min-w-0">
+                    <div class="truncate text-sm font-extrabold text-[rgb(var(--text))] rtl-text">{{ child.nameAr }}</div>
+                    <div class="mt-1 truncate text-xs text-[rgb(var(--muted))] rtl-text">{{ child.descriptionAr || 'عرض المنتجات' }}</div>
+                  </div>
+                  <Icon name="mdi:arrow-left" class="text-base text-[rgb(var(--muted))]" />
+                </NuxtLink>
+              </div>
             </div>
-          </div>
-        </Transition>
+          </Transition>
+        </div>
+</div>
 
-        <div class="category-mobile-nav lg:hidden">
-          <div class="category-mobile-nav__header">
-            <div>
-              <div class="category-mobile-nav__label">تسوّق حسب التصنيف</div>
-              <div class="category-mobile-nav__sub">اختر القسم المناسب للوصول السريع.</div>
-            </div>
-          </div>
-          <div ref="categoryRail" class="category-mobile-nav__rail" @pointerdown="(e) => onRailPointerDown(e, categoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
+        <div class="mt-8 lg:hidden">
+          <div ref="categoryRail" class="grid grid-cols-2 gap-3 sm:grid-cols-3" @pointerdown="(e) => onRailPointerDown(e, categoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
             <NuxtLink
               v-for="c in categoryCards"
               :key="c.key"
               :to="c.to"
-              class="category-mobile-nav__item"
+              class="category-grid-card"
               @click="onRailLinkClick"
             >
-              <div class="category-mobile-nav__thumb" :class="`bg-gradient-to-br ${c.accent}`">
+              <div class="category-grid-card__media" :class="`bg-gradient-to-br ${c.accent}`">
                 <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="h-full w-full object-cover" />
-                <div v-else class="flex h-full w-full items-center justify-center text-2xl font-black text-white/90">{{ c.title?.slice(0,1) }}</div>
+                <div v-else class="flex h-full w-full items-center justify-center text-4xl font-black text-white/90">{{ c.title?.slice(0,1) }}</div>
               </div>
-              <span class="category-mobile-nav__text">{{ c.title }}</span>
+              <div class="category-grid-card__body">
+                <div class="text-base font-extrabold text-[rgb(var(--text))] rtl-text">{{ c.title }}</div>
+                <div class="mt-1 text-xs text-[rgb(var(--muted))] line-clamp-2 rtl-text">{{ c.subtitle }}</div>
+              </div>
             </NuxtLink>
           </div>
         </div>
@@ -685,228 +699,20 @@ onBeforeUnmount(() => {
   .category-simple-card__arrow{ width:40px; height:40px; }
 }
 
-.category-nav-shell{
-  position: sticky;
-  top: 84px;
-  z-index: 25;
-  box-shadow: 0 14px 40px rgba(0,0,0,.18);
-}
-.category-nav-row{
-  min-height: 76px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-}
-.category-nav-brand{
-  display:flex;
-  align-items:center;
-  gap:.9rem;
-  min-width: 280px;
-}
-.category-nav-brand__dot{
-  width:12px;
-  height:12px;
-  border-radius:999px;
-  background: rgb(var(--primary));
-  box-shadow: 0 0 0 8px rgba(var(--primary), .12);
-}
-.category-nav-brand__label{
-  color: rgb(var(--text));
-  font-weight: 900;
-  font-size: 1.06rem;
-}
-.category-nav-brand__sub{
-  color: rgb(var(--muted));
-  font-size: .8rem;
-  margin-top: .2rem;
-}
-.category-nav-links{
-  display:flex;
-  align-items:center;
-  gap:.75rem;
-  flex-wrap:nowrap;
-  overflow:auto;
-  scrollbar-width:none;
-}
-.category-nav-links::-webkit-scrollbar{ display:none; }
-.category-nav-link{
-  display:inline-flex;
-  align-items:center;
-  gap:.5rem;
-  white-space:nowrap;
-  height:44px;
-  padding:0 1rem;
-  border-radius:999px;
-  border:1px solid rgba(var(--border), .95);
-  background: rgba(var(--surface), .88);
-  color: rgb(var(--text));
-  font-weight:800;
-  font-size:.92rem;
-  transition: all .18s ease;
-}
-.category-nav-link:hover,
-.category-nav-link.is-active{
-  border-color: rgba(var(--primary), .55);
-  background: rgba(var(--surface-2), .98);
-  transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(0,0,0,.16);
-}
-.category-dropdown{
-  position: relative;
-}
-.category-dropdown__panel{
-  margin-top: .35rem;
-  display:grid;
-  grid-template-columns: 1.2fr .8fr;
-  gap: 1.25rem;
-  border:1px solid rgba(var(--border), .95);
-  border-radius: 1.75rem;
-  background: linear-gradient(180deg, rgba(var(--surface), .98), rgba(var(--surface-2), .95));
-  box-shadow: 0 24px 64px rgba(0,0,0,.28);
-  padding: 1.25rem;
-}
-.category-dropdown__main{
-  padding: .5rem;
-}
-.category-dropdown__eyebrow{
-  color: rgb(var(--primary));
-  font-weight: 800;
-  font-size:.8rem;
-  letter-spacing:.12em;
-  text-transform: uppercase;
-}
-.category-dropdown__title{
-  color: rgb(var(--text));
-  font-size: 2rem;
-  font-weight: 900;
-  margin-top:.65rem;
-}
-.category-dropdown__desc{
-  color: rgb(var(--muted));
-  margin-top:.7rem;
-  line-height:1.9;
-  max-width: 42rem;
-}
-.category-dropdown__actions{ margin-top: 1rem; }
-.category-dropdown__cta{
-  display:inline-flex;
-  align-items:center;
-  gap:.55rem;
-  padding:.85rem 1.15rem;
-  border-radius:999px;
-  background: rgb(var(--primary));
-  color:#0a0712;
-  font-weight: 900;
-  box-shadow: 0 14px 34px rgba(var(--primary), .28);
-}
-.category-dropdown__list-wrap{
-  margin-top:1.2rem;
-}
-.category-dropdown__list-title{
-  color: rgb(var(--text));
-  font-weight: 800;
-  margin-bottom: .8rem;
-}
-.category-dropdown__list{
-  display:grid;
-  grid-template-columns: repeat(2, minmax(0,1fr));
-  gap:.7rem;
-}
-.category-dropdown__list-item{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:.75rem;
-  padding:.9rem 1rem;
-  border-radius:1rem;
-  border:1px solid rgba(var(--border), .9);
-  background: rgba(var(--surface), .82);
-  color: rgb(var(--text));
-  font-weight: 700;
-  transition: all .18s ease;
-}
-.category-dropdown__list-item:hover{
-  border-color: rgba(var(--primary), .45);
-  background: rgba(var(--surface-2), .95);
-}
-.category-dropdown__preview{
-  position:relative;
-  min-height: 320px;
-  overflow:hidden;
-  border-radius:1.5rem;
-  border:1px solid rgba(255,255,255,.1);
-}
-.category-dropdown__preview-media{
-  position:absolute;
-  inset:0;
-}
-.category-dropdown__preview-overlay{
-  position:absolute;
-  inset:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-end;
-  padding:1.4rem;
-  background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.55));
-}
-.category-mobile-nav{
-  padding: .85rem 0 1rem;
-}
-.category-mobile-nav__header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:1rem;
-  margin-bottom:.8rem;
-}
-.category-mobile-nav__label{
-  color: rgb(var(--text));
-  font-weight: 900;
-  font-size: 1rem;
-}
-.category-mobile-nav__sub{
-  color: rgb(var(--muted));
-  font-size: .8rem;
-  margin-top:.2rem;
-}
-.category-mobile-nav__rail{
-  display:grid;
-  grid-auto-flow:column;
-  grid-auto-columns:max-content;
-  gap:.75rem;
-  overflow-x:auto;
-  padding-bottom:.2rem;
-  scrollbar-width:none;
-}
-.category-mobile-nav__rail::-webkit-scrollbar{ display:none; }
-.category-mobile-nav__item{
-  display:flex;
-  align-items:center;
-  gap:.65rem;
-  min-width:max-content;
-  padding:.5rem .8rem .5rem .5rem;
-  border-radius:999px;
-  border:1px solid rgba(var(--border), .95);
-  background: rgba(var(--surface), .88);
-}
-.category-mobile-nav__thumb{
-  width:42px;
-  height:42px;
-  border-radius:999px;
-  overflow:hidden;
-  flex-shrink:0;
-}
-.category-mobile-nav__text{
-  color: rgb(var(--text));
-  font-size:.87rem;
-  font-weight:800;
-  white-space:nowrap;
-}
-@media (max-width: 1023px){
-  .category-nav-shell{
-    top: 72px;
-  }
-}
+.category-command-center--raised{padding-top:1rem}
+.category-secondary-bar{margin-top:.1rem;border:1px solid rgba(var(--border),.95);border-radius:1.25rem;background:linear-gradient(180deg,rgba(var(--surface-rgb),.96),rgba(var(--surface-2-rgb),.9));box-shadow:0 16px 36px rgba(0,0,0,.14)}
+.category-secondary-bar__scroll{display:flex;align-items:center;gap:.55rem;overflow-x:auto;padding:.7rem .8rem;scrollbar-width:none}
+.category-secondary-bar__scroll::-webkit-scrollbar{display:none}
+.category-secondary-bar__item{display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap;min-height:2.9rem;padding:0 1rem;border-radius:999px;border:1px solid rgba(var(--border),.75);background:rgba(var(--surface-rgb),.72);font-size:.94rem;font-weight:800;color:rgb(var(--text));transition:all .18s ease}
+.category-secondary-bar__item:hover,.category-secondary-bar__item.is-active{border-color:rgba(var(--primary),.45);background:rgba(var(--primary),.12);box-shadow:0 10px 24px rgba(var(--primary),.12)}
+.category-dropdown-panel{margin-top:.8rem;border:1px solid rgba(var(--border),.95);border-radius:1.6rem;background:linear-gradient(180deg,rgba(var(--surface-rgb),.98),rgba(var(--surface-2-rgb),.94));box-shadow:0 20px 44px rgba(0,0,0,.18);padding:1.1rem 1.1rem 1rem}
+.category-dropdown-panel__head{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.2rem .2rem .9rem}
+.category-dropdown-panel__all{display:inline-flex;align-items:center;justify-content:center;min-height:2.7rem;padding:0 1rem;border-radius:999px;border:1px solid rgba(var(--primary),.35);background:rgba(var(--primary),.1);font-size:.85rem;font-weight:800;color:rgb(var(--text))}
+.category-dropdown-panel__grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.85rem}
+.category-dropdown-panel__link{display:flex;align-items:center;gap:.85rem;min-height:5.3rem;padding:.85rem;border-radius:1.2rem;border:1px solid rgba(var(--border),.8);background:rgba(var(--surface-rgb),.72);transition:all .18s ease}
+.category-dropdown-panel__link:hover{transform:translateY(-2px);border-color:rgba(var(--primary),.38);background:rgba(var(--surface-2-rgb),.95)}
+.category-dropdown-panel__icon{flex:0 0 3.1rem;width:3.1rem;height:3.1rem;border-radius:1rem;overflow:hidden;border:1px solid rgba(var(--border),.8);display:flex;align-items:center;justify-content:center;background:rgba(var(--surface-2-rgb),.95);font-size:1.15rem;font-weight:900;color:rgb(var(--text))}
+@media (max-width: 1279px){.category-dropdown-panel__grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 </style>
 

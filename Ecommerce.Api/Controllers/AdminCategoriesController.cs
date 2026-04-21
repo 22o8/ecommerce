@@ -106,7 +106,7 @@ public class AdminCategoriesController : ControllerBase
             ImageUrl = req.ImageUrl?.Trim(),
             Section = normalizedSection,
             ParentId = normalizedParentId,
-            HasDetailSections = normalizedParentId == null && normalizedSection == "problem" && req.HasDetailSections,
+            HasDetailSections = normalizedParentId == null && req.HasDetailSections,
             SortOrder = req.SortOrder,
             IsActive = req.IsActive,
             CreatedAt = DateTime.UtcNow,
@@ -148,7 +148,7 @@ public class AdminCategoriesController : ControllerBase
         entity.ImageUrl = req.ImageUrl?.Trim();
         entity.Section = normalizedSection;
         entity.ParentId = normalizedParentId;
-        entity.HasDetailSections = normalizedParentId == null && normalizedSection == "problem" && req.HasDetailSections;
+        entity.HasDetailSections = normalizedParentId == null && req.HasDetailSections;
         entity.SortOrder = req.SortOrder;
         entity.IsActive = req.IsActive;
         entity.UpdatedAt = DateTime.UtcNow;
