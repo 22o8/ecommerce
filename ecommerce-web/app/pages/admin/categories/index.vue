@@ -1,11 +1,16 @@
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between gap-3">
+    <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <h1 class="text-2xl font-bold rtl-text">إدارة تصنيفات المتجر</h1>
-        <p class="text-sm text-white/70 rtl-text">أضف التصنيفات الرئيسية للمتجر، وحدد إن كانت تحتاج تصنيفات دقيقة تظهر داخل دروب منيو منظم في الواجهة وفي نماذج المنتجات.</p>
+        <p class="text-sm text-white/70 rtl-text">
+          من هنا تقدر تضيف أو تعدّل أو تحذف التصنيف الرئيسي، وتحدد إذا كان يحتاج تصنيفات دقيقة تظهر داخل دروب منيو منظم في الواجهة ونماذج المنتجات.
+        </p>
       </div>
-      <UiButton variant="secondary" @click="load">تحديث</UiButton>
+      <div class="flex items-center gap-2">
+        <UiButton v-if="selectedParent" variant="ghost" @click="clearSelection">إغلاق لوحة التصنيفات الدقيقة</UiButton>
+        <UiButton variant="secondary" @click="load">تحديث</UiButton>
+      </div>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-3">
@@ -44,6 +49,9 @@
               <input v-model="form.hasDetailSections" type="checkbox" class="h-4 w-4" />
               هذا التصنيف يحتاج تصنيفات دقيقة داخل دروب منيو
             </label>
+            <p v-if="form.hasDetailSections" class="text-xs text-white/60 rtl-text">
+              بعد الحفظ راح تقدر تضيف التصنيفات الدقيقة الخاصة بهذا القسم من اللوحة السفلية أو من زر إدارة التصنيفات الدقيقة داخل القائمة.
+            </p>
             <label class="flex items-center gap-2 text-sm">
               <input v-model="form.isActive" type="checkbox" class="h-4 w-4" />
               فعال
@@ -63,25 +71,42 @@
         <UiCardContent>
           <div v-if="loading" class="text-white/70">جاري التحميل...</div>
           <div v-else class="grid gap-3">
-            <div v-for="item in items" :key="item.id" class="rounded-3xl border border-white/10 bg-white/5 p-4">
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div class="flex items-center gap-3 min-w-0">
-                  <div class="h-20 w-20 overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+            <div
+              v-for="item in items"
+              :key="item.id"
+              class="rounded-3xl border p-4 transition"
+              :class="selectedParentId === item.id ? 'border-[rgba(var(--primary),0.55)] bg-[rgba(var(--primary),0.08)] shadow-[0_0_0_1px_rgba(var(--primary),0.15)]' : 'border-white/10 bg-white/5'"
+            >
+              <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                <div class="flex min-w-0 items-center gap-3">
+                  <button
+                    type="button"
+                    class="h-20 w-20 overflow-hidden rounded-2xl border border-white/10 bg-black/20 transition hover:scale-[1.02]"
+                    @click="item.hasDetailSections ? selectParent(item) : editItem(item)"
+                  >
                     <img v-if="item.imageUrl" :src="buildAssetUrl(item.imageUrl)" class="h-full w-full object-cover" />
                     <div v-else class="flex h-full w-full items-center justify-center text-lg font-black">{{ item.nameAr?.slice(0,1) }}</div>
-                  </div>
+                  </button>
                   <div class="min-w-0">
                     <div class="font-extrabold rtl-text">{{ item.nameAr }}</div>
                     <div class="text-xs text-white/60 keep-ltr">{{ item.key }}</div>
-                    <div class="mt-1 text-sm text-white/70 rtl-text">{{ item.descriptionAr }}</div>
+                    <div class="mt-1 text-sm text-white/70 rtl-text">{{ item.descriptionAr || 'بدون وصف' }}</div>
                     <div class="mt-2 flex flex-wrap gap-2 text-xs">
                       <span class="rounded-full border border-white/10 px-2 py-1">{{ item.hasDetailSections ? 'عنده تصنيفات دقيقة' : 'تصنيف مباشر' }}</span>
                       <span class="rounded-full border border-white/10 px-2 py-1">{{ item.childCount || 0 }} تصنيف دقيق</span>
+                      <span class="rounded-full border border-white/10 px-2 py-1">{{ item.isActive ? 'فعال' : 'غير فعال' }}</span>
                     </div>
                   </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <UiButton v-if="item.hasDetailSections" variant="ghost" @click="selectParent(item)">{{ selectedParentId === item.id ? 'إخفاء التصنيفات الدقيقة' : 'التصنيفات الدقيقة' }}</UiButton>
+
+                <div class="flex flex-wrap items-center gap-2 xl:justify-end">
+                  <UiButton
+                    v-if="item.hasDetailSections"
+                    variant="ghost"
+                    @click="selectParent(item)"
+                  >
+                    {{ selectedParentId === item.id ? 'إخفاء التصنيفات الدقيقة' : 'إدارة التصنيفات الدقيقة' }}
+                  </UiButton>
                   <UiButton variant="secondary" @click="editItem(item)">تعديل</UiButton>
                   <UiButton variant="destructive" @click="remove(item.id)">حذف</UiButton>
                 </div>
@@ -97,6 +122,10 @@
         <UiCardTitle>التصنيفات الدقيقة داخل: {{ selectedParent.nameAr }}</UiCardTitle>
       </UiCardHeader>
       <UiCardContent>
+        <div class="mb-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70 rtl-text">
+          أي تصنيف دقيق تضيفه هنا راح يظهر داخل دروب منيو هذا القسم في الواجهة، وكذلك في اختيار المنتجات داخل لوحة الأدمن.
+        </div>
+
         <div class="grid gap-6 lg:grid-cols-3">
           <div class="grid gap-3">
             <div class="grid gap-2">
@@ -134,11 +163,18 @@
             </div>
           </div>
 
-          <div class="lg:col-span-2 grid gap-3">
+          <div class="grid gap-3 lg:col-span-2">
             <div v-if="childLoading" class="text-white/70">جاري تحميل التصنيفات الدقيقة...</div>
-            <div v-else-if="childItems.length === 0" class="rounded-2xl border border-white/10 bg-white/5 p-4 text-white/70">لا توجد تصنيفات دقيقة بعد.</div>
-            <div v-else v-for="item in childItems" :key="item.id" class="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div class="flex items-center gap-3 min-w-0">
+            <div v-else-if="childItems.length === 0" class="rounded-2xl border border-white/10 bg-white/5 p-4 text-white/70">
+              لا توجد تصنيفات دقيقة بعد.
+            </div>
+            <div
+              v-else
+              v-for="item in childItems"
+              :key="item.id"
+              class="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 p-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div class="flex min-w-0 items-center gap-3">
                 <div class="h-16 w-16 overflow-hidden rounded-2xl border border-white/10 bg-black/20">
                   <img v-if="item.imageUrl" :src="buildAssetUrl(item.imageUrl)" class="h-full w-full object-cover" />
                   <div v-else class="flex h-full w-full items-center justify-center text-lg font-black">{{ item.nameAr?.slice(0,1) }}</div>
@@ -146,7 +182,7 @@
                 <div class="min-w-0">
                   <div class="font-extrabold rtl-text">{{ item.nameAr }}</div>
                   <div class="text-xs text-white/60 keep-ltr">{{ item.key }}</div>
-                  <div class="mt-1 text-sm text-white/70 rtl-text">{{ item.descriptionAr }}</div>
+                  <div class="mt-1 text-sm text-white/70 rtl-text">{{ item.descriptionAr || 'بدون وصف' }}</div>
                 </div>
               </div>
               <div class="flex items-center gap-2">
@@ -191,6 +227,12 @@ function resetForm() {
   Object.assign(form, { key: '', nameAr: '', nameEn: '', descriptionAr: '', descriptionEn: '', imageUrl: '', sortOrder: 0, isActive: true, section, hasDetailSections: false, parentId: null })
 }
 
+function clearSelection() {
+  selectedParentId.value = ''
+  childItems.value = []
+  resetChildForm()
+}
+
 function resetChildForm() {
   childEditingId.value = ''
   Object.assign(childForm, { key: '', nameAr: '', nameEn: '', descriptionAr: '', descriptionEn: '', imageUrl: '', sortOrder: 0, isActive: true, section, hasDetailSections: false, parentId: selectedParentId.value || null })
@@ -200,7 +242,11 @@ async function load() {
   loading.value = true
   try {
     items.value = await $fetch('/api/bff/admin/categories', { query: { _ts: Date.now(), section, rootsOnly: true } }) as any[]
-    if (selectedParentId.value) await loadChildren(selectedParentId.value)
+    if (selectedParentId.value) {
+      const stillExists = items.value.some((x: any) => x.id === selectedParentId.value && x.hasDetailSections)
+      if (stillExists) await loadChildren(selectedParentId.value)
+      else clearSelection()
+    }
   } catch {
     items.value = []
   } finally {
@@ -221,9 +267,14 @@ async function loadChildren(parentId: string) {
 }
 
 function selectParent(item: any) {
+  if (!item?.hasDetailSections) {
+    toast.error('فعّل التصنيفات الدقيقة لهذا القسم أولًا من التعديل')
+    return
+  }
   selectedParentId.value = selectedParentId.value === item.id ? '' : item.id
   resetChildForm()
   if (selectedParentId.value) loadChildren(selectedParentId.value)
+  else childItems.value = []
 }
 
 function editItem(item: any) {
@@ -271,8 +322,17 @@ async function save() {
       await $fetch('/api/bff/admin/categories', { method: 'POST', body })
       toast.success('تمت إضافة التصنيف')
     }
+
+    const keepSelected = body.hasDetailSections && editingId.value
+    const currentId = editingId.value
     resetForm()
     await load()
+
+    if (keepSelected && currentId) {
+      selectedParentId.value = currentId
+      resetChildForm()
+      await loadChildren(currentId)
+    }
   } catch (e: any) {
     toast.error(e?.data?.message || e?.message || 'تعذر حفظ التصنيف')
   }
