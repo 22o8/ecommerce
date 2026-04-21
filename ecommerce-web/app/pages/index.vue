@@ -108,13 +108,6 @@ const activeCategoryChildren = computed(() => {
   const key = activeCategoryKey.value
   return key ? (categoryChildrenMap.value[key] || []) : []
 })
-const categoryQuickLinks = computed(() => {
-  const list = categoryCards.value || []
-  return list.map((item: any) => ({
-    label: item.title,
-    to: item.to,
-  }))
-})
 async function ensureCategoryChildren(item: any) {
   if (!item?.hasDetailSections || !item?.id) return []
   if (categoryChildrenMap.value[item.key]) return categoryChildrenMap.value[item.key]
@@ -235,61 +228,45 @@ onBeforeUnmount(() => {
   <div class="min-h-screen home-page-shell">
     <section class="mx-auto max-w-[92rem] px-4 pt-3 pb-8 lg:px-6">
       <div class="home-section-panel home-section-panel--categories category-command-center category-command-center--raised">
-        <div>
-          <div class="inline-flex items-center gap-2 rounded-full border border-app bg-surface/80 px-3 py-1 text-[11px] font-bold text-[rgb(var(--muted))] backdrop-blur rtl-text">
-            <span class="h-2 w-2 rounded-full bg-[rgb(var(--primary))]" />
-            أقسام المتجر
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div class="inline-flex items-center gap-2 rounded-full border border-app bg-surface/80 px-3 py-1 text-[11px] font-bold text-[rgb(var(--muted))] backdrop-blur rtl-text">
+              <span class="h-2 w-2 rounded-full bg-[rgb(var(--primary))]" />
+              أقسام المتجر
+            </div>
+            <h2 class="mt-4 text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl rtl-text">
+              {{ t('home.spotlightTitle') }}
+            </h2>
+            <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base rtl-text">
+              تجربة أقرب للمتاجر العالمية: اختر التصنيف من الشريط، وعلى الحاسبة تظهر لك معاينة منظمة تساعدك تصل بسرعة.
+            </p>
           </div>
-          <h2 class="mt-4 text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl rtl-text">
-            {{ t('home.spotlightTitle') }}
-          </h2>
-          <p class="mt-2 max-w-3xl text-sm text-[rgb(var(--muted))] sm:text-base rtl-text">
-            تجربة أقرب للمتاجر العالمية: اختر التصنيف من الشريط، واسحب يمينًا ويسارًا على الهاتف أو الحاسبة حتى تبقى كل الأقسام داخل صف واحد بدون كسر التصميم.
-          </p>
         </div>
 
-        <div class="mt-5" @mouseleave="closeCategoriesMenu()">
-          <div class="category-secondary-shell">
-            <button type="button" class="category-shell-arrow category-shell-arrow--prev hidden md:inline-flex" @click="scrollRail('prev', categoryRail)" aria-label="السابق">
-              <Icon name="mdi:chevron-right" class="text-xl" />
-            </button>
-            <div
-              ref="categoryRail"
-              class="category-secondary-bar"
-              @pointerdown="(e) => onRailPointerDown(e, categoryRail)"
-              @pointermove="onRailPointerMove"
-              @pointerup="endRailDrag"
-              @pointercancel="endRailDrag"
-              @pointerleave="endRailDrag"
-            >
-              <div class="category-secondary-bar__scroll">
-                <template v-for="c in categoryCards" :key="c.key">
-                  <button
-                    v-if="c.hasDetailSections"
-                    type="button"
-                    class="category-secondary-bar__item"
-                    :class="activeCategory?.key === c.key ? 'is-active' : ''"
-                    @mouseenter="openCategoriesMenu(c.key)"
-                    @focus="openCategoriesMenu(c.key)"
-                    @click="openCategoriesMenu(c.key)"
-                  >
-                    <span>{{ c.title }}</span>
-                    <Icon name="mdi:chevron-down" class="text-sm opacity-70" />
-                  </button>
-                  <NuxtLink
-                    v-else
-                    :to="c.to"
-                    class="category-secondary-bar__item"
-                    @click="onRailLinkClick"
-                  >
-                    <span>{{ c.title }}</span>
-                  </NuxtLink>
-                </template>
-              </div>
+        <div class="mt-4 hidden lg:block" @mouseleave="closeCategoriesMenu()">
+          <div class="category-secondary-bar">
+            <div class="category-secondary-bar__scroll">
+              <template v-for="c in categoryCards" :key="c.key">
+                <button
+                  v-if="c.hasDetailSections"
+                  type="button"
+                  class="category-secondary-bar__item"
+                  :class="activeCategory?.key === c.key ? 'is-active' : ''"
+                  @mouseenter="openCategoriesMenu(c.key)"
+                  @focus="openCategoriesMenu(c.key)"
+                >
+                  <span>{{ c.title }}</span>
+                  <Icon name="mdi:chevron-down" class="text-sm opacity-70" />
+                </button>
+                <NuxtLink
+                  v-else
+                  :to="c.to"
+                  class="category-secondary-bar__item"
+                >
+                  <span>{{ c.title }}</span>
+                </NuxtLink>
+              </template>
             </div>
-            <button type="button" class="category-shell-arrow category-shell-arrow--next hidden md:inline-flex" @click="scrollRail('next', categoryRail)" aria-label="التالي">
-              <Icon name="mdi:chevron-left" class="text-xl" />
-            </button>
           </div>
 
           <Transition name="fade-slide">
@@ -320,16 +297,41 @@ onBeforeUnmount(() => {
                     <div class="truncate text-sm font-extrabold text-[rgb(var(--text))] rtl-text">{{ child.nameAr }}</div>
                     <div class="mt-1 truncate text-xs text-[rgb(var(--muted))] rtl-text">{{ child.descriptionAr || 'عرض المنتجات' }}</div>
                   </div>
-                  <Icon name="mdi:arrow-left" class="text-base text-[rgb(var(--muted))]" />
+                  <Icon name="mdi:arrow-right" class="text-base text-[rgb(var(--muted))]" />
                 </NuxtLink>
               </div>
             </div>
           </Transition>
         </div>
+
+        <div class="mt-4 lg:hidden">
+          <div
+            ref="categoryRail"
+            class="category-secondary-bar category-secondary-bar--mobile"
+            @pointerdown="(e) => onRailPointerDown(e, categoryRail)"
+            @pointermove="onRailPointerMove"
+            @pointerup="endRailDrag"
+            @pointercancel="endRailDrag"
+            @pointerleave="endRailDrag"
+          >
+            <div class="category-secondary-bar__scroll">
+              <NuxtLink
+                v-for="c in categoryCards"
+                :key="c.key"
+                :to="c.to"
+                class="category-secondary-bar__item"
+                @click="onRailLinkClick"
+              >
+                <span>{{ c.title }}</span>
+                <Icon v-if="c.hasDetailSections" name="mdi:chevron-down" class="text-sm opacity-70" />
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
-<section class="mx-auto max-w-6xl px-4 pb-20">
+    <section class="mx-auto max-w-6xl px-4 pb-20">
       <div class="home-section-panel home-section-panel--brands">
         <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
@@ -357,10 +359,10 @@ onBeforeUnmount(() => {
         </div>
         <div class="rail-wrap mt-8">
           <button type="button" class="rail-arrow-btn rail-arrow-btn--prev hidden lg:inline-flex" @click="scrollRail('prev', problemCategoryRail)" aria-label="السابق">
-            <Icon name="mdi:chevron-left" class="text-xl" />
+            <Icon name="mdi:chevron-right" class="text-xl" />
           </button>
           <button type="button" class="rail-arrow-btn rail-arrow-btn--next hidden lg:inline-flex" @click="scrollRail('next', problemCategoryRail)" aria-label="التالي">
-            <Icon name="mdi:chevron-right" class="text-xl" />
+            <Icon name="mdi:chevron-left" class="text-xl" />
           </button>
           <div ref="problemCategoryRail" class="category-unified-rail" @pointerdown="(e) => onRailPointerDown(e, problemCategoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
             <NuxtLink v-for="c in problemCards" :key="c.key" :to="c.to" class="category-mobile-pill" @click="onRailLinkClick">
@@ -457,8 +459,8 @@ onBeforeUnmount(() => {
   transform: translateY(-50%);
   backdrop-filter: blur(10px);
 }
-.rail-arrow-btn--prev{ left: .45rem; }
-.rail-arrow-btn--next{ right: .45rem; }
+.rail-arrow-btn--prev{ right: .45rem; }
+.rail-arrow-btn--next{ left: .45rem; }
 .rail-arrow-btn:hover{
   transform: translateY(-50%) scale(1.04);
   border-color: rgba(var(--primary), .55);
@@ -694,17 +696,13 @@ onBeforeUnmount(() => {
   .category-simple-card__arrow{ width:40px; height:40px; }
 }
 
-.category-command-center--raised{padding-top:1.15rem}
-.category-secondary-shell{position:relative;display:flex;align-items:center;gap:.75rem}
-.category-secondary-bar{flex:1 1 auto;overflow:hidden;border:1px solid rgba(var(--border),.95);border-radius:1.55rem;background:linear-gradient(135deg,rgba(var(--surface-rgb),.98),rgba(var(--surface-2-rgb),.92));box-shadow:0 18px 42px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.05)}
-.category-secondary-bar__scroll{display:flex;align-items:center;gap:.65rem;overflow-x:auto;overflow-y:hidden;padding:.85rem 1rem;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;cursor:grab;user-select:none}
+.category-command-center--raised{padding-top:1rem}
+.category-secondary-bar{margin-top:.1rem;border:1px solid rgba(var(--border),.95);border-radius:1.25rem;background:linear-gradient(180deg,rgba(var(--surface-rgb),.96),rgba(var(--surface-2-rgb),.9));box-shadow:0 16px 36px rgba(0,0,0,.14)}
+.category-secondary-bar__scroll{display:flex;align-items:center;gap:.55rem;overflow-x:auto;padding:.7rem .8rem;scrollbar-width:none}
 .category-secondary-bar__scroll::-webkit-scrollbar{display:none}
-.category-secondary-bar.is-dragging .category-secondary-bar__scroll,.category-secondary-bar__scroll.is-dragging{cursor:grabbing}
-.category-secondary-bar__item{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:.45rem;white-space:nowrap;min-height:3rem;padding:0 1.15rem;border-radius:999px;border:1px solid rgba(var(--border),.78);background:rgba(var(--surface-rgb),.76);font-size:.95rem;font-weight:900;color:rgb(var(--text));transition:all .18s ease;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
-.category-secondary-bar__item:hover,.category-secondary-bar__item.is-active{border-color:rgba(var(--primary),.42);background:linear-gradient(180deg,rgba(var(--primary),.16),rgba(var(--primary),.08));box-shadow:0 10px 24px rgba(var(--primary),.16)}
-.category-shell-arrow{width:3rem;height:3rem;flex:0 0 3rem;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;border:1px solid rgba(var(--border),.9);background:rgba(var(--surface-rgb),.92);color:rgb(var(--text));box-shadow:0 12px 28px rgba(0,0,0,.16);transition:all .18s ease}
-.category-shell-arrow:hover{border-color:rgba(var(--primary),.4);background:rgba(var(--surface-2-rgb),.96);transform:translateY(-1px)}
-.category-dropdown-panel{margin-top:1rem;border:1px solid rgba(var(--border),.95);border-radius:1.6rem;background:linear-gradient(180deg,rgba(var(--surface-rgb),.98),rgba(var(--surface-2-rgb),.95));box-shadow:0 20px 44px rgba(0,0,0,.18);padding:1.1rem 1.1rem 1rem}
+.category-secondary-bar__item{display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap;min-height:2.9rem;padding:0 1rem;border-radius:999px;border:1px solid rgba(var(--border),.75);background:rgba(var(--surface-rgb),.72);font-size:.94rem;font-weight:800;color:rgb(var(--text));transition:all .18s ease}
+.category-secondary-bar__item:hover,.category-secondary-bar__item.is-active{border-color:rgba(var(--primary),.45);background:rgba(var(--primary),.12);box-shadow:0 10px 24px rgba(var(--primary),.12)}
+.category-dropdown-panel{margin-top:.8rem;border:1px solid rgba(var(--border),.95);border-radius:1.6rem;background:linear-gradient(180deg,rgba(var(--surface-rgb),.98),rgba(var(--surface-2-rgb),.94));box-shadow:0 20px 44px rgba(0,0,0,.18);padding:1.1rem 1.1rem 1rem}
 .category-dropdown-panel__head{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.2rem .2rem .9rem}
 .category-dropdown-panel__all{display:inline-flex;align-items:center;justify-content:center;min-height:2.7rem;padding:0 1rem;border-radius:999px;border:1px solid rgba(var(--primary),.35);background:rgba(var(--primary),.1);font-size:.85rem;font-weight:800;color:rgb(var(--text))}
 .category-dropdown-panel__grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.85rem}
@@ -712,7 +710,18 @@ onBeforeUnmount(() => {
 .category-dropdown-panel__link:hover{transform:translateY(-2px);border-color:rgba(var(--primary),.38);background:rgba(var(--surface-2-rgb),.95)}
 .category-dropdown-panel__icon{flex:0 0 3.1rem;width:3.1rem;height:3.1rem;border-radius:1rem;overflow:hidden;border:1px solid rgba(var(--border),.8);display:flex;align-items:center;justify-content:center;background:rgba(var(--surface-2-rgb),.95);font-size:1.15rem;font-weight:900;color:rgb(var(--text))}
 @media (max-width: 1279px){.category-dropdown-panel__grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media (max-width: 768px){.category-command-center--raised{padding-top:.5rem}.category-secondary-shell{gap:.5rem}.category-secondary-bar{border-radius:1.25rem}.category-secondary-bar__scroll{padding:.8rem .85rem}.category-secondary-bar__item{min-height:2.8rem;padding:0 1rem;font-size:.9rem}.category-shell-arrow{display:none !important}}
-@media (max-width: 1279px){.rail-arrow-btn{ display:none !important; }}
+
+
+@media (max-width: 1279px){
+  .rail-arrow-btn{ display:none !important; }
+}
+.category-secondary-bar--mobile{overflow:hidden}
+.category-secondary-bar--mobile .category-secondary-bar__scroll{padding:.25rem .2rem .4rem;gap:.6rem;cursor:grab;user-select:none;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+.category-secondary-bar--mobile .category-secondary-bar__item{scroll-snap-align:start;flex:0 0 auto}
+.category-secondary-bar--mobile.is-dragging .category-secondary-bar__scroll{cursor:grabbing}
+@media (max-width: 1023px){
+  .category-secondary-bar{margin-top:.9rem}
+  .category-secondary-bar__item{min-height:2.75rem;padding:0 .95rem;font-size:.9rem}
+}
 
 </style>
