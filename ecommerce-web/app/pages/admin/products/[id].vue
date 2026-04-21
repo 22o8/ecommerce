@@ -338,7 +338,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const imagesLoading = ref(false)
 const images = ref<any[]>([])
 
-async function resetForm() {
+function resetForm() {
   if (!product.value) return
   // backend (ASP.NET) returns camelCase: title, priceIqd, brand, isPublished, isFeatured
   form.name = product.value.title || product.value.name || ''

@@ -119,12 +119,6 @@ public class AdminProductsController : ControllerBase
         if (!brandOk)
             return BadRequest(new { message = "Invalid brand" });
 
-        var categoryValidation = await ValidateCategoryLinksAsync(req.Category, req.SubCategory, "regular");
-        if (categoryValidation is not null) return categoryValidation;
-
-        var problemValidation = await ValidateCategoryLinksAsync(req.ProblemCategory, req.ProblemSubCategory, "problem");
-        if (problemValidation is not null) return problemValidation;
-
         var slug = NormalizeSlug(req.Slug);
         if (string.IsNullOrWhiteSpace(slug))
             slug = Slugify(req.Title);
@@ -182,12 +176,6 @@ public class AdminProductsController : ControllerBase
         var brandOk = await _db.Brands.AsNoTracking().AnyAsync(b => b.IsActive && b.Slug.ToLower() == brandSlug);
         if (!brandOk)
             return BadRequest(new { message = "Invalid brand" });
-
-        var categoryValidation = await ValidateCategoryLinksAsync(req.Category, req.SubCategory, "regular");
-        if (categoryValidation is not null) return categoryValidation;
-
-        var problemValidation = await ValidateCategoryLinksAsync(req.ProblemCategory, req.ProblemSubCategory, "problem");
-        if (problemValidation is not null) return problemValidation;
 
         p.Title = req.Title.Trim();
         p.Slug = slug;
@@ -383,41 +371,6 @@ public class AdminProductsController : ControllerBase
     private static string NormalizeSubCategory(string? value)
     {
         return (value ?? string.Empty).Trim().ToLowerInvariant();
-    }
-
-    private async Task<IActionResult?> ValidateCategoryLinksAsync(string? categoryRaw, string? subCategoryRaw, string section)
-    {
-        var category = NormalizeCategory(categoryRaw);
-        var subCategory = NormalizeSubCategory(subCategoryRaw);
-
-        if (string.IsNullOrWhiteSpace(category) || category == "general")
-        {
-            if (!string.IsNullOrWhiteSpace(subCategory))
-                return BadRequest(new { message = "لا يمكن اختيار تصنيف دقيق بدون تصنيف رئيسي صالح." });
-            return null;
-        }
-
-        var parent = await _db.Categories
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.IsActive && c.Section == section && c.ParentId == null && c.Key.ToLower() == category);
-
-        if (parent is null)
-            return BadRequest(new { message = $"التصنيف الرئيسي غير موجود: {category}" });
-
-        if (string.IsNullOrWhiteSpace(subCategory))
-            return null;
-
-        if (!parent.HasDetailSections)
-            return BadRequest(new { message = "هذا التصنيف لا يدعم تصنيفات دقيقة." });
-
-        var childExists = await _db.Categories
-            .AsNoTracking()
-            .AnyAsync(c => c.IsActive && c.Section == section && c.ParentId == parent.Id && c.Key.ToLower() == subCategory);
-
-        if (!childExists)
-            return BadRequest(new { message = "التصنيف الدقيق المختار لا يتبع التصنيف الرئيسي المحدد." });
-
-        return null;
     }
 
     private static string ExtractStorageKeyFromUrl(string? url)
