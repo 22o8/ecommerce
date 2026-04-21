@@ -409,7 +409,7 @@ async function loadProduct() {
   loading.value = true
   try {
     product.value = await getAdminProduct<any>(id.value)
-    resetForm()
+    await resetForm()
   } catch (e: any) {
     product.value = null
     toast.error(t('admin.loadProductFailed'))

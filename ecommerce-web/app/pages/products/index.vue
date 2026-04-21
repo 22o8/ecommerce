@@ -39,6 +39,8 @@
             <label class="filter-label rtl-text">{{ t('productsPage.sort') }}</label>
             <select v-model="sort" class="input products-select" @change="applyFilters" :aria-label="t('productsPage.sort')">
               <option value="new">{{ t('productsPage.sortNewest') }}</option>
+              <option value="oldest">{{ t('productsPage.sortOldest') || 'الأقدم' }}</option>
+              <option value="alpha">{{ t('productsPage.sortAlphabetical') || 'حسب الأبجدية' }}</option>
               <option value="priceAsc">{{ t('productsPage.sortPriceAsc') }}</option>
               <option value="priceDesc">{{ t('productsPage.sortPriceDesc') }}</option>
               <option value="topRated">{{ t('home.topRatedProducts') }}</option>
@@ -72,7 +74,7 @@
           </div>
 
           <div class="results-pill rtl-text">
-            {{ t('productsPage.resultsCount', { count: products.totalCount || products.items.length || 0 }) }}
+            {{ t('productsPage.resultsCount', { count: products.totalCount || displayedItems.length || 0 }) }}
           </div>
         </div>
       </aside>
@@ -104,7 +106,7 @@
 
         <div v-else class="mt-6 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
           <RevealOnScroll
-            v-for="(p, idx) in products.items"
+            v-for="(p, idx) in displayedItems"
             :key="p.id"
             :parity="(idx % 2) as 0 | 1"
             :delay="35 * (idx % 6)"
@@ -113,7 +115,7 @@
           </RevealOnScroll>
         </div>
 
-        <div v-if="!products.loading && products.items.length === 0" class="mt-6 card-soft p-10 text-center text-[rgb(var(--muted))] rtl-text">
+        <div v-if="!products.loading && displayedItems.length === 0" class="mt-6 card-soft p-10 text-center text-[rgb(var(--muted))] rtl-text">
           <div class="text-lg font-extrabold text-[rgb(var(--text))]">{{ t('productsPage.emptyTitle') }}</div>
           <div class="mt-2 text-sm">{{ t('productsPage.emptyDesc') }}</div>
         </div>
@@ -184,6 +186,15 @@ const subCategoryMap: Record<string, Array<{value:string,label:string}>> = {
 }
 const subCategoryOptions = computed(() => subCategoryMap[category.value] || [])
 
+const displayedItems = computed(() => {
+  const list = [...(products.items || [])]
+  if (sort.value === 'priceAsc') return list.sort((a,b) => Number(a.finalPriceIqd ?? a.priceIqd ?? a.price ?? 0) - Number(b.finalPriceIqd ?? b.priceIqd ?? b.price ?? 0))
+  if (sort.value === 'priceDesc') return list.sort((a,b) => Number(b.finalPriceIqd ?? b.priceIqd ?? b.price ?? 0) - Number(a.finalPriceIqd ?? a.priceIqd ?? a.price ?? 0))
+  if (sort.value === 'alpha') return list.sort((a,b) => String(a.name || a.title || '').localeCompare(String(b.name || b.title || ''), 'ar'))
+  if (sort.value === 'oldest') return [...list].reverse()
+  return list
+})
+
 const hasNext = computed(() => {
   const total = Number(products.totalCount || 0)
   const pageSize = 12
@@ -193,6 +204,8 @@ const hasNext = computed(() => {
 const activeSortLabel = computed(() => {
   if (sort.value === 'priceAsc') return t('productsPage.sortPriceAsc')
   if (sort.value === 'priceDesc') return t('productsPage.sortPriceDesc')
+  if (sort.value === 'alpha') return t('productsPage.sortAlphabetical') || 'حسب الأبجدية'
+  if (sort.value === 'oldest') return t('productsPage.sortOldest') || 'الأقدم'
   return t('productsPage.sortNewest')
 })
 

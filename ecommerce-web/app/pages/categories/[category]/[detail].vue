@@ -14,35 +14,26 @@
       </p>
     </div>
 
-    <section class="mt-6 card-soft p-5 sm:p-6">
-      <div class="mb-5 flex items-center justify-between gap-3">
-        <div>
-          <div class="text-xl font-extrabold text-[rgb(var(--text))] rtl-text">المنتجات المناسبة</div>
-          <div class="mt-1 text-sm text-[rgb(var(--muted))] rtl-text">
-            {{ t('productsPage.resultsCount', { count: filteredItems.length || 0 }) }}
-          </div>
-        </div>
-        <NuxtLink :to="parentRoute" class="btn-secondary px-4 py-2">العودة للتصنيف</NuxtLink>
-      </div>
-
-      <div v-if="products.loading && filteredItems.length === 0" class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-        <div v-for="n in 6" :key="n" class="skeleton-card min-h-[320px] rounded-[1.75rem]" />
-      </div>
-      <div v-else-if="filteredItems.length" class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-        <ProductCard v-for="p in filteredItems" :key="p.id" :p="p" />
-      </div>
-      <div v-else class="rounded-[1.5rem] border border-app bg-surface p-10 text-center text-[rgb(var(--muted))] rtl-text">
-        {{ t('productsPage.emptyDesc') }}
-      </div>
-    </section>
+    <ProductListingWithSidebar
+      :items="displayItems"
+      :loading="products.loading"
+      :count="displayItems.length"
+      :sort="sort"
+      :sort-label="activeSortLabel"
+      heading="المنتجات المناسبة"
+      :subheading="t('productsPage.resultsCount', { count: displayItems.length })"
+      @update:sort="onSortChange"
+      @reset="resetFilters"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import ProductCard from '~/components/ProductCard.vue'
+import ProductListingWithSidebar from '~/components/ProductListingWithSidebar.vue'
 const { t } = useI18n()
 const { categories, fetchCategories, fetchProblemChildren } = useCategories()
 const route = useRoute()
+const router = useRouter()
 const products = useProductsStore()
 const categoryKey = computed(() => String(route.params.category || '').toLowerCase())
 const detailKey = computed(() => String(route.params.detail || '').toLowerCase())
@@ -54,7 +45,6 @@ await useAsyncData(`category-detail:${categoryKey.value}:${detailKey.value}`, as
   if (parent?.id) {
     const children = await fetchProblemChildren(String(parent.id), 'regular')
     const child = (children || []).find((x: any) => String(x.key || '').toLowerCase() === detailKey.value)
-    detailItem.value = child || null
     detailLabel.value = child?.nameAr || detailKey.value
   }
   await products.fetch({ page: 1, pageSize: 24, sort: 'new', category: categoryKey.value, subCategory: detailKey.value })
@@ -62,24 +52,28 @@ await useAsyncData(`category-detail:${categoryKey.value}:${detailKey.value}`, as
 }, { watch: [categoryKey, detailKey] })
 
 const categoryLabel = computed(() => (categories.value || []).find((c: any) => String(c.key || '').toLowerCase() === categoryKey.value)?.nameAr || categoryKey.value)
-const detailItem = ref<any | null>(null)
 const detailLabel = ref(detailKey.value)
+const sort = ref(String(route.query.sort || 'new'))
 
-const normalize = (value: any) => String(value || '').trim().toLowerCase()
-const detailAliases = computed(() => {
-  const item = detailItem.value
-  const aliases = new Set<string>([normalize(detailKey.value)])
-  if (item) {
-    aliases.add(normalize(item.key))
-    aliases.add(normalize(item.nameAr))
-    aliases.add(normalize(item.nameEn))
-  }
-  return aliases
+const displayItems = computed(() => {
+  const list = [...(products.items || [])]
+  const key = detailKey.value
+  const filtered = list.filter((item: any) => {
+    const values = new Set([String(item.subCategory || '').toLowerCase(), String(item.problemSubCategory || '').toLowerCase()].filter(Boolean))
+    return values.size ? values.has(key) : true
+  })
+  if (sort.value === 'priceAsc') return filtered.sort((a,b) => Number(a.finalPriceIqd ?? a.priceIqd ?? a.price ?? 0) - Number(b.finalPriceIqd ?? b.priceIqd ?? b.price ?? 0))
+  if (sort.value === 'priceDesc') return filtered.sort((a,b) => Number(b.finalPriceIqd ?? b.priceIqd ?? b.price ?? 0) - Number(a.finalPriceIqd ?? a.priceIqd ?? a.price ?? 0))
+  if (sort.value === 'alpha') return filtered.sort((a,b) => String(a.name || a.title || '').localeCompare(String(b.name || b.title || ''), 'ar'))
+  if (sort.value === 'oldest') return filtered.reverse()
+  return filtered
 })
+const activeSortLabel = computed(() => sort.value === 'priceAsc' ? t('productsPage.sortPriceAsc') : sort.value === 'priceDesc' ? t('productsPage.sortPriceDesc') : sort.value === 'alpha' ? 'حسب الأبجدية' : sort.value === 'oldest' ? 'الأقدم' : t('productsPage.sortNewest'))
+function onSortChange(value: string) {
+  sort.value = value
+  router.replace({ query: { ...route.query, ...(value && value !== 'new' ? { sort: value } : {}) } })
+}
+function resetFilters() { onSortChange('new') }
+watch(() => route.query.sort, (v) => { sort.value = String(v || 'new') })
 
-const filteredItems = computed(() => {
-  const aliases = detailAliases.value
-  const result = (products.items || []).filter((p: any) => aliases.has(normalize(p.subCategory)))
-  return result.length ? result : (products.items || [])
-})
 </script>

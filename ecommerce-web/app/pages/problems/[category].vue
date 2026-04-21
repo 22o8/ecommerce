@@ -68,33 +68,18 @@
         </div>
       </section>
 
-      <section v-else class="mt-6">
-        <div class="card-soft p-5 sm:p-6">
-          <div class="mb-5 flex items-center justify-between gap-3">
-            <div>
-              <div class="text-xl font-extrabold text-[rgb(var(--text))] rtl-text">المنتجات المناسبة</div>
-              <div class="mt-1 text-sm text-[rgb(var(--muted))] rtl-text">
-                {{ t('productsPage.resultsCount', { count: products.totalCount || products.items.length || 0 }) }}
-              </div>
-            </div>
-            <button type="button" class="btn-secondary px-4 py-2" @click="router.push('/#categories')">
-              عودة
-            </button>
-          </div>
-
-          <div v-if="products.loading && products.items.length === 0" class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-            <div v-for="n in 6" :key="n" class="skeleton-card min-h-[320px] rounded-[1.75rem]" />
-          </div>
-
-          <div v-else-if="products.items.length" class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-            <ProductCard v-for="p in products.items" :key="p.id" :p="p" />
-          </div>
-
-          <div v-else class="rounded-[1.5rem] border border-app bg-surface p-10 text-center text-[rgb(var(--muted))] rtl-text">
-            {{ t('productsPage.emptyDesc') }}
-          </div>
-        </div>
-      </section>
+      <ProductListingWithSidebar
+        v-else
+        :items="displayItems"
+        :loading="products.loading"
+        :count="displayItems.length"
+        :sort="sort"
+        :sort-label="activeSortLabel"
+        heading="المنتجات المناسبة"
+        :subheading="t('productsPage.resultsCount', { count: displayItems.length })"
+        @update:sort="onSortChange"
+        @reset="resetFilters"
+      />
     </template>
 
     <NuxtPage v-else :page-key="route.fullPath" />
@@ -102,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import ProductCard from '~/components/ProductCard.vue'
+import ProductListingWithSidebar from '~/components/ProductListingWithSidebar.vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -138,6 +123,23 @@ const categoryLabel = computed(() => categoryItem.value?.nameAr || categoryKey.v
 const categoryDescription = computed(
   () => categoryItem.value?.descriptionAr || 'اختر القسم المناسب لتظهر لك الحلول الدقيقة الخاصة بهذه المشكلة.'
 )
+
+const sort = ref(String(route.query.sort || 'new'))
+const displayItems = computed(() => {
+  const list = [...(products.items || [])]
+  if (sort.value === 'priceAsc') return list.sort((a,b) => Number(a.finalPriceIqd ?? a.priceIqd ?? a.price ?? 0) - Number(b.finalPriceIqd ?? b.priceIqd ?? b.price ?? 0))
+  if (sort.value === 'priceDesc') return list.sort((a,b) => Number(b.finalPriceIqd ?? b.priceIqd ?? b.price ?? 0) - Number(a.finalPriceIqd ?? a.priceIqd ?? a.price ?? 0))
+  if (sort.value === 'alpha') return list.sort((a,b) => String(a.name || a.title || '').localeCompare(String(b.name || b.title || ''), 'ar'))
+  if (sort.value === 'oldest') return list.reverse()
+  return list
+})
+const activeSortLabel = computed(() => sort.value === 'priceAsc' ? t('productsPage.sortPriceAsc') : sort.value === 'priceDesc' ? t('productsPage.sortPriceDesc') : sort.value === 'alpha' ? 'حسب الأبجدية' : sort.value === 'oldest' ? 'الأقدم' : t('productsPage.sortNewest'))
+function onSortChange(value: string) {
+  sort.value = value
+  router.replace({ query: { ...route.query, ...(value && value !== 'new' ? { sort: value } : {}) } })
+}
+function resetFilters() { onSortChange('new') }
+watch(() => route.query.sort, (v) => { sort.value = String(v || 'new') })
 
 async function loadChildren() {
   if (hasActiveDetailRoute.value) return
