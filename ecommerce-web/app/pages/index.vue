@@ -213,135 +213,106 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="min-h-screen home-page-shell">
-    <section v-if="categoryCards.length" id="categories" class="mx-auto max-w-6xl px-4 pb-16 pt-8 scroll-mt-24">
-      <div class="home-section-panel home-section-panel--categories category-command-center">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div class="inline-flex items-center gap-2 rounded-full border border-app bg-surface/80 px-3 py-1 text-[11px] font-bold text-[rgb(var(--muted))] backdrop-blur rtl-text">
-              <span class="h-2 w-2 rounded-full bg-[rgb(var(--primary))]" />
-              أقسام المتجر
+    <section v-if="categoryCards.length" id="categories" class="category-nav-shell border-b border-app/80 bg-[rgba(var(--surface),0.88)] backdrop-blur-xl">
+      <div class="mx-auto max-w-7xl px-4">
+        <div class="category-nav-row hidden lg:flex" @mouseleave="closeCategoriesMenu()">
+          <div class="category-nav-brand">
+            <span class="category-nav-brand__dot" />
+            <div>
+              <div class="category-nav-brand__label">تسوق حسب التصنيف</div>
+              <div class="category-nav-brand__sub">مرر أو حدّد أي قسم لتظهر لك المعاينة والروابط بسرعة.</div>
             </div>
-            <h2 class="mt-4 text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl rtl-text">
-              {{ t('home.spotlightTitle') }}
-            </h2>
-            <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base rtl-text">
-              تجربة أقرب للمتاجر العالمية: اختر التصنيف من الشريط، وعلى الحاسبة تظهر لك معاينة منظمة تساعدك تصل بسرعة.
-            </p>
           </div>
 
-          <div class="hidden lg:flex items-center gap-2 self-start lg:self-auto">
-            <NuxtLink
-              v-for="link in categoryQuickLinks.slice(0, 4)"
-              :key="link.to"
-              :to="link.to"
-              class="rounded-full border border-app bg-surface px-3 py-2 text-xs font-semibold text-[rgb(var(--text))] transition hover:-translate-y-0.5 hover:border-[rgba(var(--primary),0.45)] hover:bg-surface-2"
-            >
-              {{ link.label }}
-            </NuxtLink>
-          </div>
-        </div>
-
-        <div class="mt-8 hidden lg:block" @mouseenter="openCategoriesMenu()" @mouseleave="closeCategoriesMenu()">
-          <div class="category-command-center__tabs">
+          <div class="category-nav-links" @mouseenter="openCategoriesMenu()">
             <NuxtLink
               v-for="c in categoryCards"
               :key="c.key"
               :to="c.to"
-              class="category-command-center__tab"
+              class="category-nav-link"
               :class="activeCategory?.key === c.key ? 'is-active' : ''"
               @mouseenter="openCategoriesMenu(c.key)"
               @focus="openCategoriesMenu(c.key)"
             >
-              <span class="category-command-center__tab-index">{{ String(c.index).padStart(2, '0') }}</span>
-              <span class="truncate">{{ c.title }}</span>
+              <span>{{ c.title }}</span>
               <Icon name="mdi:chevron-down" class="text-sm opacity-60" />
             </NuxtLink>
           </div>
-
-          <Transition name="fade-slide">
-            <div v-if="categoriesMenuOpen && activeCategory" class="category-mega-menu">
-              <div class="category-mega-menu__sidebar">
-                <button
-                  v-for="c in categoryCards"
-                  :key="`menu-${c.key}`"
-                  type="button"
-                  class="category-mega-menu__sidebar-item"
-                  :class="activeCategory?.key === c.key ? 'is-active' : ''"
-                  @mouseenter="openCategoriesMenu(c.key)"
-                  @focus="openCategoriesMenu(c.key)"
-                >
-                  <span class="truncate">{{ c.title }}</span>
-                  <Icon name="mdi:chevron-left" class="text-sm opacity-60" />
-                </button>
-              </div>
-
-              <div class="category-mega-menu__content">
-                <div class="grid gap-6 xl:grid-cols-[1.2fr_.8fr]">
-                  <div>
-                    <div class="text-xs font-bold uppercase tracking-[0.24em] text-[rgb(var(--muted))]">{{ activeCategory.title }}</div>
-                    <h3 class="mt-3 text-3xl font-extrabold text-[rgb(var(--text))] rtl-text">{{ activeCategory.title }}</h3>
-                    <p class="mt-3 max-w-xl text-sm leading-7 text-[rgb(var(--muted))] rtl-text">{{ activeCategory.subtitle }}</p>
-
-                    <div class="mt-6 grid gap-3 sm:grid-cols-2">
-                      <NuxtLink
-                        v-for="link in featuredCategoryCards"
-                        :key="`featured-${link.key}`"
-                        :to="link.to"
-                        class="category-mega-menu__list-link"
-                      >
-                        <span class="truncate">{{ link.title }}</span>
-                        <Icon name="mdi:arrow-top-left" class="text-base opacity-70" />
-                      </NuxtLink>
-                    </div>
-                  </div>
-
-                  <NuxtLink :to="activeCategory.to" class="category-mega-menu__preview" :class="`bg-gradient-to-br ${activeCategory.accent}`">
-                    <div class="category-mega-menu__preview-media">
-                      <img
-                        v-if="activeCategory.imageUrl"
-                        :src="buildAssetUrl(activeCategory.imageUrl)"
-                        :alt="activeCategory.title"
-                        class="h-full w-full object-cover"
-                      >
-                      <div v-else class="flex h-full w-full items-center justify-center text-6xl font-black text-white/90">
-                        {{ activeCategory.title?.slice(0, 1) }}
-                      </div>
-                    </div>
-                    <div class="category-mega-menu__preview-copy">
-                      <div>
-                        <div class="text-xs font-bold uppercase tracking-[0.22em] text-white/70">Shop by category</div>
-                        <div class="mt-2 text-2xl font-extrabold text-white rtl-text">{{ activeCategory.title }}</div>
-                        <div class="mt-2 text-sm leading-7 text-white/80 rtl-text line-clamp-3">{{ activeCategory.subtitle }}</div>
-                      </div>
-                      <span class="inline-flex items-center gap-2 rounded-full bg-white/14 px-4 py-2 text-sm font-bold text-white">
-                        ادخل للتصنيف
-                        <Icon name="mdi:arrow-left" class="text-base" />
-                      </span>
-                    </div>
-                  </NuxtLink>
-                </div>
-              </div>
-            </div>
-          </Transition>
         </div>
 
-        <div class="mt-8 lg:hidden">
-          <div ref="categoryRail" class="grid grid-cols-2 gap-3 sm:grid-cols-3" @pointerdown="(e) => onRailPointerDown(e, categoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
+        <Transition name="fade-slide">
+          <div v-if="categoriesMenuOpen && activeCategory" class="category-dropdown hidden lg:block" @mouseenter="openCategoriesMenu(activeCategory.key)">
+            <div class="category-dropdown__panel">
+              <div class="category-dropdown__main">
+                <div class="category-dropdown__eyebrow">{{ activeCategory.title }}</div>
+                <h3 class="category-dropdown__title rtl-text">{{ activeCategory.title }}</h3>
+                <p class="category-dropdown__desc rtl-text">{{ activeCategory.subtitle }}</p>
+
+                <div class="category-dropdown__actions">
+                  <NuxtLink :to="activeCategory.to" class="category-dropdown__cta">
+                    ادخل إلى التصنيف
+                    <Icon name="mdi:arrow-left" class="text-base" />
+                  </NuxtLink>
+                </div>
+
+                <div class="category-dropdown__list-wrap">
+                  <div class="category-dropdown__list-title">التصنيفات المتاحة</div>
+                  <div class="category-dropdown__list">
+                    <NuxtLink
+                      v-for="link in categoryQuickLinks"
+                      :key="link.to"
+                      :to="link.to"
+                      class="category-dropdown__list-item"
+                      @mouseenter="openCategoriesMenu(link.to.split('/').pop())"
+                    >
+                      <span class="truncate">{{ link.label }}</span>
+                      <Icon name="mdi:arrow-top-left" class="text-base opacity-70" />
+                    </NuxtLink>
+                  </div>
+                </div>
+              </div>
+
+              <NuxtLink :to="activeCategory.to" class="category-dropdown__preview" :class="`bg-gradient-to-br ${activeCategory.accent}`">
+                <div class="category-dropdown__preview-media">
+                  <img
+                    v-if="activeCategory.imageUrl"
+                    :src="buildAssetUrl(activeCategory.imageUrl)"
+                    :alt="activeCategory.title"
+                    class="h-full w-full object-cover"
+                  >
+                  <div v-else class="flex h-full w-full items-center justify-center text-6xl font-black text-white/90">
+                    {{ activeCategory.title?.slice(0, 1) }}
+                  </div>
+                </div>
+                <div class="category-dropdown__preview-overlay">
+                  <div class="text-xs font-bold uppercase tracking-[0.22em] text-white/70">Category spotlight</div>
+                  <div class="mt-2 text-2xl font-extrabold text-white rtl-text">{{ activeCategory.title }}</div>
+                </div>
+              </NuxtLink>
+            </div>
+          </div>
+        </Transition>
+
+        <div class="category-mobile-nav lg:hidden">
+          <div class="category-mobile-nav__header">
+            <div>
+              <div class="category-mobile-nav__label">تسوّق حسب التصنيف</div>
+              <div class="category-mobile-nav__sub">اختر القسم المناسب للوصول السريع.</div>
+            </div>
+          </div>
+          <div ref="categoryRail" class="category-mobile-nav__rail" @pointerdown="(e) => onRailPointerDown(e, categoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
             <NuxtLink
               v-for="c in categoryCards"
               :key="c.key"
               :to="c.to"
-              class="category-grid-card"
+              class="category-mobile-nav__item"
               @click="onRailLinkClick"
             >
-              <div class="category-grid-card__media" :class="`bg-gradient-to-br ${c.accent}`">
+              <div class="category-mobile-nav__thumb" :class="`bg-gradient-to-br ${c.accent}`">
                 <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="h-full w-full object-cover" />
-                <div v-else class="flex h-full w-full items-center justify-center text-4xl font-black text-white/90">{{ c.title?.slice(0,1) }}</div>
+                <div v-else class="flex h-full w-full items-center justify-center text-2xl font-black text-white/90">{{ c.title?.slice(0,1) }}</div>
               </div>
-              <div class="category-grid-card__body">
-                <div class="text-base font-extrabold text-[rgb(var(--text))] rtl-text">{{ c.title }}</div>
-                <div class="mt-1 text-xs text-[rgb(var(--muted))] line-clamp-2 rtl-text">{{ c.subtitle }}</div>
-              </div>
+              <span class="category-mobile-nav__text">{{ c.title }}</span>
             </NuxtLink>
           </div>
         </div>
@@ -713,6 +684,230 @@ onBeforeUnmount(() => {
   .category-simple-card__subtitle{ font-size:.78rem; }
   .category-simple-card__arrow{ width:40px; height:40px; }
 }
+
+.category-nav-shell{
+  position: sticky;
+  top: 84px;
+  z-index: 25;
+  box-shadow: 0 14px 40px rgba(0,0,0,.18);
+}
+.category-nav-row{
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+.category-nav-brand{
+  display:flex;
+  align-items:center;
+  gap:.9rem;
+  min-width: 280px;
+}
+.category-nav-brand__dot{
+  width:12px;
+  height:12px;
+  border-radius:999px;
+  background: rgb(var(--primary));
+  box-shadow: 0 0 0 8px rgba(var(--primary), .12);
+}
+.category-nav-brand__label{
+  color: rgb(var(--text));
+  font-weight: 900;
+  font-size: 1.06rem;
+}
+.category-nav-brand__sub{
+  color: rgb(var(--muted));
+  font-size: .8rem;
+  margin-top: .2rem;
+}
+.category-nav-links{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  flex-wrap:nowrap;
+  overflow:auto;
+  scrollbar-width:none;
+}
+.category-nav-links::-webkit-scrollbar{ display:none; }
+.category-nav-link{
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  white-space:nowrap;
+  height:44px;
+  padding:0 1rem;
+  border-radius:999px;
+  border:1px solid rgba(var(--border), .95);
+  background: rgba(var(--surface), .88);
+  color: rgb(var(--text));
+  font-weight:800;
+  font-size:.92rem;
+  transition: all .18s ease;
+}
+.category-nav-link:hover,
+.category-nav-link.is-active{
+  border-color: rgba(var(--primary), .55);
+  background: rgba(var(--surface-2), .98);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(0,0,0,.16);
+}
+.category-dropdown{
+  position: relative;
+}
+.category-dropdown__panel{
+  margin-top: .35rem;
+  display:grid;
+  grid-template-columns: 1.2fr .8fr;
+  gap: 1.25rem;
+  border:1px solid rgba(var(--border), .95);
+  border-radius: 1.75rem;
+  background: linear-gradient(180deg, rgba(var(--surface), .98), rgba(var(--surface-2), .95));
+  box-shadow: 0 24px 64px rgba(0,0,0,.28);
+  padding: 1.25rem;
+}
+.category-dropdown__main{
+  padding: .5rem;
+}
+.category-dropdown__eyebrow{
+  color: rgb(var(--primary));
+  font-weight: 800;
+  font-size:.8rem;
+  letter-spacing:.12em;
+  text-transform: uppercase;
+}
+.category-dropdown__title{
+  color: rgb(var(--text));
+  font-size: 2rem;
+  font-weight: 900;
+  margin-top:.65rem;
+}
+.category-dropdown__desc{
+  color: rgb(var(--muted));
+  margin-top:.7rem;
+  line-height:1.9;
+  max-width: 42rem;
+}
+.category-dropdown__actions{ margin-top: 1rem; }
+.category-dropdown__cta{
+  display:inline-flex;
+  align-items:center;
+  gap:.55rem;
+  padding:.85rem 1.15rem;
+  border-radius:999px;
+  background: rgb(var(--primary));
+  color:#0a0712;
+  font-weight: 900;
+  box-shadow: 0 14px 34px rgba(var(--primary), .28);
+}
+.category-dropdown__list-wrap{
+  margin-top:1.2rem;
+}
+.category-dropdown__list-title{
+  color: rgb(var(--text));
+  font-weight: 800;
+  margin-bottom: .8rem;
+}
+.category-dropdown__list{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap:.7rem;
+}
+.category-dropdown__list-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.75rem;
+  padding:.9rem 1rem;
+  border-radius:1rem;
+  border:1px solid rgba(var(--border), .9);
+  background: rgba(var(--surface), .82);
+  color: rgb(var(--text));
+  font-weight: 700;
+  transition: all .18s ease;
+}
+.category-dropdown__list-item:hover{
+  border-color: rgba(var(--primary), .45);
+  background: rgba(var(--surface-2), .95);
+}
+.category-dropdown__preview{
+  position:relative;
+  min-height: 320px;
+  overflow:hidden;
+  border-radius:1.5rem;
+  border:1px solid rgba(255,255,255,.1);
+}
+.category-dropdown__preview-media{
+  position:absolute;
+  inset:0;
+}
+.category-dropdown__preview-overlay{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:1.4rem;
+  background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.55));
+}
+.category-mobile-nav{
+  padding: .85rem 0 1rem;
+}
+.category-mobile-nav__header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  margin-bottom:.8rem;
+}
+.category-mobile-nav__label{
+  color: rgb(var(--text));
+  font-weight: 900;
+  font-size: 1rem;
+}
+.category-mobile-nav__sub{
+  color: rgb(var(--muted));
+  font-size: .8rem;
+  margin-top:.2rem;
+}
+.category-mobile-nav__rail{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:max-content;
+  gap:.75rem;
+  overflow-x:auto;
+  padding-bottom:.2rem;
+  scrollbar-width:none;
+}
+.category-mobile-nav__rail::-webkit-scrollbar{ display:none; }
+.category-mobile-nav__item{
+  display:flex;
+  align-items:center;
+  gap:.65rem;
+  min-width:max-content;
+  padding:.5rem .8rem .5rem .5rem;
+  border-radius:999px;
+  border:1px solid rgba(var(--border), .95);
+  background: rgba(var(--surface), .88);
+}
+.category-mobile-nav__thumb{
+  width:42px;
+  height:42px;
+  border-radius:999px;
+  overflow:hidden;
+  flex-shrink:0;
+}
+.category-mobile-nav__text{
+  color: rgb(var(--text));
+  font-size:.87rem;
+  font-weight:800;
+  white-space:nowrap;
+}
+@media (max-width: 1023px){
+  .category-nav-shell{
+    top: 72px;
+  }
+}
+
 </style>
 
 @media (max-width: 1279px){
