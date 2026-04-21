@@ -10,29 +10,26 @@
       <p class="mt-3 max-w-2xl text-sm leading-7 text-[rgb(var(--muted))] sm:text-base rtl-text">{{ detailDescription }}</p>
     </section>
 
-    <section class="mt-6 card-soft p-5 sm:p-6">
-      <div class="mb-5 flex items-center justify-between gap-3">
-        <div>
-          <div class="text-xl font-extrabold text-[rgb(var(--text))] rtl-text">المنتجات المناسبة</div>
-          <div class="mt-1 text-sm text-[rgb(var(--muted))] rtl-text">{{ t('productsPage.resultsCount', { count: filteredItems.length }) }}</div>
-        </div>
-      </div>
-
-      <div v-if="products.loading && products.items.length === 0" class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-        <div v-for="n in 6" :key="n" class="skeleton-card min-h-[320px] rounded-[1.75rem]" />
-      </div>
-      <div v-else-if="filteredItems.length" class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-        <ProductCard v-for="p in filteredItems" :key="p.id" :p="p" />
-      </div>
-      <div v-else class="rounded-[1.5rem] border border-app bg-surface p-10 text-center text-[rgb(var(--muted))] rtl-text">
-        {{ t('productsPage.emptyDesc') }}
-      </div>
-    </section>
+    <ProductResultsSection
+      :items="sortedItems"
+      :loading="products.loading"
+      :sort="sort"
+      :count="sortedItems.length"
+      title="الفلاتر"
+      hint="رتّب النتائج حسب الوقت أو الاسم أو السعر."
+      sort-label="الترتيب"
+      clear-label="إعادة"
+      results-title="المنتجات المناسبة"
+      count-label="عدد المنتجات"
+      :empty-text="t('productsPage.emptyDesc')"
+      @update:sort="onSortChange"
+      @reset="resetSort"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import ProductCard from '~/components/ProductCard.vue'
+import ProductResultsSection from '~/components/ProductResultsSection.vue'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -42,20 +39,14 @@ const products = useProductsStore()
 const categoryKey = computed(() => String(route.params.category || '').toLowerCase())
 const detailKey = computed(() => String(route.params.detail || '').toLowerCase())
 const childSections = ref<any[]>([])
-const detailAliases = ref<string[]>([])
 const parentRoute = computed(() => `/problems/${encodeURIComponent(categoryKey.value)}`)
-
-function norm(v: unknown) {
-  return String(v || '').trim().toLowerCase()
-}
+const sort = ref(String(route.query.sort || 'new'))
 
 await useAsyncData(`problem-detail:${categoryKey.value}:${detailKey.value}`, async () => {
   await fetchCategories(false, 'problem')
   const parent = (problemCategories.value || []).find((c: any) => String(c.key || '').toLowerCase() === categoryKey.value)
   if (parent?.id) childSections.value = await fetchProblemChildren(String(parent.id))
-  const child = (childSections.value || []).find((x: any) => String(x.key || '').toLowerCase() === detailKey.value)
-  detailAliases.value = [child?.key, child?.nameAr, child?.nameEn, detailKey.value].map(norm).filter(Boolean)
-  await products.fetch({ page: 1, pageSize: 100, sort: 'new', problemCategory: categoryKey.value, problemSubCategory: detailKey.value })
+  await products.fetch({ page: 1, pageSize: 24, sort: 'new', problemCategory: categoryKey.value, problemSubCategory: detailKey.value })
   return true
 }, { watch: [categoryKey, detailKey] })
 
@@ -63,9 +54,18 @@ const categoryLabel = computed(() => (problemCategories.value || []).find((c: an
 const detailItem = computed(() => (childSections.value || []).find((c: any) => String(c.key || '').toLowerCase() === detailKey.value) || null)
 const detailLabel = computed(() => detailItem.value?.nameAr || detailKey.value)
 const detailDescription = computed(() => detailItem.value?.descriptionAr || 'هذه المنتجات مرتبطة بهذا القسم الدقيق ضمن حلول المشكلة.')
-const filteredItems = computed(() => {
-  const aliases = new Set(detailAliases.value.map(norm).filter(Boolean))
-  if (!aliases.size) return []
-  return (products.items || []).filter((p: any) => aliases.has(norm(p?.problemSubCategory)))
-})
+const sortedItems = computed(() => sortProducts(products.items || [], sort.value))
+
+function onSortChange(value: string) { sort.value = value }
+function resetSort() { sort.value = 'new' }
+function sortProducts(items: any[], mode: string) {
+  const list = [...items]
+  switch (mode) {
+    case 'oldest': return list.sort((a, b) => new Date(a.createdAt || a.created_at || 0).getTime() - new Date(b.createdAt || b.created_at || 0).getTime())
+    case 'alphabetical': return list.sort((a, b) => String(a.name || a.title || '').localeCompare(String(b.name || b.title || ''), 'ar'))
+    case 'priceAsc': return list.sort((a, b) => Number(a.finalPriceIqd ?? a.priceIqd ?? a.price ?? 0) - Number(b.finalPriceIqd ?? b.priceIqd ?? b.price ?? 0))
+    case 'priceDesc': return list.sort((a, b) => Number(b.finalPriceIqd ?? b.priceIqd ?? b.price ?? 0) - Number(a.finalPriceIqd ?? a.priceIqd ?? a.price ?? 0))
+    default: return list.sort((a, b) => new Date(b.createdAt || b.created_at || 0).getTime() - new Date(a.createdAt || a.created_at || 0).getTime())
+  }
+}
 </script>

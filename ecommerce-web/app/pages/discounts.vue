@@ -1,21 +1,22 @@
 <script setup lang="ts">
-import ProductCard from '~/components/ProductCard.vue'
-import RevealOnScroll from '~/components/RevealOnScroll.vue'
+import ProductResultsSection from '~/components/ProductResultsSection.vue'
 import { useProductsStore } from '~/stores/products'
 
 const { t } = useI18n()
 const productsStore = useProductsStore()
-
-await useAsyncData(
-  'discounts-page',
-  async () => {
-    await productsStore.fetchDiscounts(36)
-    return true
-  },
-  { server: false, default: () => true }
-)
-
-const items = computed(() => productsStore.discountItems)
+const sort = ref('new')
+await useAsyncData('discounts-page', async () => { await productsStore.fetchDiscounts(36); return true }, { server: false, default: () => true })
+const items = computed(() => sortProducts(productsStore.discountItems || [], sort.value))
+function sortProducts(items: any[], mode: string) {
+  const list=[...items]
+  switch(mode){
+    case 'oldest': return list.sort((a,b)=>new Date(a.createdAt||0).getTime()-new Date(b.createdAt||0).getTime())
+    case 'alphabetical': return list.sort((a,b)=>String(a.name||a.title||'').localeCompare(String(b.name||b.title||''),'ar'))
+    case 'priceAsc': return list.sort((a,b)=>Number(a.finalPriceIqd??a.priceIqd??a.price??0)-Number(b.finalPriceIqd??b.priceIqd??b.price??0))
+    case 'priceDesc': return list.sort((a,b)=>Number(b.finalPriceIqd??b.priceIqd??b.price??0)-Number(a.finalPriceIqd??a.priceIqd??a.price??0))
+    default: return list.sort((a,b)=>new Date(b.createdAt||0).getTime()-new Date(a.createdAt||0).getTime())
+  }
+}
 </script>
 
 <template>
@@ -25,19 +26,23 @@ const items = computed(() => productsStore.discountItems)
         <h1 class="text-2xl sm:text-4xl font-extrabold rtl-text">{{ t('discounts.title') || 'التخفيضات' }}</h1>
         <p class="mt-2 text-sm text-muted rtl-text">{{ t('discounts.subtitle') || 'منتجات عليها خصم حقيقي' }}</p>
       </div>
-      <NuxtLink to="/products" class="btn inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold">
-        {{ t('home.viewAll') || 'عرض الكل' }}
-      </NuxtLink>
+      <NuxtLink to="/products" class="btn inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold">{{ t('home.viewAll') || 'عرض الكل' }}</NuxtLink>
     </div>
 
-    <div v-if="!items?.length" class="mt-8 rounded-3xl border border-app bg-surface p-8 text-center">
-      <div class="text-muted">{{ t('discounts.empty') || 'حالياً ماكو منتجات عليها تخفيض.' }}</div>
-    </div>
-
-    <div v-else class="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-      <RevealOnScroll v-for="(p, idx) in items" :key="p.id" :parity="idx % 2">
-        <ProductCard :p="p" />
-      </RevealOnScroll>
-    </div>
+    <ProductResultsSection
+      :items="items"
+      :loading="false"
+      :sort="sort"
+      :count="items.length"
+      title="فلترة التخفيضات"
+      hint="رتّب منتجات التخفيضات حسب الوقت أو الاسم أو السعر."
+      sort-label="الترتيب"
+      clear-label="إعادة"
+      results-title="منتجات التخفيضات"
+      count-label="عدد المنتجات"
+      :empty-text="t('discounts.empty') || 'حالياً ماكو منتجات عليها تخفيض.'"
+      @update:sort="(v) => sort = v"
+      @reset="sort = 'new'"
+    />
   </div>
 </template>
