@@ -75,8 +75,8 @@
               </select>
             </div>
 
-            <div v-if="selectedCategoryHasDetailSections">
-              <label class="mb-1 block text-sm text-white/80">{{ t('admin.preciseCategory') || 'التصنيف الدقيق' }}</label>
+            <div>
+              <label class="mb-1 block text-sm text-white/80">{{ categorySubCategoryOptions.length ? (t('admin.preciseCategory') || 'التصنيف الدقيق') : (t('admin.preciseCategory') || 'التصنيف الدقيق') }}</label>
               <select v-model="form.subCategory" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
                 <option value="">{{ t('admin.preciseCategoryPlaceholder') || 'اختر تصنيفًا دقيقًا' }}</option>
                 <option v-for="c in categorySubCategoryOptions" :key="c.key" :value="c.key">{{ c.nameAr }}</option>
@@ -91,7 +91,7 @@
               </select>
             </div>
 
-            <div v-if="selectedProblemCategoryHasDetailSections">
+            <div v-if="problemSubCategoryOptions.length">
               <label class="mb-1 block text-sm text-white/80">القسم الدقيق لحل المشكلة</label>
               <select v-model="form.problemSubCategory" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
                 <option value="">اختر القسم الدقيق</option>
@@ -228,16 +228,14 @@ const form = reactive({
 })
 
 const slugTouched = ref(false)
-const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام', id: '', hasDetailSections: false, childCount: 0 }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false), childCount: Number(c.childCount ?? 0) })))
-const selectedCategoryMeta = computed(() => categoryOptions.value.find((x:any) => x.key === String(form.category || '')) || null)
-const selectedCategoryHasDetailSections = computed(() => Boolean(selectedCategoryMeta.value?.hasDetailSections || Number(selectedCategoryMeta.value?.childCount || 0) > 0))
+const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام', id: '', hasDetailSections: false }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false) })))
 const categorySubCategoryItems = ref<any[]>([])
 const categorySubCategoryOptions = computed(() => (categorySubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
 async function loadCategorySubCategories() {
   form.subCategory = categorySubCategoryOptions.value.some((x:any) => x.key === form.subCategory) ? form.subCategory : ''
   const selected = (categories.value || []).find((x:any) => String(x.key || '') === String(form.category || ''))
-  if (!selected?.id || (!selected?.hasDetailSections && Number(selected?.childCount || 0) <= 0)) {
+  if (!selected?.id || !selected?.hasDetailSections) {
     categorySubCategoryItems.value = []
     form.subCategory = ''
     return
@@ -253,9 +251,7 @@ async function loadCategorySubCategories() {
 }
 
 watch(() => form.category, () => { loadCategorySubCategories() })
-const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false), childCount: Number(c.childCount ?? 0) })))
-const selectedProblemCategoryMeta = computed(() => problemCategoryOptions.value.find((x:any) => x.key === String(form.problemCategory || '')) || null)
-const selectedProblemCategoryHasDetailSections = computed(() => Boolean(selectedProblemCategoryMeta.value?.hasDetailSections || Number(selectedProblemCategoryMeta.value?.childCount || 0) > 0))
+const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || '') })))
 const problemSubCategoryItems = ref<any[]>([])
 const problemSubCategoryOptions = computed(() => (problemSubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
@@ -263,7 +259,7 @@ const problemSubCategoryOptions = computed(() => (problemSubCategoryItems.value 
 async function loadProblemSubCategories() {
   form.problemSubCategory = problemSubCategoryOptions.value.some((x:any) => x.key === form.problemSubCategory) ? form.problemSubCategory : ''
   const selected = (problemCategories.value || []).find((x:any) => String(x.key || '') === String(form.problemCategory || ''))
-  if (!selected?.id || (!selected?.hasDetailSections && Number(selected?.childCount || 0) <= 0)) {
+  if (!selected?.id) {
     problemSubCategoryItems.value = []
     form.problemSubCategory = ''
     return
@@ -315,7 +311,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 
 onMounted(async () => {
   try {
-    const [res] = await Promise.all([listBrands(), fetchCategories(true, 'regular'), fetchCategories(true, 'problem')])
+    const [res] = await Promise.all([listBrands(), fetchCategories(false, 'regular'), fetchCategories(false, 'problem')])
     await loadCategorySubCategories()
     brands.value = (res?.items || res || []) as BrandItem[]
     await loadProblemSubCategories()

@@ -19,17 +19,17 @@
         <div>
           <div class="text-xl font-extrabold text-[rgb(var(--text))] rtl-text">المنتجات المناسبة</div>
           <div class="mt-1 text-sm text-[rgb(var(--muted))] rtl-text">
-            {{ t('productsPage.resultsCount', { count: products.totalCount || products.items.length || 0 }) }}
+            {{ t('productsPage.resultsCount', { count: filteredItems.length || 0 }) }}
           </div>
         </div>
         <NuxtLink :to="parentRoute" class="btn-secondary px-4 py-2">العودة للتصنيف</NuxtLink>
       </div>
 
-      <div v-if="products.loading && products.items.length === 0" class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+      <div v-if="products.loading && filteredItems.length === 0" class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
         <div v-for="n in 6" :key="n" class="skeleton-card min-h-[320px] rounded-[1.75rem]" />
       </div>
-      <div v-else-if="products.items.length" class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-        <ProductCard v-for="p in products.items" :key="p.id" :p="p" />
+      <div v-else-if="filteredItems.length" class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+        <ProductCard v-for="p in filteredItems" :key="p.id" :p="p" />
       </div>
       <div v-else class="rounded-[1.5rem] border border-app bg-surface p-10 text-center text-[rgb(var(--muted))] rtl-text">
         {{ t('productsPage.emptyDesc') }}
@@ -54,6 +54,7 @@ await useAsyncData(`category-detail:${categoryKey.value}:${detailKey.value}`, as
   if (parent?.id) {
     const children = await fetchProblemChildren(String(parent.id), 'regular')
     const child = (children || []).find((x: any) => String(x.key || '').toLowerCase() === detailKey.value)
+    detailItem.value = child || null
     detailLabel.value = child?.nameAr || detailKey.value
   }
   await products.fetch({ page: 1, pageSize: 24, sort: 'new', category: categoryKey.value, subCategory: detailKey.value })
@@ -61,5 +62,24 @@ await useAsyncData(`category-detail:${categoryKey.value}:${detailKey.value}`, as
 }, { watch: [categoryKey, detailKey] })
 
 const categoryLabel = computed(() => (categories.value || []).find((c: any) => String(c.key || '').toLowerCase() === categoryKey.value)?.nameAr || categoryKey.value)
+const detailItem = ref<any | null>(null)
 const detailLabel = ref(detailKey.value)
+
+const normalize = (value: any) => String(value || '').trim().toLowerCase()
+const detailAliases = computed(() => {
+  const item = detailItem.value
+  const aliases = new Set<string>([normalize(detailKey.value)])
+  if (item) {
+    aliases.add(normalize(item.key))
+    aliases.add(normalize(item.nameAr))
+    aliases.add(normalize(item.nameEn))
+  }
+  return aliases
+})
+
+const filteredItems = computed(() => {
+  const aliases = detailAliases.value
+  const result = (products.items || []).filter((p: any) => aliases.has(normalize(p.subCategory)))
+  return result.length ? result : (products.items || [])
+})
 </script>
