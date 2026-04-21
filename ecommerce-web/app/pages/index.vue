@@ -87,11 +87,44 @@ const categoryCards = computed(() => {
     title: locale.value === 'en' ? (c.nameEn || c.nameAr || c.key) : (c.nameAr || c.nameEn || c.key),
     subtitle: locale.value === 'en' ? (c.descriptionEn || c.descriptionAr || t('home.tapToExplore')) : (c.descriptionAr || c.descriptionEn || t('home.tapToExplore')),
     imageUrl: c.imageUrl || '',
-    to: `/problems/${encodeURIComponent(String(c.key || '').toLowerCase())}`,
+    to: `/categories/${encodeURIComponent(String(c.key || '').toLowerCase())}`,
     accent: accents[idx % accents.length],
+    index: idx + 1,
   }))
 })
 
+const activeCategoryKey = ref('')
+const categoriesMenuOpen = ref(false)
+const activeCategory = computed(() => {
+  const list = categoryCards.value || []
+  if (!list.length) return null
+  return list.find((item: any) => item.key === activeCategoryKey.value) || list[0]
+})
+const featuredCategoryCards = computed(() => (categoryCards.value || []).slice(0, 8))
+const categoryQuickLinks = computed(() => {
+  const list = categoryCards.value || []
+  return list.map((item: any) => ({
+    label: item.title,
+    to: item.to,
+  }))
+})
+function openCategoriesMenu(key?: string) {
+  categoriesMenuOpen.value = true
+  if (key) activeCategoryKey.value = key
+  else if (!activeCategoryKey.value && categoryCards.value.length) activeCategoryKey.value = categoryCards.value[0].key
+}
+function closeCategoriesMenu() {
+  categoriesMenuOpen.value = false
+}
+watch(categoryCards, (list) => {
+  if (!list.length) {
+    activeCategoryKey.value = ''
+    return
+  }
+  if (!list.some((item: any) => item.key === activeCategoryKey.value)) {
+    activeCategoryKey.value = list[0].key
+  }
+}, { immediate: true })
 
 
 const problemCards = computed(() => {
@@ -181,37 +214,134 @@ onBeforeUnmount(() => {
 <template>
   <div class="min-h-screen home-page-shell">
     <section v-if="categoryCards.length" id="categories" class="mx-auto max-w-6xl px-4 pb-16 pt-8 scroll-mt-24">
-      <div class="home-section-panel home-section-panel--categories">
-        <div>
-          <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">
-            {{ t('home.spotlightTitle') }}
-          </h2>
-          <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base">
-            {{ t('home.spotlightSubtitle') }}
-          </p>
+      <div class="home-section-panel home-section-panel--categories category-command-center">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div class="inline-flex items-center gap-2 rounded-full border border-app bg-surface/80 px-3 py-1 text-[11px] font-bold text-[rgb(var(--muted))] backdrop-blur rtl-text">
+              <span class="h-2 w-2 rounded-full bg-[rgb(var(--primary))]" />
+              أقسام المتجر
+            </div>
+            <h2 class="mt-4 text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl rtl-text">
+              {{ t('home.spotlightTitle') }}
+            </h2>
+            <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base rtl-text">
+              تجربة أقرب للمتاجر العالمية: اختر التصنيف من الشريط، وعلى الحاسبة تظهر لك معاينة منظمة تساعدك تصل بسرعة.
+            </p>
+          </div>
+
+          <div class="hidden lg:flex items-center gap-2 self-start lg:self-auto">
+            <NuxtLink
+              v-for="link in categoryQuickLinks.slice(0, 4)"
+              :key="link.to"
+              :to="link.to"
+              class="rounded-full border border-app bg-surface px-3 py-2 text-xs font-semibold text-[rgb(var(--text))] transition hover:-translate-y-0.5 hover:border-[rgba(var(--primary),0.45)] hover:bg-surface-2"
+            >
+              {{ link.label }}
+            </NuxtLink>
+          </div>
         </div>
 
-        <div class="rail-wrap mt-8">
-          <button type="button" class="rail-arrow-btn rail-arrow-btn--prev hidden lg:inline-flex" @click="scrollRail('prev', categoryRail)" aria-label="السابق">
-            <Icon name="mdi:chevron-left" class="text-xl" />
-          </button>
-          <button type="button" class="rail-arrow-btn rail-arrow-btn--next hidden lg:inline-flex" @click="scrollRail('next', categoryRail)" aria-label="التالي">
-            <Icon name="mdi:chevron-right" class="text-xl" />
-          </button>
-
-          <div ref="categoryRail" class="category-unified-rail" @pointerdown="(e) => onRailPointerDown(e, categoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
+        <div class="mt-8 hidden lg:block" @mouseenter="openCategoriesMenu()" @mouseleave="closeCategoriesMenu()">
+          <div class="category-command-center__tabs">
             <NuxtLink
               v-for="c in categoryCards"
               :key="c.key"
               :to="c.to"
-              class="category-mobile-pill"
+              class="category-command-center__tab"
+              :class="activeCategory?.key === c.key ? 'is-active' : ''"
+              @mouseenter="openCategoriesMenu(c.key)"
+              @focus="openCategoriesMenu(c.key)"
+            >
+              <span class="category-command-center__tab-index">{{ String(c.index).padStart(2, '0') }}</span>
+              <span class="truncate">{{ c.title }}</span>
+              <Icon name="mdi:chevron-down" class="text-sm opacity-60" />
+            </NuxtLink>
+          </div>
+
+          <Transition name="fade-slide">
+            <div v-if="categoriesMenuOpen && activeCategory" class="category-mega-menu">
+              <div class="category-mega-menu__sidebar">
+                <button
+                  v-for="c in categoryCards"
+                  :key="`menu-${c.key}`"
+                  type="button"
+                  class="category-mega-menu__sidebar-item"
+                  :class="activeCategory?.key === c.key ? 'is-active' : ''"
+                  @mouseenter="openCategoriesMenu(c.key)"
+                  @focus="openCategoriesMenu(c.key)"
+                >
+                  <span class="truncate">{{ c.title }}</span>
+                  <Icon name="mdi:chevron-left" class="text-sm opacity-60" />
+                </button>
+              </div>
+
+              <div class="category-mega-menu__content">
+                <div class="grid gap-6 xl:grid-cols-[1.2fr_.8fr]">
+                  <div>
+                    <div class="text-xs font-bold uppercase tracking-[0.24em] text-[rgb(var(--muted))]">{{ activeCategory.title }}</div>
+                    <h3 class="mt-3 text-3xl font-extrabold text-[rgb(var(--text))] rtl-text">{{ activeCategory.title }}</h3>
+                    <p class="mt-3 max-w-xl text-sm leading-7 text-[rgb(var(--muted))] rtl-text">{{ activeCategory.subtitle }}</p>
+
+                    <div class="mt-6 grid gap-3 sm:grid-cols-2">
+                      <NuxtLink
+                        v-for="link in featuredCategoryCards"
+                        :key="`featured-${link.key}`"
+                        :to="link.to"
+                        class="category-mega-menu__list-link"
+                      >
+                        <span class="truncate">{{ link.title }}</span>
+                        <Icon name="mdi:arrow-top-left" class="text-base opacity-70" />
+                      </NuxtLink>
+                    </div>
+                  </div>
+
+                  <NuxtLink :to="activeCategory.to" class="category-mega-menu__preview" :class="`bg-gradient-to-br ${activeCategory.accent}`">
+                    <div class="category-mega-menu__preview-media">
+                      <img
+                        v-if="activeCategory.imageUrl"
+                        :src="buildAssetUrl(activeCategory.imageUrl)"
+                        :alt="activeCategory.title"
+                        class="h-full w-full object-cover"
+                      >
+                      <div v-else class="flex h-full w-full items-center justify-center text-6xl font-black text-white/90">
+                        {{ activeCategory.title?.slice(0, 1) }}
+                      </div>
+                    </div>
+                    <div class="category-mega-menu__preview-copy">
+                      <div>
+                        <div class="text-xs font-bold uppercase tracking-[0.22em] text-white/70">Shop by category</div>
+                        <div class="mt-2 text-2xl font-extrabold text-white rtl-text">{{ activeCategory.title }}</div>
+                        <div class="mt-2 text-sm leading-7 text-white/80 rtl-text line-clamp-3">{{ activeCategory.subtitle }}</div>
+                      </div>
+                      <span class="inline-flex items-center gap-2 rounded-full bg-white/14 px-4 py-2 text-sm font-bold text-white">
+                        ادخل للتصنيف
+                        <Icon name="mdi:arrow-left" class="text-base" />
+                      </span>
+                    </div>
+                  </NuxtLink>
+                </div>
+              </div>
+            </div>
+          </Transition>
+        </div>
+
+        <div class="mt-8 lg:hidden">
+          <div ref="categoryRail" class="grid grid-cols-2 gap-3 sm:grid-cols-3" @pointerdown="(e) => onRailPointerDown(e, categoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
+            <NuxtLink
+              v-for="c in categoryCards"
+              :key="c.key"
+              :to="c.to"
+              class="category-grid-card"
               @click="onRailLinkClick"
             >
-              <div class="category-mobile-pill__image-wrap" :class="`bg-gradient-to-br ${c.accent}`">
-                <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="category-mobile-pill__image" />
-                <div v-else class="category-mobile-pill__fallback">{{ c.title?.slice(0,1) }}</div>
+              <div class="category-grid-card__media" :class="`bg-gradient-to-br ${c.accent}`">
+                <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="h-full w-full object-cover" />
+                <div v-else class="flex h-full w-full items-center justify-center text-4xl font-black text-white/90">{{ c.title?.slice(0,1) }}</div>
               </div>
-              <div class="category-mobile-pill__title">{{ c.title }}</div>
+              <div class="category-grid-card__body">
+                <div class="text-base font-extrabold text-[rgb(var(--text))] rtl-text">{{ c.title }}</div>
+                <div class="mt-1 text-xs text-[rgb(var(--muted))] line-clamp-2 rtl-text">{{ c.subtitle }}</div>
+              </div>
             </NuxtLink>
           </div>
         </div>
