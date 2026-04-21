@@ -508,11 +508,7 @@
     "subFaceGel": "جل الوجه",
     "subFoamCleanser": "غسول رغوي",
     "subOilCleanser": "غسول زيتي",
-    "toolbarCategory": "عرض {count} منتج ضمن {category}",
-    "sortOldest": "الأقدم",
-    "sortAlphabetical": "الترتيب الأبجدي",
-    "sortPriceHigh": "الأعلى سعراً",
-    "sortPriceLow": "الأقل سعراً"
+    "toolbarCategory": "عرض {count} منتج ضمن {category}"
   },
   "brandsPage": {
     "title": "البراندات",

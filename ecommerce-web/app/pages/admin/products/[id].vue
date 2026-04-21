@@ -338,7 +338,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const imagesLoading = ref(false)
 const images = ref<any[]>([])
 
-async function resetForm() {
+function resetForm() {
   if (!product.value) return
   // backend (ASP.NET) returns camelCase: title, priceIqd, brand, isPublished, isFeatured
   form.name = product.value.title || product.value.name || ''
@@ -409,7 +409,7 @@ async function loadProduct() {
   loading.value = true
   try {
     product.value = await getAdminProduct<any>(id.value)
-    await resetForm()
+    resetForm()
   } catch (e: any) {
     product.value = null
     toast.error(t('admin.loadProductFailed'))

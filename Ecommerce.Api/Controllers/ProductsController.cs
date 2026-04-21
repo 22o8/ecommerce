@@ -231,11 +231,12 @@ public class ProductsController : ControllerBase
         var problemCategoryAliases = await ResolveCategoryAliasesAsync(problemCategory);
         var problemSubCategoryAliases = await ResolveCategoryAliasesAsync(problemSubCategory);
 
+        // Strict filtering: category routes must only match the dedicated category field,
+        // and detail routes must only match the dedicated precise-category field.
+        // Do not fall back across other fields, otherwise unrelated products appear.
         if (categoryAliases.Count > 0)
             baseQuery = baseQuery.Where(p =>
-                (p.Category != null && categoryAliases.Contains(p.Category.ToLower())) ||
-                (p.SubCategory != null && categoryAliases.Contains(p.SubCategory.ToLower())) ||
-                (p.ProblemCategory != null && categoryAliases.Contains(p.ProblemCategory.ToLower())));
+                p.Category != null && categoryAliases.Contains(p.Category.ToLower()));
 
         if (subCategoryAliases.Count > 0)
             baseQuery = baseQuery.Where(p =>

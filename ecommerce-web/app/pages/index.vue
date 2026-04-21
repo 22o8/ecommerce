@@ -108,6 +108,13 @@ const activeCategoryChildren = computed(() => {
   const key = activeCategoryKey.value
   return key ? (categoryChildrenMap.value[key] || []) : []
 })
+const categoryQuickLinks = computed(() => {
+  const list = categoryCards.value || []
+  return list.map((item: any) => ({
+    label: item.title,
+    to: item.to,
+  }))
+})
 async function ensureCategoryChildren(item: any) {
   if (!item?.hasDetailSections || !item?.id) return []
   if (categoryChildrenMap.value[item.key]) return categoryChildrenMap.value[item.key]
@@ -241,6 +248,17 @@ onBeforeUnmount(() => {
               تجربة أقرب للمتاجر العالمية: اختر التصنيف من الشريط، وعلى الحاسبة تظهر لك معاينة منظمة تساعدك تصل بسرعة.
             </p>
           </div>
+
+          <div class="hidden lg:flex items-center gap-2 self-start lg:self-auto">
+            <NuxtLink
+              v-for="link in categoryQuickLinks.slice(0, 4)"
+              :key="link.to"
+              :to="link.to"
+              class="rounded-full border border-app bg-surface px-3 py-2 text-xs font-semibold text-[rgb(var(--text))] transition hover:-translate-y-0.5 hover:border-[rgba(var(--primary),0.45)] hover:bg-surface-2"
+            >
+              <span>{{ link.label }}</span>
+            </NuxtLink>
+          </div>
         </div>
 
         <div class="mt-4 hidden lg:block" @mouseleave="closeCategoriesMenu()">
@@ -297,35 +315,39 @@ onBeforeUnmount(() => {
                     <div class="truncate text-sm font-extrabold text-[rgb(var(--text))] rtl-text">{{ child.nameAr }}</div>
                     <div class="mt-1 truncate text-xs text-[rgb(var(--muted))] rtl-text">{{ child.descriptionAr || 'عرض المنتجات' }}</div>
                   </div>
-                  <Icon name="mdi:arrow-right" class="text-base text-[rgb(var(--muted))]" />
+                  <Icon name="mdi:arrow-left" class="text-base text-[rgb(var(--muted))]" />
                 </NuxtLink>
               </div>
             </div>
           </Transition>
         </div>
 
-        <div class="mt-4 lg:hidden">
+        <div class="mt-8 lg:hidden">
           <div
             ref="categoryRail"
-            class="category-secondary-bar category-secondary-bar--mobile"
+            class="grid grid-cols-2 gap-3 sm:grid-cols-3"
             @pointerdown="(e) => onRailPointerDown(e, categoryRail)"
             @pointermove="onRailPointerMove"
             @pointerup="endRailDrag"
             @pointercancel="endRailDrag"
             @pointerleave="endRailDrag"
           >
-            <div class="category-secondary-bar__scroll">
-              <NuxtLink
-                v-for="c in categoryCards"
-                :key="c.key"
-                :to="c.to"
-                class="category-secondary-bar__item"
-                @click="onRailLinkClick"
-              >
-                <span>{{ c.title }}</span>
-                <Icon v-if="c.hasDetailSections" name="mdi:chevron-down" class="text-sm opacity-70" />
-              </NuxtLink>
-            </div>
+            <NuxtLink
+              v-for="c in categoryCards"
+              :key="c.key"
+              :to="c.to"
+              class="category-grid-card"
+              @click="onRailLinkClick"
+            >
+              <div class="category-grid-card__media" :class="`bg-gradient-to-br ${c.accent}`">
+                <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="h-full w-full object-cover" />
+                <div v-else class="flex h-full w-full items-center justify-center text-4xl font-black text-white/90">{{ c.title?.slice(0, 1) }}</div>
+              </div>
+              <div class="category-grid-card__body">
+                <div class="text-base font-extrabold text-[rgb(var(--text))] rtl-text">{{ c.title }}</div>
+                <div class="mt-1 text-xs text-[rgb(var(--muted))] line-clamp-2 rtl-text">{{ c.subtitle }}</div>
+              </div>
+            </NuxtLink>
           </div>
         </div>
       </div>
@@ -359,10 +381,10 @@ onBeforeUnmount(() => {
         </div>
         <div class="rail-wrap mt-8">
           <button type="button" class="rail-arrow-btn rail-arrow-btn--prev hidden lg:inline-flex" @click="scrollRail('prev', problemCategoryRail)" aria-label="السابق">
-            <Icon name="mdi:chevron-right" class="text-xl" />
+            <Icon name="mdi:chevron-left" class="text-xl" />
           </button>
           <button type="button" class="rail-arrow-btn rail-arrow-btn--next hidden lg:inline-flex" @click="scrollRail('next', problemCategoryRail)" aria-label="التالي">
-            <Icon name="mdi:chevron-left" class="text-xl" />
+            <Icon name="mdi:chevron-right" class="text-xl" />
           </button>
           <div ref="problemCategoryRail" class="category-unified-rail" @pointerdown="(e) => onRailPointerDown(e, problemCategoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
             <NuxtLink v-for="c in problemCards" :key="c.key" :to="c.to" class="category-mobile-pill" @click="onRailLinkClick">
@@ -459,8 +481,8 @@ onBeforeUnmount(() => {
   transform: translateY(-50%);
   backdrop-filter: blur(10px);
 }
-.rail-arrow-btn--prev{ right: .45rem; }
-.rail-arrow-btn--next{ left: .45rem; }
+.rail-arrow-btn--prev{ left: .45rem; }
+.rail-arrow-btn--next{ right: .45rem; }
 .rail-arrow-btn:hover{
   transform: translateY(-50%) scale(1.04);
   border-color: rgba(var(--primary), .55);
@@ -711,17 +733,8 @@ onBeforeUnmount(() => {
 .category-dropdown-panel__icon{flex:0 0 3.1rem;width:3.1rem;height:3.1rem;border-radius:1rem;overflow:hidden;border:1px solid rgba(var(--border),.8);display:flex;align-items:center;justify-content:center;background:rgba(var(--surface-2-rgb),.95);font-size:1.15rem;font-weight:900;color:rgb(var(--text))}
 @media (max-width: 1279px){.category-dropdown-panel__grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
+</style>
 
 @media (max-width: 1279px){
   .rail-arrow-btn{ display:none !important; }
 }
-.category-secondary-bar--mobile{overflow:hidden}
-.category-secondary-bar--mobile .category-secondary-bar__scroll{padding:.25rem .2rem .4rem;gap:.6rem;cursor:grab;user-select:none;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
-.category-secondary-bar--mobile .category-secondary-bar__item{scroll-snap-align:start;flex:0 0 auto}
-.category-secondary-bar--mobile.is-dragging .category-secondary-bar__scroll{cursor:grabbing}
-@media (max-width: 1023px){
-  .category-secondary-bar{margin-top:.9rem}
-  .category-secondary-bar__item{min-height:2.75rem;padding:0 .95rem;font-size:.9rem}
-}
-
-</style>

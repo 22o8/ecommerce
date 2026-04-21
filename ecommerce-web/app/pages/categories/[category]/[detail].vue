@@ -14,26 +14,32 @@
       </p>
     </div>
 
-    <ProductResultsSection
-      :items="sortedItems"
-      :loading="products.loading"
-      :sort="sort"
-      :count="sortedItems.length"
-      title="الفلاتر"
-      hint="رتّب المنتجات حسب الوقت أو الاسم أو السعر."
-      sort-label="الترتيب"
-      clear-label="إعادة"
-      results-title="المنتجات المناسبة"
-      count-label="عدد المنتجات"
-      :empty-text="t('productsPage.emptyDesc')"
-      @update:sort="onSortChange"
-      @reset="resetSort"
-    />
+    <section class="mt-6 card-soft p-5 sm:p-6">
+      <div class="mb-5 flex items-center justify-between gap-3">
+        <div>
+          <div class="text-xl font-extrabold text-[rgb(var(--text))] rtl-text">المنتجات المناسبة</div>
+          <div class="mt-1 text-sm text-[rgb(var(--muted))] rtl-text">
+            {{ t('productsPage.resultsCount', { count: products.totalCount || products.items.length || 0 }) }}
+          </div>
+        </div>
+        <NuxtLink :to="parentRoute" class="btn-secondary px-4 py-2">العودة للتصنيف</NuxtLink>
+      </div>
+
+      <div v-if="products.loading && products.items.length === 0" class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+        <div v-for="n in 6" :key="n" class="skeleton-card min-h-[320px] rounded-[1.75rem]" />
+      </div>
+      <div v-else-if="products.items.length" class="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+        <ProductCard v-for="p in products.items" :key="p.id" :p="p" />
+      </div>
+      <div v-else class="rounded-[1.5rem] border border-app bg-surface p-10 text-center text-[rgb(var(--muted))] rtl-text">
+        {{ t('productsPage.emptyDesc') }}
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import ProductResultsSection from '~/components/ProductResultsSection.vue'
+import ProductCard from '~/components/ProductCard.vue'
 const { t } = useI18n()
 const { categories, fetchCategories, fetchProblemChildren } = useCategories()
 const route = useRoute()
@@ -41,7 +47,6 @@ const products = useProductsStore()
 const categoryKey = computed(() => String(route.params.category || '').toLowerCase())
 const detailKey = computed(() => String(route.params.detail || '').toLowerCase())
 const parentRoute = computed(() => `/categories/${encodeURIComponent(categoryKey.value)}`)
-const sort = ref(String(route.query.sort || 'new'))
 
 await useAsyncData(`category-detail:${categoryKey.value}:${detailKey.value}`, async () => {
   await fetchCategories(false, 'regular')
@@ -57,28 +62,4 @@ await useAsyncData(`category-detail:${categoryKey.value}:${detailKey.value}`, as
 
 const categoryLabel = computed(() => (categories.value || []).find((c: any) => String(c.key || '').toLowerCase() === categoryKey.value)?.nameAr || categoryKey.value)
 const detailLabel = ref(detailKey.value)
-
-const sortedItems = computed(() => sortProducts(products.items || [], sort.value))
-
-function onSortChange(value: string) {
-  sort.value = value
-}
-function resetSort() {
-  sort.value = 'new'
-}
-function sortProducts(items: any[], mode: string) {
-  const list = [...items]
-  switch (mode) {
-    case 'oldest':
-      return list.sort((a, b) => new Date(a.createdAt || a.created_at || 0).getTime() - new Date(b.createdAt || b.created_at || 0).getTime())
-    case 'alphabetical':
-      return list.sort((a, b) => String(a.name || a.title || '').localeCompare(String(b.name || b.title || ''), 'ar'))
-    case 'priceAsc':
-      return list.sort((a, b) => Number(a.finalPriceIqd ?? a.priceIqd ?? a.price ?? 0) - Number(b.finalPriceIqd ?? b.priceIqd ?? b.price ?? 0))
-    case 'priceDesc':
-      return list.sort((a, b) => Number(b.finalPriceIqd ?? b.priceIqd ?? b.price ?? 0) - Number(a.finalPriceIqd ?? a.priceIqd ?? a.price ?? 0))
-    default:
-      return list.sort((a, b) => new Date(b.createdAt || b.created_at || 0).getTime() - new Date(a.createdAt || a.created_at || 0).getTime())
-  }
-}
 </script>

@@ -488,11 +488,7 @@
     "subFaceGel": "Face Gel",
     "subFoamCleanser": "Foam Cleanser",
     "subOilCleanser": "Oil Cleanser",
-    "toolbarCategory": "Showing {count} products in {category}",
-    "sortOldest": "Oldest",
-    "sortAlphabetical": "Alphabetical",
-    "sortPriceHigh": "Highest price",
-    "sortPriceLow": "Lowest price"
+    "toolbarCategory": "Showing {count} products in {category}"
   },
   "brandsPage": {
     "title": "Brands",
