@@ -233,10 +233,10 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="min-h-screen home-page-shell">
-    <section v-if="categoryCards.length" id="categories" class="mx-auto max-w-[92rem] px-4 pb-12 pt-3 scroll-mt-24">
+    <section class="mx-auto max-w-[96rem] px-4 pt-2 pb-8 lg:px-6">
       <div class="home-section-panel home-section-panel--categories category-command-center category-command-center--raised">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div class="max-w-3xl">
             <div class="inline-flex items-center gap-2 rounded-full border border-app bg-surface/80 px-3 py-1 text-[11px] font-bold text-[rgb(var(--muted))] backdrop-blur rtl-text">
               <span class="h-2 w-2 rounded-full bg-[rgb(var(--primary))]" />
               أقسام المتجر
@@ -244,15 +244,24 @@ onBeforeUnmount(() => {
             <h2 class="mt-4 text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl rtl-text">
               {{ t('home.spotlightTitle') }}
             </h2>
-            <p class="mt-2 max-w-2xl text-sm text-[rgb(var(--muted))] sm:text-base rtl-text">
-              تجربة أقرب للمتاجر العالمية: اختر التصنيف من الشريط، وعلى الحاسبة تظهر لك معاينة منظمة تساعدك تصل بسرعة.
+            <p class="mt-2 text-sm text-[rgb(var(--muted))] sm:text-base rtl-text">
+              اختر التصنيف من الشريط المنظم، وإذا كان التصنيف يحتوي أقسامًا دقيقة ستظهر لك قائمة منسدلة مرتبة على الحاسبة، بينما يبقى العرض مناسبًا على الهاتف.
             </p>
           </div>
 
-
+          <div class="hidden lg:flex flex-wrap items-center justify-end gap-2">
+            <NuxtLink
+              v-for="link in categoryQuickLinks.slice(0, 5)"
+              :key="link.to"
+              :to="link.to"
+              class="rounded-full border border-app bg-surface px-3 py-2 text-xs font-semibold text-[rgb(var(--text))] transition hover:-translate-y-0.5 hover:border-[rgba(var(--primary),0.45)] hover:bg-surface-2"
+            >
+              {{ link.label }}
+            </NuxtLink>
+          </div>
         </div>
 
-        <div class="mt-4 hidden lg:block" @mouseleave="closeCategoriesMenu()">
+        <div class="mt-5 hidden lg:block" @mouseleave="closeCategoriesMenu()">
           <div class="category-secondary-bar">
             <div class="category-secondary-bar__scroll">
               <template v-for="c in categoryCards" :key="c.key">
@@ -267,6 +276,7 @@ onBeforeUnmount(() => {
                   <span>{{ c.title }}</span>
                   <Icon name="mdi:chevron-down" class="text-sm opacity-70" />
                 </button>
+
                 <NuxtLink
                   v-else
                   :to="c.to"
@@ -279,7 +289,11 @@ onBeforeUnmount(() => {
           </div>
 
           <Transition name="fade-slide">
-            <div v-if="categoriesMenuOpen && activeCategory && activeCategoryChildren.length" class="category-dropdown-panel" @mouseenter="openCategoriesMenu(activeCategory.key)">
+            <div
+              v-if="categoriesMenuOpen && activeCategory && activeCategoryChildren.length"
+              class="category-dropdown-panel"
+              @mouseenter="openCategoriesMenu(activeCategory.key)"
+            >
               <div class="category-dropdown-panel__head">
                 <div>
                   <div class="text-xs font-bold uppercase tracking-[0.24em] text-[rgb(var(--muted))]">{{ activeCategory.title }}</div>
@@ -287,6 +301,7 @@ onBeforeUnmount(() => {
                 </div>
                 <NuxtLink :to="activeCategory.to" class="category-dropdown-panel__all">عرض الكل</NuxtLink>
               </div>
+
               <div class="category-dropdown-panel__grid">
                 <NuxtLink
                   v-for="child in activeCategoryChildren"
@@ -295,23 +310,37 @@ onBeforeUnmount(() => {
                   class="category-dropdown-panel__link"
                 >
                   <div class="category-dropdown-panel__icon">
-                    <img v-if="child.imageUrl" :src="buildAssetUrl(child.imageUrl)" :alt="child.nameAr" class="h-full w-full object-cover" />
-                    <span v-else>{{ child.nameAr?.slice(0,1) }}</span>
+                    <img
+                      v-if="child.imageUrl"
+                      :src="buildAssetUrl(child.imageUrl)"
+                      :alt="child.nameAr"
+                      class="h-full w-full object-cover"
+                    />
+                    <span v-else>{{ child.nameAr?.slice(0, 1) }}</span>
                   </div>
+
                   <div class="min-w-0">
                     <div class="truncate text-sm font-extrabold text-[rgb(var(--text))] rtl-text">{{ child.nameAr }}</div>
                     <div class="mt-1 truncate text-xs text-[rgb(var(--muted))] rtl-text">{{ child.descriptionAr || 'عرض المنتجات' }}</div>
                   </div>
+
                   <Icon name="mdi:arrow-left" class="text-base text-[rgb(var(--muted))]" />
                 </NuxtLink>
               </div>
             </div>
           </Transition>
         </div>
-</div>
 
-        <div class="mt-8 lg:hidden">
-          <div ref="categoryRail" class="grid grid-cols-2 gap-3 sm:grid-cols-3" @pointerdown="(e) => onRailPointerDown(e, categoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
+        <div class="mt-5 lg:hidden">
+          <div
+            ref="categoryRail"
+            class="grid grid-cols-2 gap-3 sm:grid-cols-3"
+            @pointerdown="(e) => onRailPointerDown(e, categoryRail)"
+            @pointermove="onRailPointerMove"
+            @pointerup="endRailDrag"
+            @pointercancel="endRailDrag"
+            @pointerleave="endRailDrag"
+          >
             <NuxtLink
               v-for="c in categoryCards"
               :key="c.key"
@@ -320,8 +349,13 @@ onBeforeUnmount(() => {
               @click="onRailLinkClick"
             >
               <div class="category-grid-card__media" :class="`bg-gradient-to-br ${c.accent}`">
-                <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="h-full w-full object-cover" />
-                <div v-else class="flex h-full w-full items-center justify-center text-4xl font-black text-white/90">{{ c.title?.slice(0,1) }}</div>
+                <img
+                  v-if="c.imageUrl"
+                  :src="buildAssetUrl(c.imageUrl)"
+                  :alt="c.title"
+                  class="h-full w-full object-cover"
+                />
+                <div v-else class="flex h-full w-full items-center justify-center text-4xl font-black text-white/90">{{ c.title?.slice(0, 1) }}</div>
               </div>
               <div class="category-grid-card__body">
                 <div class="text-base font-extrabold text-[rgb(var(--text))] rtl-text">{{ c.title }}</div>
@@ -332,7 +366,6 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </section>
-
     <section class="mx-auto max-w-6xl px-4 pb-20">
       <div class="home-section-panel home-section-panel--brands">
         <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
@@ -370,7 +403,7 @@ onBeforeUnmount(() => {
             <NuxtLink v-for="c in problemCards" :key="c.key" :to="c.to" class="category-mobile-pill" @click="onRailLinkClick">
               <div class="category-mobile-pill__image-wrap" :class="`bg-gradient-to-br ${c.accent}`">
                 <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="category-mobile-pill__image" />
-                <div v-else class="category-mobile-pill__fallback">{{ c.title?.slice(0,1) }}</div>
+                <div v-else class="category-mobile-pill__fallback">{{ c.title?.slice(0, 1) }}</div>
               </div>
               <div class="category-mobile-pill__title">{{ c.title }}</div>
             </NuxtLink>
@@ -378,6 +411,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </section>
+
     <section class="mx-auto max-w-6xl px-4 pb-16 pt-12 sm:pt-14">
       <div class="home-section-panel">
         <div class="flex flex-col items-center justify-center gap-4 text-center">
@@ -426,10 +460,8 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </section>
-
   </div>
 </template>
-
 <style scoped>
 .section-kicker{
   width:88px;
