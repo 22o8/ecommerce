@@ -2,7 +2,7 @@
   <div class="container mx-auto px-4 py-8 sm:py-10">
     <section class="card-soft overflow-hidden p-6 sm:p-8">
       <div class="flex flex-wrap items-center gap-2 text-sm text-[rgb(var(--muted))]">
-        <NuxtLink :to="`/problems/${encodeURIComponent(categoryKey)}`" class="hover:text-[rgb(var(--text))]">{{ categoryLabel }}</NuxtLink>
+        <NuxtLink :to="parentRoute" class="hover:text-[rgb(var(--text))]">{{ categoryLabel }}</NuxtLink>
         <span>/</span>
         <span class="text-[rgb(var(--text))]">{{ detailLabel }}</span>
       </div>
@@ -42,6 +42,7 @@ const products = useProductsStore()
 const categoryKey = computed(() => String(route.params.category || '').toLowerCase())
 const detailKey = computed(() => String(route.params.detail || '').toLowerCase())
 const childSections = ref<any[]>([])
+const parentRoute = computed(() => `/problems/${encodeURIComponent(categoryKey.value)}`)
 
 await useAsyncData(`problem-detail:${categoryKey.value}:${detailKey.value}`, async () => {
   await fetchCategories(false, 'problem')
