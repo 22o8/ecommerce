@@ -38,11 +38,10 @@
           <div class="filter-field">
             <label class="filter-label rtl-text">{{ t('productsPage.sort') }}</label>
             <select v-model="sort" class="input products-select" @change="applyFilters" :aria-label="t('productsPage.sort')">
-              <option value="new">الأحدث</option>
-              <option value="oldest">الأقدم</option>
-              <option value="alphabetical">الترتيب الأبجدي</option>
-              <option value="priceDesc">الأعلى سعراً</option>
-              <option value="priceAsc">الأقل سعراً</option>
+              <option value="new">{{ t('productsPage.sortNewest') }}</option>
+              <option value="priceAsc">{{ t('productsPage.sortPriceAsc') }}</option>
+              <option value="priceDesc">{{ t('productsPage.sortPriceDesc') }}</option>
+              <option value="topRated">{{ t('home.topRatedProducts') }}</option>
             </select>
           </div>
 
@@ -105,7 +104,7 @@
 
         <div v-else class="mt-6 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
           <RevealOnScroll
-            v-for="(p, idx) in displayedItems"
+            v-for="(p, idx) in products.items"
             :key="p.id"
             :parity="(idx % 2) as 0 | 1"
             :delay="35 * (idx % 6)"
@@ -114,7 +113,7 @@
           </RevealOnScroll>
         </div>
 
-        <div v-if="!products.loading && displayedItems.length === 0" class="mt-6 card-soft p-10 text-center text-[rgb(var(--muted))] rtl-text">
+        <div v-if="!products.loading && products.items.length === 0" class="mt-6 card-soft p-10 text-center text-[rgb(var(--muted))] rtl-text">
           <div class="text-lg font-extrabold text-[rgb(var(--text))]">{{ t('productsPage.emptyTitle') }}</div>
           <div class="mt-2 text-sm">{{ t('productsPage.emptyDesc') }}</div>
         </div>
@@ -159,13 +158,6 @@ const category = ref(String(route.query.category || ''))
 const subCategory = ref(String(route.query.subCategory || ''))
 const page = ref(Number(route.query.page || 1) || 1)
 
-
-const serverSort = computed(() => {
-  if (sort.value === 'priceAsc') return 'priceAsc'
-  if (sort.value === 'priceDesc') return 'priceDesc'
-  return 'new'
-})
-
 const productsPageKey = computed(() => `products_page_boot:${JSON.stringify(route.query)}`)
 await useAsyncData(productsPageKey, async () => {
   await brandsStore.fetchPublic()
@@ -192,23 +184,6 @@ const subCategoryMap: Record<string, Array<{value:string,label:string}>> = {
 }
 const subCategoryOptions = computed(() => subCategoryMap[category.value] || [])
 
-
-const displayedItems = computed(() => {
-  const list = [...(products.items || [])]
-  switch (sort.value) {
-    case 'oldest':
-      return list.sort((a: any, b: any) => new Date(a.createdAt || a.created_at || 0).getTime() - new Date(b.createdAt || b.created_at || 0).getTime())
-    case 'alphabetical':
-      return list.sort((a: any, b: any) => String(a.name || a.title || '').localeCompare(String(b.name || b.title || ''), 'ar'))
-    case 'priceAsc':
-      return list.sort((a: any, b: any) => Number(a.finalPriceIqd ?? a.priceIqd ?? a.price ?? 0) - Number(b.finalPriceIqd ?? b.priceIqd ?? b.price ?? 0))
-    case 'priceDesc':
-      return list.sort((a: any, b: any) => Number(b.finalPriceIqd ?? b.priceIqd ?? b.price ?? 0) - Number(a.finalPriceIqd ?? a.priceIqd ?? a.price ?? 0))
-    default:
-      return list
-  }
-})
-
 const hasNext = computed(() => {
   const total = Number(products.totalCount || 0)
   const pageSize = 12
@@ -216,11 +191,9 @@ const hasNext = computed(() => {
 })
 
 const activeSortLabel = computed(() => {
-  if (sort.value === 'oldest') return 'الأقدم'
-  if (sort.value === 'alphabetical') return 'الترتيب الأبجدي'
-  if (sort.value === 'priceAsc') return 'الأقل سعراً'
-  if (sort.value === 'priceDesc') return 'الأعلى سعراً'
-  return 'الأحدث'
+  if (sort.value === 'priceAsc') return t('productsPage.sortPriceAsc')
+  if (sort.value === 'priceDesc') return t('productsPage.sortPriceDesc')
+  return t('productsPage.sortNewest')
 })
 
 const activeBrandLabel = computed(() => {
@@ -245,7 +218,7 @@ async function fetchProducts() {
     page: page.value,
     pageSize: 12,
     q: q.value || undefined,
-    sort: serverSort.value as any,
+    sort: sort.value as any,
     brand: brand.value || undefined,
     category: category.value || undefined,
     subCategory: subCategory.value || undefined,

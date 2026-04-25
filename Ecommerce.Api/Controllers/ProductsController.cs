@@ -233,9 +233,7 @@ public class ProductsController : ControllerBase
 
         if (categoryAliases.Count > 0)
             baseQuery = baseQuery.Where(p =>
-                (p.Category != null && categoryAliases.Contains(p.Category.ToLower())) ||
-                (p.SubCategory != null && categoryAliases.Contains(p.SubCategory.ToLower())) ||
-                (p.ProblemCategory != null && categoryAliases.Contains(p.ProblemCategory.ToLower())));
+                p.Category != null && categoryAliases.Contains(p.Category.ToLower()));
 
         if (subCategoryAliases.Count > 0)
             baseQuery = baseQuery.Where(p =>

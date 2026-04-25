@@ -126,6 +126,12 @@ public class AdminProductsController : ControllerBase
         var exists = await _db.Products.AnyAsync(x => x.Slug.ToLower() == slug);
         if (exists) return BadRequest(new { message = "Slug already exists" });
 
+        var regularSelection = await ValidateCategorySelectionAsync("regular", req.Category, req.SubCategory, required: true);
+        if (!regularSelection.Ok) return BadRequest(new { message = regularSelection.Message });
+
+        var problemSelection = await ValidateCategorySelectionAsync("problem", req.ProblemCategory, req.ProblemSubCategory, required: false);
+        if (!problemSelection.Ok) return BadRequest(new { message = problemSelection.Message });
+
         var p = new Product
         {
             Id = Guid.NewGuid(),
@@ -138,10 +144,10 @@ public class AdminProductsController : ControllerBase
             IsPublished = req.IsPublished,
             IsFeatured = req.IsFeatured,
             Brand = brandSlug,
-            Category = NormalizeCategory(req.Category),
-            SubCategory = NormalizeSubCategory(req.SubCategory),
-            ProblemCategory = NormalizeSubCategory(req.ProblemCategory),
-            ProblemSubCategory = NormalizeSubCategory(req.ProblemSubCategory),
+            Category = regularSelection.CategoryKey,
+            SubCategory = regularSelection.SubCategoryKey,
+            ProblemCategory = problemSelection.CategoryKey,
+            ProblemSubCategory = problemSelection.SubCategoryKey,
             StockQuantity = Math.Max(0, req.StockQuantity),
             LowStockThreshold = Math.Max(0, req.LowStockThreshold),
             IsCouponAllowed = req.IsCouponAllowed,
@@ -185,11 +191,17 @@ public class AdminProductsController : ControllerBase
         p.PriceUsd = req.PriceUsd;
         p.IsPublished = req.IsPublished;
         p.IsFeatured = req.IsFeatured;
+        var regularSelection = await ValidateCategorySelectionAsync("regular", req.Category, req.SubCategory, required: true);
+        if (!regularSelection.Ok) return BadRequest(new { message = regularSelection.Message });
+
+        var problemSelection = await ValidateCategorySelectionAsync("problem", req.ProblemCategory, req.ProblemSubCategory, required: false);
+        if (!problemSelection.Ok) return BadRequest(new { message = problemSelection.Message });
+
         p.Brand = brandSlug;
-        p.Category = NormalizeCategory(req.Category);
-        p.SubCategory = NormalizeSubCategory(req.SubCategory);
-        p.ProblemCategory = NormalizeSubCategory(req.ProblemCategory);
-        p.ProblemSubCategory = NormalizeSubCategory(req.ProblemSubCategory);
+        p.Category = regularSelection.CategoryKey;
+        p.SubCategory = regularSelection.SubCategoryKey;
+        p.ProblemCategory = problemSelection.CategoryKey;
+        p.ProblemSubCategory = problemSelection.SubCategoryKey;
         p.StockQuantity = Math.Max(0, req.StockQuantity);
         p.LowStockThreshold = Math.Max(0, req.LowStockThreshold);
         p.IsCouponAllowed = req.IsCouponAllowed;
@@ -360,6 +372,73 @@ public class AdminProductsController : ControllerBase
         if (value < 0) return 0;
         if (value > 100) return 100;
         return value;
+    }
+
+
+    private async Task<CategorySelectionResult> ValidateCategorySelectionAsync(string section, string? categoryRaw, string? subCategoryRaw, bool required)
+    {
+        if (!required && string.IsNullOrWhiteSpace(categoryRaw))
+        {
+            return CategorySelectionResult.Success("", "");
+        }
+
+        var categoryKey = NormalizeCategory(categoryRaw);
+        var subCategoryKey = NormalizeSubCategory(subCategoryRaw);
+
+        if (string.IsNullOrWhiteSpace(categoryKey) || categoryKey == "general" && required && string.IsNullOrWhiteSpace(categoryRaw))
+        {
+            return required
+                ? CategorySelectionResult.Fail(section == "problem" ? "Problem category is required" : "Category is required")
+                : CategorySelectionResult.Success("", "");
+        }
+
+        var parent = await _db.Categories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c =>
+                c.IsActive &&
+                c.Section.ToLower() == section.ToLower() &&
+                c.ParentId == null &&
+                c.Key.ToLower() == categoryKey);
+
+        if (parent is null)
+        {
+            return CategorySelectionResult.Fail(section == "problem" ? "Invalid problem category" : "Invalid category");
+        }
+
+        if (!parent.HasDetailSections)
+        {
+            return CategorySelectionResult.Success(parent.Key, "");
+        }
+
+        if (string.IsNullOrWhiteSpace(subCategoryKey))
+        {
+            return CategorySelectionResult.Fail(section == "problem"
+                ? "Problem detail category is required for this problem category"
+                : "Sub category is required for this category");
+        }
+
+        var child = await _db.Categories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c =>
+                c.IsActive &&
+                c.Section.ToLower() == section.ToLower() &&
+                c.ParentId == parent.Id &&
+                c.Key.ToLower() == subCategoryKey);
+
+        if (child is null)
+        {
+            return CategorySelectionResult.Fail(section == "problem"
+                ? "Invalid problem detail category for selected problem category"
+                : "Invalid sub category for selected category");
+        }
+
+        return CategorySelectionResult.Success(parent.Key, child.Key);
+    }
+
+    private sealed record CategorySelectionResult(bool Ok, string CategoryKey, string SubCategoryKey, string Message)
+    {
+        public static CategorySelectionResult Success(string categoryKey, string subCategoryKey) => new(true, categoryKey, subCategoryKey, "");
+        public static CategorySelectionResult Fail(string message) => new(false, "", "", message);
     }
 
     private static string NormalizeCategory(string? value)
