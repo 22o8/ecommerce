@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen w-full bg-app text-fg overflow-x-hidden">
+  <div class="admin-layout-root min-h-screen w-full bg-app text-fg overflow-x-hidden">
     <!-- Header -->
     <header
-      class="sticky top-0 z-40 border-b border-app bg-app/85 backdrop-blur supports-[backdrop-filter]:bg-app/70"
+      class="admin-topbar sticky top-0 z-40 border-b border-app bg-app/85 backdrop-blur supports-[backdrop-filter]:bg-app/70"
       :style="safeAreaTopStyle"
     >
-      <div class="mx-auto max-w-7xl px-3 sm:px-4 py-3 flex items-center gap-2">
+      <div class="admin-content-wrap px-3 sm:px-4 py-3 flex items-center gap-2">
         <!-- Menu button (mobile) -->
         <button
           class="md:hidden inline-flex h-10 w-10 shrink-0 items-center justify-center
@@ -60,7 +60,7 @@
       </div>
     </header>
 
-    <div class="mx-auto max-w-[1480px] px-3 sm:px-4 py-4 md:py-6">
+    <div class="admin-content-wrap px-3 sm:px-4 py-4 md:py-6">
       <div class="relative admin-shell gap-4 xl:gap-6">
         <!-- Overlay (mobile) -->
         <div
