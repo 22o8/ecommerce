@@ -108,15 +108,8 @@ const activeCategoryChildren = computed(() => {
   const key = activeCategoryKey.value
   return key ? (categoryChildrenMap.value[key] || []) : []
 })
-const categoryQuickLinks = computed(() => {
-  const list = categoryCards.value || []
-  return list.map((item: any) => ({
-    label: item.title,
-    to: item.to,
-  }))
-})
 async function ensureCategoryChildren(item: any) {
-  if (!item?.hasDetailSections || !item?.id) return []
+  if (!(item?.hasDetailSections || item?.childCount > 0) || !item?.id) return []
   if (categoryChildrenMap.value[item.key]) return categoryChildrenMap.value[item.key]
   const children = await fetchProblemChildren(item.id, 'regular')
   categoryChildrenMap.value = { ...categoryChildrenMap.value, [item.key]: children }
@@ -127,7 +120,7 @@ async function openCategoriesMenu(key?: string) {
   const item = list.find((x: any) => x.key === (key || activeCategoryKey.value)) || list[0]
   if (!item) return
   activeCategoryKey.value = item.key
-  if (item.hasDetailSections) {
+  if (item.hasDetailSections || item.childCount > 0) {
     await ensureCategoryChildren(item)
     categoriesMenuOpen.value = true
   } else {
@@ -248,44 +241,59 @@ onBeforeUnmount(() => {
               تجربة أقرب للمتاجر العالمية: اختر التصنيف من الشريط، وعلى الحاسبة تظهر لك معاينة منظمة تساعدك تصل بسرعة.
             </p>
           </div>
-
-          <div class="hidden lg:flex items-center gap-2 self-start lg:self-auto">
-            <NuxtLink
-              v-for="link in categoryQuickLinks.slice(0, 4)"
-              :key="link.to"
-              :to="link.to"
-              class="rounded-full border border-app bg-surface px-3 py-2 text-xs font-semibold text-[rgb(var(--text))] transition hover:-translate-y-0.5 hover:border-[rgba(var(--primary),0.45)] hover:bg-surface-2"
-            >
-              <span>{{ link.label }}</span>
-            </NuxtLink>
-          </div>
         </div>
 
-        <div class="mt-4 hidden lg:block" @mouseleave="closeCategoriesMenu()">
-          <div class="category-secondary-bar">
-            <div class="category-secondary-bar__scroll">
-              <template v-for="c in categoryCards" :key="c.key">
-                <button
-                  v-if="c.hasDetailSections"
-                  type="button"
-                  class="category-secondary-bar__item"
-                  :class="activeCategory?.key === c.key ? 'is-active' : ''"
-                  @mouseenter="openCategoriesMenu(c.key)"
-                  @focus="openCategoriesMenu(c.key)"
-                >
-                  <span>{{ c.title }}</span>
-                  <Icon name="mdi:chevron-down" class="text-sm opacity-70" />
-                </button>
-                <NuxtLink
-                  v-else
-                  :to="c.to"
-                  class="category-secondary-bar__item"
-                >
-                  <span>{{ c.title }}</span>
-                </NuxtLink>
-              </template>
-            </div>
+        <div class="category-navbar-shell" @mouseleave="closeCategoriesMenu()">
+          <button
+            type="button"
+            class="category-navbar-arrow category-navbar-arrow--start"
+            aria-label="السابق"
+            @click="scrollRail('prev', categoryRail)"
+          >
+            <Icon name="mdi:chevron-right" class="text-xl" />
+          </button>
+
+          <div
+            ref="categoryRail"
+            class="category-secondary-bar__scroll category-secondary-bar__scroll--unified"
+            @pointerdown="(e) => onRailPointerDown(e, categoryRail)"
+            @pointermove="onRailPointerMove"
+            @pointerup="endRailDrag"
+            @pointercancel="endRailDrag"
+            @pointerleave="endRailDrag"
+          >
+            <template v-for="c in categoryCards" :key="c.key">
+              <button
+                v-if="c.hasDetailSections || c.childCount > 0"
+                type="button"
+                class="category-secondary-bar__item"
+                :class="activeCategory?.key === c.key && categoriesMenuOpen ? 'is-active' : ''"
+                @mouseenter="openCategoriesMenu(c.key)"
+                @focus="openCategoriesMenu(c.key)"
+                @click="openCategoriesMenu(c.key)"
+              >
+                <span>{{ c.title }}</span>
+                <Icon name="mdi:chevron-down" class="category-chevron" />
+              </button>
+              <NuxtLink
+                v-else
+                :to="c.to"
+                class="category-secondary-bar__item"
+                @click="onRailLinkClick"
+              >
+                <span>{{ c.title }}</span>
+              </NuxtLink>
+            </template>
           </div>
+
+          <button
+            type="button"
+            class="category-navbar-arrow category-navbar-arrow--end"
+            aria-label="التالي"
+            @click="scrollRail('next', categoryRail)"
+          >
+            <Icon name="mdi:chevron-left" class="text-xl" />
+          </button>
 
           <Transition name="fade-slide">
             <div
@@ -320,35 +328,6 @@ onBeforeUnmount(() => {
               </div>
             </div>
           </Transition>
-        </div>
-
-        <div class="mt-8 lg:hidden">
-          <div
-            ref="categoryRail"
-            class="grid grid-cols-2 gap-3 sm:grid-cols-3"
-            @pointerdown="(e) => onRailPointerDown(e, categoryRail)"
-            @pointermove="onRailPointerMove"
-            @pointerup="endRailDrag"
-            @pointercancel="endRailDrag"
-            @pointerleave="endRailDrag"
-          >
-            <NuxtLink
-              v-for="c in categoryCards"
-              :key="c.key"
-              :to="c.to"
-              class="category-grid-card"
-              @click="onRailLinkClick"
-            >
-              <div class="category-grid-card__media" :class="`bg-gradient-to-br ${c.accent}`">
-                <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="h-full w-full object-cover" />
-                <div v-else class="flex h-full w-full items-center justify-center text-4xl font-black text-white/90">{{ c.title?.slice(0, 1) }}</div>
-              </div>
-              <div class="category-grid-card__body">
-                <div class="text-base font-extrabold text-[rgb(var(--text))] rtl-text">{{ c.title }}</div>
-                <div class="mt-1 text-xs text-[rgb(var(--muted))] line-clamp-2 rtl-text">{{ c.subtitle }}</div>
-              </div>
-            </NuxtLink>
-          </div>
         </div>
       </div>
     </section>
@@ -719,11 +698,17 @@ onBeforeUnmount(() => {
 }
 
 .category-command-center--raised{padding-top:1rem}
-.category-secondary-bar{margin-top:.1rem;border:1px solid rgba(var(--border),.95);border-radius:1.25rem;background:linear-gradient(180deg,rgba(var(--surface-rgb),.96),rgba(var(--surface-2-rgb),.9));box-shadow:0 16px 36px rgba(0,0,0,.14)}
-.category-secondary-bar__scroll{display:flex;align-items:center;gap:.55rem;overflow-x:auto;padding:.7rem .8rem;scrollbar-width:none}
+.category-navbar-shell{position:relative;margin-top:1.15rem;border:1px solid rgba(var(--border),.95);border-radius:1.35rem;background:linear-gradient(180deg,rgba(var(--surface-rgb),.97),rgba(var(--surface-2-rgb),.9));box-shadow:0 18px 44px rgba(0,0,0,.15);padding:.55rem 3.15rem}
+.category-secondary-bar__scroll{display:flex;align-items:center;gap:.55rem;overflow-x:auto;overflow-y:hidden;padding:.12rem;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;cursor:grab}
+.category-secondary-bar__scroll.is-dragging{cursor:grabbing}
 .category-secondary-bar__scroll::-webkit-scrollbar{display:none}
-.category-secondary-bar__item{display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap;min-height:2.9rem;padding:0 1rem;border-radius:999px;border:1px solid rgba(var(--border),.75);background:rgba(var(--surface-rgb),.72);font-size:.94rem;font-weight:800;color:rgb(var(--text));transition:all .18s ease}
+.category-secondary-bar__scroll--unified{width:100%}
+.category-secondary-bar__item{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;white-space:nowrap;min-height:2.75rem;padding:0 1rem;border-radius:999px;border:1px solid rgba(var(--border),.75);background:rgba(var(--surface-rgb),.72);font-size:.9rem;font-weight:900;color:rgb(var(--text));transition:all .18s ease;scroll-snap-align:start;flex:0 0 auto}
 .category-secondary-bar__item:hover,.category-secondary-bar__item.is-active{border-color:rgba(var(--primary),.45);background:rgba(var(--primary),.12);box-shadow:0 10px 24px rgba(var(--primary),.12)}
+.category-chevron{font-size:1rem;opacity:.72;transition:transform .18s ease}.category-secondary-bar__item.is-active .category-chevron{transform:rotate(180deg)}
+.category-navbar-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:2.35rem;height:2.35rem;border-radius:999px;border:1px solid rgba(var(--border),.95);background:rgba(var(--surface-rgb),.98);display:flex;align-items:center;justify-content:center;color:rgb(var(--text));box-shadow:0 12px 28px rgba(0,0,0,.16);transition:all .18s ease}
+.category-navbar-arrow:hover{border-color:rgba(var(--primary),.48);background:rgba(var(--primary),.12)}
+.category-navbar-arrow--start{right:.45rem}.category-navbar-arrow--end{left:.45rem}
 .category-dropdown-panel{margin-top:.8rem;border:1px solid rgba(var(--border),.95);border-radius:1.6rem;background:linear-gradient(180deg,rgba(var(--surface-rgb),.98),rgba(var(--surface-2-rgb),.94));box-shadow:0 20px 44px rgba(0,0,0,.18);padding:1.1rem 1.1rem 1rem}
 .category-dropdown-panel__head{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.2rem .2rem .9rem}
 .category-dropdown-panel__all{display:inline-flex;align-items:center;justify-content:center;min-height:2.7rem;padding:0 1rem;border-radius:999px;border:1px solid rgba(var(--primary),.35);background:rgba(var(--primary),.1);font-size:.85rem;font-weight:800;color:rgb(var(--text))}
@@ -732,9 +717,16 @@ onBeforeUnmount(() => {
 .category-dropdown-panel__link:hover{transform:translateY(-2px);border-color:rgba(var(--primary),.38);background:rgba(var(--surface-2-rgb),.95)}
 .category-dropdown-panel__icon{flex:0 0 3.1rem;width:3.1rem;height:3.1rem;border-radius:1rem;overflow:hidden;border:1px solid rgba(var(--border),.8);display:flex;align-items:center;justify-content:center;background:rgba(var(--surface-2-rgb),.95);font-size:1.15rem;font-weight:900;color:rgb(var(--text))}
 @media (max-width: 1279px){.category-dropdown-panel__grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width: 768px){
+  .category-command-center--raised{padding-top:.85rem}
+  .category-navbar-shell{margin-top:1rem;border-radius:1.15rem;padding:.45rem 2.65rem}
+  .category-navbar-arrow{width:2.05rem;height:2.05rem}
+  .category-navbar-arrow--start{right:.35rem}.category-navbar-arrow--end{left:.35rem}
+  .category-secondary-bar__scroll{gap:.45rem;padding:.05rem}
+  .category-secondary-bar__item{min-height:2.45rem;padding:0 .82rem;font-size:.82rem}
+  .category-dropdown-panel{border-radius:1.15rem;padding:.85rem;margin-top:.55rem}
+  .category-dropdown-panel__grid{grid-template-columns:1fr;gap:.55rem;max-height:18rem;overflow:auto}
+  .category-dropdown-panel__link{min-height:4.6rem;border-radius:1rem}
+}
 
 </style>
-
-@media (max-width: 1279px){
-  .rail-arrow-btn{ display:none !important; }
-}
