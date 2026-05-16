@@ -926,279 +926,77 @@ html.theme-dark .control-box-strong{
   box-shadow: 0 14px 36px rgba(0,0,0,.18);
 }
 
-/* =========================================================
-   ADMIN POLISH SYSTEM — unified dashboard light/dark design
-   Applies to all admin pages without changing business logic
-   ========================================================= */
-:root{
-  --admin-bg-accent: 236 72 153;
-  --admin-panel-alpha: .94;
-  --admin-soft-shadow: 0 20px 60px rgba(15, 23, 42, .08);
-  --admin-strong-shadow: 0 26px 80px rgba(15, 23, 42, .12);
-}
-html.theme-dark{
-  --admin-bg-accent: 167 139 250;
-  --admin-panel-alpha: .88;
-  --admin-soft-shadow: 0 22px 70px rgba(0, 0, 0, .34);
-  --admin-strong-shadow: 0 30px 90px rgba(0, 0, 0, .44);
+
+/* ===== Final UI polish ===== */
+@media (min-width: 1400px){
+  .container,
+  .mx-auto{
+    max-width: 1680px !important;
+  }
 }
 
-/* admin page background gets the same premium visual language as the storefront */
-.admin-layout-root{
-  background:
-    radial-gradient(900px 520px at 12% -10%, rgba(var(--admin-bg-accent), .10), transparent 62%),
-    radial-gradient(900px 520px at 92% 8%, rgba(var(--primary), .075), transparent 60%),
-    rgb(var(--bg));
-}
-html.theme-light .admin-layout-root{
-  background:
-    radial-gradient(1200px 620px at 18% -8%, rgba(var(--primary), .055), transparent 62%),
-    radial-gradient(900px 520px at 92% 8%, rgba(15, 23, 42, .028), transparent 60%),
-    rgb(var(--bg));
+html,body,#__nuxt{
+  overflow-x:hidden;
 }
 
-.admin-topbar{
-  border-color: rgba(var(--border), .82) !important;
-  background: rgba(var(--surface-rgb), .82) !important;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, .05);
-}
-html.theme-dark .admin-topbar{
-  background: rgba(var(--bg), .78) !important;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, .28);
+button,
+a,
+input,
+select{
+  transition: all .22s ease;
 }
 
-.admin-content-wrap{
-  width: min(100%, 1740px);
-  margin-inline: auto;
-}
-
-/* unified panels/cards */
-.admin-box,
-.admin-card,
-.admin-list-shell,
-.admin-panel,
-.brands-hero{
-  border-radius: 28px !important;
-  border: 1px solid rgba(var(--border), .90) !important;
-  background:
-    linear-gradient(180deg, rgba(var(--surface-rgb), var(--admin-panel-alpha)), rgba(var(--surface-2-rgb), .84)) !important;
-  box-shadow: var(--admin-soft-shadow) !important;
-  color: rgb(var(--text)) !important;
-  backdrop-filter: blur(16px);
-}
-html.theme-light .admin-box,
-html.theme-light .admin-card,
-html.theme-light .admin-list-shell,
-html.theme-light .admin-panel,
-html.theme-light .brands-hero{
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.98), rgba(var(--surface-2-rgb), .92)) !important;
-  box-shadow: 0 18px 55px rgba(15, 23, 42, .065) !important;
-}
-
-.admin-box--hero,
-.brands-hero{
-  overflow: hidden;
-  position: relative;
-}
-.admin-box--hero::after,
-.brands-hero::after{
-  content: '';
-  position: absolute;
-  inset: auto auto -110px -60px;
-  width: 310px;
-  height: 310px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(var(--primary), .15), transparent 68%);
-  pointer-events: none;
-}
-
-/* unified admin form controls */
-.admin-input,
-.admin-select,
-.admin-textarea,
-.admin-box input:not([type='checkbox']):not([type='radio']):not([type='file']),
-.admin-box select,
-.admin-box textarea,
-.admin-card input:not([type='checkbox']):not([type='radio']):not([type='file']),
-.admin-card select,
-.admin-card textarea{
-  min-height: 48px !important;
-  width: 100%;
-  border-radius: 18px !important;
-  border: 1px solid rgba(var(--border), .95) !important;
-  background: rgba(var(--surface-rgb), .88) !important;
-  color: rgb(var(--text)) !important;
-  padding: 12px 14px !important;
-  outline: none !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.04) !important;
-  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease, transform .18s ease;
-}
-html.theme-light .admin-input,
-html.theme-light .admin-select,
-html.theme-light .admin-textarea,
-html.theme-light .admin-box input:not([type='checkbox']):not([type='radio']):not([type='file']),
-html.theme-light .admin-box select,
-html.theme-light .admin-box textarea,
-html.theme-light .admin-card input:not([type='checkbox']):not([type='radio']):not([type='file']),
-html.theme-light .admin-card select,
-html.theme-light .admin-card textarea{
-  background: #fff !important;
-}
-.admin-input:focus,
-.admin-select:focus,
-.admin-textarea:focus,
-.admin-box input:focus,
-.admin-box select:focus,
-.admin-box textarea:focus,
-.admin-card input:focus,
-.admin-card select:focus,
-.admin-card textarea:focus{
-  border-color: rgba(var(--primary), .55) !important;
-  box-shadow: 0 0 0 4px rgba(var(--primary), .15) !important;
-}
-
-/* unified buttons */
-.admin-primary,
-.btn-primary,
-.admin-ghost,
-.admin-danger,
-.btn-danger,
-.admin-icon-btn,
-.icon-btn{
-  min-height: 44px;
-  border-radius: 16px !important;
-  font-weight: 900 !important;
-  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease, opacity .16s ease;
-}
-.admin-primary,
-.btn-primary{
-  border: 1px solid rgba(var(--primary), .42) !important;
-  background: linear-gradient(135deg, rgba(var(--primary), .96), rgba(var(--primary-2), .88)) !important;
-  color: rgb(var(--on-primary)) !important;
-  box-shadow: 0 16px 34px rgba(var(--primary), .22) !important;
-}
-.admin-primary:hover,
-.btn-primary:hover,
-.admin-ghost:hover,
-.admin-icon-btn:hover,
-.icon-btn:hover{
+button:hover,
+a:hover{
   transform: translateY(-1px);
 }
-.admin-ghost,
-.admin-icon-btn,
-.icon-btn{
-  border: 1px solid rgba(var(--border), .94) !important;
-  background: rgba(var(--surface-rgb), .78) !important;
-  color: rgb(var(--text)) !important;
-  box-shadow: 0 10px 26px rgba(0,0,0,.055) !important;
-}
-html.theme-dark .admin-ghost,
-html.theme-dark .admin-icon-btn,
-html.theme-dark .icon-btn{
-  background: rgba(var(--surface-2-rgb), .80) !important;
-  box-shadow: 0 12px 30px rgba(0,0,0,.20) !important;
-}
-.admin-danger,
-.btn-danger,
-.admin-btn-danger{
-  border: 1px solid rgba(var(--danger), .40) !important;
-  background: rgba(var(--danger), .12) !important;
-  color: rgb(var(--danger)) !important;
+
+html.theme-dark .bg-surface,
+html.theme-dark .bg-surface-2{
+  border:1px solid rgba(var(--border),.55);
 }
 
-/* unified tables/lists */
-.admin-tr{
-  border-color: rgba(var(--border), .82) !important;
-  background: rgba(var(--surface-rgb), .58) !important;
-  color: rgb(var(--text)) !important;
-}
-.admin-th{
-  background: rgba(var(--surface-2-rgb), .70) !important;
-  color: rgb(var(--muted)) !important;
-}
-.admin-muted,
-.admin-box .text-muted,
-.admin-card .text-muted{
-  color: rgb(var(--muted)) !important;
+html:not(.theme-dark) .bg-surface,
+html:not(.theme-dark) .bg-surface-2{
+  border:1px solid rgba(var(--border),.75);
+  box-shadow: 0 10px 30px rgba(15,23,42,.05);
 }
 
-.admin-pill,
-.badge-on,
-.badge-off,
-.badge-featured{
-  border-radius: 999px !important;
-  border: 1px solid rgba(var(--border), .85) !important;
-  background: rgba(var(--surface-2-rgb), .88) !important;
-  color: rgb(var(--text)) !important;
-  box-shadow: 0 8px 20px rgba(0,0,0,.045);
-}
-.badge-on,
-.admin-pill.success{
-  border-color: rgba(var(--success), .35) !important;
-  background: rgba(var(--success), .12) !important;
-  color: rgb(var(--success)) !important;
-}
-.badge-featured,
-.admin-pill.info{
-  border-color: rgba(var(--primary), .35) !important;
-  background: rgba(var(--primary), .12) !important;
-  color: rgb(var(--text)) !important;
-}
-
-/* sidebar refinement */
-.admin-sidebar-shell{
-  border: 1px solid rgba(var(--border), .88) !important;
-  background:
-    linear-gradient(180deg, rgba(var(--surface-rgb), .94), rgba(var(--surface-2-rgb), .82)),
-    radial-gradient(circle at 12% 0%, rgba(var(--primary), .13), transparent 44%) !important;
-  box-shadow: var(--admin-soft-shadow) !important;
-}
-html.theme-light .admin-sidebar-shell{
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.98), rgba(var(--surface-2-rgb), .92)),
-    radial-gradient(circle at 12% 0%, rgba(var(--primary), .08), transparent 44%) !important;
-}
-.admin-link{
-  border-color: rgba(var(--border), .78) !important;
-  background: rgba(var(--surface-rgb), .46) !important;
-  color: rgb(var(--text)) !important;
-  box-shadow: none !important;
-}
-.admin-link:hover{
-  border-color: rgba(var(--primary), .34) !important;
-  background: rgba(var(--primary), .08) !important;
-  box-shadow: 0 14px 34px rgba(var(--primary), .08) !important;
-}
-.admin-link.router-link-active,
-.admin-sidebar-shell .router-link-active{
-  border-color: rgba(var(--primary), .46) !important;
-  background: linear-gradient(135deg, rgba(var(--primary), .18), rgba(var(--primary), .08)) !important;
-  color: rgb(var(--text)) !important;
-}
-.admin-link.router-link-active::before{
-  background: rgb(var(--primary)) !important;
-}
-
-/* mobile dashboard stability */
-@media (max-width: 767px){
-  .admin-content-wrap{ padding-inline: 12px !important; }
-  .admin-box,
-  .admin-card,
-  .admin-list-shell,
-  .brands-hero{
-    border-radius: 22px !important;
-    padding: 14px !important;
+@media (max-width: 768px){
+  .categories-scroll,
+  .categories-tabs{
+    overflow-x:auto !important;
+    overflow-y:hidden;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+    padding-inline:12px;
+    scroll-behavior:smooth;
   }
-  .admin-sidebar-shell{
-    border-radius: 0 24px 24px 0 !important;
-    max-width: min(88vw, 330px) !important;
+
+  .categories-scroll::-webkit-scrollbar,
+  .categories-tabs::-webkit-scrollbar{
+    display:none;
   }
-  .admin-primary,
-  .btn-primary,
-  .admin-ghost,
-  .admin-danger,
-  .btn-danger{
-    min-height: 46px;
+
+  .categories-scroll > *,
+  .categories-tabs > *{
+    flex:0 0 auto;
+    white-space:nowrap;
   }
+}
+
+.category-arrow-left{
+  transform: rotate(180deg);
+}
+
+html[dir="ltr"] .category-arrow-left{
+  transform:none;
+}
+
+.category-arrow-right{
+  transform:none;
+}
+
+html[dir="ltr"] .category-arrow-right{
+  transform: rotate(180deg);
 }
