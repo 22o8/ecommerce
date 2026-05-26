@@ -1,199 +1,299 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-      <div>
-        <h1 class="text-2xl font-bold rtl-text">إدارة تصنيفات المتجر</h1>
-        <p class="text-sm text-white/70 rtl-text">
-          من هنا تقدر تضيف أو تعدّل أو تحذف التصنيف الرئيسي، وتحدد إذا كان يحتاج تصنيفات دقيقة تظهر داخل دروب منيو منظم في الواجهة ونماذج المنتجات.
+  <div class="admin-category-page space-y-6">
+    <section class="admin-page-hero">
+      <div class="min-w-0">
+        <div class="admin-kicker rtl-text">
+          <span class="admin-kicker__dot" />
+          إدارة أقسام المتجر
+        </div>
+        <h1 class="mt-3 text-2xl font-black tracking-tight text-[rgb(var(--text))] sm:text-3xl rtl-text">
+          التصنيفات الرئيسية والتصنيفات الدقيقة
+        </h1>
+        <p class="mt-2 max-w-4xl text-sm leading-7 text-[rgb(var(--muted))] rtl-text">
+          رتّب أقسام المتجر من هنا: التصنيف المباشر يفتح صفحة منتجاته فوراً، والتصنيف الذي يحتوي أقساماً دقيقة يظهر كقائمة منظمة في الواجهة وداخل نماذج المنتجات.
         </p>
       </div>
-      <div class="flex items-center gap-2">
-        <UiButton v-if="selectedParent" variant="ghost" @click="clearSelection">إغلاق لوحة التصنيفات الدقيقة</UiButton>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <UiButton v-if="selectedParent" variant="ghost" @click="clearSelection">إغلاق اللوحة</UiButton>
         <UiButton variant="secondary" @click="load">تحديث</UiButton>
       </div>
-    </div>
+    </section>
 
-    <div class="grid gap-6 lg:grid-cols-3">
-      <UiCard>
+    <section class="grid gap-3 sm:grid-cols-3">
+      <div class="stat-card">
+        <span>كل التصنيفات</span>
+        <strong>{{ items.length }}</strong>
+      </div>
+      <div class="stat-card stat-card--detail">
+        <span>تحتوي تصنيفات دقيقة</span>
+        <strong>{{ detailedItems.length }}</strong>
+      </div>
+      <div class="stat-card stat-card--direct">
+        <span>تصنيفات مباشرة</span>
+        <strong>{{ directItems.length }}</strong>
+      </div>
+    </section>
+
+    <section class="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
+      <UiCard class="category-editor-card">
         <UiCardHeader>
-          <UiCardTitle>{{ editingId ? 'تعديل التصنيف الرئيسي' : 'إضافة تصنيف رئيسي' }}</UiCardTitle>
+          <UiCardTitle>{{ editingId ? 'تعديل تصنيف رئيسي' : 'إضافة تصنيف رئيسي' }}</UiCardTitle>
         </UiCardHeader>
         <UiCardContent>
-          <div class="grid gap-3">
+          <div class="grid gap-4">
+            <div class="rounded-3xl border border-app bg-surface-2/60 p-4 text-sm leading-7 text-[rgb(var(--muted))] rtl-text">
+              املأ بيانات التصنيف الرئيسي. إذا يحتاج أقساماً داخله، فعّل خيار التصنيفات الدقيقة ثم احفظ، بعدها افتح زر الإدارة الخاص به.
+            </div>
+
             <div class="grid gap-2">
-              <label class="text-sm">الاسم بالعربي</label>
-              <UiInput v-model="form.nameAr" />
+              <label class="admin-label">الاسم بالعربي</label>
+              <UiInput v-model="form.nameAr" placeholder="مثال: عناية البشرة" />
             </div>
             <div class="grid gap-2">
-              <label class="text-sm">الاسم بالإنكليزي</label>
-              <UiInput v-model="form.nameEn" />
+              <label class="admin-label">الاسم بالإنكليزي</label>
+              <UiInput v-model="form.nameEn" placeholder="Skin Care" />
             </div>
             <div class="grid gap-2">
-              <label class="text-sm">المفتاح</label>
-              <UiInput v-model="form.key" placeholder="skin-care" />
+              <label class="admin-label">المفتاح</label>
+              <UiInput v-model="form.key" placeholder="skin-care" dir="ltr" />
             </div>
             <div class="grid gap-2">
-              <label class="text-sm">الوصف</label>
-              <UiInput v-model="form.descriptionAr" />
+              <label class="admin-label">الوصف</label>
+              <UiInput v-model="form.descriptionAr" placeholder="وصف قصير يظهر في الواجهة" />
             </div>
-            <div class="grid gap-2">
-              <label class="text-sm">الترتيب</label>
-              <UiInput v-model.number="form.sortOrder" type="number" min="0" step="1" />
+            <div class="grid gap-2 sm:grid-cols-2">
+              <div class="grid gap-2">
+                <label class="admin-label">الترتيب</label>
+                <UiInput v-model.number="form.sortOrder" type="number" min="0" step="1" />
+              </div>
+              <label class="toggle-box mt-7">
+                <input v-model="form.isActive" type="checkbox" />
+                <span>فعال</span>
+              </label>
             </div>
+
             <div class="grid gap-2">
-              <label class="text-sm">الصورة</label>
-              <input type="file" accept="image/*" @change="onPickFile($event, 'parent')" class="block w-full text-sm" />
+              <label class="admin-label">الصورة</label>
+              <div class="upload-line">
+                <input type="file" accept="image/*" @change="onPickFile($event, 'parent')" class="block w-full text-sm" />
+              </div>
               <UiInput v-model="form.imageUrl" placeholder="https://..." dir="ltr" />
             </div>
-            <label class="flex items-center gap-2 text-sm">
-              <input v-model="form.hasDetailSections" type="checkbox" class="h-4 w-4" />
-              هذا التصنيف يحتاج تصنيفات دقيقة داخل دروب منيو
+
+            <label class="detail-switch" :class="form.hasDetailSections ? 'is-on' : ''">
+              <input v-model="form.hasDetailSections" type="checkbox" />
+              <span class="detail-switch__mark" />
+              <span>
+                <strong>يحتاج تصنيفات دقيقة</strong>
+                <small>يظهر كـ Dropdown في الواجهة، وتظهر أقسامه عند إضافة المنتج.</small>
+              </span>
             </label>
-            <p v-if="form.hasDetailSections" class="text-xs text-white/60 rtl-text">
-              بعد الحفظ راح تقدر تضيف التصنيفات الدقيقة الخاصة بهذا القسم من اللوحة السفلية أو من زر إدارة التصنيفات الدقيقة داخل القائمة.
-            </p>
-            <label class="flex items-center gap-2 text-sm">
-              <input v-model="form.isActive" type="checkbox" class="h-4 w-4" />
-              فعال
-            </label>
+
             <div class="flex flex-wrap gap-2 pt-2">
-              <UiButton @click="save">{{ editingId ? 'حفظ التعديل' : 'إضافة' }}</UiButton>
-              <UiButton variant="ghost" @click="resetForm">جديد</UiButton>
+              <UiButton @click="save">{{ editingId ? 'حفظ التعديل' : 'إنشاء التصنيف' }}</UiButton>
+              <UiButton variant="ghost" @click="resetForm">تفريغ النموذج</UiButton>
             </div>
           </div>
         </UiCardContent>
       </UiCard>
 
-      <UiCard class="lg:col-span-2">
-        <UiCardHeader>
-          <UiCardTitle>التصنيفات الرئيسية</UiCardTitle>
-        </UiCardHeader>
-        <UiCardContent>
-          <div v-if="loading" class="text-white/70">جاري التحميل...</div>
-          <div v-else class="grid gap-3">
-            <div
-              v-for="item in items"
-              :key="item.id"
-              class="rounded-3xl border p-4 transition"
-              :class="selectedParentId === item.id ? 'border-[rgba(var(--primary),0.55)] bg-[rgba(var(--primary),0.08)] shadow-[0_0_0_1px_rgba(var(--primary),0.15)]' : 'border-white/10 bg-white/5'"
-            >
-              <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                <div class="flex min-w-0 items-center gap-3">
-                  <button
-                    type="button"
-                    class="h-20 w-20 overflow-hidden rounded-2xl border border-white/10 bg-black/20 transition hover:scale-[1.02]"
-                    @click="item.hasDetailSections ? selectParent(item) : editItem(item)"
-                  >
-                    <img v-if="item.imageUrl" :src="buildAssetUrl(item.imageUrl)" class="h-full w-full object-cover" />
-                    <div v-else class="flex h-full w-full items-center justify-center text-lg font-black">{{ item.nameAr?.slice(0,1) }}</div>
-                  </button>
-                  <div class="min-w-0">
-                    <div class="font-extrabold rtl-text">{{ item.nameAr }}</div>
-                    <div class="text-xs text-white/60 keep-ltr">{{ item.key }}</div>
-                    <div class="mt-1 text-sm text-white/70 rtl-text">{{ item.descriptionAr || 'بدون وصف' }}</div>
-                    <div class="mt-2 flex flex-wrap gap-2 text-xs">
-                      <span class="rounded-full border border-white/10 px-2 py-1">{{ item.hasDetailSections ? 'عنده تصنيفات دقيقة' : 'تصنيف مباشر' }}</span>
-                      <span class="rounded-full border border-white/10 px-2 py-1">{{ item.childCount || 0 }} تصنيف دقيق</span>
-                      <span class="rounded-full border border-white/10 px-2 py-1">{{ item.isActive ? 'فعال' : 'غير فعال' }}</span>
+      <div class="space-y-5 min-w-0">
+        <UiCard>
+          <UiCardContent>
+            <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+              <div class="relative">
+                <UiInput v-model="search" placeholder="ابحث باسم التصنيف أو المفتاح..." />
+              </div>
+              <div class="filter-tabs">
+                <button :class="filterMode === 'all' ? 'is-active' : ''" @click="filterMode = 'all'">الكل</button>
+                <button :class="filterMode === 'detail' ? 'is-active' : ''" @click="filterMode = 'detail'">بتصنيفات دقيقة</button>
+                <button :class="filterMode === 'direct' ? 'is-active' : ''" @click="filterMode = 'direct'">مباشر فقط</button>
+              </div>
+            </div>
+          </UiCardContent>
+        </UiCard>
+
+        <UiCard v-if="loading">
+          <UiCardContent>
+            <div class="py-10 text-center text-[rgb(var(--muted))]">جاري التحميل...</div>
+          </UiCardContent>
+        </UiCard>
+
+        <template v-else>
+          <section v-if="showDetailSection" class="category-group category-group--detail">
+            <div class="category-group__head">
+              <div>
+                <h2>تصنيفات تحتوي أقساماً دقيقة</h2>
+                <p>هذه تظهر في الواجهة كقائمة منسدلة، ويجب اختيار قسم دقيق عند ربط المنتج بها.</p>
+              </div>
+              <span>{{ visibleDetailedItems.length }}</span>
+            </div>
+
+            <div v-if="visibleDetailedItems.length" class="grid gap-3">
+              <article v-for="item in visibleDetailedItems" :key="item.id" class="category-admin-card has-detail" :class="selectedParentId === item.id ? 'is-selected' : ''">
+                <div class="category-admin-card__media" @click="selectParent(item)">
+                  <img v-if="item.imageUrl" :src="buildAssetUrl(item.imageUrl)" alt="" />
+                  <span v-else>{{ item.nameAr?.slice(0,1) }}</span>
+                </div>
+
+                <div class="category-admin-card__body">
+                  <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <h3>{{ item.nameAr }}</h3>
+                      <p class="keep-ltr">{{ item.key }}</p>
+                      <small>{{ item.descriptionAr || 'بدون وصف' }}</small>
                     </div>
+                    <span class="status-pill" :class="item.isActive ? 'is-active' : 'is-off'">{{ item.isActive ? 'فعال' : 'غير فعال' }}</span>
+                  </div>
+
+                  <div class="category-admin-card__meta">
+                    <span>Dropdown</span>
+                    <span>{{ item.childCount || 0 }} تصنيف دقيق</span>
+                    <span>ترتيب {{ item.sortOrder || 0 }}</span>
                   </div>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2 xl:justify-end">
-                  <UiButton
-                    v-if="item.hasDetailSections"
-                    variant="ghost"
-                    @click="selectParent(item)"
-                  >
-                    {{ selectedParentId === item.id ? 'إخفاء التصنيفات الدقيقة' : 'إدارة التصنيفات الدقيقة' }}
-                  </UiButton>
+                <div class="category-admin-card__actions">
+                  <UiButton variant="ghost" @click="selectParent(item)">إدارة التصنيفات الدقيقة</UiButton>
                   <UiButton variant="secondary" @click="editItem(item)">تعديل</UiButton>
                   <UiButton variant="destructive" @click="remove(item.id)">حذف</UiButton>
                 </div>
+              </article>
+            </div>
+            <div v-else class="empty-panel">لا توجد نتائج ضمن هذا النوع.</div>
+          </section>
+
+          <section v-if="showDirectSection" class="category-group category-group--direct">
+            <div class="category-group__head">
+              <div>
+                <h2>تصنيفات مباشرة</h2>
+                <p>هذه تفتح صفحة منتجات التصنيف مباشرة بدون اختيار قسم دقيق.</p>
               </div>
+              <span>{{ visibleDirectItems.length }}</span>
             </div>
-          </div>
-        </UiCardContent>
-      </UiCard>
-    </div>
 
-    <UiCard v-if="selectedParent">
-      <UiCardHeader>
-        <UiCardTitle>التصنيفات الدقيقة داخل: {{ selectedParent.nameAr }}</UiCardTitle>
-      </UiCardHeader>
-      <UiCardContent>
-        <div class="mb-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70 rtl-text">
-          أي تصنيف دقيق تضيفه هنا راح يظهر داخل دروب منيو هذا القسم في الواجهة، وكذلك في اختيار المنتجات داخل لوحة الأدمن.
-        </div>
-
-        <div class="grid gap-6 lg:grid-cols-3">
-          <div class="grid gap-3">
-            <div class="grid gap-2">
-              <label class="text-sm">الاسم بالعربي</label>
-              <UiInput v-model="childForm.nameAr" />
-            </div>
-            <div class="grid gap-2">
-              <label class="text-sm">الاسم بالإنكليزي</label>
-              <UiInput v-model="childForm.nameEn" />
-            </div>
-            <div class="grid gap-2">
-              <label class="text-sm">المفتاح</label>
-              <UiInput v-model="childForm.key" placeholder="face-wash" />
-            </div>
-            <div class="grid gap-2">
-              <label class="text-sm">الوصف</label>
-              <UiInput v-model="childForm.descriptionAr" />
-            </div>
-            <div class="grid gap-2">
-              <label class="text-sm">الترتيب</label>
-              <UiInput v-model.number="childForm.sortOrder" type="number" min="0" step="1" />
-            </div>
-            <div class="grid gap-2">
-              <label class="text-sm">الصورة</label>
-              <input type="file" accept="image/*" @change="onPickFile($event, 'child')" class="block w-full text-sm" />
-              <UiInput v-model="childForm.imageUrl" placeholder="https://..." dir="ltr" />
-            </div>
-            <label class="flex items-center gap-2 text-sm">
-              <input v-model="childForm.isActive" type="checkbox" class="h-4 w-4" />
-              فعال
-            </label>
-            <div class="flex flex-wrap gap-2 pt-2">
-              <UiButton @click="saveChild">{{ childEditingId ? 'حفظ التعديل' : 'إضافة التصنيف الدقيق' }}</UiButton>
-              <UiButton variant="ghost" @click="resetChildForm">جديد</UiButton>
-            </div>
-          </div>
-
-          <div class="grid gap-3 lg:col-span-2">
-            <div v-if="childLoading" class="text-white/70">جاري تحميل التصنيفات الدقيقة...</div>
-            <div v-else-if="childItems.length === 0" class="rounded-2xl border border-white/10 bg-white/5 p-4 text-white/70">
-              لا توجد تصنيفات دقيقة بعد.
-            </div>
-            <div
-              v-else
-              v-for="item in childItems"
-              :key="item.id"
-              class="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 p-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div class="flex min-w-0 items-center gap-3">
-                <div class="h-16 w-16 overflow-hidden rounded-2xl border border-white/10 bg-black/20">
-                  <img v-if="item.imageUrl" :src="buildAssetUrl(item.imageUrl)" class="h-full w-full object-cover" />
-                  <div v-else class="flex h-full w-full items-center justify-center text-lg font-black">{{ item.nameAr?.slice(0,1) }}</div>
+            <div v-if="visibleDirectItems.length" class="grid gap-3">
+              <article v-for="item in visibleDirectItems" :key="item.id" class="category-admin-card is-direct">
+                <div class="category-admin-card__media" @click="editItem(item)">
+                  <img v-if="item.imageUrl" :src="buildAssetUrl(item.imageUrl)" alt="" />
+                  <span v-else>{{ item.nameAr?.slice(0,1) }}</span>
                 </div>
-                <div class="min-w-0">
-                  <div class="font-extrabold rtl-text">{{ item.nameAr }}</div>
-                  <div class="text-xs text-white/60 keep-ltr">{{ item.key }}</div>
-                  <div class="mt-1 text-sm text-white/70 rtl-text">{{ item.descriptionAr || 'بدون وصف' }}</div>
+
+                <div class="category-admin-card__body">
+                  <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <h3>{{ item.nameAr }}</h3>
+                      <p class="keep-ltr">{{ item.key }}</p>
+                      <small>{{ item.descriptionAr || 'بدون وصف' }}</small>
+                    </div>
+                    <span class="status-pill" :class="item.isActive ? 'is-active' : 'is-off'">{{ item.isActive ? 'فعال' : 'غير فعال' }}</span>
+                  </div>
+
+                  <div class="category-admin-card__meta">
+                    <span>تصنيف مباشر</span>
+                    <span>بدون أقسام دقيقة</span>
+                    <span>ترتيب {{ item.sortOrder || 0 }}</span>
+                  </div>
+                </div>
+
+                <div class="category-admin-card__actions">
+                  <UiButton variant="secondary" @click="editItem(item)">تعديل</UiButton>
+                  <UiButton variant="destructive" @click="remove(item.id)">حذف</UiButton>
+                </div>
+              </article>
+            </div>
+            <div v-else class="empty-panel">لا توجد نتائج ضمن هذا النوع.</div>
+          </section>
+        </template>
+      </div>
+    </section>
+
+    <Transition name="drawer-fade">
+      <div v-if="selectedParent" class="drawer-backdrop" @click.self="clearSelection">
+        <aside class="detail-drawer">
+          <header class="detail-drawer__head">
+            <div>
+              <span class="admin-kicker rtl-text"><span class="admin-kicker__dot" /> لوحة التصنيفات الدقيقة</span>
+              <h2>داخل: {{ selectedParent.nameAr }}</h2>
+              <p>أي تصنيف تضيفه هنا يظهر داخل دروب منيو هذا القسم، وكذلك داخل اختيار التصنيف الدقيق في المنتج.</p>
+            </div>
+            <button type="button" class="drawer-close" @click="clearSelection">×</button>
+          </header>
+
+          <div class="detail-drawer__content">
+            <section class="drawer-form">
+              <h3>{{ childEditingId ? 'تعديل تصنيف دقيق' : 'إضافة تصنيف دقيق' }}</h3>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div class="grid gap-2">
+                  <label class="admin-label">الاسم بالعربي</label>
+                  <UiInput v-model="childForm.nameAr" />
+                </div>
+                <div class="grid gap-2">
+                  <label class="admin-label">الاسم بالإنكليزي</label>
+                  <UiInput v-model="childForm.nameEn" />
+                </div>
+                <div class="grid gap-2">
+                  <label class="admin-label">المفتاح</label>
+                  <UiInput v-model="childForm.key" placeholder="face-wash" dir="ltr" />
+                </div>
+                <div class="grid gap-2">
+                  <label class="admin-label">الترتيب</label>
+                  <UiInput v-model.number="childForm.sortOrder" type="number" min="0" step="1" />
                 </div>
               </div>
-              <div class="flex items-center gap-2">
-                <UiButton variant="secondary" @click="editChild(item)">تعديل</UiButton>
-                <UiButton variant="destructive" @click="remove(item.id)">حذف</UiButton>
+              <div class="mt-3 grid gap-2">
+                <label class="admin-label">الوصف</label>
+                <UiInput v-model="childForm.descriptionAr" />
               </div>
-            </div>
+              <div class="mt-3 grid gap-2">
+                <label class="admin-label">الصورة</label>
+                <div class="upload-line">
+                  <input type="file" accept="image/*" @change="onPickFile($event, 'child')" class="block w-full text-sm" />
+                </div>
+                <UiInput v-model="childForm.imageUrl" placeholder="https://..." dir="ltr" />
+              </div>
+
+              <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <label class="toggle-box">
+                  <input v-model="childForm.isActive" type="checkbox" />
+                  <span>فعال</span>
+                </label>
+                <div class="flex flex-wrap gap-2">
+                  <UiButton @click="saveChild">{{ childEditingId ? 'حفظ التعديل' : 'إضافة التصنيف الدقيق' }}</UiButton>
+                  <UiButton variant="ghost" @click="resetChildForm">جديد</UiButton>
+                </div>
+              </div>
+            </section>
+
+            <section class="drawer-list">
+              <div class="drawer-list__head">
+                <h3>التصنيفات الدقيقة المسجلة</h3>
+                <span>{{ childItems.length }}</span>
+              </div>
+
+              <div v-if="childLoading" class="empty-panel">جاري تحميل التصنيفات الدقيقة...</div>
+              <div v-else-if="childItems.length === 0" class="empty-panel">لا توجد تصنيفات دقيقة بعد.</div>
+              <article v-else v-for="item in childItems" :key="item.id" class="child-card">
+                <div class="child-card__media">
+                  <img v-if="item.imageUrl" :src="buildAssetUrl(item.imageUrl)" alt="" />
+                  <span v-else>{{ item.nameAr?.slice(0,1) }}</span>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <h4>{{ item.nameAr }}</h4>
+                  <p class="keep-ltr">{{ item.key }}</p>
+                  <small>{{ item.descriptionAr || 'بدون وصف' }}</small>
+                </div>
+                <div class="child-card__actions">
+                  <UiButton variant="secondary" @click="editChild(item)">تعديل</UiButton>
+                  <UiButton variant="destructive" @click="remove(item.id)">حذف</UiButton>
+                </div>
+              </article>
+            </section>
           </div>
-        </div>
-      </UiCardContent>
-    </UiCard>
+        </aside>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -215,12 +315,28 @@ const childLoading = ref(false)
 const editingId = ref<string>('')
 const childEditingId = ref<string>('')
 const selectedParentId = ref<string>('')
+const search = ref('')
+const filterMode = ref<'all' | 'detail' | 'direct'>('all')
 
 const form = reactive({ key: '', nameAr: '', nameEn: '', descriptionAr: '', descriptionEn: '', imageUrl: '', sortOrder: 0, isActive: true, section, hasDetailSections: false, parentId: null as string | null })
 const childForm = reactive({ key: '', nameAr: '', nameEn: '', descriptionAr: '', descriptionEn: '', imageUrl: '', sortOrder: 0, isActive: true, section, hasDetailSections: false, parentId: null as string | null })
 const childItems = ref<any[]>([])
 
 const selectedParent = computed(() => items.value.find((x: any) => x.id === selectedParentId.value) || null)
+const sortedItems = computed(() => [...items.value].sort((a: any, b: any) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0) || String(a.nameAr || '').localeCompare(String(b.nameAr || ''), 'ar')))
+const detailedItems = computed(() => sortedItems.value.filter((x: any) => Boolean(x.hasDetailSections)))
+const directItems = computed(() => sortedItems.value.filter((x: any) => !x.hasDetailSections))
+
+function matchesSearch(item: any) {
+  const q = search.value.trim().toLowerCase()
+  if (!q) return true
+  return [item.nameAr, item.nameEn, item.key, item.descriptionAr].some((v) => String(v || '').toLowerCase().includes(q))
+}
+
+const visibleDetailedItems = computed(() => detailedItems.value.filter(matchesSearch))
+const visibleDirectItems = computed(() => directItems.value.filter(matchesSearch))
+const showDetailSection = computed(() => filterMode.value === 'all' || filterMode.value === 'detail')
+const showDirectSection = computed(() => filterMode.value === 'all' || filterMode.value === 'direct')
 
 function resetForm() {
   editingId.value = ''
@@ -271,10 +387,9 @@ function selectParent(item: any) {
     toast.error('فعّل التصنيفات الدقيقة لهذا القسم أولًا من التعديل')
     return
   }
-  selectedParentId.value = selectedParentId.value === item.id ? '' : item.id
+  selectedParentId.value = item.id
   resetChildForm()
-  if (selectedParentId.value) loadChildren(selectedParentId.value)
-  else childItems.value = []
+  loadChildren(item.id)
 }
 
 function editItem(item: any) {
@@ -292,11 +407,12 @@ function editItem(item: any) {
     hasDetailSections: Boolean(item.hasDetailSections ?? false),
     parentId: null,
   })
+  window?.scrollTo?.({ top: 0, behavior: 'smooth' })
 }
 
 function editChild(item: any) {
   childEditingId.value = item.id
-  selectedParentId.value = item.parentId
+  selectedParentId.value = item.parentId || selectedParentId.value
   Object.assign(childForm, {
     key: item.key || '',
     section: item.section || section,
@@ -315,6 +431,7 @@ function editChild(item: any) {
 async function save() {
   try {
     const body = { ...form, section, parentId: null }
+    const currentId = editingId.value
     if (editingId.value) {
       await $fetch(`/api/bff/admin/categories/${editingId.value}`, { method: 'PUT', body })
       toast.success('تم تحديث التصنيف')
@@ -323,12 +440,11 @@ async function save() {
       toast.success('تمت إضافة التصنيف')
     }
 
-    const keepSelected = body.hasDetailSections && editingId.value
-    const currentId = editingId.value
+    const shouldOpenDetails = Boolean(body.hasDetailSections && currentId)
     resetForm()
     await load()
 
-    if (keepSelected && currentId) {
+    if (shouldOpenDetails && currentId) {
       selectedParentId.value = currentId
       resetChildForm()
       await loadChildren(currentId)
@@ -390,3 +506,422 @@ async function onPickFile(e: Event, target: 'parent' | 'child') {
 
 onMounted(load)
 </script>
+
+<style scoped>
+.admin-category-page {
+  --soft-border: rgba(var(--border), 0.9);
+}
+.admin-page-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid var(--soft-border);
+  background: linear-gradient(135deg, rgba(var(--surface), 0.92), rgba(var(--surface-2), 0.72));
+  border-radius: 2rem;
+  padding: 1.25rem;
+  box-shadow: var(--shadow-soft);
+}
+.admin-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  border: 1px solid var(--soft-border);
+  background: rgb(var(--surface));
+  color: rgb(var(--muted));
+  border-radius: 999px;
+  padding: .35rem .7rem;
+  font-size: .75rem;
+  font-weight: 800;
+}
+.admin-kicker__dot {
+  width: .55rem;
+  height: .55rem;
+  border-radius: 999px;
+  background: rgb(var(--primary));
+  box-shadow: 0 0 0 5px rgba(var(--primary), .12);
+}
+.stat-card {
+  border: 1px solid var(--soft-border);
+  background: rgb(var(--surface));
+  border-radius: 1.5rem;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgb(var(--muted));
+  box-shadow: var(--shadow-soft);
+}
+.stat-card strong {
+  color: rgb(var(--text));
+  font-size: 1.5rem;
+}
+.stat-card--detail strong { color: rgb(var(--primary)); }
+.stat-card--direct strong { color: rgb(var(--text)); }
+.category-editor-card {
+  position: sticky;
+  top: 1rem;
+  height: fit-content;
+}
+.admin-label {
+  font-size: .82rem;
+  font-weight: 800;
+  color: rgb(var(--text));
+}
+.upload-line {
+  border: 1px dashed var(--soft-border);
+  border-radius: 1rem;
+  background: rgb(var(--surface-2));
+  padding: .75rem;
+}
+.toggle-box,
+.detail-switch {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  border: 1px solid var(--soft-border);
+  background: rgb(var(--surface-2));
+  border-radius: 1.2rem;
+  padding: .8rem .9rem;
+  cursor: pointer;
+}
+.toggle-box input,
+.detail-switch input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: rgb(var(--primary));
+}
+.detail-switch {
+  align-items: flex-start;
+}
+.detail-switch__mark {
+  width: .75rem;
+  height: .75rem;
+  margin-top: .25rem;
+  border-radius: 999px;
+  background: rgb(var(--muted));
+}
+.detail-switch.is-on {
+  border-color: rgba(var(--primary), .45);
+  background: rgba(var(--primary), .08);
+}
+.detail-switch.is-on .detail-switch__mark {
+  background: rgb(var(--primary));
+  box-shadow: 0 0 0 6px rgba(var(--primary), .14);
+}
+.detail-switch strong,
+.detail-switch small {
+  display: block;
+}
+.detail-switch strong {
+  color: rgb(var(--text));
+  font-weight: 900;
+}
+.detail-switch small {
+  margin-top: .25rem;
+  color: rgb(var(--muted));
+  line-height: 1.6;
+}
+.filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  justify-content: flex-end;
+}
+.filter-tabs button {
+  border: 1px solid var(--soft-border);
+  background: rgb(var(--surface-2));
+  color: rgb(var(--muted));
+  border-radius: 999px;
+  padding: .65rem .9rem;
+  font-size: .82rem;
+  font-weight: 800;
+  transition: .2s ease;
+}
+.filter-tabs button.is-active {
+  color: rgb(var(--text));
+  border-color: rgba(var(--primary), .5);
+  background: rgba(var(--primary), .12);
+}
+.category-group {
+  border: 1px solid var(--soft-border);
+  background: rgb(var(--surface));
+  border-radius: 2rem;
+  padding: 1rem;
+  box-shadow: var(--shadow-soft);
+}
+.category-group__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .25rem .25rem 1rem;
+}
+.category-group__head h2 {
+  font-size: 1.05rem;
+  font-weight: 950;
+  color: rgb(var(--text));
+}
+.category-group__head p {
+  margin-top: .35rem;
+  font-size: .84rem;
+  color: rgb(var(--muted));
+  line-height: 1.7;
+}
+.category-group__head span {
+  min-width: 2.4rem;
+  text-align: center;
+  border: 1px solid var(--soft-border);
+  background: rgb(var(--surface-2));
+  border-radius: 999px;
+  padding: .35rem .6rem;
+  font-weight: 900;
+}
+.category-admin-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  border: 1px solid var(--soft-border);
+  background: rgb(var(--surface-2));
+  border-radius: 1.6rem;
+  padding: .9rem;
+  transition: .2s ease;
+}
+.category-admin-card:hover,
+.category-admin-card.is-selected {
+  border-color: rgba(var(--primary), .45);
+  transform: translateY(-1px);
+}
+.category-admin-card.has-detail {
+  background: linear-gradient(135deg, rgba(var(--primary), .1), rgb(var(--surface-2)) 45%);
+}
+.category-admin-card__media {
+  width: 5.25rem;
+  height: 5.25rem;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  border: 1px solid var(--soft-border);
+  background: rgb(var(--surface));
+  display: grid;
+  place-items: center;
+  font-weight: 950;
+  cursor: pointer;
+}
+.category-admin-card__media img,
+.child-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.category-admin-card__body h3,
+.child-card h4 {
+  color: rgb(var(--text));
+  font-weight: 950;
+}
+.category-admin-card__body p,
+.child-card p {
+  margin-top: .15rem;
+  color: rgb(var(--muted));
+  font-size: .78rem;
+}
+.category-admin-card__body small,
+.child-card small {
+  display: block;
+  margin-top: .35rem;
+  color: rgb(var(--muted));
+  line-height: 1.55;
+}
+.status-pill {
+  border: 1px solid var(--soft-border);
+  border-radius: 999px;
+  padding: .35rem .6rem;
+  font-size: .72rem;
+  font-weight: 900;
+}
+.status-pill.is-active {
+  color: #23c483;
+  border-color: rgba(35, 196, 131, .35);
+  background: rgba(35, 196, 131, .08);
+}
+.status-pill.is-off {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, .35);
+  background: rgba(248, 113, 113, .08);
+}
+.category-admin-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  margin-top: .75rem;
+}
+.category-admin-card__meta span {
+  border: 1px solid var(--soft-border);
+  background: rgb(var(--surface));
+  color: rgb(var(--muted));
+  border-radius: 999px;
+  padding: .28rem .55rem;
+  font-size: .72rem;
+  font-weight: 800;
+}
+.category-admin-card__actions,
+.child-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: .45rem;
+}
+.empty-panel {
+  border: 1px dashed var(--soft-border);
+  background: rgb(var(--surface-2));
+  border-radius: 1.4rem;
+  padding: 1.25rem;
+  text-align: center;
+  color: rgb(var(--muted));
+}
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(0, 0, 0, .58);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: flex-start;
+}
+.detail-drawer {
+  width: min(760px, 96vw);
+  height: 100%;
+  overflow-y: auto;
+  background: rgb(var(--bg));
+  border-inline-end: 1px solid var(--soft-border);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .28);
+  padding: 1.25rem;
+}
+.detail-drawer__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid var(--soft-border);
+  background: rgb(var(--surface));
+  border-radius: 1.8rem;
+  padding: 1rem;
+}
+.detail-drawer__head h2 {
+  margin-top: .75rem;
+  font-size: 1.35rem;
+  font-weight: 950;
+  color: rgb(var(--text));
+}
+.detail-drawer__head p {
+  margin-top: .35rem;
+  color: rgb(var(--muted));
+  font-size: .85rem;
+  line-height: 1.7;
+}
+.drawer-close {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--soft-border);
+  background: rgb(var(--surface-2));
+  color: rgb(var(--text));
+  border-radius: 999px;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.detail-drawer__content {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.drawer-form,
+.drawer-list {
+  border: 1px solid var(--soft-border);
+  background: rgb(var(--surface));
+  border-radius: 1.8rem;
+  padding: 1rem;
+}
+.drawer-form h3,
+.drawer-list__head h3 {
+  color: rgb(var(--text));
+  font-weight: 950;
+}
+.drawer-list__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: .8rem;
+}
+.drawer-list__head span {
+  border: 1px solid var(--soft-border);
+  border-radius: 999px;
+  padding: .2rem .6rem;
+  font-weight: 900;
+}
+.child-card {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  border: 1px solid var(--soft-border);
+  background: rgb(var(--surface-2));
+  border-radius: 1.4rem;
+  padding: .75rem;
+  margin-top: .65rem;
+}
+.child-card__media {
+  width: 4rem;
+  height: 4rem;
+  border: 1px solid var(--soft-border);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: rgb(var(--surface));
+  display: grid;
+  place-items: center;
+  font-weight: 950;
+}
+.drawer-fade-enter-active,
+.drawer-fade-leave-active {
+  transition: opacity .2s ease;
+}
+.drawer-fade-enter-from,
+.drawer-fade-leave-to {
+  opacity: 0;
+}
+@media (max-width: 900px) {
+  .admin-page-hero,
+  .category-group__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .category-editor-card {
+    position: static;
+  }
+  .category-admin-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .category-admin-card__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+  .filter-tabs {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 560px) {
+  .category-admin-card,
+  .child-card {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .category-admin-card__media,
+  .child-card__media {
+    width: 100%;
+    height: 9rem;
+  }
+  .detail-drawer {
+    width: 100vw;
+    padding: .85rem;
+  }
+}
+</style>
