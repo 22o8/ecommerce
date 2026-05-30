@@ -46,10 +46,11 @@ public class AdminAppearanceController : ControllerBase
         config.EnabledEffects = req.EnabledEffects ?? new();
         config.SiteLogoUrl = string.IsNullOrWhiteSpace(req.SiteLogoUrl) ? null : req.SiteLogoUrl.Trim();
         config.IntroEnabled = req.IntroEnabled;
-        config.IntroTitle = string.IsNullOrWhiteSpace(req.IntroTitle) ? null : req.IntroTitle.Trim();
-        config.IntroSubtitle = string.IsNullOrWhiteSpace(req.IntroSubtitle) ? null : req.IntroSubtitle.Trim();
         config.IntroVideoUrl = string.IsNullOrWhiteSpace(req.IntroVideoUrl) ? null : req.IntroVideoUrl.Trim();
-        config.IntroButtonText = string.IsNullOrWhiteSpace(req.IntroButtonText) ? null : req.IntroButtonText.Trim();
+        config.IntroTitle = req.IntroTitle ?? string.Empty;
+        config.IntroSubtitle = req.IntroSubtitle;
+        config.IntroButtonText = string.IsNullOrWhiteSpace(req.IntroButtonText) ? "ابدأ الآن" : req.IntroButtonText.Trim();
+        config.IntroButtonUrl = string.IsNullOrWhiteSpace(req.IntroButtonUrl) ? "/products" : req.IntroButtonUrl.Trim();
         config.UpdatedAt = DateTimeOffset.UtcNow;
 
         // Sync ads
@@ -106,7 +107,7 @@ public class AdminAppearanceController : ControllerBase
     }
 
     [HttpPost("upload")]
-    [RequestSizeLimit(90_000_000)]
+    [RequestSizeLimit(20_000_000)]
     public async Task<ActionResult<object>> Upload([FromForm] IFormFile file)
     {
         if (file is null || file.Length == 0)
@@ -139,11 +140,7 @@ public class AdminAppearanceController : ControllerBase
             EnabledThemesJson = JsonDocument.Parse("[]"),
             EnabledEffectsJson = JsonDocument.Parse("[]"),
             IsActive = true,
-            UpdatedAt = DateTimeOffset.UtcNow,
-            IntroEnabled = false,
-            IntroTitle = "ابدأ رحلتك الجمالية",
-            IntroSubtitle = "اختيارات كوزمتك مرتبة بعناية لتوصلك بسرعة للمنتج المناسب.",
-            IntroButtonText = "ابدأ الآن"
+            UpdatedAt = DateTimeOffset.UtcNow
         };
 
         _db.AppearanceConfigs.Add(config);
@@ -158,18 +155,19 @@ public class AdminAppearanceController : ControllerBase
             Id = config.Id,
             IsActive = config.IsActive,
             UpdatedAt = config.UpdatedAt,
-            SiteLogoUrl = config.SiteLogoUrl,
-            IntroEnabled = config.IntroEnabled,
-            IntroTitle = config.IntroTitle,
-            IntroSubtitle = config.IntroSubtitle,
-            IntroVideoUrl = config.IntroVideoUrl,
-            IntroButtonText = config.IntroButtonText,
             EnabledThemes = config.EnabledThemes,
             EnabledEffects = config.EnabledEffects,
             Ads = config.Ads
                 .OrderBy(a => a.SortOrder)
                 .Select(a => new AppearanceAdDto(a.Id, a.Title, a.Subtitle, a.ImageUrl, a.LinkUrl, a.SortOrder, a.IsEnabled))
-                .ToList()
+                .ToList(),
+            SiteLogoUrl = config.SiteLogoUrl,
+            IntroEnabled = config.IntroEnabled,
+            IntroVideoUrl = config.IntroVideoUrl,
+            IntroTitle = config.IntroTitle,
+            IntroSubtitle = config.IntroSubtitle,
+            IntroButtonText = config.IntroButtonText,
+            IntroButtonUrl = config.IntroButtonUrl
         };
     }
 }

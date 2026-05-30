@@ -127,22 +127,25 @@ public static class DbBootstrapper
               );",
 
             @"ALTER TABLE IF EXISTS ""AppearanceConfigs""
-              ADD COLUMN IF NOT EXISTS ""SiteLogoUrl"" character varying(2000) NULL;",
+              ADD COLUMN IF NOT EXISTS ""SiteLogoUrl"" character varying(2048) NULL;",
 
             @"ALTER TABLE IF EXISTS ""AppearanceConfigs""
               ADD COLUMN IF NOT EXISTS ""IntroEnabled"" boolean NOT NULL DEFAULT FALSE;",
 
             @"ALTER TABLE IF EXISTS ""AppearanceConfigs""
-              ADD COLUMN IF NOT EXISTS ""IntroTitle"" character varying(200) NULL;",
+              ADD COLUMN IF NOT EXISTS ""IntroVideoUrl"" character varying(2048) NULL;",
 
             @"ALTER TABLE IF EXISTS ""AppearanceConfigs""
-              ADD COLUMN IF NOT EXISTS ""IntroSubtitle"" character varying(600) NULL;",
+              ADD COLUMN IF NOT EXISTS ""IntroTitle"" character varying(180) NULL;",
 
             @"ALTER TABLE IF EXISTS ""AppearanceConfigs""
-              ADD COLUMN IF NOT EXISTS ""IntroVideoUrl"" character varying(2000) NULL;",
+              ADD COLUMN IF NOT EXISTS ""IntroSubtitle"" character varying(400) NULL;",
 
             @"ALTER TABLE IF EXISTS ""AppearanceConfigs""
               ADD COLUMN IF NOT EXISTS ""IntroButtonText"" character varying(80) NULL;",
+
+            @"ALTER TABLE IF EXISTS ""AppearanceConfigs""
+              ADD COLUMN IF NOT EXISTS ""IntroButtonUrl"" character varying(2048) NULL;",
 
             @"CREATE TABLE IF NOT EXISTS ""AppearanceAds"" (
                 ""Id"" uuid NOT NULL,

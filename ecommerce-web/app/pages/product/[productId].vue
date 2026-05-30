@@ -60,6 +60,22 @@ watch(myReview, (v) => {
   reviewForm.comment = String(v?.comment ?? '')
 }, { immediate: true })
 
+const { data: productAds } = await useAsyncData(
+  () => `product-ads-${productId.value}`,
+  async () => {
+    if (!productId.value) return []
+    const res: any = await $fetch('/api/bff/ads/active', {
+      query: { type: 'product', placement: 'product_page', productId: productId.value, _ts: Date.now() },
+      headers: { 'cache-control': 'no-cache' },
+    }).catch(() => [])
+    return Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : [])
+  },
+  { watch: [productId] }
+)
+
+const productAd = computed(() => Array.isArray(productAds.value) ? productAds.value[0] : null)
+const productAdImage = computed(() => productAd.value?.imageUrl ? api.buildAssetUrl(productAd.value.imageUrl) : '')
+
 const { data: similar } = await useAsyncData(
   () => `product-similar-${productId.value}-${categoryKey.value}-${subCategoryKey.value}`,
   async () => {
@@ -242,6 +258,20 @@ watch(() => auth.isAuthed, async (v) => {
             <div class="product-description text-sm sm:text-[15px] text-muted whitespace-pre-line rtl-text leading-8">{{ product.description }}</div>
           </div>
 
+          <a
+            v-if="productAd && productAdImage"
+            :href="productAd.linkUrl || '#'"
+            class="product-ad-card"
+            :target="productAd.linkUrl ? '_blank' : undefined"
+          >
+            <img :src="productAdImage" :alt="productAd.title || 'ad'" />
+            <div class="product-ad-card__body">
+              <span>إعلان</span>
+              <b>{{ productAd.title || 'عرض خاص لهذا المنتج' }}</b>
+              <small v-if="productAd.subtitle">{{ productAd.subtitle }}</small>
+            </div>
+          </a>
+
           <div class="product-sheet rounded-[1.8rem] sm:rounded-[2rem] p-4 sm:p-6 grid gap-4">
             <div class="flex items-center justify-between gap-3 flex-wrap">
               <div class="font-extrabold rtl-text">إضافة تقييم</div>
@@ -388,4 +418,19 @@ watch(() => auth.isAuthed, async (v) => {
   .product-action-btn{ min-height:50px; padding:.85rem .8rem; font-size:.92rem; }
   .product-related-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:.75rem; }
 }
+
+.product-ad-card{
+  display:block;
+  overflow:hidden;
+  border-radius:1.8rem;
+  border:1px solid rgba(var(--primary), .22);
+  background:linear-gradient(180deg, rgba(var(--primary), .10), rgba(var(--surface-rgb), .74));
+  box-shadow:var(--shadow-soft);
+}
+.product-ad-card img{ width:100%; max-height:280px; object-fit:cover; display:block; }
+.product-ad-card__body{ padding:1rem; display:grid; gap:.25rem; }
+.product-ad-card__body span{ width:max-content; border-radius:999px; padding:.25rem .55rem; background:rgba(var(--primary), .14); color:rgb(var(--primary)); font-size:.72rem; font-weight:1000; }
+.product-ad-card__body b{ color:rgb(var(--text)); font-size:1rem; }
+.product-ad-card__body small{ color:rgb(var(--muted)); line-height:1.6; }
+
 </style>

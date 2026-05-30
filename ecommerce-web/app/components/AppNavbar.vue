@@ -4,7 +4,7 @@
       <div class="mx-auto max-w-7xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3">
         <NuxtLink to="/" class="flex items-center min-w-0">
           <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black overflow-hidden">
-            <img v-if="siteLogoSrc !== '#'" :src="siteLogoSrc" alt="Site logo" class="h-full w-full object-cover" />
+            <img v-if="resolvedLogo" :src="resolvedLogo" alt="Site logo" class="h-full w-full object-cover" />
             <Icon v-else name="mdi:shopping-outline" class="text-xl animate-floaty" />
           </div>
         </NuxtLink>
@@ -249,7 +249,7 @@
 </template>
 
 <script setup lang="ts">
-import defaultSiteLogoSrc from '~/assets/img/site-logo.jpg'
+import siteLogoSrc from '~/assets/img/site-logo.jpg'
 import UiButton from '~/components/ui/UiButton.vue'
 import { useFavoritesStore } from '~/stores/favorites'
 import { useProductsStore } from '~/stores/products'
@@ -259,10 +259,10 @@ const auth = useAuthStore()
 const cart = useCartStore()
 const fav = useFavoritesStore()
 const products = useProductsStore()
-const { t } = useI18n()
 const appearance = useAppearanceStore()
 const { buildAssetUrl } = useApi()
-const siteLogoSrc = computed(() => appearance.data.siteLogoUrl ? buildAssetUrl(appearance.data.siteLogoUrl) : defaultSiteLogoSrc)
+const { t } = useI18n()
+const resolvedLogo = computed(() => appearance.data.siteLogoUrl ? buildAssetUrl(appearance.data.siteLogoUrl) : siteLogoSrc)
 
 const route = useRoute()
 

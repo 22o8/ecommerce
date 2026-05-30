@@ -41,17 +41,6 @@
       </a>
     </div>
 
-
-    <div v-if="productAd && route.path.startsWith('/product/')" class="mx-auto max-w-7xl px-4 pt-4">
-      <a
-        :href="productAd.linkUrl || '#'"
-        :target="productAd.linkUrl ? '_blank' : undefined"
-        class="block overflow-hidden rounded-3xl border border-app bg-surface shadow-card"
-      >
-        <img :src="asset(productAd.imageUrl, productAd.updatedAt || productAd.id)" :alt="productAd.title || 'product ad'" class="h-auto max-h-[260px] w-full object-contain p-2" />
-      </a>
-    </div>
-
     <div v-if="popupAd && showPopup" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-black/55" @click="close" />
       <div class="relative w-full max-w-[560px] overflow-hidden rounded-3xl border border-white/10 bg-white shadow-2xl dark:bg-zinc-950">
@@ -83,8 +72,6 @@ const sliderTimer = ref<any>(null)
 const bannerAd = computed(() => ads.value.find((a: any) => a?.type === 'banner' && a?.placement === 'home_top'))
 const popupAd = computed(() => ads.value.find((a: any) => a?.type === 'popup'))
 const homeSliderAd = computed(() => ads.value.find((a: any) => a?.type === 'slider' && (a?.placement === 'home_top_slider' || a?.placement === 'home_top')))
-const routeProductId = computed(() => String(route.params.productId || route.params.slug || ''))
-const productAd = computed(() => ads.value.find((a: any) => a?.type === 'product' && a?.placement === 'product_page' && (!a?.productId || String(a.productId) === routeProductId.value)))
 const sliderImages = computed<string[]>(() => {
   const arr = homeSliderAd.value?.imageUrls
   if (Array.isArray(arr) && arr.length) return arr
@@ -121,7 +108,7 @@ async function loadAds() {
   try {
     const res: any = await $fetch('/api/bff/ads/active', {
       method: 'GET',
-      query: { _ts: loadingKey.value, productId: routeProductId.value || undefined },
+      query: { _ts: loadingKey.value },
       headers: { 'cache-control': 'no-cache, no-store, must-revalidate', pragma: 'no-cache' },
     })
     ads.value = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : [])

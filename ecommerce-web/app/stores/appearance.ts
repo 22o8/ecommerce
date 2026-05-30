@@ -22,10 +22,11 @@ export type AppearanceState = {
   siteLogoUrl?: string
   intro: {
     enabled: boolean
+    videoUrl?: string
     title?: string
     subtitle?: string
-    videoUrl?: string
     buttonText?: string
+    buttonUrl?: string
   }
 }
 
@@ -43,7 +44,14 @@ const DEFAULT: AppearanceState = {
   },
   ads: [],
   siteLogoUrl: '',
-  intro: { enabled: false, title: '', subtitle: '', videoUrl: '', buttonText: 'ابدأ الآن' },
+  intro: {
+    enabled: false,
+    videoUrl: '',
+    title: '',
+    subtitle: '',
+    buttonText: 'ابدأ الآن',
+    buttonUrl: '/products',
+  },
 }
 
 function normalizeUrl(v: any): string {
@@ -78,11 +86,12 @@ export const useAppearanceStore = defineStore('appearance', {
         effects,
         siteLogoUrl: normalizeUrl(res?.siteLogoUrl ?? res?.SiteLogoUrl),
         intro: {
-          enabled: !!(res?.introEnabled ?? res?.IntroEnabled),
+          enabled: Boolean(res?.introEnabled ?? res?.IntroEnabled ?? false),
+          videoUrl: normalizeUrl(res?.introVideoUrl ?? res?.IntroVideoUrl),
           title: res?.introTitle ?? res?.IntroTitle ?? '',
           subtitle: res?.introSubtitle ?? res?.IntroSubtitle ?? '',
-          videoUrl: normalizeUrl(res?.introVideoUrl ?? res?.IntroVideoUrl),
           buttonText: res?.introButtonText ?? res?.IntroButtonText ?? 'ابدأ الآن',
+          buttonUrl: res?.introButtonUrl ?? res?.IntroButtonUrl ?? '/products',
         },
         ads: ads.map((a: any) => ({
           id: a.id ?? a.Id,

@@ -4,7 +4,7 @@
       <div class="grid gap-3">
         <div class="flex items-center gap-3">
           <div class="h-10 w-10 rounded-2xl bg-[rgb(var(--primary))] text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black overflow-hidden">
-            <img v-if="siteLogoSrc !== '#'" :src="siteLogoSrc" alt="Site logo" class="h-full w-full object-cover" />
+            <img v-if="resolvedLogo" :src="resolvedLogo" alt="Site logo" class="h-full w-full object-cover" />
             <Icon v-else name="mdi:storefront-outline" class="text-xl" />
           </div>
         </div>
@@ -47,6 +47,9 @@
 <script setup lang="ts">
 import siteLogoSrc from '~/assets/img/site-logo.jpg'
 const { t } = useI18n()
+const appearance = useAppearanceStore()
+const { buildAssetUrl } = useApi()
+const resolvedLogo = computed(() => appearance.data.siteLogoUrl ? buildAssetUrl(appearance.data.siteLogoUrl) : siteLogoSrc)
 const config = useRuntimeConfig()
 const supportEmail = String((config.public as any).supportEmail || '')
 const supportPhone = String((config.public as any).supportPhone || '')

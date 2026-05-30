@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useHead, useCookie } from '#app'
 import { watch } from 'vue'
-import IntroOverlay from '~/components/appearance/IntroOverlay.vue'
 
 type Locale = 'ar' | 'en'
 const localeCookie = useCookie<Locale>('locale', { default: () => 'ar' })
@@ -32,7 +31,7 @@ useHead({
   <div class="min-h-screen bg-app">
     <ApiDebugBanner />
     <ToastHost />
-    <IntroOverlay />
+    <AppearanceIntroOverlay />
     <NuxtLayout>
       <NuxtPage :transition="{ name: 'page', mode: 'out-in' }" />
     </NuxtLayout>

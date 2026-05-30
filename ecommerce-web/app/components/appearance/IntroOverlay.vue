@@ -1,83 +1,139 @@
 <template>
-  <Teleport to="body">
-    <Transition name="intro-fade">
-      <div v-if="visible" class="intro-overlay">
-        <div class="intro-backdrop" />
-        <div class="intro-card">
-          <button class="intro-close" type="button" aria-label="close" @click="dismiss">×</button>
-          <div class="intro-media">
-            <video
-              v-if="intro.videoUrl"
-              :src="asset(intro.videoUrl)"
-              class="intro-video"
-              autoplay
-              muted
-              playsinline
-              loop
-            />
-            <div v-else class="intro-fallback">
-              <span class="intro-orb" />
-              <span class="intro-orb intro-orb--small" />
-              <div class="intro-beauty-word">BEAUTY</div>
-            </div>
-          </div>
-          <div class="intro-content rtl-text">
-            <div class="intro-kicker">مرحباً بك</div>
-            <h2>{{ intro.title || 'ابدأ رحلتك الجمالية' }}</h2>
-            <p>{{ intro.subtitle || 'منتجات مختارة بعناية لتصل بسرعة إلى روتينك المناسب.' }}</p>
-            <button type="button" class="intro-start" @click="dismiss">
-              {{ intro.buttonText || 'ابدأ الآن' }}
-            </button>
-          </div>
+  <Transition name="intro-fade">
+    <div v-if="visible" class="intro-screen" role="dialog" aria-modal="true">
+      <video
+        v-if="videoSrc"
+        class="intro-screen__video"
+        :src="videoSrc"
+        autoplay
+        muted
+        loop
+        playsinline
+      />
+      <div class="intro-screen__overlay" />
+      <div class="intro-screen__content">
+        <div class="intro-screen__badge">Beauty Store</div>
+        <h1>{{ intro.title || 'اكتشفي جمالك بثقة' }}</h1>
+        <p>{{ intro.subtitle || 'منتجات مختارة بعناية لتجربة كوزمتك أنيقة وسريعة.' }}</p>
+        <div class="intro-screen__actions">
+          <button type="button" class="intro-screen__primary" @click="startNow">
+            {{ intro.buttonText || 'ابدأ الآن' }}
+          </button>
+          <button type="button" class="intro-screen__ghost" @click="closeIntro">تخطي</button>
         </div>
       </div>
-    </Transition>
-  </Teleport>
+    </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
+const appearance = useAppearanceStore()
+const { buildAssetUrl } = useApi()
+const router = useRouter()
 const route = useRoute()
-const store = useAppearanceStore()
-const api = useApi()
-const closed = ref(false)
-const intro = computed(() => store.data.intro || { enabled: false })
-const storageKey = computed(() => `intro:${store.data.updatedAt || 'default'}`)
+const visible = ref(false)
 
-const visible = computed(() => {
-  if (!process.client) return false
-  if (route.path !== '/') return false
-  if (!intro.value?.enabled) return false
-  if (closed.value) return false
-  return sessionStorage.getItem(storageKey.value) !== '1'
-})
+const intro = computed(() => appearance.data.intro || { enabled: false })
+const videoSrc = computed(() => intro.value.videoUrl ? buildAssetUrl(String(intro.value.videoUrl)) : '')
 
-function asset(url?: string) {
-  return api.buildAssetUrl(url || '')
+function closeIntro() {
+  visible.value = false
+  if (process.client) sessionStorage.setItem('intro-seen', '1')
 }
 
-function dismiss() {
-  closed.value = true
-  if (process.client) sessionStorage.setItem(storageKey.value, '1')
+function startNow() {
+  const url = intro.value.buttonUrl || '/products'
+  closeIntro()
+  router.push(url)
 }
+
+watch(
+  () => [appearance.loaded, intro.value.enabled, route.path],
+  () => {
+    if (!process.client) return
+    if (route.path.startsWith('/admin')) return
+    if (!appearance.loaded || !intro.value.enabled) return
+    if (sessionStorage.getItem('intro-seen') === '1') return
+    visible.value = true
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>
-.intro-overlay{ position:fixed; inset:0; z-index:100; display:grid; place-items:center; padding:18px; }
-.intro-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.68); backdrop-filter:blur(18px); }
-.intro-card{ position:relative; width:min(980px, 100%); overflow:hidden; border-radius:36px; border:1px solid rgba(var(--border), .92); background:linear-gradient(135deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .94)); box-shadow:0 40px 120px rgba(0,0,0,.38); display:grid; grid-template-columns:1.05fr .95fr; min-height:520px; }
-.intro-close{ position:absolute; left:18px; top:18px; z-index:3; width:42px; height:42px; border-radius:999px; background:rgba(0,0,0,.42); color:#fff; font-size:24px; border:1px solid rgba(255,255,255,.18); }
-.intro-media{ position:relative; min-height:420px; background:radial-gradient(circle at 30% 20%, rgba(var(--primary), .22), transparent 42%), linear-gradient(145deg, rgba(236,72,153,.18), rgba(124,58,237,.18)); }
-.intro-video{ width:100%; height:100%; object-fit:cover; display:block; }
-.intro-fallback{ position:absolute; inset:0; display:grid; place-items:center; overflow:hidden; }
-.intro-orb{ position:absolute; width:380px; height:380px; border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,.34), rgba(var(--primary), .20) 38%, transparent 70%); filter:blur(4px); animation:introFloat 7s ease-in-out infinite; }
-.intro-orb--small{ width:190px; height:190px; right:12%; bottom:12%; animation-delay:-2s; }
-.intro-beauty-word{ font-size:clamp(52px, 10vw, 118px); font-weight:1000; letter-spacing:.08em; color:rgba(255,255,255,.5); mix-blend-mode:overlay; }
-.intro-content{ padding:clamp(30px, 5vw, 58px); display:flex; flex-direction:column; justify-content:center; }
-.intro-kicker{ width:max-content; border:1px solid rgba(var(--primary), .35); background:rgba(var(--primary), .10); color:rgb(var(--primary)); border-radius:999px; padding:.45rem .8rem; font-size:.78rem; font-weight:900; margin-bottom:18px; }
-.intro-content h2{ font-size:clamp(32px, 5vw, 64px); line-height:1.05; font-weight:1000; color:rgb(var(--text)); }
-.intro-content p{ margin-top:18px; color:rgb(var(--muted)); font-size:1.05rem; line-height:2; max-width:34rem; }
-.intro-start{ margin-top:28px; min-height:54px; border-radius:999px; padding:0 28px; background:linear-gradient(135deg, rgb(var(--primary)), rgba(236,72,153,.95)); color:white; font-weight:1000; box-shadow:0 18px 44px rgba(var(--primary), .22); width:max-content; }
-.intro-fade-enter-active,.intro-fade-leave-active{ transition:opacity .32s ease; } .intro-fade-enter-from,.intro-fade-leave-to{ opacity:0; }
-@keyframes introFloat{ 0%,100%{ transform:translate3d(0,0,0) scale(1); } 50%{ transform:translate3d(-18px,18px,0) scale(1.04); } }
-@media(max-width:760px){ .intro-card{ grid-template-columns:1fr; min-height:0; border-radius:28px; } .intro-media{ min-height:240px; } .intro-content{ padding:26px; } .intro-start{ width:100%; } }
+.intro-screen{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:#050509;
+}
+.intro-screen__video{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  opacity:.72;
+}
+.intro-screen__overlay{
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 72% 22%, rgba(var(--primary), .32), transparent 34%),
+    linear-gradient(90deg, rgba(0,0,0,.86), rgba(0,0,0,.48), rgba(0,0,0,.78));
+}
+.intro-screen__content{
+  position:relative;
+  width:min(92vw, 760px);
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:38px;
+  padding:clamp(28px, 6vw, 64px);
+  color:white;
+  background:rgba(10,10,16,.48);
+  box-shadow:0 40px 120px rgba(0,0,0,.44);
+  backdrop-filter:blur(18px);
+  text-align:start;
+}
+.intro-screen__badge{
+  display:inline-flex;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:999px;
+  padding:.45rem .9rem;
+  color:rgba(255,255,255,.78);
+  font-size:.76rem;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.intro-screen h1{
+  margin-top:1.2rem;
+  font-size:clamp(2.4rem, 7vw, 5.8rem);
+  line-height:.95;
+  font-weight:1000;
+  letter-spacing:-.05em;
+}
+.intro-screen p{
+  margin-top:1.2rem;
+  max-width:620px;
+  color:rgba(255,255,255,.78);
+  font-size:clamp(1rem, 2vw, 1.25rem);
+  line-height:1.9;
+}
+.intro-screen__actions{ display:flex; flex-wrap:wrap; gap:.8rem; margin-top:2rem; }
+.intro-screen__primary,.intro-screen__ghost{
+  min-height:52px;
+  border-radius:999px;
+  padding:0 1.35rem;
+  font-weight:1000;
+  transition:.2s ease;
+}
+.intro-screen__primary{ background:rgb(var(--primary)); color:#050509; }
+.intro-screen__ghost{ border:1px solid rgba(255,255,255,.18); color:white; background:rgba(255,255,255,.08); }
+.intro-screen__primary:hover,.intro-screen__ghost:hover{ transform:translateY(-2px); }
+.intro-fade-enter-active,.intro-fade-leave-active{ transition:opacity .35s ease; }
+.intro-fade-enter-from,.intro-fade-leave-to{ opacity:0; }
+@media(max-width:640px){ .intro-screen__content{ border-radius:28px; } }
 </style>

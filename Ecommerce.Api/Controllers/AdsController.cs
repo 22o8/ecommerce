@@ -47,9 +47,11 @@ public class AdsController : ControllerBase
         // time window
         q = q.Where(x => (x.StartAt == null || x.StartAt <= now) && (x.EndAt == null || x.EndAt >= now));
 
-        // Product Ads (اختياري)
+        // Product ads must stay tied to the exact product when productId is provided.
         if (productId.HasValue)
-            q = q.Where(x => x.ProductId == null || x.ProductId == productId);
+            q = q.Where(x => x.ProductId == productId);
+        else
+            q = q.Where(x => x.ProductId == null);
 
         var items = await q
             .OrderBy(x => x.SortOrder)

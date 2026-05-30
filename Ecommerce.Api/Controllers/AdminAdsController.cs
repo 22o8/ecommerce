@@ -108,6 +108,13 @@ public class AdminAdsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] SaveAdRequest req)
     {
         var type = ParseType(req.Type);
+        if (type == AdType.Product && req.ProductId is null)
+            return BadRequest(new { message = "Product ad requires ProductId" });
+        if (type == AdType.Product && req.ProductId is not null)
+        {
+            var exists = await _db.Products.AsNoTracking().AnyAsync(p => p.Id == req.ProductId.Value);
+            if (!exists) return BadRequest(new { message = "Selected product was not found" });
+        }
         var ad = new Ad
         {
             Type = type,
@@ -137,7 +144,16 @@ public class AdminAdsController : ControllerBase
         var ad = await _db.Ads.FirstOrDefaultAsync(x => x.Id == id);
         if (ad is null) return NotFound();
 
-        ad.Type = ParseType(req.Type);
+        var type = ParseType(req.Type);
+        if (type == AdType.Product && req.ProductId is null)
+            return BadRequest(new { message = "Product ad requires ProductId" });
+        if (type == AdType.Product && req.ProductId is not null)
+        {
+            var exists = await _db.Products.AsNoTracking().AnyAsync(p => p.Id == req.ProductId.Value);
+            if (!exists) return BadRequest(new { message = "Selected product was not found" });
+        }
+
+        ad.Type = type;
         ad.Placement = string.IsNullOrWhiteSpace(req.Placement) ? ad.Placement : req.Placement.Trim();
         ad.Title = req.Title ?? string.Empty;
         ad.Subtitle = req.Subtitle;

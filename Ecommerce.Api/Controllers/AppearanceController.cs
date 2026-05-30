@@ -33,15 +33,16 @@ public class AppearanceController : ControllerBase
                 Id = System.Guid.Empty,
                 IsActive = true,
                 UpdatedAt = System.DateTimeOffset.UtcNow,
-                SiteLogoUrl = null,
-                IntroEnabled = false,
-                IntroTitle = null,
-                IntroSubtitle = null,
-                IntroVideoUrl = null,
-                IntroButtonText = null,
                 EnabledThemes = new(),
                 EnabledEffects = new(),
-                Ads = new()
+                Ads = new(),
+                SiteLogoUrl = null,
+                IntroEnabled = false,
+                IntroVideoUrl = null,
+                IntroTitle = null,
+                IntroSubtitle = null,
+                IntroButtonText = null,
+                IntroButtonUrl = null
             });
         }
 
@@ -50,19 +51,20 @@ public class AppearanceController : ControllerBase
             Id = config.Id,
             IsActive = config.IsActive,
             UpdatedAt = config.UpdatedAt,
-            SiteLogoUrl = config.SiteLogoUrl,
-            IntroEnabled = config.IntroEnabled,
-            IntroTitle = config.IntroTitle,
-            IntroSubtitle = config.IntroSubtitle,
-            IntroVideoUrl = config.IntroVideoUrl,
-            IntroButtonText = config.IntroButtonText,
             EnabledThemes = config.EnabledThemes,
             EnabledEffects = config.EnabledEffects,
             Ads = config.Ads
                 .Where(a => a.IsEnabled)
                 .OrderBy(a => a.SortOrder)
                 .Select(a => new AppearanceAdDto(a.Id, a.Title, a.Subtitle, a.ImageUrl, a.LinkUrl, a.SortOrder, a.IsEnabled))
-                .ToList()
+                .ToList(),
+            SiteLogoUrl = config.SiteLogoUrl,
+            IntroEnabled = config.IntroEnabled,
+            IntroVideoUrl = config.IntroVideoUrl,
+            IntroTitle = config.IntroTitle,
+            IntroSubtitle = config.IntroSubtitle,
+            IntroButtonText = config.IntroButtonText,
+            IntroButtonUrl = config.IntroButtonUrl
         });
     }
 }

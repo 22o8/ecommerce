@@ -11,8 +11,6 @@ public class AppearanceConfig
 
     public bool IsActive { get; set; } = true;
 
-    // Stored as jsonb in Postgres.
-    // IMPORTANT: using JsonDocument ensures Npgsql sends the correct jsonb parameter type.
     [Required]
     public JsonDocument EnabledThemesJson { get; set; } = JsonDocument.Parse("[]");
 
@@ -21,10 +19,11 @@ public class AppearanceConfig
 
     public string? SiteLogoUrl { get; set; }
     public bool IntroEnabled { get; set; } = false;
+    public string? IntroVideoUrl { get; set; }
     public string? IntroTitle { get; set; }
     public string? IntroSubtitle { get; set; }
-    public string? IntroVideoUrl { get; set; }
     public string? IntroButtonText { get; set; }
+    public string? IntroButtonUrl { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 
