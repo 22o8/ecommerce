@@ -249,7 +249,7 @@
 </template>
 
 <script setup lang="ts">
-import siteLogoSrc from '~/assets/img/site-logo.jpg'
+import defaultSiteLogoSrc from '~/assets/img/site-logo.jpg'
 import UiButton from '~/components/ui/UiButton.vue'
 import { useFavoritesStore } from '~/stores/favorites'
 import { useProductsStore } from '~/stores/products'
@@ -260,6 +260,9 @@ const cart = useCartStore()
 const fav = useFavoritesStore()
 const products = useProductsStore()
 const { t } = useI18n()
+const appearance = useAppearanceStore()
+const { buildAssetUrl } = useApi()
+const siteLogoSrc = computed(() => appearance.data.siteLogoUrl ? buildAssetUrl(appearance.data.siteLogoUrl) : defaultSiteLogoSrc)
 
 const route = useRoute()
 

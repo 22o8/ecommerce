@@ -156,6 +156,27 @@ public class AppDbContext : DbContext
             .Property(x => x.EnabledEffectsJson)
             .HasColumnType("jsonb");
 
+        
+        modelBuilder.Entity<AppearanceConfig>()
+            .Property(x => x.SiteLogoUrl)
+            .HasMaxLength(2000);
+
+        modelBuilder.Entity<AppearanceConfig>()
+            .Property(x => x.IntroTitle)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<AppearanceConfig>()
+            .Property(x => x.IntroSubtitle)
+            .HasMaxLength(600);
+
+        modelBuilder.Entity<AppearanceConfig>()
+            .Property(x => x.IntroVideoUrl)
+            .HasMaxLength(2000);
+
+        modelBuilder.Entity<AppearanceConfig>()
+            .Property(x => x.IntroButtonText)
+            .HasMaxLength(80);
+
         modelBuilder.Entity<AppearanceConfig>()
             .HasMany(x => x.Ads)
             .WithOne(x => x.AppearanceConfig)

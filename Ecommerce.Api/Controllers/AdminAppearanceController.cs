@@ -44,6 +44,12 @@ public class AdminAppearanceController : ControllerBase
         // Persist as jsonb via JsonDocument-backed properties
         config.EnabledThemes = req.EnabledThemes ?? new();
         config.EnabledEffects = req.EnabledEffects ?? new();
+        config.SiteLogoUrl = string.IsNullOrWhiteSpace(req.SiteLogoUrl) ? null : req.SiteLogoUrl.Trim();
+        config.IntroEnabled = req.IntroEnabled;
+        config.IntroTitle = string.IsNullOrWhiteSpace(req.IntroTitle) ? null : req.IntroTitle.Trim();
+        config.IntroSubtitle = string.IsNullOrWhiteSpace(req.IntroSubtitle) ? null : req.IntroSubtitle.Trim();
+        config.IntroVideoUrl = string.IsNullOrWhiteSpace(req.IntroVideoUrl) ? null : req.IntroVideoUrl.Trim();
+        config.IntroButtonText = string.IsNullOrWhiteSpace(req.IntroButtonText) ? null : req.IntroButtonText.Trim();
         config.UpdatedAt = DateTimeOffset.UtcNow;
 
         // Sync ads
@@ -100,7 +106,7 @@ public class AdminAppearanceController : ControllerBase
     }
 
     [HttpPost("upload")]
-    [RequestSizeLimit(20_000_000)]
+    [RequestSizeLimit(90_000_000)]
     public async Task<ActionResult<object>> Upload([FromForm] IFormFile file)
     {
         if (file is null || file.Length == 0)
@@ -133,7 +139,11 @@ public class AdminAppearanceController : ControllerBase
             EnabledThemesJson = JsonDocument.Parse("[]"),
             EnabledEffectsJson = JsonDocument.Parse("[]"),
             IsActive = true,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
+            IntroEnabled = false,
+            IntroTitle = "ابدأ رحلتك الجمالية",
+            IntroSubtitle = "اختيارات كوزمتك مرتبة بعناية لتوصلك بسرعة للمنتج المناسب.",
+            IntroButtonText = "ابدأ الآن"
         };
 
         _db.AppearanceConfigs.Add(config);
@@ -148,6 +158,12 @@ public class AdminAppearanceController : ControllerBase
             Id = config.Id,
             IsActive = config.IsActive,
             UpdatedAt = config.UpdatedAt,
+            SiteLogoUrl = config.SiteLogoUrl,
+            IntroEnabled = config.IntroEnabled,
+            IntroTitle = config.IntroTitle,
+            IntroSubtitle = config.IntroSubtitle,
+            IntroVideoUrl = config.IntroVideoUrl,
+            IntroButtonText = config.IntroButtonText,
             EnabledThemes = config.EnabledThemes,
             EnabledEffects = config.EnabledEffects,
             Ads = config.Ads

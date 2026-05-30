@@ -19,6 +19,14 @@ export type AppearanceState = {
   // allow multiple effects enabled
   effects: Record<string, boolean>
   ads: AppearanceAd[]
+  siteLogoUrl?: string
+  intro: {
+    enabled: boolean
+    title?: string
+    subtitle?: string
+    videoUrl?: string
+    buttonText?: string
+  }
 }
 
 const DEFAULT: AppearanceState = {
@@ -34,6 +42,8 @@ const DEFAULT: AppearanceState = {
     rosesEdge: false,
   },
   ads: [],
+  siteLogoUrl: '',
+  intro: { enabled: false, title: '', subtitle: '', videoUrl: '', buttonText: 'ابدأ الآن' },
 }
 
 function normalizeUrl(v: any): string {
@@ -66,6 +76,14 @@ export const useAppearanceStore = defineStore('appearance', {
         updatedAt: res?.updatedAt ?? res?.UpdatedAt,
         themes: enabledThemes,
         effects,
+        siteLogoUrl: normalizeUrl(res?.siteLogoUrl ?? res?.SiteLogoUrl),
+        intro: {
+          enabled: !!(res?.introEnabled ?? res?.IntroEnabled),
+          title: res?.introTitle ?? res?.IntroTitle ?? '',
+          subtitle: res?.introSubtitle ?? res?.IntroSubtitle ?? '',
+          videoUrl: normalizeUrl(res?.introVideoUrl ?? res?.IntroVideoUrl),
+          buttonText: res?.introButtonText ?? res?.IntroButtonText ?? 'ابدأ الآن',
+        },
         ads: ads.map((a: any) => ({
           id: a.id ?? a.Id,
           title: a.title ?? a.Title,

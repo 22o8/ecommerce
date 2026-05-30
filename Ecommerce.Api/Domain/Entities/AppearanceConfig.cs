@@ -19,6 +19,13 @@ public class AppearanceConfig
     [Required]
     public JsonDocument EnabledEffectsJson { get; set; } = JsonDocument.Parse("[]");
 
+    public string? SiteLogoUrl { get; set; }
+    public bool IntroEnabled { get; set; } = false;
+    public string? IntroTitle { get; set; }
+    public string? IntroSubtitle { get; set; }
+    public string? IntroVideoUrl { get; set; }
+    public string? IntroButtonText { get; set; }
+
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     public List<AppearanceAd> Ads { get; set; } = new();
