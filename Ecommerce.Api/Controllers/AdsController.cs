@@ -40,6 +40,7 @@ public class AdsController : ControllerBase
                 "banner" => q.Where(x => x.Type == AdType.Banner),
                 "product" or "productads" or "product_ad" => q.Where(x => x.Type == AdType.Product),
                 "slider" or "carousel" => q.Where(x => x.Type == AdType.Slider),
+                "notification" or "notice" or "toast" => q.Where(x => x.Type == AdType.Notification),
                 _ => q
             };
         }

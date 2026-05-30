@@ -13,11 +13,12 @@
       </div>
     </section>
 
-    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
       <div class="ad-stat"><b>{{ stats.total }}</b><span>كل الإعلانات</span></div>
       <div class="ad-stat"><b>{{ stats.active }}</b><span>مفعلة</span></div>
       <div class="ad-stat"><b>{{ stats.slider }}</b><span>سلايدر</span></div>
       <div class="ad-stat"><b>{{ stats.popup }}</b><span>منبثقة</span></div>
+      <div class="ad-stat"><b>{{ stats.notification }}</b><span>إشعارات</span></div>
     </section>
 
     <section class="grid gap-6 xl:grid-cols-[minmax(420px,620px)_1fr]">
@@ -106,15 +107,22 @@
         <div class="step-card">
           <div class="step-label">3</div>
           <div class="grid min-w-0 flex-1 gap-4">
-            <h3 class="step-title rtl-text">الصور والرابط</h3>
-            <label class="upload-zone">
+            <h3 class="step-title rtl-text">{{ form.type === 'notification' ? 'الرابط وحالة الإشعار' : 'الصور والرابط' }}</h3>
+            <div v-if="form.type === 'notification'" class="notification-preview-card rtl-text">
+              <div class="notification-preview-card__icon"><Icon name="mdi:bell-ring-outline" /></div>
+              <div>
+                <b>{{ form.title || 'عنوان الإشعار' }}</b>
+                <span>{{ form.subtitle || 'اكتب رسالة قصيرة تظهر للزائر داخل الموقع.' }}</span>
+              </div>
+            </div>
+            <label v-else class="upload-zone">
               <input type="file" accept="image/*,video/mp4,video/webm,video/ogg" :multiple="form.type === 'slider'" class="hidden" @change="onPickFile" />
               <Icon name="mdi:cloud-upload-outline" class="text-3xl text-[rgb(var(--primary))]" />
               <span class="font-extrabold">{{ uploading ? 'جاري الرفع...' : 'اضغط لرفع الصور' }}</span>
               <small>{{ form.type === 'slider' ? 'يمكن رفع أكثر من صورة للسلايدر' : 'صورة واحدة تكفي لهذا النوع' }}</small>
             </label>
-            <UiInput v-model="form.imageUrl" placeholder="رابط الصورة اليدوي إن وجد" dir="ltr" />
-            <div v-if="previewImages.length" class="preview-grid">
+            <UiInput v-if="form.type !== 'notification'" v-model="form.imageUrl" placeholder="رابط الصورة اليدوي إن وجد" dir="ltr" />
+            <div v-if="form.type !== 'notification' && previewImages.length" class="preview-grid">
               <div v-for="(img, idx) in previewImages" :key="`${img}-${idx}`" class="preview-card">
                 <img :src="api.buildAssetUrl(String(img))" />
                 <button type="button" @click="removePreview(idx)">حذف</button>
@@ -149,6 +157,7 @@
             <option value="banner">بانر</option>
             <option value="popup">منبثق</option>
             <option value="product">داخل منتج</option>
+            <option value="notification">إشعار للزوار</option>
           </select>
         </div>
 
@@ -209,6 +218,7 @@ const adTypes = [
   { value: 'banner', label: 'بانر', icon: 'mdi:image-outline', hint: 'صورة ثابتة في موضع تختاره' },
   { value: 'popup', label: 'منبثق', icon: 'mdi:tooltip-image-outline', hint: 'نافذة تظهر للزائر في الصفحة الرئيسية' },
   { value: 'product', label: 'داخل منتج', icon: 'mdi:package-variant-closed', hint: 'إعلان مرتبط بمنتج تختاره بالبحث' },
+  { value: 'notification', label: 'إشعار للزوار', icon: 'mdi:bell-ring-outline', hint: 'رسالة قصيرة تظهر للزبائن داخل الموقع بدون صورة' },
 ]
 
 const allPlacements = [
@@ -225,6 +235,8 @@ const allPlacements = [
   { value: 'page_bottom', label: 'بانر آخر الصفحات', type: 'banner' },
   { value: 'popup', label: 'إعلان منبثق', type: 'popup' },
   { value: 'product_page', label: 'داخل صفحة المنتج', type: 'product' },
+  { value: 'site_notification', label: 'إشعار عام لكل الموقع', type: 'notification' },
+  { value: 'home_notification', label: 'إشعار الصفحة الرئيسية فقط', type: 'notification' },
 ]
 const placementOptions = computed(() => allPlacements.filter((x) => x.type === form.type))
 
@@ -252,6 +264,7 @@ const stats = computed(() => ({
   active: items.value.filter((x: any) => x.isEnabled).length,
   slider: items.value.filter((x: any) => x.type === 'slider').length,
   popup: items.value.filter((x: any) => x.type === 'popup').length,
+  notification: items.value.filter((x: any) => x.type === 'notification').length,
 }))
 const filteredAds = computed(() => {
   if (filterType.value === 'all') return items.value
@@ -320,6 +333,7 @@ function selectType(type: string) {
   const first = allPlacements.find((x) => x.type === type)
   form.placement = first?.value || 'home_top'
   if (type === 'product') form.linkUrl = form.productId ? `/product/${form.productId}` : '/products'
+  if (type === 'notification') { form.imageUrl = ''; form.imageUrls = []; if (!form.linkUrl || form.linkUrl === '/products') form.linkUrl = '#' }
 }
 function selectProduct(p: any) {
   form.productId = p.id
@@ -331,7 +345,8 @@ function payload() {
   return { type: form.type, placement: form.placement, title: form.title, subtitle: form.subtitle || null, imageUrl: form.imageUrl, imageUrls: form.imageUrls, linkUrl: form.linkUrl || null, productId: form.type === 'product' && form.productId ? form.productId : null, sortOrder: Number(form.sortOrder || 0), isEnabled: Boolean(form.isEnabled), startAt: null, endAt: null }
 }
 async function saveAd() {
-  if (!previewImages.value.length) return toast.error('ارفع صورة واحدة على الأقل')
+  if (form.type !== 'notification' && !previewImages.value.length) return toast.error('ارفع صورة واحدة على الأقل')
+  if (form.type === 'notification' && !String(form.title || '').trim()) return toast.error('اكتب عنوان الإشعار أولاً')
   if (form.type === 'product' && !form.productId) return toast.error('اختر المنتج من البحث أولاً')
   saving.value = true
   try {
@@ -422,6 +437,11 @@ await load()
 .ad-type__icon{ font-size:1.35rem; color:rgb(var(--primary)); }
 .ad-type span{ font-weight:1000; color:rgb(var(--text)); } .ad-type small{ color:rgb(var(--muted)); line-height:1.6; font-size:.74rem; }
 .ad-type:hover,.ad-type.is-active{ border-color:rgba(var(--primary), .55); background:rgba(var(--primary), .12); transform:translateY(-2px); }
+.notification-preview-card{ display:flex; align-items:center; gap:.85rem; border:1px solid rgba(var(--primary),.28); background:linear-gradient(135deg, rgba(var(--primary),.16), rgba(var(--surface-rgb),.62)); border-radius:24px; padding:1rem; color:rgb(var(--text)); }
+.notification-preview-card__icon{ width:48px; height:48px; border-radius:18px; display:grid; place-items:center; background:rgb(var(--primary)); color:#050509; font-size:1.5rem; flex:0 0 auto; box-shadow:0 16px 34px rgba(var(--primary),.22); }
+.notification-preview-card b{ display:block; font-size:1rem; font-weight:1000; }
+.notification-preview-card span{ display:block; margin-top:.2rem; color:rgb(var(--muted)); line-height:1.7; font-size:.86rem; }
+
 .upload-zone{ display:grid; place-items:center; gap:.35rem; min-height:132px; border:1px dashed rgba(var(--primary), .44); background:linear-gradient(180deg, rgba(var(--primary), .08), rgba(var(--surface-rgb), .45)); border-radius:24px; cursor:pointer; text-align:center; color:rgb(var(--text)); }
 .upload-zone small{ color:rgb(var(--muted)); }
 .preview-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.65rem; }

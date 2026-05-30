@@ -5,7 +5,8 @@ public enum AdType
     Popup = 1,
     Banner = 2,
     Product = 3,
-    Slider = 4
+    Slider = 4,
+    Notification = 5
 }
 
 public class Ad
