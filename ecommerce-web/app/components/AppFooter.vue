@@ -48,6 +48,7 @@
 import siteLogoSrc from '~/assets/img/site-logo.jpg'
 const { t } = useI18n()
 const appearance = useAppearanceStore()
+if (!appearance.loaded) await appearance.refresh()
 const { buildAssetUrl } = useApi()
 const resolvedLogo = computed(() => appearance.data.siteLogoUrl ? buildAssetUrl(appearance.data.siteLogoUrl) : siteLogoSrc)
 const config = useRuntimeConfig()

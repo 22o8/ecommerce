@@ -113,7 +113,7 @@ export const useAppearanceStore = defineStore('appearance', {
 
     async refresh() {
       try {
-        const res = await $fetch<any>('/api/bff/appearance', { timeout: 8000 })
+        const res = await $fetch<any>('/api/bff/appearance', { timeout: 8000, query: { _ts: Date.now() }, headers: { 'cache-control': 'no-cache, no-store, must-revalidate', pragma: 'no-cache' } })
         this.mapFromApi(res)
         this.loaded = true
       } catch {
@@ -124,7 +124,7 @@ export const useAppearanceStore = defineStore('appearance', {
 
     async fetchAdminAppearance() {
       try {
-        const res = await $fetch<any>('/api/bff/admin/appearance', { timeout: 8000 })
+        const res = await $fetch<any>('/api/bff/admin/appearance', { timeout: 8000, query: { _ts: Date.now() }, headers: { 'cache-control': 'no-cache, no-store, must-revalidate', pragma: 'no-cache' } })
         this.mapFromApi(res)
         this.loaded = true
       } catch {

@@ -40,24 +40,7 @@ public class AdminAdsController : ControllerBase
             .ThenBy(x => x.Placement)
             .ThenBy(x => x.SortOrder)
             .ThenByDescending(x => x.UpdatedAt)
-            .Select(x => new
-            {
-                x.Id,
-                type = x.Type.ToString().ToLowerInvariant(),
-                x.Placement,
-                x.Title,
-                x.Subtitle,
-                x.ImageUrl,
-                imageUrls = ParseImageUrls(x.ImageUrlsJson, x.ImageUrl),
-                x.LinkUrl,
-                x.ProductId,
-                x.SortOrder,
-                x.IsEnabled,
-                x.StartAt,
-                x.EndAt,
-                x.CreatedAt,
-                x.UpdatedAt
-            })
+            .Select(x => ToDto(x))
             .ToListAsync();
 
         return Ok(items);
@@ -69,24 +52,7 @@ public class AdminAdsController : ControllerBase
         var x = await _db.Ads.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id);
         if (x is null) return NotFound();
 
-        return Ok(new
-        {
-            x.Id,
-            type = x.Type.ToString().ToLowerInvariant(),
-            x.Placement,
-            x.Title,
-            x.Subtitle,
-            x.ImageUrl,
-            imageUrls = ParseImageUrls(x.ImageUrlsJson, x.ImageUrl),
-            x.LinkUrl,
-            x.ProductId,
-            x.SortOrder,
-            x.IsEnabled,
-            x.StartAt,
-            x.EndAt,
-            x.CreatedAt,
-            x.UpdatedAt
-        });
+        return Ok(ToDto(x));
     }
 
     public record SaveAdRequest(
@@ -135,7 +101,7 @@ public class AdminAdsController : ControllerBase
 
         _db.Ads.Add(ad);
         await _db.SaveChangesAsync();
-        return Ok(new { ad.Id });
+        return Ok(ToDto(ad));
     }
 
     [HttpPut("{id:guid}")]
@@ -168,7 +134,7 @@ public class AdminAdsController : ControllerBase
         ad.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _db.SaveChangesAsync();
-        return Ok(new { ad.Id });
+        return Ok(ToDto(ad));
     }
 
     [HttpDelete("{id:guid}")]
@@ -201,6 +167,29 @@ public class AdminAdsController : ControllerBase
         var stored = await _storage.UploadAsync(stream, key, file.ContentType);
 
         return Ok(new { url = stored.Url, key = stored.Key });
+    }
+
+
+    private static object ToDto(Ad x)
+    {
+        return new
+        {
+            x.Id,
+            type = x.Type.ToString().ToLowerInvariant(),
+            x.Placement,
+            x.Title,
+            x.Subtitle,
+            x.ImageUrl,
+            imageUrls = ParseImageUrls(x.ImageUrlsJson, x.ImageUrl),
+            x.LinkUrl,
+            x.ProductId,
+            x.SortOrder,
+            x.IsEnabled,
+            x.StartAt,
+            x.EndAt,
+            x.CreatedAt,
+            x.UpdatedAt
+        };
     }
 
     private static AdType ParseType(string? t)

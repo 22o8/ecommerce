@@ -43,7 +43,12 @@ const videoSrc = computed(() => intro.value.videoUrl ? buildAssetUrl(String(intr
 
 function closeIntro() {
   visible.value = false
-  if (process.client) sessionStorage.setItem('intro-seen', '1')
+  if (!process.client) return
+  if (route.path === '/intro') {
+    router.push('/')
+    return
+  }
+  sessionStorage.setItem('intro-seen', '1')
 }
 function startNow() {
   const url = intro.value.buttonUrl || '/products'
@@ -60,7 +65,12 @@ watch(
   () => {
     if (!process.client) return
     if (route.path.startsWith('/admin')) return
-    if (!appearance.loaded || !intro.value.enabled) return
+    if (!appearance.loaded) return
+    if (route.path === '/intro') {
+      visible.value = true
+      return
+    }
+    if (!intro.value.enabled) return
     if (sessionStorage.getItem('intro-seen') === '1') return
     visible.value = true
   },

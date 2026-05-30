@@ -156,7 +156,10 @@
         <div v-else-if="!filteredAds.length" class="empty-box">لا توجد إعلانات حسب هذا الفلتر</div>
         <div v-else class="grid gap-3">
           <article v-for="ad in filteredAds" :key="ad.id" class="ad-row">
-            <img :src="api.buildAssetUrl(String(ad.imageUrl || ad.imageUrls?.[0] || ''))" />
+            <div class="ad-thumb">
+              <img v-if="ad.imageUrl || ad.imageUrls?.[0]" :src="api.buildAssetUrl(String(ad.imageUrl || ad.imageUrls?.[0] || ''))" />
+              <Icon v-else name="mdi:image-off-outline" class="text-2xl text-[rgb(var(--muted))]" />
+            </div>
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-center gap-2">
                 <b class="truncate">{{ ad.title || 'بدون عنوان' }}</b>
@@ -329,13 +332,16 @@ async function saveAd() {
   if (form.type === 'product' && !form.productId) return toast.error('اختر المنتج من البحث أولاً')
   saving.value = true
   try {
-    if (editingId.value) {
-      await $fetch(`/api/bff/admin/ads/${editingId.value}`, { method: 'PUT', body: payload() })
-      toast.success('تم تحديث الإعلان')
-    } else {
-      await $fetch('/api/bff/admin/ads', { method: 'POST', body: payload() })
-      toast.success('تم إنشاء الإعلان')
+    const saved: any = editingId.value
+      ? await $fetch(`/api/bff/admin/ads/${editingId.value}`, { method: 'PUT', body: payload() })
+      : await $fetch('/api/bff/admin/ads', { method: 'POST', body: payload() })
+
+    if (saved?.id) {
+      const idx = items.value.findIndex((x: any) => x.id === saved.id)
+      if (idx >= 0) items.value[idx] = saved
+      else items.value.unshift(saved)
     }
+    toast.success(editingId.value ? 'تم تحديث الإعلان' : 'تم إنشاء الإعلان')
     resetForm()
     await load()
     emitAdsChanged()
@@ -431,10 +437,11 @@ await load()
 .product-pick small{ display:block; margin-top:.2rem; color:rgb(var(--muted)); font-size:.75rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .selected-product{ border:1px solid rgba(52,211,153,.25); background:rgba(52,211,153,.10); color:rgb(52 211 153); border-radius:18px; padding:.7rem .9rem; font-size:.8rem; font-weight:900; }
 .ad-row{ display:flex; align-items:center; gap:.9rem; border:1px solid rgba(var(--border), .9); background:rgba(var(--surface-2-rgb), .56); border-radius:24px; padding:.85rem; }
-.ad-row > img{ width:86px; height:86px; object-fit:cover; border-radius:20px; border:1px solid rgba(var(--border),.9); background:rgb(var(--surface-2)); }
+.ad-thumb{ width:86px; height:86px; border-radius:20px; border:1px solid rgba(var(--border),.9); background:rgb(var(--surface-2)); display:grid; place-items:center; overflow:hidden; flex:0 0 auto; }
+.ad-thumb img{ width:100%; height:100%; object-fit:cover; }
 .pill{ border:1px solid rgba(var(--border), .9); background:rgba(var(--surface-rgb), .75); border-radius:999px; padding:.28rem .55rem; font-size:.72rem; color:rgb(var(--muted)); font-weight:900; }
 .pill.is-good{ color:rgb(52 211 153); border-color:rgba(52,211,153,.22); } .pill.is-off{ color:rgb(248 113 113); border-color:rgba(248,113,113,.22); }
 .ad-actions{ display:flex; gap:.45rem; flex-wrap:wrap; justify-content:flex-end; }
 .empty-box{ display:grid; place-items:center; min-height:240px; border:1px dashed rgba(var(--border), .9); border-radius:26px; color:rgb(var(--muted)); }
-@media(max-width:920px){ .ads-hero,.builder-head,.ad-list-head{ flex-direction:column; } .ads-hero__actions{ justify-content:flex-start; } .ad-type-grid{ grid-template-columns:1fr; } .step-card{ flex-direction:column; } .ad-row{ align-items:flex-start; flex-direction:column; } .ad-row > img{ width:100%; height:190px; } .ad-actions{ justify-content:flex-start; } }
+@media(max-width:920px){ .ads-hero,.builder-head,.ad-list-head{ flex-direction:column; } .ads-hero__actions{ justify-content:flex-start; } .ad-type-grid{ grid-template-columns:1fr; } .step-card{ flex-direction:column; } .ad-row{ align-items:flex-start; flex-direction:column; } .ad-thumb{ width:100%; height:190px; } .ad-actions{ justify-content:flex-start; } }
 </style>

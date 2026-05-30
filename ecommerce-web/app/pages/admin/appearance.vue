@@ -6,9 +6,12 @@
         <h1 class="rtl-text">الشعار، الاستفتاحية، والثيمات</h1>
         <p class="rtl-text">قسّمنا الصفحة حتى يكون الشعار دائم ومستقل، والاستفتاحية اختيارية يمكن تفعيلها أو حذفها بأي وقت.</p>
       </div>
-      <button class="admin-primary px-5 py-3" @click="save" :disabled="saving">
-        {{ saving ? 'جارِ الحفظ...' : 'حفظ كل التغييرات' }}
-      </button>
+      <div class="flex flex-wrap gap-2 justify-end">
+        <NuxtLink to="/admin/identity" class="admin-secondary px-5 py-3">تغيير الشعار</NuxtLink>
+        <button class="admin-primary px-5 py-3" @click="save" :disabled="saving">
+          {{ saving ? 'جارِ الحفظ...' : 'حفظ كل التغييرات' }}
+        </button>
+      </div>
     </section>
 
     <section class="grid gap-6 xl:grid-cols-[minmax(420px,600px)_1fr]">
@@ -74,6 +77,13 @@
             </div>
             <div class="intro-note rtl-text">
               يمكنك تعطيل الاستفتاحية بأي وقت بدون حذف الفيديو أو النصوص، وستبقى الإعدادات محفوظة للعودة لها لاحقاً.
+            </div>
+            <div class="intro-link-box">
+              <div class="min-w-0">
+                <b class="rtl-text">رابط الاستفتاحية للنشر</b>
+                <p class="keep-ltr">{{ introPublicUrl }}</p>
+              </div>
+              <button type="button" class="admin-secondary px-4 py-3" @click="copyIntroLink">نسخ الرابط</button>
             </div>
           </div>
         </section>
@@ -202,6 +212,16 @@ const draft = reactive<Draft>({
 
 const logoPreview = computed(() => draft.siteLogoUrl ? buildAssetUrl(draft.siteLogoUrl) : '')
 const introVideoPreview = computed(() => draft.intro.videoUrl ? buildAssetUrl(draft.intro.videoUrl) : '')
+const introPublicUrl = computed(() => process.client ? `${window.location.origin}/intro` : '/intro')
+
+async function copyIntroLink() {
+  try {
+    if (process.client) await navigator.clipboard.writeText(introPublicUrl.value)
+    toast.success('تم نسخ رابط الاستفتاحية')
+  } catch {
+    toast.error('تعذر نسخ الرابط')
+  }
+}
 
 async function uploadFile(file: File) {
   const fd = new FormData()
@@ -273,6 +293,9 @@ async function save() {
 .upload-zone small{ color:rgb(var(--muted)); }
 .switch-row{ display:inline-flex; align-items:center; gap:.55rem; border:1px solid rgba(var(--border),.9); background:rgba(var(--surface-rgb),.72); border-radius:999px; padding:.65rem .9rem; font-weight:900; color:rgb(var(--text)); }
 .intro-note{ border:1px solid rgba(var(--primary),.22); background:rgba(var(--primary),.08); color:rgb(var(--muted)); border-radius:20px; padding:.8rem 1rem; line-height:1.8; font-size:.86rem; }
+.intro-link-box{ display:flex; align-items:center; justify-content:space-between; gap:1rem; border:1px solid rgba(var(--border),.9); background:rgba(var(--surface-2-rgb),.56); border-radius:22px; padding:.9rem 1rem; }
+.intro-link-box b{ display:block; color:rgb(var(--text)); font-weight:1000; }
+.intro-link-box p{ margin-top:.25rem; color:rgb(var(--muted)); font-size:.82rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .intro-preview{ position:relative; min-height:430px; overflow:hidden; border-radius:34px; border:1px solid rgba(var(--border),.9); background:#050509; display:grid; place-items:center; box-shadow:var(--shadow-soft); }
 .intro-preview video,.intro-preview__fallback{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .intro-preview__fallback{ background:radial-gradient(circle at 70% 20%, rgba(var(--primary),.30), transparent 35%), radial-gradient(circle at 20% 80%, rgba(236,72,153,.22), transparent 42%), #050509; }
