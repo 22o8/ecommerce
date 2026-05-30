@@ -189,6 +189,7 @@ import UiInput from '~/components/ui/UiInput.vue'
 
 const toast = useToast()
 const api = useApi()
+const directUpload = useDirectAdminUpload()
 
 function emitAdsChanged() {
   if (process.client) window.dispatchEvent(new CustomEvent('ads:changed'))
@@ -345,7 +346,7 @@ async function saveAd() {
     resetForm()
     await load()
     emitAdsChanged()
-  } catch { toast.error('تعذر حفظ الإعلان') }
+  } catch (e:any) { toast.error(e?.data?.message || e?.message || 'تعذر حفظ الإعلان') }
   finally { saving.value = false }
 }
 async function remove(id: string) {
@@ -372,10 +373,7 @@ async function onPickFile(e: Event) {
   try {
     const uploaded: string[] = []
     for (const file of files) {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res: any = await $fetch('/api/bff/admin/ads/upload', { method: 'POST', body: fd })
-      const url = res?.url?.url || res?.url || res?.imageUrl || ''
+      const url = await directUpload.upload('admin/ads/upload', file, { maxMb: 60, fallbackToBff: true })
       if (url) uploaded.push(url)
     }
     if (form.type === 'slider') form.imageUrls = [...form.imageUrls, ...uploaded]
@@ -384,7 +382,7 @@ async function onPickFile(e: Event) {
       form.imageUrls = form.imageUrl ? [form.imageUrl] : []
     }
     toast.success('تم رفع الصور')
-  } catch { toast.error('تعذر رفع الصور') }
+  } catch (e:any) { toast.error(e?.data?.message || e?.message || 'تعذر رفع الصور') }
   finally { uploading.value = false; input.value = '' }
 }
 function removePreview(idx: number) {

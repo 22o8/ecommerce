@@ -62,9 +62,10 @@
               <input type="file" accept="video/*" class="hidden" @change="uploadIntroVideo" />
               <Icon name="mdi:video-plus-outline" class="text-3xl text-[rgb(var(--primary))]" />
               <span>{{ uploadingVideo ? 'جاري رفع الفيديو...' : 'رفع فيديو الاستفتاحية' }}</span>
-              <small>يفضل فيديو قصير 5-12 ثانية وحجمه خفيف.</small>
+              <small>رفع مباشر إلى الباك/R2 لتجاوز حد Vercel. يقبل MP4، أو ضع رابط فيديو مباشر.</small>
             </label>
-            <UiInput v-model="draft.intro.videoUrl" placeholder="رابط الفيديو أو ارفعه من الأعلى" dir="ltr" />
+            <UiInput v-model="draft.intro.videoUrl" placeholder="رابط MP4 مباشر أو YouTube/Instagram/TikTok" dir="ltr" />
+            <div class="intro-note rtl-text">ملاحظة: روابط Instagram/Reels ليست ملف فيديو مباشر، لذلك نعرضها كـ iframe إن أمكن. أفضل حل للفيديو التجاري هو رفع MP4 مباشر إلى R2 أو استخدام رابط MP4.</div>
             <UiInput v-model="draft.intro.title" placeholder="العنوان الرئيسي مثل: اكتشفي جمالك بثقة" />
             <UiInput v-model="draft.intro.subtitle" placeholder="وصف قصير: منتجات مختارة بعناية لبشرتك" />
             <div class="grid gap-3 sm:grid-cols-2">
@@ -98,7 +99,14 @@
             </div>
           </div>
           <div class="intro-preview" :class="draft.intro.enabled ? 'is-enabled' : 'is-disabled'">
-            <video v-if="introVideoPreview" :src="introVideoPreview" autoplay muted loop playsinline />
+            <iframe
+              v-if="introEmbedUrl"
+              class="intro-preview__media"
+              :src="introEmbedUrl"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowfullscreen
+            />
+            <video v-else-if="introVideoPreview" class="intro-preview__media" :src="introVideoPreview" autoplay muted loop playsinline />
             <div v-else class="intro-preview__fallback" />
             <div class="intro-preview__overlay" />
             <div class="intro-preview__content rtl-text">
@@ -160,6 +168,7 @@ const saving = ref(false)
 const uploadingLogo = ref(false)
 const uploadingVideo = ref(false)
 const toast = useToast()
+const directUpload = useDirectAdminUpload()
 
 const themeOptions = [
   { key: 'ramadan', labelKey: 'season.ramadan', hintKey: 'seasonHints.ramadan' },
@@ -211,7 +220,38 @@ const draft = reactive<Draft>({
 })
 
 const logoPreview = computed(() => draft.siteLogoUrl ? buildAssetUrl(draft.siteLogoUrl) : '')
-const introVideoPreview = computed(() => draft.intro.videoUrl ? buildAssetUrl(draft.intro.videoUrl) : '')
+function directVideoUrl(raw?: string) {
+  const v = String(raw || '').trim()
+  if (!v) return ''
+  if (isEmbeddableVideo(v)) return ''
+  return buildAssetUrl(v)
+}
+function isEmbeddableVideo(v: string) {
+  return /youtube\.com|youtu\.be|instagram\.com|tiktok\.com/i.test(v)
+}
+function toEmbedUrl(raw?: string) {
+  const v = String(raw || '').trim()
+  if (!v) return ''
+  try {
+    const u = new URL(v)
+    const host = u.hostname.replace(/^www\./, '')
+    if (host.includes('youtu.be')) return `https://www.youtube.com/embed/${u.pathname.replace('/', '')}?autoplay=1&mute=1&loop=1&playsinline=1`
+    if (host.includes('youtube.com')) {
+      const id = u.searchParams.get('v') || u.pathname.split('/').filter(Boolean).pop()
+      return id ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playsinline=1` : ''
+    }
+    if (host.includes('instagram.com')) {
+      const parts = u.pathname.split('/').filter(Boolean)
+      const type = parts[0] || 'reel'
+      const code = parts[1]
+      return code ? `https://www.instagram.com/${type}/${code}/embed` : ''
+    }
+    if (host.includes('tiktok.com')) return v
+  } catch {}
+  return ''
+}
+const introVideoPreview = computed(() => directVideoUrl(draft.intro.videoUrl))
+const introEmbedUrl = computed(() => toEmbedUrl(draft.intro.videoUrl))
 const introPublicUrl = computed(() => process.client ? `${window.location.origin}/intro` : '/intro')
 
 async function copyIntroLink() {
@@ -223,19 +263,22 @@ async function copyIntroLink() {
   }
 }
 
-async function uploadFile(file: File) {
+async function uploadSmallAppearanceFile(file: File) {
   const fd = new FormData()
   fd.append('file', file)
   const res: any = await $fetch('/api/bff/admin/appearance/upload', { method: 'POST', body: fd })
   return res?.url?.url || res?.url || ''
+}
+async function uploadLargeAppearanceFile(file: File) {
+  return await directUpload.upload('admin/appearance/upload', file, { maxMb: 150, fallbackToBff: false })
 }
 async function uploadLogo(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
   uploadingLogo.value = true
-  try { draft.siteLogoUrl = await uploadFile(file); toast.success('تم رفع الشعار') }
-  catch { toast.error('تعذر رفع الشعار') }
+  try { draft.siteLogoUrl = await uploadSmallAppearanceFile(file); toast.success('تم رفع الشعار') }
+  catch (e:any) { toast.error(e?.data?.message || e?.message || 'تعذر رفع الشعار') }
   finally { uploadingLogo.value = false; input.value = '' }
 }
 async function uploadIntroVideo(e: Event) {
@@ -243,8 +286,8 @@ async function uploadIntroVideo(e: Event) {
   const file = input.files?.[0]
   if (!file) return
   uploadingVideo.value = true
-  try { draft.intro.videoUrl = await uploadFile(file); toast.success('تم رفع الفيديو') }
-  catch { toast.error('تعذر رفع الفيديو') }
+  try { draft.intro.videoUrl = await uploadLargeAppearanceFile(file); toast.success('تم رفع الفيديو مباشرة إلى التخزين') }
+  catch (e:any) { toast.error(e?.data?.message || e?.message || 'تعذر رفع الفيديو. استخدم ملف MP4 أو رابط مباشر') }
   finally { uploadingVideo.value = false; input.value = '' }
 }
 async function save() {
@@ -297,7 +340,7 @@ async function save() {
 .intro-link-box b{ display:block; color:rgb(var(--text)); font-weight:1000; }
 .intro-link-box p{ margin-top:.25rem; color:rgb(var(--muted)); font-size:.82rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .intro-preview{ position:relative; min-height:430px; overflow:hidden; border-radius:34px; border:1px solid rgba(var(--border),.9); background:#050509; display:grid; place-items:center; box-shadow:var(--shadow-soft); }
-.intro-preview video,.intro-preview__fallback{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.intro-preview video,.intro-preview iframe,.intro-preview__media,.intro-preview__fallback{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; }
 .intro-preview__fallback{ background:radial-gradient(circle at 70% 20%, rgba(var(--primary),.30), transparent 35%), radial-gradient(circle at 20% 80%, rgba(236,72,153,.22), transparent 42%), #050509; }
 .intro-preview__overlay{ position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.86), rgba(0,0,0,.42), rgba(0,0,0,.72)); }
 .intro-preview__content{ position:relative; width:min(88%,680px); color:white; border:1px solid rgba(255,255,255,.14); border-radius:32px; padding:2.2rem; background:rgba(8,8,14,.48); backdrop-filter:blur(16px); }

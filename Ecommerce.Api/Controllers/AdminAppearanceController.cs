@@ -109,17 +109,20 @@ public class AdminAppearanceController : ControllerBase
     }
 
     [HttpPost("upload")]
-    [RequestSizeLimit(20_000_000)]
+    [RequestSizeLimit(160_000_000)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 160_000_000)]
     public async Task<ActionResult<object>> Upload([FromForm] IFormFile file)
     {
         if (file is null || file.Length == 0)
             return BadRequest(new { message = "File is required" });
 
         var ext = Path.GetExtension(file.FileName);
-        if (string.IsNullOrWhiteSpace(ext)) ext = ".jpg";
+        var isVideo = (file.ContentType ?? string.Empty).StartsWith("video/", StringComparison.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(ext)) ext = isVideo ? ".mp4" : ".jpg";
 
         var id = Guid.NewGuid();
-        var key = $"uploads/appearance/{id}{ext}";
+        var folder = isVideo ? "intro-videos" : "appearance";
+        var key = $"uploads/{folder}/{id}{ext}";
 
         await using var stream = file.OpenReadStream();
         // IStorageService.UploadAsync expects (Stream stream, string key, string contentType)

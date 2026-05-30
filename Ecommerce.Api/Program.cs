@@ -2,6 +2,7 @@ using System.Text;
 using Ecommerce.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -13,6 +14,19 @@ var config = builder.Configuration;
 // ============================
 // Services
 // ============================
+
+
+// Allow large direct uploads to the backend (videos/images bypass Vercel BFF).
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 160L * 1024L * 1024L;
+});
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 160L * 1024L * 1024L;
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

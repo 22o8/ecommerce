@@ -83,6 +83,7 @@ export default defineNuxtConfig({
       '/': { headers: { 'cache-control': 'no-store' } },
       '/products': { headers: { 'cache-control': 'no-store' } },
       '/products/**': { headers: { 'cache-control': 'no-store' } },
+      '/intro': { headers: { 'cache-control': 'no-store' } },
       '/services': { headers: { 'cache-control': 'no-store' } },
       '/services/**': { headers: { 'cache-control': 'no-store' } },
 

@@ -1,8 +1,15 @@
 <template>
   <Transition name="intro-fade">
     <div v-if="visible" class="intro-screen" role="dialog" aria-modal="true">
+      <iframe
+        v-if="embedSrc"
+        class="intro-screen__video"
+        :src="embedSrc"
+        allow="autoplay; encrypted-media; picture-in-picture"
+        allowfullscreen
+      />
       <video
-        v-if="videoSrc"
+        v-else-if="videoSrc"
         class="intro-screen__video"
         :src="videoSrc"
         autoplay
@@ -39,7 +46,36 @@ if (!appearance.loaded) await appearance.refresh()
 
 const visible = ref(false)
 const intro = computed(() => appearance.data.intro || { enabled: false })
-const videoSrc = computed(() => intro.value.videoUrl ? buildAssetUrl(String(intro.value.videoUrl)) : '')
+function isEmbeddableVideo(v: string) {
+  return /youtube\.com|youtu\.be|instagram\.com|tiktok\.com/i.test(v)
+}
+function toEmbedUrl(raw?: string) {
+  const v = String(raw || '').trim()
+  if (!v) return ''
+  try {
+    const u = new URL(v)
+    const host = u.hostname.replace(/^www\./, '')
+    if (host.includes('youtu.be')) return `https://www.youtube.com/embed/${u.pathname.replace('/', '')}?autoplay=1&mute=1&loop=1&playsinline=1`
+    if (host.includes('youtube.com')) {
+      const id = u.searchParams.get('v') || u.pathname.split('/').filter(Boolean).pop()
+      return id ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playsinline=1` : ''
+    }
+    if (host.includes('instagram.com')) {
+      const parts = u.pathname.split('/').filter(Boolean)
+      const type = parts[0] || 'reel'
+      const code = parts[1]
+      return code ? `https://www.instagram.com/${type}/${code}/embed` : ''
+    }
+    if (host.includes('tiktok.com')) return v
+  } catch {}
+  return ''
+}
+const embedSrc = computed(() => toEmbedUrl(String(intro.value.videoUrl || '')))
+const videoSrc = computed(() => {
+  const raw = String(intro.value.videoUrl || '')
+  if (!raw || isEmbeddableVideo(raw)) return ''
+  return buildAssetUrl(raw)
+})
 
 function closeIntro() {
   visible.value = false
@@ -80,7 +116,7 @@ watch(
 
 <style scoped>
 .intro-screen{ position:fixed; inset:0; z-index:80; display:grid; place-items:center; padding:1rem; overflow:hidden; background:#050509; }
-.intro-screen__video,.intro-screen__fallback{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.intro-screen__video,.intro-screen__fallback{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; }
 .intro-screen__fallback{ background:radial-gradient(circle at 76% 18%, rgba(var(--primary),.38), transparent 36%), radial-gradient(circle at 18% 76%, rgba(236,72,153,.24), transparent 42%), #050509; }
 .intro-screen__overlay{ position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.9), rgba(0,0,0,.42), rgba(0,0,0,.76)); }
 .intro-screen__content{ position:relative; width:min(94vw,760px); color:white; border:1px solid rgba(255,255,255,.15); border-radius:38px; padding:clamp(1.6rem,4vw,3rem); background:rgba(8,8,14,.52); backdrop-filter:blur(18px); box-shadow:0 32px 90px rgba(0,0,0,.42); }
