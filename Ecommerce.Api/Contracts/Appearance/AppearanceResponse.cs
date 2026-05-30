@@ -18,4 +18,6 @@ public sealed class AppearanceResponse
     public string? IntroSubtitle { get; set; }
     public string? IntroButtonText { get; set; }
     public string? IntroButtonUrl { get; set; }
+    public string? IntroSecondaryButtonText { get; set; }
+    public string? IntroSecondaryButtonUrl { get; set; }
 }

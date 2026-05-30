@@ -27,6 +27,8 @@ export type AppearanceState = {
     subtitle?: string
     buttonText?: string
     buttonUrl?: string
+    secondaryButtonText?: string
+    secondaryButtonUrl?: string
   }
 }
 
@@ -51,6 +53,8 @@ const DEFAULT: AppearanceState = {
     subtitle: '',
     buttonText: 'ابدأ الآن',
     buttonUrl: '/products',
+    secondaryButtonText: 'تصفح البراندات',
+    secondaryButtonUrl: '/brands',
   },
 }
 
@@ -92,6 +96,8 @@ export const useAppearanceStore = defineStore('appearance', {
           subtitle: res?.introSubtitle ?? res?.IntroSubtitle ?? '',
           buttonText: res?.introButtonText ?? res?.IntroButtonText ?? 'ابدأ الآن',
           buttonUrl: res?.introButtonUrl ?? res?.IntroButtonUrl ?? '/products',
+          secondaryButtonText: res?.introSecondaryButtonText ?? res?.IntroSecondaryButtonText ?? 'تصفح البراندات',
+          secondaryButtonUrl: res?.introSecondaryButtonUrl ?? res?.IntroSecondaryButtonUrl ?? '/brands',
         },
         ads: ads.map((a: any) => ({
           id: a.id ?? a.Id,

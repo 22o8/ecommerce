@@ -1,314 +1,51 @@
-<script setup lang="ts">
-definePageMeta({ layout: 'admin', middleware: 'admin' })
-
-import UiButton from '~/components/ui/UiButton.vue'
-import UiInput from '~/components/ui/UiInput.vue'
-
-const toast = useToast()
-const api = useApi()
-
-function emitAdsChanged() {
-  if (process.client) window.dispatchEvent(new CustomEvent('ads:changed'))
-}
-
-const loading = ref(true)
-const saving = ref(false)
-const uploading = ref(false)
-const items = ref<any[]>([])
-const products = ref<any[]>([])
-const productQuery = ref('')
-const filterType = ref('all')
-const editingId = ref<string | null>(null)
-
-const adTypes = [
-  { value: 'slider', label: 'سلايدر رئيسي', icon: 'mdi:view-carousel-outline', hint: 'عدة صور في واجهة المتجر' },
-  { value: 'banner', label: 'بانر ثابت', icon: 'mdi:image-outline', hint: 'صورة واحدة لقسم محدد' },
-  { value: 'popup', label: 'إعلان منبثق', icon: 'mdi:tooltip-image-outline', hint: 'يظهر فوق الصفحة للزائر' },
-  { value: 'product', label: 'داخل منتج', icon: 'mdi:package-variant-closed', hint: 'يرتبط بمنتج تختاره بالبحث' },
-]
-
-const placementOptions = computed(() => {
-  if (form.type === 'slider') return [{ value: 'home_top_slider', label: 'أعلى الصفحة الرئيسية' }]
-  if (form.type === 'popup') return [{ value: 'popup', label: 'نافذة منبثقة' }]
-  if (form.type === 'product') return [{ value: 'product_page', label: 'داخل صفحة المنتج' }]
-  return [
-    { value: 'home_top', label: 'أعلى الصفحة الرئيسية' },
-    { value: 'home_middle', label: 'منتصف الصفحة الرئيسية' },
-  ]
-})
-
-const form = reactive({
-  type: 'slider',
-  placement: 'home_top_slider',
-  title: '',
-  subtitle: '',
-  imageUrl: '',
-  imageUrls: [] as string[],
-  linkUrl: '/products',
-  productId: '',
-  productTitle: '',
-  sortOrder: 0,
-  isEnabled: true,
-})
-
-const activeType = computed(() => adTypes.find((x) => x.value === form.type) || adTypes[0])
-const previewImages = computed(() => {
-  const arr = Array.isArray(form.imageUrls) ? form.imageUrls.filter(Boolean) : []
-  return arr.length ? arr : (form.imageUrl ? [form.imageUrl] : [])
-})
-
-const stats = computed(() => ({
-  total: items.value.length,
-  active: items.value.filter((x: any) => x.isEnabled).length,
-  slider: items.value.filter((x: any) => x.type === 'slider').length,
-  product: items.value.filter((x: any) => x.type === 'product').length,
-}))
-
-const filteredAds = computed(() => {
-  if (filterType.value === 'all') return items.value
-  if (filterType.value === 'active') return items.value.filter((x: any) => x.isEnabled)
-  if (filterType.value === 'disabled') return items.value.filter((x: any) => !x.isEnabled)
-  return items.value.filter((x: any) => x.type === filterType.value)
-})
-
-function normalizeProducts(res: any) {
-  if (Array.isArray(res)) return res
-  if (Array.isArray(res?.items)) return res.items
-  if (Array.isArray(res?.data)) return res.data
-  return []
-}
-
-function productName(p: any) { return p?.title || p?.name || p?.nameAr || 'منتج بدون اسم' }
-function productBrand(p: any) { return p?.brand || p?.brandName || p?.brandSlug || '' }
-function productImage(p: any) {
-  return p?.imageUrl || p?.primaryImageUrl || p?.thumbnailUrl || p?.images?.[0]?.url || p?.assets?.[0]?.url || ''
-}
-
-const filteredProducts = computed(() => {
-  const q = productQuery.value.trim().toLowerCase()
-  const source = products.value || []
-  if (!q) return source.slice(0, 10)
-  return source.filter((p: any) => {
-    const txt = `${productName(p)} ${p.slug || ''} ${productBrand(p)}`.toLowerCase()
-    return txt.includes(q)
-  }).slice(0, 14)
-})
-
-async function load() {
-  loading.value = true
-  try {
-    const [adsRes, productsRes]: any[] = await Promise.all([
-      $fetch('/api/bff/admin/ads', { timeout: 10000, query: { _ts: Date.now() }, headers: { 'cache-control': 'no-cache' } }),
-      $fetch('/api/bff/admin/products', { timeout: 10000, query: { page: 1, pageSize: 250, _ts: Date.now() }, headers: { 'cache-control': 'no-cache' } }).catch(() => []),
-    ])
-    items.value = Array.isArray(adsRes) ? adsRes : []
-    products.value = normalizeProducts(productsRes)
-  } catch {
-    items.value = []
-    products.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-function resetForm() {
-  editingId.value = null
-  Object.assign(form, {
-    type: 'slider', placement: 'home_top_slider', title: '', subtitle: '', imageUrl: '', imageUrls: [], linkUrl: '/products',
-    productId: '', productTitle: '', sortOrder: 0, isEnabled: true,
-  })
-  productQuery.value = ''
-}
-
-function edit(ad: any) {
-  editingId.value = ad.id
-  const found = products.value.find((p: any) => p.id === ad.productId)
-  Object.assign(form, {
-    type: ad.type || 'banner',
-    placement: ad.placement || 'home_top',
-    title: ad.title || '',
-    subtitle: ad.subtitle || '',
-    imageUrl: ad.imageUrl || '',
-    imageUrls: Array.isArray(ad.imageUrls) ? [...ad.imageUrls] : (ad.imageUrl ? [ad.imageUrl] : []),
-    linkUrl: ad.linkUrl || '/products',
-    productId: ad.productId || '',
-    productTitle: found ? productName(found) : '',
-    sortOrder: Number(ad.sortOrder || 0),
-    isEnabled: !!ad.isEnabled,
-  })
-  productQuery.value = form.productTitle
-  window?.scrollTo?.({ top: 0, behavior: 'smooth' })
-}
-
-function selectType(type: string) {
-  form.type = type
-}
-
-function selectProduct(p: any) {
-  form.productId = p.id
-  form.productTitle = productName(p)
-  form.linkUrl = `/product/${p.id}`
-  productQuery.value = productName(p)
-}
-
-function payload() {
-  return {
-    type: form.type,
-    placement: form.placement,
-    title: form.title,
-    subtitle: form.subtitle || null,
-    imageUrl: form.imageUrl,
-    imageUrls: form.imageUrls,
-    linkUrl: form.linkUrl || null,
-    productId: form.type === 'product' && form.productId ? form.productId : null,
-    sortOrder: Number(form.sortOrder || 0),
-    isEnabled: Boolean(form.isEnabled),
-    startAt: null,
-    endAt: null,
-  }
-}
-
-async function saveAd() {
-  if (!previewImages.value.length) {
-    toast.error('ارفع صورة واحدة على الأقل')
-    return
-  }
-  if (form.type === 'product' && !form.productId) {
-    toast.error('اختر المنتج من البحث أولاً')
-    return
-  }
-  saving.value = true
-  try {
-    if (editingId.value) {
-      await $fetch(`/api/bff/admin/ads/${editingId.value}`, { method: 'PUT', body: payload() })
-      toast.success('تم تحديث الإعلان')
-    } else {
-      await $fetch('/api/bff/admin/ads', { method: 'POST', body: payload() })
-      toast.success('تم إنشاء الإعلان')
-    }
-    resetForm()
-    await load()
-    emitAdsChanged()
-  } catch {
-    toast.error('تعذر حفظ الإعلان')
-  } finally {
-    saving.value = false
-  }
-}
-
-async function remove(id: string) {
-  if (!confirm('حذف الإعلان؟')) return
-  try {
-    await $fetch(`/api/bff/admin/ads/${id}`, { method: 'DELETE' })
-    toast.success('تم الحذف')
-    await load()
-    emitAdsChanged()
-  } catch { toast.error('تعذر الحذف') }
-}
-
-async function removeAll() {
-  if (!confirm('حذف كل الإعلانات الحالية؟')) return
-  try {
-    await $fetch('/api/bff/admin/ads', { method: 'DELETE' })
-    toast.success('تم حذف جميع الإعلانات')
-    await load()
-    emitAdsChanged()
-  } catch { toast.error('تعذر حذف الكل') }
-}
-
-async function toggleEnabled(ad: any) {
-  try {
-    await $fetch(`/api/bff/admin/ads/${ad.id}`, {
-      method: 'PUT',
-      body: { ...ad, imageUrls: ad.imageUrls || (ad.imageUrl ? [ad.imageUrl] : []), isEnabled: !ad.isEnabled, startAt: ad.startAt || null, endAt: ad.endAt || null },
-    })
-    await load()
-    emitAdsChanged()
-  } catch { toast.error('تعذر تحديث الإعلان') }
-}
-
-async function onPickFile(e: Event) {
-  const files = Array.from((e.target as HTMLInputElement)?.files || [])
-  if (!files.length) return
-  uploading.value = true
-  try {
-    const uploaded: string[] = []
-    for (const file of files) {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res: any = await $fetch('/api/bff/admin/ads/upload', { method: 'POST', body: fd })
-      const url = res?.url?.url || res?.url || res?.imageUrl || ''
-      if (typeof url === 'string' && url) uploaded.push(url)
-    }
-    if (form.type === 'slider') {
-      form.imageUrls = [...form.imageUrls, ...uploaded]
-      form.imageUrl = form.imageUrls[0] || ''
-    } else {
-      form.imageUrl = uploaded[0] || form.imageUrl
-      form.imageUrls = form.imageUrl ? [form.imageUrl] : []
-    }
-    if (uploaded.length) toast.success('تم رفع الصور')
-  } catch { toast.error('تعذر رفع الصور') }
-  finally { uploading.value = false; (e.target as HTMLInputElement).value = '' }
-}
-
-function removePreview(idx: number) {
-  form.imageUrls.splice(idx, 1)
-  form.imageUrl = form.imageUrls[0] || ''
-}
-
-watch(() => form.type, (v) => {
-  if (v === 'slider') form.placement = 'home_top_slider'
-  else if (v === 'popup') form.placement = 'popup'
-  else if (v === 'product') form.placement = 'product_page'
-  else form.placement = 'home_top'
-  if (v !== 'slider') form.imageUrls = form.imageUrl ? [form.imageUrl] : form.imageUrls.slice(0, 1)
-})
-
-onMounted(load)
-</script>
-
 <template>
   <div class="ads-admin space-y-6">
-    <section class="ads-hero admin-panel">
+    <section class="admin-panel ads-hero">
       <div>
         <div class="eyebrow rtl-text">مركز الإعلانات</div>
         <h1 class="ads-title rtl-text">إدارة الإعلانات</h1>
-        <p class="ads-subtitle rtl-text">ارفع الصور، اختر نوع الإعلان، اربطه بمنتج عند الحاجة، وشاهد كل شيء من شاشة واحدة بدون معرفات يدوية.</p>
+        <p class="ads-subtitle rtl-text">أنشئ سلايدر، بانر أعلى الصفحة أو آخرها، إعلان منبثق، أو إعلان مرتبط بمنتج محدد بدون كتابة معرفات يدوية.</p>
       </div>
       <div class="ads-hero__actions">
-        <NuxtLink to="/admin/appearance" class="admin-secondary px-4 py-2 rtl-text">الشعار والاستفتاحية</NuxtLink>
-        <UiButton variant="secondary" :disabled="loading" @click="load">تحديث</UiButton>
-        <UiButton variant="secondary" @click="removeAll">حذف الكل</UiButton>
+        <button class="admin-secondary px-4 py-3" type="button" @click="load">تحديث</button>
+        <button class="admin-secondary px-4 py-3" type="button" @click="resetForm">إعلان جديد</button>
+        <button class="admin-danger px-4 py-3" type="button" @click="removeAll">حذف الكل</button>
       </div>
     </section>
 
-    <section class="grid gap-3 md:grid-cols-4">
+    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <div class="ad-stat"><b>{{ stats.total }}</b><span>كل الإعلانات</span></div>
       <div class="ad-stat"><b>{{ stats.active }}</b><span>مفعلة</span></div>
       <div class="ad-stat"><b>{{ stats.slider }}</b><span>سلايدر</span></div>
-      <div class="ad-stat"><b>{{ stats.product }}</b><span>داخل منتجات</span></div>
+      <div class="ad-stat"><b>{{ stats.popup }}</b><span>منبثقة</span></div>
     </section>
 
-    <section class="grid gap-6 2xl:grid-cols-[minmax(440px,560px)_1fr]">
+    <section class="grid gap-6 xl:grid-cols-[minmax(420px,620px)_1fr]">
       <div class="admin-panel ad-builder">
         <div class="builder-head">
           <div>
             <h2 class="rtl-text">{{ editingId ? 'تعديل الإعلان' : 'إنشاء إعلان جديد' }}</h2>
-            <p class="rtl-text">اتبع الخطوات من الأعلى للأسفل. الحقول تتغير حسب نوع الإعلان.</p>
+            <p class="rtl-text">اتبع الخطوات: نوع الإعلان، المكان، المحتوى، ثم الحفظ.</p>
           </div>
-          <button v-if="editingId" type="button" class="admin-secondary px-3 py-2" @click="resetForm">إعلان جديد</button>
+          <span class="builder-badge">{{ activeType.label }}</span>
         </div>
 
         <div class="step-card">
           <div class="step-label">1</div>
           <div class="min-w-0 flex-1">
-            <div class="step-title rtl-text">نوع الإعلان</div>
+            <h3 class="step-title rtl-text">نوع الإعلان</h3>
             <div class="ad-type-grid">
-              <button v-for="type in adTypes" :key="type.value" type="button" class="ad-type" :class="form.type === type.value ? 'is-active' : ''" @click="selectType(type.value)">
+              <button
+                v-for="type in adTypes"
+                :key="type.value"
+                type="button"
+                class="ad-type"
+                :class="form.type === type.value ? 'is-active' : ''"
+                @click="selectType(type.value)"
+              >
                 <Icon :name="type.icon" class="ad-type__icon" />
-                <span>{{ type.label }}</span>
-                <small>{{ type.hint }}</small>
+                <span class="rtl-text">{{ type.label }}</span>
+                <small class="rtl-text">{{ type.hint }}</small>
               </button>
             </div>
           </div>
@@ -316,20 +53,21 @@ onMounted(load)
 
         <div class="step-card">
           <div class="step-label">2</div>
-          <div class="grid flex-1 gap-4">
-            <div class="step-title rtl-text">المحتوى والمكان</div>
+          <div class="grid min-w-0 flex-1 gap-4">
+            <h3 class="step-title rtl-text">المكان والمحتوى</h3>
             <div class="grid gap-4 sm:grid-cols-2">
               <div class="grid gap-2">
-                <label class="admin-label">الموضع</label>
+                <label class="admin-label">موضع الظهور</label>
                 <select v-model="form.placement" class="admin-input h-12">
                   <option v-for="p in placementOptions" :key="p.value" :value="p.value">{{ p.label }}</option>
                 </select>
               </div>
               <div class="grid gap-2">
                 <label class="admin-label">الترتيب</label>
-                <UiInput v-model.number="form.sortOrder" type="number" min="0" step="1" />
+                <UiInput v-model="form.sortOrder" type="number" />
               </div>
             </div>
+
             <div class="grid gap-2">
               <label class="admin-label">العنوان</label>
               <UiInput v-model="form.title" placeholder="مثال: عروض العناية الكورية" />
@@ -338,43 +76,44 @@ onMounted(load)
               <label class="admin-label">العنوان الفرعي</label>
               <UiInput v-model="form.subtitle" placeholder="نص قصير يظهر تحت العنوان" />
             </div>
-          </div>
-        </div>
 
-        <div v-if="form.type === 'product'" class="step-card product-search-step">
-          <div class="step-label">3</div>
-          <div class="grid flex-1 gap-3">
-            <div>
-              <div class="step-title rtl-text">اختيار المنتج</div>
-              <p class="admin-muted text-xs rtl-text">ابحث عن المنتج ثم اضغط عليه لربط الإعلان بداخله.</p>
+            <div v-if="form.type === 'product'" class="grid gap-3">
+              <label class="admin-label">اختيار المنتج</label>
+              <UiInput v-model="productQuery" placeholder="ابحث باسم المنتج أو البراند أو slug" />
+              <div class="product-search-list">
+                <button
+                  v-for="p in filteredProducts"
+                  :key="p.id"
+                  type="button"
+                  class="product-pick"
+                  :class="form.productId === p.id ? 'is-active' : ''"
+                  @click="selectProduct(p)"
+                >
+                  <img v-if="productImage(p)" :src="api.buildAssetUrl(productImage(p))" />
+                  <span v-else class="product-pick__empty"><Icon name="mdi:image-off-outline" /></span>
+                  <span class="min-w-0 flex-1">
+                    <b>{{ productName(p) }}</b>
+                    <small>{{ productBrand(p) || p.slug || 'منتج' }}</small>
+                  </span>
+                  <Icon v-if="form.productId === p.id" name="mdi:check-circle" class="text-xl text-emerald-400" />
+                </button>
+              </div>
+              <div v-if="form.productId" class="selected-product rtl-text">تم اختيار: {{ form.productTitle }}</div>
             </div>
-            <UiInput v-model="productQuery" placeholder="ابحث بالاسم أو السلك أو البراند" />
-            <div class="product-search-list">
-              <button v-for="p in filteredProducts" :key="p.id" type="button" class="product-pick" :class="form.productId === p.id ? 'is-active' : ''" @click="selectProduct(p)">
-                <img v-if="productImage(p)" :src="api.buildAssetUrl(productImage(p))" alt="" />
-                <div v-else class="product-pick__empty"><Icon name="mdi:package-variant" /></div>
-                <div class="min-w-0 flex-1">
-                  <b>{{ productName(p) }}</b>
-                  <small>{{ p.slug }} <span v-if="productBrand(p)">• {{ productBrand(p) }}</span></small>
-                </div>
-                <Icon v-if="form.productId === p.id" name="mdi:check-circle" class="text-xl text-emerald-400" />
-              </button>
-            </div>
-            <div v-if="form.productId" class="selected-product rtl-text">تم اختيار: {{ form.productTitle }}</div>
           </div>
         </div>
 
         <div class="step-card">
-          <div class="step-label">{{ form.type === 'product' ? '4' : '3' }}</div>
-          <div class="grid flex-1 gap-3">
-            <div class="step-title rtl-text">الصور والرابط</div>
+          <div class="step-label">3</div>
+          <div class="grid min-w-0 flex-1 gap-4">
+            <h3 class="step-title rtl-text">الصور والرابط</h3>
             <label class="upload-zone">
               <input type="file" accept="image/*" :multiple="form.type === 'slider'" class="hidden" @change="onPickFile" />
               <Icon name="mdi:cloud-upload-outline" class="text-3xl text-[rgb(var(--primary))]" />
               <span class="font-extrabold">{{ uploading ? 'جاري الرفع...' : 'اضغط لرفع الصور' }}</span>
               <small>{{ form.type === 'slider' ? 'يمكن رفع أكثر من صورة للسلايدر' : 'صورة واحدة تكفي لهذا النوع' }}</small>
             </label>
-            <UiInput v-model="form.imageUrl" placeholder="https://..." dir="ltr" />
+            <UiInput v-model="form.imageUrl" placeholder="رابط الصورة اليدوي إن وجد" dir="ltr" />
             <div v-if="previewImages.length" class="preview-grid">
               <div v-for="(img, idx) in previewImages" :key="`${img}-${idx}`" class="preview-card">
                 <img :src="api.buildAssetUrl(String(img))" />
@@ -382,7 +121,7 @@ onMounted(load)
               </div>
             </div>
             <div class="grid gap-2">
-              <label class="admin-label">الرابط</label>
+              <label class="admin-label">الرابط عند الضغط</label>
               <UiInput v-model="form.linkUrl" placeholder="/products أو رابط خارجي" dir="ltr" />
             </div>
             <label class="enable-toggle">
@@ -400,7 +139,7 @@ onMounted(load)
         <div class="ad-list-head">
           <div>
             <h2 class="rtl-text">قائمة الإعلانات</h2>
-            <p class="admin-muted text-sm rtl-text">راجع، عدّل، عطّل أو احذف الإعلانات بسهولة.</p>
+            <p class="admin-muted text-sm rtl-text">تظهر الإعلانات هنا مباشرة بعد الحفظ أو الرفع.</p>
           </div>
           <select v-model="filterType" class="admin-input h-11 w-full sm:w-56">
             <option value="all">كل الإعلانات</option>
@@ -421,8 +160,8 @@ onMounted(load)
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-center gap-2">
                 <b class="truncate">{{ ad.title || 'بدون عنوان' }}</b>
-                <span class="pill">{{ ad.type }}</span>
-                <span class="pill">{{ ad.placement }}</span>
+                <span class="pill">{{ typeLabel(ad.type) }}</span>
+                <span class="pill">{{ placementLabel(ad.placement) }}</span>
                 <span class="pill" :class="ad.isEnabled ? 'is-good' : 'is-off'">{{ ad.isEnabled ? 'مفعل' : 'معطل' }}</span>
               </div>
               <p class="mt-1 truncate text-xs text-[rgb(var(--muted))] keep-ltr">{{ ad.linkUrl || 'بدون رابط' }}</p>
@@ -440,11 +179,227 @@ onMounted(load)
   </div>
 </template>
 
+<script setup lang="ts">
+definePageMeta({ layout: 'admin', middleware: 'admin' })
+import UiButton from '~/components/ui/UiButton.vue'
+import UiInput from '~/components/ui/UiInput.vue'
+
+const toast = useToast()
+const api = useApi()
+
+function emitAdsChanged() {
+  if (process.client) window.dispatchEvent(new CustomEvent('ads:changed'))
+}
+
+const loading = ref(true)
+const saving = ref(false)
+const uploading = ref(false)
+const items = ref<any[]>([])
+const products = ref<any[]>([])
+const productQuery = ref('')
+const filterType = ref('all')
+const editingId = ref<string | null>(null)
+
+const adTypes = [
+  { value: 'slider', label: 'سلايدر', icon: 'mdi:view-carousel-outline', hint: 'عدة صور تتحرك في أعلى أو آخر الصفحة' },
+  { value: 'banner', label: 'بانر', icon: 'mdi:image-outline', hint: 'صورة ثابتة في موضع تختاره' },
+  { value: 'popup', label: 'منبثق', icon: 'mdi:tooltip-image-outline', hint: 'نافذة تظهر للزائر في الصفحة الرئيسية' },
+  { value: 'product', label: 'داخل منتج', icon: 'mdi:package-variant-closed', hint: 'إعلان مرتبط بمنتج تختاره بالبحث' },
+]
+
+const allPlacements = [
+  { value: 'home_top_slider', label: 'سلايدر أعلى الرئيسية', type: 'slider' },
+  { value: 'home_bottom_slider', label: 'سلايدر آخر الرئيسية', type: 'slider' },
+  { value: 'page_top_slider', label: 'سلايدر أعلى الصفحات', type: 'slider' },
+  { value: 'page_bottom_slider', label: 'سلايدر آخر الصفحات', type: 'slider' },
+  { value: 'home_top', label: 'بانر أعلى الرئيسية', type: 'banner' },
+  { value: 'home_middle', label: 'بانر منتصف الرئيسية', type: 'banner' },
+  { value: 'home_bottom', label: 'بانر آخر الرئيسية', type: 'banner' },
+  { value: 'page_top', label: 'بانر أعلى الصفحات', type: 'banner' },
+  { value: 'page_bottom', label: 'بانر آخر الصفحات', type: 'banner' },
+  { value: 'popup', label: 'إعلان منبثق', type: 'popup' },
+  { value: 'product_page', label: 'داخل صفحة المنتج', type: 'product' },
+]
+const placementOptions = computed(() => allPlacements.filter((x) => x.type === form.type))
+
+const form = reactive({
+  type: 'slider',
+  placement: 'home_top_slider',
+  title: '',
+  subtitle: '',
+  imageUrl: '',
+  imageUrls: [] as string[],
+  linkUrl: '/products',
+  productId: '',
+  productTitle: '',
+  sortOrder: 0,
+  isEnabled: true,
+})
+
+const activeType = computed(() => adTypes.find((x) => x.value === form.type) || adTypes[0])
+const previewImages = computed(() => {
+  const arr = Array.isArray(form.imageUrls) ? form.imageUrls.filter(Boolean) : []
+  return arr.length ? arr : (form.imageUrl ? [form.imageUrl] : [])
+})
+const stats = computed(() => ({
+  total: items.value.length,
+  active: items.value.filter((x: any) => x.isEnabled).length,
+  slider: items.value.filter((x: any) => x.type === 'slider').length,
+  popup: items.value.filter((x: any) => x.type === 'popup').length,
+}))
+const filteredAds = computed(() => {
+  if (filterType.value === 'all') return items.value
+  if (filterType.value === 'active') return items.value.filter((x: any) => x.isEnabled)
+  if (filterType.value === 'disabled') return items.value.filter((x: any) => !x.isEnabled)
+  return items.value.filter((x: any) => x.type === filterType.value)
+})
+
+function normalizeProducts(res: any) {
+  if (Array.isArray(res)) return res
+  if (Array.isArray(res?.items)) return res.items
+  if (Array.isArray(res?.data)) return res.data
+  return []
+}
+function productName(p: any) { return p?.title || p?.name || p?.nameAr || 'منتج بدون اسم' }
+function productBrand(p: any) { return p?.brand || p?.brandName || p?.brandSlug || '' }
+function productImage(p: any) { return p?.imageUrl || p?.primaryImageUrl || p?.thumbnailUrl || p?.images?.[0]?.url || p?.assets?.[0]?.url || '' }
+const filteredProducts = computed(() => {
+  const q = productQuery.value.trim().toLowerCase()
+  const source = products.value || []
+  if (!q) return source.slice(0, 12)
+  return source.filter((p: any) => `${productName(p)} ${p.slug || ''} ${productBrand(p)}`.toLowerCase().includes(q)).slice(0, 16)
+})
+
+async function load() {
+  loading.value = true
+  try {
+    const [adsRes, productsRes]: any[] = await Promise.all([
+      $fetch('/api/bff/admin/ads', { query: { _ts: Date.now() }, headers: { 'cache-control': 'no-cache' } }),
+      $fetch('/api/bff/admin/products', { query: { page: 1, pageSize: 300, _ts: Date.now() }, headers: { 'cache-control': 'no-cache' } }).catch(() => []),
+    ])
+    items.value = Array.isArray(adsRes) ? adsRes : []
+    products.value = normalizeProducts(productsRes)
+  } catch {
+    items.value = []
+    products.value = []
+  } finally { loading.value = false }
+}
+
+function resetForm() {
+  editingId.value = null
+  Object.assign(form, { type: 'slider', placement: 'home_top_slider', title: '', subtitle: '', imageUrl: '', imageUrls: [], linkUrl: '/products', productId: '', productTitle: '', sortOrder: 0, isEnabled: true })
+  productQuery.value = ''
+}
+function edit(ad: any) {
+  editingId.value = ad.id
+  const found = products.value.find((p: any) => p.id === ad.productId)
+  Object.assign(form, {
+    type: ad.type || 'banner',
+    placement: ad.placement || 'home_top',
+    title: ad.title || '',
+    subtitle: ad.subtitle || '',
+    imageUrl: ad.imageUrl || '',
+    imageUrls: Array.isArray(ad.imageUrls) ? [...ad.imageUrls] : (ad.imageUrl ? [ad.imageUrl] : []),
+    linkUrl: ad.linkUrl || '/products',
+    productId: ad.productId || '',
+    productTitle: found ? productName(found) : '',
+    sortOrder: Number(ad.sortOrder || 0),
+    isEnabled: ad.isEnabled !== false,
+  })
+  productQuery.value = form.productTitle
+  window?.scrollTo?.({ top: 0, behavior: 'smooth' })
+}
+function selectType(type: string) {
+  form.type = type
+  const first = allPlacements.find((x) => x.type === type)
+  form.placement = first?.value || 'home_top'
+  if (type === 'product') form.linkUrl = form.productId ? `/product/${form.productId}` : '/products'
+}
+function selectProduct(p: any) {
+  form.productId = p.id
+  form.productTitle = productName(p)
+  form.linkUrl = `/product/${p.id}`
+  productQuery.value = productName(p)
+}
+function payload() {
+  return { type: form.type, placement: form.placement, title: form.title, subtitle: form.subtitle || null, imageUrl: form.imageUrl, imageUrls: form.imageUrls, linkUrl: form.linkUrl || null, productId: form.type === 'product' && form.productId ? form.productId : null, sortOrder: Number(form.sortOrder || 0), isEnabled: Boolean(form.isEnabled), startAt: null, endAt: null }
+}
+async function saveAd() {
+  if (!previewImages.value.length) return toast.error('ارفع صورة واحدة على الأقل')
+  if (form.type === 'product' && !form.productId) return toast.error('اختر المنتج من البحث أولاً')
+  saving.value = true
+  try {
+    if (editingId.value) {
+      await $fetch(`/api/bff/admin/ads/${editingId.value}`, { method: 'PUT', body: payload() })
+      toast.success('تم تحديث الإعلان')
+    } else {
+      await $fetch('/api/bff/admin/ads', { method: 'POST', body: payload() })
+      toast.success('تم إنشاء الإعلان')
+    }
+    resetForm()
+    await load()
+    emitAdsChanged()
+  } catch { toast.error('تعذر حفظ الإعلان') }
+  finally { saving.value = false }
+}
+async function remove(id: string) {
+  if (!confirm('حذف الإعلان؟')) return
+  try { await $fetch(`/api/bff/admin/ads/${id}`, { method: 'DELETE' }); toast.success('تم الحذف'); await load(); emitAdsChanged() }
+  catch { toast.error('تعذر الحذف') }
+}
+async function removeAll() {
+  if (!confirm('حذف كل الإعلانات الحالية؟')) return
+  try { await $fetch('/api/bff/admin/ads', { method: 'DELETE' }); toast.success('تم حذف جميع الإعلانات'); await load(); emitAdsChanged() }
+  catch { toast.error('تعذر حذف الكل') }
+}
+async function toggleEnabled(ad: any) {
+  try {
+    await $fetch(`/api/bff/admin/ads/${ad.id}`, { method: 'PUT', body: { ...ad, imageUrls: ad.imageUrls || (ad.imageUrl ? [ad.imageUrl] : []), isEnabled: !ad.isEnabled, startAt: ad.startAt || null, endAt: ad.endAt || null } })
+    await load(); emitAdsChanged()
+  } catch { toast.error('تعذر تحديث الإعلان') }
+}
+async function onPickFile(e: Event) {
+  const input = e.target as HTMLInputElement
+  const files = Array.from(input.files || [])
+  if (!files.length) return
+  uploading.value = true
+  try {
+    const uploaded: string[] = []
+    for (const file of files) {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res: any = await $fetch('/api/bff/admin/ads/upload', { method: 'POST', body: fd })
+      const url = res?.url?.url || res?.url || res?.imageUrl || ''
+      if (url) uploaded.push(url)
+    }
+    if (form.type === 'slider') form.imageUrls = [...form.imageUrls, ...uploaded]
+    else {
+      form.imageUrl = uploaded[0] || form.imageUrl
+      form.imageUrls = form.imageUrl ? [form.imageUrl] : []
+    }
+    toast.success('تم رفع الصور')
+  } catch { toast.error('تعذر رفع الصور') }
+  finally { uploading.value = false; input.value = '' }
+}
+function removePreview(idx: number) {
+  const arr = [...previewImages.value]
+  arr.splice(idx, 1)
+  form.imageUrls = arr
+  form.imageUrl = arr[0] || ''
+}
+function typeLabel(type: string) { return adTypes.find((x) => x.value === type)?.label || type }
+function placementLabel(p: string) { return allPlacements.find((x) => x.value === p)?.label || p }
+
+watch(() => form.imageUrl, (v) => { if (v && !form.imageUrls.length) form.imageUrls = [v] })
+watch(() => form.type, (v) => { if (!placementOptions.value.some((p) => p.value === form.placement)) form.placement = placementOptions.value[0]?.value || 'home_top' })
+await load()
+</script>
+
 <style scoped>
 .ads-hero{ display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:1.35rem; border-radius:30px; }
 .eyebrow{ display:inline-flex; border:1px solid rgba(var(--primary),.35); background:rgba(var(--primary),.08); color:rgb(var(--primary)); border-radius:999px; padding:.35rem .7rem; font-size:.72rem; font-weight:1000; }
 .ads-title{ margin-top:.8rem; font-size:clamp(1.7rem,3vw,2.6rem); font-weight:1000; letter-spacing:-.04em; color:rgb(var(--text)); }
-.ads-subtitle{ margin-top:.35rem; color:rgb(var(--muted)); max-width:760px; line-height:1.9; }
+.ads-subtitle{ margin-top:.35rem; color:rgb(var(--muted)); max-width:820px; line-height:1.9; }
 .ads-hero__actions{ display:flex; gap:.6rem; flex-wrap:wrap; justify-content:flex-end; }
 .ad-stat{ border:1px solid rgba(var(--border), .9); background:linear-gradient(180deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-2-rgb), .82)); border-radius:26px; padding:1rem 1.1rem; box-shadow:var(--shadow-soft); }
 .ad-stat b{ display:block; font-size:1.85rem; color:rgb(var(--text)); line-height:1; } .ad-stat span{ color:rgb(var(--muted)); font-size:.84rem; font-weight:900; }
@@ -452,6 +407,7 @@ onMounted(load)
 .builder-head,.ad-list-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
 .builder-head h2,.ad-list-head h2{ font-size:1.25rem; font-weight:1000; color:rgb(var(--text)); }
 .builder-head p{ margin-top:.2rem; color:rgb(var(--muted)); font-size:.82rem; }
+.builder-badge{ display:inline-flex; border-radius:999px; border:1px solid rgba(var(--primary),.28); background:rgba(var(--primary),.10); color:rgb(var(--primary)); padding:.45rem .8rem; font-weight:1000; font-size:.8rem; }
 .step-card{ display:flex; gap:1rem; border:1px solid rgba(var(--border),.86); background:rgba(var(--surface-2-rgb),.48); border-radius:26px; padding:1rem; margin-top:1rem; }
 .step-label{ display:grid; place-items:center; width:36px; height:36px; flex:0 0 auto; border-radius:50%; background:rgb(var(--primary)); color:#050509; font-weight:1000; box-shadow:0 10px 24px rgba(var(--primary),.24); }
 .step-title{ margin-bottom:.75rem; color:rgb(var(--text)); font-size:1rem; font-weight:1000; }

@@ -147,6 +147,12 @@ public static class DbBootstrapper
             @"ALTER TABLE IF EXISTS ""AppearanceConfigs""
               ADD COLUMN IF NOT EXISTS ""IntroButtonUrl"" character varying(2048) NULL;",
 
+            @"ALTER TABLE IF EXISTS ""AppearanceConfigs""
+              ADD COLUMN IF NOT EXISTS ""IntroSecondaryButtonText"" character varying(100) NULL;",
+
+            @"ALTER TABLE IF EXISTS ""AppearanceConfigs""
+              ADD COLUMN IF NOT EXISTS ""IntroSecondaryButtonUrl"" character varying(2048) NULL;",
+
             @"CREATE TABLE IF NOT EXISTS ""AppearanceAds"" (
                 ""Id"" uuid NOT NULL,
                 ""AppearanceConfigId"" uuid NOT NULL,

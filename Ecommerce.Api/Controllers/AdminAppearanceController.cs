@@ -51,6 +51,8 @@ public class AdminAppearanceController : ControllerBase
         config.IntroSubtitle = req.IntroSubtitle;
         config.IntroButtonText = string.IsNullOrWhiteSpace(req.IntroButtonText) ? "ابدأ الآن" : req.IntroButtonText.Trim();
         config.IntroButtonUrl = string.IsNullOrWhiteSpace(req.IntroButtonUrl) ? "/products" : req.IntroButtonUrl.Trim();
+        config.IntroSecondaryButtonText = string.IsNullOrWhiteSpace(req.IntroSecondaryButtonText) ? "تصفح البراندات" : req.IntroSecondaryButtonText.Trim();
+        config.IntroSecondaryButtonUrl = string.IsNullOrWhiteSpace(req.IntroSecondaryButtonUrl) ? "/brands" : req.IntroSecondaryButtonUrl.Trim();
         config.UpdatedAt = DateTimeOffset.UtcNow;
 
         // Sync ads
@@ -167,7 +169,9 @@ public class AdminAppearanceController : ControllerBase
             IntroTitle = config.IntroTitle,
             IntroSubtitle = config.IntroSubtitle,
             IntroButtonText = config.IntroButtonText,
-            IntroButtonUrl = config.IntroButtonUrl
+            IntroButtonUrl = config.IntroButtonUrl,
+            IntroSecondaryButtonText = config.IntroSecondaryButtonText,
+            IntroSecondaryButtonUrl = config.IntroSecondaryButtonUrl
         };
     }
 }

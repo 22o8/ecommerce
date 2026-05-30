@@ -2,13 +2,14 @@
   <div class="min-h-screen bg-app relative overflow-x-clip">
     <GlobalEffects />
     <AppNavbar />
-    <GlobalAds />
+    <GlobalAds zone="top" />
 
     <main class="mx-auto max-w-7xl px-4 py-8">
       <slot />
     </main>
 
 
+    <GlobalAds zone="bottom" />
     <AppFooter />
 
     <Transition name="back-to-top-fade">

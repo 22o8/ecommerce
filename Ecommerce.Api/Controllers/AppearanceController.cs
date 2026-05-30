@@ -42,7 +42,9 @@ public class AppearanceController : ControllerBase
                 IntroTitle = null,
                 IntroSubtitle = null,
                 IntroButtonText = null,
-                IntroButtonUrl = null
+                IntroButtonUrl = null,
+                IntroSecondaryButtonText = null,
+                IntroSecondaryButtonUrl = null
             });
         }
 
@@ -64,7 +66,9 @@ public class AppearanceController : ControllerBase
             IntroTitle = config.IntroTitle,
             IntroSubtitle = config.IntroSubtitle,
             IntroButtonText = config.IntroButtonText,
-            IntroButtonUrl = config.IntroButtonUrl
+            IntroButtonUrl = config.IntroButtonUrl,
+            IntroSecondaryButtonText = config.IntroSecondaryButtonText,
+            IntroSecondaryButtonUrl = config.IntroSecondaryButtonUrl
         });
     }
 }
