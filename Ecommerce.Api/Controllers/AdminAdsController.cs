@@ -202,7 +202,6 @@ public class AdminAdsController : ControllerBase
             "banner" => AdType.Banner,
             "product" or "productads" or "product_ad" => AdType.Product,
             "slider" or "carousel" => AdType.Slider,
-            "notification" or "notice" or "toast" => AdType.Notification,
             _ => AdType.Banner
         };
     }

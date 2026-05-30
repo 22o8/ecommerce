@@ -47,32 +47,22 @@
         </div>
       </section>
 
-      <Transition name="ad-notification">
-        <div v-if="zone === 'top' && notificationAd && showNotification" class="ad-notification-wrap">
-          <NuxtLink :to="safeLink(notificationAd.linkUrl)" class="ad-notification rtl-text" @click="closeNotification">
-            <span class="ad-notification__icon"><Icon name="mdi:bell-ring-outline" /></span>
-            <span class="ad-notification__body">
-              <b>{{ notificationAd.title || 'تنبيه جديد' }}</b>
-              <small>{{ notificationAd.subtitle || 'لديك عرض جديد داخل المتجر.' }}</small>
-            </span>
-          </NuxtLink>
-          <button type="button" class="ad-notification__close" aria-label="close" @click="closeNotification">×</button>
-        </div>
-      </Transition>
-
       <div v-if="zone === 'top' && popupAd && showPopup" class="fixed inset-0 z-[70] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="close" />
         <div class="ad-popup relative w-full max-w-[620px] overflow-hidden rounded-[2rem] border border-white/15 bg-surface shadow-2xl">
           <button class="ad-popup__close" type="button" @click="close" aria-label="close">✕</button>
           <NuxtLink :to="safeLink(popupAd.linkUrl)" class="block" @click="close">
             <component
+              v-if="firstMedia(popupAd)"
               :is="mediaComponent(firstMedia(popupAd))"
               v-bind="mediaAttrs(firstMedia(popupAd), popupAd.title || 'popup')"
               class="ad-popup__media"
             />
-            <div v-if="popupAd.title || popupAd.subtitle" class="ad-popup__body rtl-text">
-              <b>{{ popupAd.title }}</b>
-              <span>{{ popupAd.subtitle }}</span>
+            <div class="ad-popup__body rtl-text" :class="{ 'ad-popup__body--text-only': !firstMedia(popupAd) }">
+              <span class="ad-popup__badge">إعلان</span>
+              <b>{{ popupAd.title || 'عرض خاص' }}</b>
+              <span v-if="popupAd.subtitle">{{ popupAd.subtitle }}</span>
+              <strong v-if="popupAd.linkUrl" class="ad-popup__cta">اضغط للمتابعة</strong>
             </div>
           </NuxtLink>
         </div>
@@ -90,7 +80,6 @@ const api = useApi()
 const enabled = computed(() => !route.path.startsWith('/admin'))
 const ads = ref<any[]>([])
 const showPopup = ref(false)
-const showNotification = ref(false)
 const loadingKey = ref(0)
 const sliderIndex = ref(0)
 let timer: ReturnType<typeof setInterval> | null = null
@@ -104,11 +93,11 @@ function adScore(ad: any, placements: string[]) {
   const idx = placements.indexOf(p)
   return idx < 0 ? 999 : idx
 }
-function findAd(types: string[], placements: string[]) {
+function findAd(types: string[], placements: string[], requireMedia = true) {
   const typeSet = new Set(types.map(norm))
   const placeSet = new Set(placements.map(norm))
   return [...ads.value]
-    .filter((a: any) => typeSet.has(norm(a?.type)) && placeSet.has(norm(a?.placement)) && hasMedia(a))
+    .filter((a: any) => typeSet.has(norm(a?.type)) && placeSet.has(norm(a?.placement)) && (!requireMedia || hasMedia(a) || Boolean(String(a?.title || a?.subtitle || '').trim())))
     .sort((a: any, b: any) => adScore(a, placements.map(norm)) - adScore(b, placements.map(norm)) || Number(a?.sortOrder || 0) - Number(b?.sortOrder || 0))[0] || null
 }
 
@@ -127,9 +116,8 @@ const primaryTopAd = computed(() => topSlider.value || topBanner.value)
 const bottomSlider = computed(() => findAd(['slider'], bottomPlacements.value))
 const bottomBanner = computed(() => findAd(['banner'], bottomPlacements.value))
 const primaryBottomAd = computed(() => bottomSlider.value || bottomBanner.value)
-const popupAd = computed(() => findAd(['popup'], ['popup', 'site_popup', 'home_popup']))
-const notificationAd = computed(() => findAd(['notification'], isHome.value ? ['home_notification', 'site_notification', 'notification'] : ['site_notification', 'notification']))
-const hasRenderableAd = computed(() => Boolean(primaryTopAd.value || primaryBottomAd.value || popupAd.value || notificationAd.value))
+const popupAd = computed(() => findAd(['popup'], ['popup', 'site_popup', 'home_popup'], false))
+const hasRenderableAd = computed(() => Boolean(primaryTopAd.value || primaryBottomAd.value || popupAd.value))
 
 function mediaList(ad: any) {
   const arr = Array.isArray(ad?.imageUrls) ? ad.imageUrls.filter(Boolean) : []
@@ -185,11 +173,9 @@ async function loadAds() {
   } catch { ads.value = [] }
   sliderIndex.value = 0
   showPopup.value = Boolean(process.client && zone.value === 'top' && popupAd.value)
-  showNotification.value = Boolean(process.client && zone.value === 'top' && notificationAd.value)
   startTimer()
 }
 function close() { showPopup.value = false }
-function closeNotification() { showNotification.value = false }
 
 onMounted(() => {
   loadAds()
@@ -228,22 +214,15 @@ onBeforeUnmount(() => {
 .ad-slider__dots{ position:absolute; inset-inline:0; bottom:.8rem; display:flex; align-items:center; justify-content:center; gap:.4rem; z-index:5; }
 .ad-slider__dots button{ width:.58rem; height:.58rem; border-radius:999px; background:rgba(255,255,255,.55); transition:.2s ease; }
 .ad-slider__dots button.is-active{ width:2.3rem; background:white; }
- .ad-notification-wrap{ position:fixed; inset-inline-end:clamp(.85rem,2vw,1.35rem); top:5.6rem; z-index:68; display:flex; align-items:center; gap:.5rem; max-width:min(420px, calc(100vw - 1.5rem)); }
-.ad-notification{ display:flex; align-items:center; gap:.8rem; min-width:280px; max-width:100%; border:1px solid rgba(var(--primary),.32); background:linear-gradient(135deg, rgba(var(--surface-rgb),.96), rgba(var(--surface-2-rgb),.92)); color:rgb(var(--text)); border-radius:1.35rem; padding:.85rem 1rem; box-shadow:0 24px 70px rgba(0,0,0,.24), 0 0 0 1px rgba(255,255,255,.04) inset; backdrop-filter:blur(18px); text-decoration:none; }
-.ad-notification__icon{ width:42px; height:42px; border-radius:16px; display:grid; place-items:center; flex:0 0 auto; background:rgb(var(--primary)); color:#06050a; font-size:1.35rem; box-shadow:0 14px 30px rgba(var(--primary),.25); }
-.ad-notification__body{ display:grid; gap:.15rem; min-width:0; }
-.ad-notification__body b{ font-size:.95rem; font-weight:1000; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.ad-notification__body small{ color:rgb(var(--muted)); line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.ad-notification__close{ width:2.25rem; height:2.25rem; border-radius:999px; background:rgba(var(--surface-rgb),.86); border:1px solid rgba(var(--border),.75); color:rgb(var(--text)); font-size:1.25rem; font-weight:900; box-shadow:0 10px 26px rgba(0,0,0,.12); }
-.ad-notification-enter-active,.ad-notification-leave-active{ transition:opacity .24s ease, transform .24s ease; }
-.ad-notification-enter-from,.ad-notification-leave-to{ opacity:0; transform:translateY(-12px) scale(.97); }
-
 .ad-popup{ animation:popupIn .28s ease both; }
 .ad-popup__media{ display:block; width:100%; max-height:72vh; object-fit:cover; }
 .ad-popup__close{ position:absolute; z-index:3; inset-inline-start:.8rem; top:.8rem; width:2.6rem; height:2.6rem; border-radius:999px; background:rgba(0,0,0,.52); color:white; font-weight:900; }
-.ad-popup__body{ padding:1rem 1.25rem; display:grid; gap:.25rem; }
+.ad-popup__body{ padding:1rem 1.25rem; display:grid; gap:.4rem; }
+.ad-popup__body--text-only{ padding:2rem; min-height:260px; place-content:center; text-align:center; background:radial-gradient(circle at top right, rgba(var(--primary),.20), transparent 42%), rgb(var(--surface)); }
 .ad-popup__body b{ color:rgb(var(--text)); font-size:1.2rem; font-weight:1000; }
 .ad-popup__body span{ color:rgb(var(--muted)); }
+.ad-popup__badge{ justify-self:center; width:max-content; border-radius:999px; padding:.35rem .8rem; background:rgba(var(--primary),.14); color:rgb(var(--primary)) !important; font-size:.78rem; font-weight:1000; }
+.ad-popup__cta{ justify-self:center; margin-top:.6rem; border-radius:999px; padding:.7rem 1.1rem; background:rgb(var(--primary)); color:#050509; font-size:.86rem; font-weight:1000; }
 @keyframes popupIn{ from{ opacity:0; transform:translateY(18px) scale(.98); } to{ opacity:1; transform:none; } }
-@media(max-width:640px){ .ad-notification-wrap{ inset-inline:.75rem; top:5.1rem; max-width:none; } .ad-notification{ flex:1; min-width:0; padding:.75rem .85rem; border-radius:1.1rem; } .ad-notification__icon{ width:38px; height:38px; border-radius:14px; } .ad-container{ padding-inline:.75rem; } .ad-hero-frame{ border-radius:1.35rem; min-height:168px; } .ad-hero-frame__media{ height:178px; } .ad-hero-frame__shade{ background:linear-gradient(0deg, rgba(0,0,0,.72), rgba(0,0,0,.10)); } .ad-hero-frame__content{ inset-inline:.9rem !important; bottom:.9rem; max-width:calc(100% - 1.8rem); } .ad-hero-frame__content b{ font-size:1.45rem; } .ad-hero-frame__content small{ font-size:.82rem; } .ad-bottom-frame{ border-radius:1.35rem; } .ad-bottom-frame__media{ height:160px; } .ad-bottom-frame__content{ inset-inline:.65rem; bottom:.65rem; border-radius:1rem; padding:.65rem .75rem; } }
+@media(max-width:640px){ .ad-container{ padding-inline:.75rem; } .ad-hero-frame{ border-radius:1.35rem; min-height:168px; } .ad-hero-frame__media{ height:178px; } .ad-hero-frame__shade{ background:linear-gradient(0deg, rgba(0,0,0,.72), rgba(0,0,0,.10)); } .ad-hero-frame__content{ inset-inline:.9rem !important; bottom:.9rem; max-width:calc(100% - 1.8rem); } .ad-hero-frame__content b{ font-size:1.45rem; } .ad-hero-frame__content small{ font-size:.82rem; } .ad-bottom-frame{ border-radius:1.35rem; } .ad-bottom-frame__media{ height:160px; } .ad-bottom-frame__content{ inset-inline:.65rem; bottom:.65rem; border-radius:1rem; padding:.65rem .75rem; } }
 </style>
