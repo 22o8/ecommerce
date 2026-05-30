@@ -102,11 +102,11 @@ function findAd(types: string[], placements: string[], requireMedia = true) {
 }
 
 const topPlacements = computed(() => isHome.value
-  ? ['home_hero_slider', 'home_hero_top', 'home_top_slider', 'home_top', 'hero_top', 'top']
+  ? ['home_hero_slider', 'home_hero_top', 'home_top_slider', 'home_top', 'hero_top', 'top', 'above_hero']
   : ['page_top_slider', 'page_top', 'top']
 )
 const bottomPlacements = computed(() => isHome.value
-  ? ['home_bottom_slider', 'home_bottom', 'bottom']
+  ? ['home_bottom_slider', 'home_bottom', 'bottom', 'home_footer']
   : ['page_bottom_slider', 'page_bottom', 'bottom']
 )
 
@@ -116,7 +116,8 @@ const primaryTopAd = computed(() => topSlider.value || topBanner.value)
 const bottomSlider = computed(() => findAd(['slider'], bottomPlacements.value))
 const bottomBanner = computed(() => findAd(['banner'], bottomPlacements.value))
 const primaryBottomAd = computed(() => bottomSlider.value || bottomBanner.value)
-const popupAd = computed(() => findAd(['popup'], ['popup', 'site_popup', 'home_popup'], false))
+const popupPlacements = computed(() => isHome.value ? ['popup', 'site_popup', 'home_popup'] : ['popup', 'site_popup'])
+const popupAd = computed(() => findAd(['popup'], popupPlacements.value, false))
 const hasRenderableAd = computed(() => Boolean(primaryTopAd.value || primaryBottomAd.value || popupAd.value))
 
 function mediaList(ad: any) {

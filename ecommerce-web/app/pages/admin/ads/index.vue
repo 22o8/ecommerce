@@ -34,6 +34,13 @@
           <div class="step-label">1</div>
           <div class="min-w-0 flex-1">
             <h3 class="step-title rtl-text">نوع الإعلان</h3>
+            <div class="grid gap-2 mb-3">
+              <label class="admin-label">اختر نوع الإعلان</label>
+              <select v-model="form.type" class="admin-input h-12" @change="selectType(form.type)">
+                <option v-for="type in adTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
+              </select>
+              <p class="text-xs text-[rgb(var(--muted))] rtl-text">اختيار النوع هنا يغيّر مواضع الظهور تلقائيًا. للإعلان المنبثق اختر: إعلان منبثق.</p>
+            </div>
             <div class="ad-type-grid">
               <button
                 v-for="type in adTypes"
@@ -153,7 +160,7 @@
         </div>
 
         <div v-if="loading" class="empty-box">جاري التحميل...</div>
-        <div v-else-if="!filteredAds.length" class="empty-box">لا توجد إعلانات حسب هذا الفلتر</div>
+        <div v-else-if="!filteredAds.length" class="empty-box">لا توجد إعلانات حسب هذا الفلتر. غيّر الفلتر إلى "كل الإعلانات" أو أنشئ إعلانًا جديدًا.</div>
         <div v-else class="grid gap-3">
           <article v-for="ad in filteredAds" :key="ad.id" class="ad-row">
             <div class="ad-thumb">
@@ -223,8 +230,8 @@ const allPlacements = [
   { value: 'home_bottom', label: 'بانر آخر الرئيسية', type: 'banner' },
   { value: 'page_top', label: 'بانر أعلى الصفحات', type: 'banner' },
   { value: 'page_bottom', label: 'بانر آخر الصفحات', type: 'banner' },
-  { value: 'popup', label: 'منبثق عام لكل الموقع', type: 'popup' },
-  { value: 'home_popup', label: 'منبثق في الصفحة الرئيسية فقط', type: 'popup' },
+  { value: 'popup', label: 'إعلان منبثق عام لكل الموقع', type: 'popup' },
+  { value: 'home_popup', label: 'إعلان منبثق في الصفحة الرئيسية فقط', type: 'popup' },
   { value: 'product_page', label: 'داخل صفحة المنتج', type: 'product' },
 ]
 const placementOptions = computed(() => allPlacements.filter((x) => x.type === form.type))
@@ -267,6 +274,16 @@ function normalizeProducts(res: any) {
   if (Array.isArray(res?.data)) return res.data
   return []
 }
+function normalizeAds(res: any) {
+  const list = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : (Array.isArray(res?.data) ? res.data : []))
+  return list.map((ad: any) => ({
+    ...ad,
+    type: String(ad?.type || 'banner').trim().toLowerCase(),
+    placement: String(ad?.placement || 'home_top').trim(),
+    imageUrls: Array.isArray(ad?.imageUrls) ? ad.imageUrls : (ad?.imageUrl ? [ad.imageUrl] : []),
+    isEnabled: ad?.isEnabled !== false,
+  }))
+}
 function productName(p: any) { return p?.title || p?.name || p?.nameAr || 'منتج بدون اسم' }
 function productBrand(p: any) { return p?.brand || p?.brandName || p?.brandSlug || '' }
 function productImage(p: any) { return p?.imageUrl || p?.primaryImageUrl || p?.thumbnailUrl || p?.images?.[0]?.url || p?.assets?.[0]?.url || '' }
@@ -284,7 +301,7 @@ async function load() {
       $fetch('/api/bff/admin/ads', { query: { _ts: Date.now() }, headers: { 'cache-control': 'no-cache' } }),
       $fetch('/api/bff/admin/products', { query: { page: 1, pageSize: 300, _ts: Date.now() }, headers: { 'cache-control': 'no-cache' } }).catch(() => []),
     ])
-    items.value = Array.isArray(adsRes) ? adsRes : []
+    items.value = normalizeAds(adsRes)
     products.value = normalizeProducts(productsRes)
   } catch {
     items.value = []
@@ -411,7 +428,7 @@ await load()
 .ads-hero__actions{ display:flex; gap:.6rem; flex-wrap:wrap; justify-content:flex-end; }
 .ad-stat{ border:1px solid rgba(var(--border), .9); background:linear-gradient(180deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-2-rgb), .82)); border-radius:26px; padding:1rem 1.1rem; box-shadow:var(--shadow-soft); }
 .ad-stat b{ display:block; font-size:1.85rem; color:rgb(var(--text)); line-height:1; } .ad-stat span{ color:rgb(var(--muted)); font-size:.84rem; font-weight:900; }
-.ad-builder,.ad-list-panel{ padding:1rem; border-radius:30px; }
+.ad-builder,.ad-list-panel{ padding:1rem; border-radius:30px; align-self:start; position:sticky; top:1rem; max-height:calc(100vh - 2rem); overflow:auto; }
 .builder-head,.ad-list-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
 .builder-head h2,.ad-list-head h2{ font-size:1.25rem; font-weight:1000; color:rgb(var(--text)); }
 .builder-head p{ margin-top:.2rem; color:rgb(var(--muted)); font-size:.82rem; }
