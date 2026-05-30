@@ -148,8 +148,8 @@ public class AdminAdsController : ControllerBase
     }
 
     [HttpPost("upload")]
-    [RequestSizeLimit(80_000_000)]
-    [RequestFormLimits(MultipartBodyLengthLimit = 80_000_000)]
+    [RequestSizeLimit(150_000_000)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 150_000_000)]
     public async Task<ActionResult<object>> Upload([FromForm] IFormFile? file)
     {
         if ((file is null || file.Length == 0) && Request.HasFormContentType && Request.Form.Files.Count > 0)

@@ -108,7 +108,7 @@
           <div class="grid min-w-0 flex-1 gap-4">
             <h3 class="step-title rtl-text">الصور والرابط</h3>
             <label class="upload-zone">
-              <input type="file" accept="image/*" :multiple="form.type === 'slider'" class="hidden" @change="onPickFile" />
+              <input type="file" accept="image/*,video/mp4,video/webm,video/ogg" :multiple="form.type === 'slider'" class="hidden" @change="onPickFile" />
               <Icon name="mdi:cloud-upload-outline" class="text-3xl text-[rgb(var(--primary))]" />
               <span class="font-extrabold">{{ uploading ? 'جاري الرفع...' : 'اضغط لرفع الصور' }}</span>
               <small>{{ form.type === 'slider' ? 'يمكن رفع أكثر من صورة للسلايدر' : 'صورة واحدة تكفي لهذا النوع' }}</small>
@@ -212,10 +212,12 @@ const adTypes = [
 ]
 
 const allPlacements = [
+  { value: 'home_hero_slider', label: 'سلايدر فوق الهيرو / بداية الصفحة', type: 'slider' },
   { value: 'home_top_slider', label: 'سلايدر أعلى الرئيسية', type: 'slider' },
   { value: 'home_bottom_slider', label: 'سلايدر آخر الرئيسية', type: 'slider' },
   { value: 'page_top_slider', label: 'سلايدر أعلى الصفحات', type: 'slider' },
   { value: 'page_bottom_slider', label: 'سلايدر آخر الصفحات', type: 'slider' },
+  { value: 'home_hero_top', label: 'بانر فوق الهيرو / بداية الصفحة', type: 'banner' },
   { value: 'home_top', label: 'بانر أعلى الرئيسية', type: 'banner' },
   { value: 'home_middle', label: 'بانر منتصف الرئيسية', type: 'banner' },
   { value: 'home_bottom', label: 'بانر آخر الرئيسية', type: 'banner' },
@@ -228,7 +230,7 @@ const placementOptions = computed(() => allPlacements.filter((x) => x.type === f
 
 const form = reactive({
   type: 'slider',
-  placement: 'home_top_slider',
+  placement: 'home_hero_slider',
   title: '',
   subtitle: '',
   imageUrl: '',
@@ -291,7 +293,7 @@ async function load() {
 
 function resetForm() {
   editingId.value = null
-  Object.assign(form, { type: 'slider', placement: 'home_top_slider', title: '', subtitle: '', imageUrl: '', imageUrls: [], linkUrl: '/products', productId: '', productTitle: '', sortOrder: 0, isEnabled: true })
+  Object.assign(form, { type: 'slider', placement: 'home_hero_slider', title: '', subtitle: '', imageUrl: '', imageUrls: [], linkUrl: '/products', productId: '', productTitle: '', sortOrder: 0, isEnabled: true })
   productQuery.value = ''
 }
 function edit(ad: any) {
@@ -373,7 +375,7 @@ async function onPickFile(e: Event) {
   try {
     const uploaded: string[] = []
     for (const file of files) {
-      const url = await directUpload.upload('admin/ads/upload', file, { maxMb: 60, fallbackToBff: true })
+      const url = await directUpload.upload('admin/ads/upload', file, { maxMb: 150, fallbackToBff: true })
       if (url) uploaded.push(url)
     }
     if (form.type === 'slider') form.imageUrls = [...form.imageUrls, ...uploaded]

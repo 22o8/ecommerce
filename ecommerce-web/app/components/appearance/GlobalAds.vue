@@ -1,79 +1,71 @@
 <template>
-  <div v-if="enabled" class="global-ads" :data-zone="zone">
-    <section v-if="zone === 'top' && topSlider" class="ad-container ad-container--top">
-      <div class="ad-slider relative overflow-hidden rounded-[2rem] border border-app bg-surface shadow-soft">
-        <NuxtLink :to="safeLink(topSlider.linkUrl)" class="block">
-          <Transition name="fade" mode="out-in">
-            <img
-              :key="currentTopImage"
-              :src="asset(currentTopImage, `${topSlider.updatedAt || topSlider.id}-${sliderIndex}`)"
-              :alt="topSlider.title || 'slider'"
-              class="ad-slider__image"
+  <ClientOnly>
+    <div v-if="enabled && hasRenderableAd" class="global-ads" :data-zone="zone">
+      <section v-if="zone === 'top' && primaryTopAd" class="ad-container ad-container--hero">
+        <div class="ad-hero-frame" :class="`ad-hero-frame--${primaryTopAd.type || 'banner'}`">
+          <NuxtLink :to="safeLink(primaryTopAd.linkUrl)" class="ad-hero-frame__link">
+            <Transition name="fade" mode="out-in">
+              <component
+                :is="mediaComponent(currentTopMedia)"
+                :key="currentTopMedia"
+                v-bind="mediaAttrs(currentTopMedia, primaryTopAd.title || 'advertisement')"
+                class="ad-hero-frame__media"
+              />
+            </Transition>
+            <div class="ad-hero-frame__shade" />
+            <div v-if="primaryTopAd.title || primaryTopAd.subtitle" class="ad-hero-frame__content rtl-text">
+              <span class="ad-hero-frame__eyebrow">إعلان</span>
+              <b>{{ primaryTopAd.title }}</b>
+              <small>{{ primaryTopAd.subtitle }}</small>
+            </div>
+          </NuxtLink>
+          <div v-if="topMedia.length > 1" class="ad-slider__dots">
+            <button
+              v-for="(_, idx) in topMedia"
+              :key="idx"
+              type="button"
+              :class="idx === sliderIndex ? 'is-active' : ''"
+              @click="sliderIndex = idx"
             />
-          </Transition>
-          <div v-if="topSlider.title || topSlider.subtitle" class="ad-slider__caption rtl-text">
-            <b>{{ topSlider.title }}</b>
-            <span>{{ topSlider.subtitle }}</span>
           </div>
-        </NuxtLink>
-        <div v-if="topSliderImages.length > 1" class="ad-slider__dots">
-          <button
-            v-for="(_, idx) in topSliderImages"
-            :key="idx"
-            type="button"
-            :class="idx === sliderIndex ? 'is-active' : ''"
-            @click="sliderIndex = idx"
-          />
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section v-else-if="zone === 'top' && topBanner" class="ad-container ad-container--top">
-      <NuxtLink :to="safeLink(topBanner.linkUrl)" class="ad-banner">
-        <img :src="asset(topBanner.imageUrl, topBanner.updatedAt || topBanner.id)" :alt="topBanner.title || 'banner'" />
-        <div v-if="topBanner.title || topBanner.subtitle" class="ad-banner__content rtl-text">
-          <b>{{ topBanner.title }}</b>
-          <span>{{ topBanner.subtitle }}</span>
+      <section v-if="zone === 'bottom' && primaryBottomAd" class="ad-container ad-container--bottom">
+        <div class="ad-bottom-frame">
+          <NuxtLink :to="safeLink(primaryBottomAd.linkUrl)" class="ad-bottom-frame__link">
+            <component
+              :is="mediaComponent(currentBottomMedia)"
+              v-bind="mediaAttrs(currentBottomMedia, primaryBottomAd.title || 'advertisement')"
+              class="ad-bottom-frame__media"
+            />
+            <div v-if="primaryBottomAd.title || primaryBottomAd.subtitle" class="ad-bottom-frame__content rtl-text">
+              <b>{{ primaryBottomAd.title }}</b>
+              <span>{{ primaryBottomAd.subtitle }}</span>
+            </div>
+          </NuxtLink>
         </div>
-      </NuxtLink>
-    </section>
+      </section>
 
-    <section v-if="zone === 'bottom' && bottomSlider" class="ad-container ad-container--bottom">
-      <div class="ad-slider relative overflow-hidden rounded-[2rem] border border-app bg-surface shadow-soft">
-        <NuxtLink :to="safeLink(bottomSlider.linkUrl)" class="block">
-          <img :src="asset(bottomSliderImage, bottomSlider.updatedAt || bottomSlider.id)" :alt="bottomSlider.title || 'slider'" class="ad-slider__image" />
-          <div v-if="bottomSlider.title || bottomSlider.subtitle" class="ad-slider__caption rtl-text">
-            <b>{{ bottomSlider.title }}</b>
-            <span>{{ bottomSlider.subtitle }}</span>
-          </div>
-        </NuxtLink>
-      </div>
-    </section>
-
-    <section v-else-if="zone === 'bottom' && bottomBanner" class="ad-container ad-container--bottom">
-      <NuxtLink :to="safeLink(bottomBanner.linkUrl)" class="ad-banner">
-        <img :src="asset(bottomBanner.imageUrl, bottomBanner.updatedAt || bottomBanner.id)" :alt="bottomBanner.title || 'banner'" />
-        <div v-if="bottomBanner.title || bottomBanner.subtitle" class="ad-banner__content rtl-text">
-          <b>{{ bottomBanner.title }}</b>
-          <span>{{ bottomBanner.subtitle }}</span>
+      <div v-if="zone === 'top' && popupAd && showPopup" class="fixed inset-0 z-[70] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="close" />
+        <div class="ad-popup relative w-full max-w-[620px] overflow-hidden rounded-[2rem] border border-white/15 bg-surface shadow-2xl">
+          <button class="ad-popup__close" type="button" @click="close" aria-label="close">✕</button>
+          <NuxtLink :to="safeLink(popupAd.linkUrl)" class="block" @click="close">
+            <component
+              :is="mediaComponent(firstMedia(popupAd))"
+              v-bind="mediaAttrs(firstMedia(popupAd), popupAd.title || 'popup')"
+              class="ad-popup__media"
+            />
+            <div v-if="popupAd.title || popupAd.subtitle" class="ad-popup__body rtl-text">
+              <b>{{ popupAd.title }}</b>
+              <span>{{ popupAd.subtitle }}</span>
+            </div>
+          </NuxtLink>
         </div>
-      </NuxtLink>
-    </section>
-
-    <div v-if="zone === 'top' && popupAd && showPopup" class="fixed inset-0 z-[70] flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="close" />
-      <div class="ad-popup relative w-full max-w-[620px] overflow-hidden rounded-[2rem] border border-white/15 bg-surface shadow-2xl">
-        <button class="ad-popup__close" type="button" @click="close" aria-label="close">✕</button>
-        <NuxtLink :to="safeLink(popupAd.linkUrl)" class="block" @click="close">
-          <img :src="asset(popupAd.imageUrl, popupAd.updatedAt || popupAd.id)" :alt="popupAd.title || 'popup'" />
-          <div v-if="popupAd.title || popupAd.subtitle" class="ad-popup__body rtl-text">
-            <b>{{ popupAd.title }}</b>
-            <span>{{ popupAd.subtitle }}</span>
-          </div>
-        </NuxtLink>
       </div>
     </div>
-  </div>
+  </ClientOnly>
 </template>
 
 <script setup lang="ts">
@@ -90,40 +82,66 @@ const sliderIndex = ref(0)
 let timer: ReturnType<typeof setInterval> | null = null
 
 const isHome = computed(() => route.path === '/')
-const findAd = (types: string[], placements: string[]) => ads.value.find((a: any) => types.includes(String(a?.type || '').toLowerCase()) && placements.includes(String(a?.placement || '')))
+const norm = (v: any) => String(v || '').trim().toLowerCase()
+const hasMedia = (ad: any) => mediaList(ad).length > 0
 
-const topSlider = computed(() => isHome.value
-  ? findAd(['slider'], ['home_top_slider', 'home_top'])
-  : findAd(['slider'], ['page_top_slider', 'page_top'])
-)
-const topBanner = computed(() => isHome.value
-  ? findAd(['banner'], ['home_top'])
-  : findAd(['banner'], ['page_top'])
-)
-const bottomSlider = computed(() => isHome.value
-  ? findAd(['slider'], ['home_bottom_slider', 'home_bottom'])
-  : findAd(['slider'], ['page_bottom_slider', 'page_bottom'])
-)
-const bottomBanner = computed(() => isHome.value
-  ? findAd(['banner'], ['home_bottom'])
-  : findAd(['banner'], ['page_bottom'])
-)
-const popupAd = computed(() => findAd(['popup'], ['popup', 'site_popup']))
-
-function imageList(ad: any) {
-  const arr = Array.isArray(ad?.imageUrls) ? ad.imageUrls.filter(Boolean) : []
-  return arr.length ? arr : (ad?.imageUrl ? [ad.imageUrl] : [])
+function adScore(ad: any, placements: string[]) {
+  const p = norm(ad?.placement)
+  const idx = placements.indexOf(p)
+  return idx < 0 ? 999 : idx
 }
-const topSliderImages = computed(() => imageList(topSlider.value))
-const currentTopImage = computed(() => topSliderImages.value[sliderIndex.value] || '')
-const bottomSliderImages = computed(() => imageList(bottomSlider.value))
-const bottomSliderImage = computed(() => bottomSliderImages.value[0] || '')
+function findAd(types: string[], placements: string[]) {
+  const typeSet = new Set(types.map(norm))
+  const placeSet = new Set(placements.map(norm))
+  return [...ads.value]
+    .filter((a: any) => typeSet.has(norm(a?.type)) && placeSet.has(norm(a?.placement)) && hasMedia(a))
+    .sort((a: any, b: any) => adScore(a, placements.map(norm)) - adScore(b, placements.map(norm)) || Number(a?.sortOrder || 0) - Number(b?.sortOrder || 0))[0] || null
+}
 
-const asset = (p?: string, stamp?: any) => {
+const topPlacements = computed(() => isHome.value
+  ? ['home_hero_slider', 'home_hero_top', 'home_top_slider', 'home_top', 'hero_top', 'top']
+  : ['page_top_slider', 'page_top', 'top']
+)
+const bottomPlacements = computed(() => isHome.value
+  ? ['home_bottom_slider', 'home_bottom', 'bottom']
+  : ['page_bottom_slider', 'page_bottom', 'bottom']
+)
+
+const topSlider = computed(() => findAd(['slider'], topPlacements.value))
+const topBanner = computed(() => findAd(['banner'], topPlacements.value))
+const primaryTopAd = computed(() => topSlider.value || topBanner.value)
+const bottomSlider = computed(() => findAd(['slider'], bottomPlacements.value))
+const bottomBanner = computed(() => findAd(['banner'], bottomPlacements.value))
+const primaryBottomAd = computed(() => bottomSlider.value || bottomBanner.value)
+const popupAd = computed(() => findAd(['popup'], ['popup', 'site_popup', 'home_popup']))
+const hasRenderableAd = computed(() => Boolean(primaryTopAd.value || primaryBottomAd.value || popupAd.value))
+
+function mediaList(ad: any) {
+  const arr = Array.isArray(ad?.imageUrls) ? ad.imageUrls.filter(Boolean) : []
+  const merged = arr.length ? arr : (ad?.imageUrl ? [ad.imageUrl] : [])
+  return merged.map((x: any) => String(x || '').trim()).filter(Boolean)
+}
+function firstMedia(ad: any) { return mediaList(ad)[0] || '' }
+const topMedia = computed(() => primaryTopAd.value ? mediaList(primaryTopAd.value) : [])
+const currentTopMedia = computed(() => topMedia.value[sliderIndex.value] || topMedia.value[0] || '')
+const bottomMedia = computed(() => primaryBottomAd.value ? mediaList(primaryBottomAd.value) : [])
+const currentBottomMedia = computed(() => bottomMedia.value[0] || '')
+
+function isVideo(url?: string) {
+  const u = String(url || '').split('?')[0].toLowerCase()
+  return /\.(mp4|webm|ogg|mov)$/i.test(u)
+}
+function mediaComponent(url?: string) { return isVideo(url) ? 'video' : 'img' }
+function mediaAttrs(path?: string, alt?: string) {
+  const src = asset(path)
+  if (isVideo(src)) return { src, autoplay: true, muted: true, loop: true, playsinline: true }
+  return { src, alt: alt || 'advertisement', loading: 'eager' }
+}
+const asset = (p?: string) => {
   const url = api.buildAssetUrl(p || '')
   if (!url) return ''
   const sep = url.includes('?') ? '&' : '?'
-  return `${url}${sep}v=${encodeURIComponent(String(stamp || loadingKey.value || '1'))}`
+  return `${url}${sep}v=${encodeURIComponent(String(loadingKey.value || '1'))}`
 }
 function safeLink(link?: string) {
   const v = String(link || '#').trim()
@@ -135,10 +153,10 @@ function stopTimer() {
 }
 function startTimer() {
   stopTimer()
-  if (topSliderImages.value.length <= 1) return
+  if (topMedia.value.length <= 1) return
   timer = setInterval(() => {
-    sliderIndex.value = (sliderIndex.value + 1) % topSliderImages.value.length
-  }, 4500)
+    sliderIndex.value = (sliderIndex.value + 1) % topMedia.value.length
+  }, 5200)
 }
 async function loadAds() {
   if (!enabled.value) return
@@ -161,7 +179,7 @@ onMounted(() => {
   if (process.client) window.addEventListener('ads:changed', loadAds)
 })
 watch(() => route.fullPath, () => loadAds())
-watch(topSliderImages, () => { sliderIndex.value = 0; startTimer() })
+watch(topMedia, () => { sliderIndex.value = 0; startTimer() })
 onBeforeUnmount(() => {
   stopTimer()
   if (process.client) window.removeEventListener('ads:changed', loadAds)
@@ -169,25 +187,36 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.ad-container{ width:min(100%, 92rem); margin-inline:auto; padding-inline:1rem; }
-.ad-container--top{ padding-top:1rem; }
-.ad-container--bottom{ padding-block:1rem; }
-.ad-banner{ position:relative; display:block; overflow:hidden; border-radius:2rem; border:1px solid rgba(var(--border),.8); background:rgb(var(--surface)); box-shadow:var(--shadow-soft); }
-.ad-banner img{ display:block; width:100%; max-height:280px; object-fit:cover; }
-.ad-banner__content,.ad-slider__caption{ position:absolute; inset-inline:1rem; bottom:1rem; display:grid; gap:.25rem; width:max-content; max-width:min(520px, calc(100% - 2rem)); border:1px solid rgba(255,255,255,.16); border-radius:1.35rem; padding:.85rem 1rem; color:white; background:rgba(5,5,9,.48); backdrop-filter:blur(16px); }
-.ad-banner__content b,.ad-slider__caption b{ font-size:1.1rem; font-weight:1000; }
-.ad-banner__content span,.ad-slider__caption span{ font-size:.86rem; color:rgba(255,255,255,.78); }
-.ad-slider{ min-height:170px; }
-.ad-slider__image{ display:block; width:100%; height:clamp(180px, 22vw, 340px); object-fit:cover; }
-.ad-slider__dots{ position:absolute; inset-inline:0; bottom:.8rem; display:flex; align-items:center; justify-content:center; gap:.4rem; }
-.ad-slider__dots button{ width:.6rem; height:.6rem; border-radius:999px; background:rgba(255,255,255,.45); transition:.2s ease; }
-.ad-slider__dots button.is-active{ width:2.2rem; background:white; }
+.global-ads{ position:relative; z-index:4; }
+.ad-container{ width:min(100%, 96rem); margin-inline:auto; padding-inline:clamp(.85rem,2vw,1.5rem); }
+.ad-container--hero{ padding-top:clamp(.7rem,1.4vw,1.15rem); padding-bottom:clamp(.25rem,.8vw,.65rem); }
+.ad-container--bottom{ padding-block:clamp(1rem,2vw,1.4rem); }
+.ad-hero-frame,.ad-bottom-frame{ position:relative; overflow:hidden; border:1px solid rgba(var(--border),.78); background:linear-gradient(135deg, rgba(var(--surface-rgb),.92), rgba(var(--surface-2-rgb),.72)); box-shadow:0 22px 70px rgba(0,0,0,.18); }
+.ad-hero-frame{ border-radius:clamp(1.35rem,2.2vw,2.4rem); min-height:clamp(180px,23vw,360px); }
+.ad-bottom-frame{ border-radius:2rem; }
+.ad-hero-frame__link,.ad-bottom-frame__link{ display:block; position:relative; min-height:inherit; color:inherit; }
+.ad-hero-frame__media,.ad-bottom-frame__media{ display:block; width:100%; object-fit:cover; background:rgb(var(--surface-2)); }
+.ad-hero-frame__media{ height:clamp(190px,24vw,380px); }
+.ad-bottom-frame__media{ height:clamp(150px,18vw,270px); }
+.ad-hero-frame__shade{ pointer-events:none; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.66), rgba(0,0,0,.24) 44%, rgba(0,0,0,.08)); }
+:global(html[dir="rtl"]) .ad-hero-frame__shade{ background:linear-gradient(270deg, rgba(0,0,0,.66), rgba(0,0,0,.24) 44%, rgba(0,0,0,.08)); }
+.ad-hero-frame__content{ position:absolute; inset-block:auto 1.25rem; inset-inline:1.25rem auto; display:grid; gap:.35rem; max-width:min(620px, calc(100% - 2.5rem)); color:white; }
+:global(html[dir="rtl"]) .ad-hero-frame__content{ inset-inline:auto 1.25rem; }
+.ad-hero-frame__eyebrow{ width:max-content; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.12); backdrop-filter:blur(12px); border-radius:999px; padding:.35rem .7rem; font-size:.74rem; font-weight:1000; }
+.ad-hero-frame__content b{ font-size:clamp(1.4rem,3vw,3.1rem); font-weight:1000; line-height:1.05; text-shadow:0 16px 48px rgba(0,0,0,.35); }
+.ad-hero-frame__content small{ max-width:520px; font-size:clamp(.86rem,1.1vw,1.05rem); color:rgba(255,255,255,.82); line-height:1.8; }
+.ad-bottom-frame__content{ position:absolute; inset-inline:1rem; bottom:1rem; display:grid; gap:.25rem; width:max-content; max-width:min(520px, calc(100% - 2rem)); border:1px solid rgba(255,255,255,.16); border-radius:1.35rem; padding:.85rem 1rem; color:white; background:rgba(5,5,9,.48); backdrop-filter:blur(16px); }
+.ad-bottom-frame__content b{ font-size:1.1rem; font-weight:1000; }
+.ad-bottom-frame__content span{ font-size:.86rem; color:rgba(255,255,255,.78); }
+.ad-slider__dots{ position:absolute; inset-inline:0; bottom:.8rem; display:flex; align-items:center; justify-content:center; gap:.4rem; z-index:5; }
+.ad-slider__dots button{ width:.58rem; height:.58rem; border-radius:999px; background:rgba(255,255,255,.55); transition:.2s ease; }
+.ad-slider__dots button.is-active{ width:2.3rem; background:white; }
 .ad-popup{ animation:popupIn .28s ease both; }
-.ad-popup > a > img{ display:block; width:100%; max-height:72vh; object-fit:cover; }
+.ad-popup__media{ display:block; width:100%; max-height:72vh; object-fit:cover; }
 .ad-popup__close{ position:absolute; z-index:3; inset-inline-start:.8rem; top:.8rem; width:2.6rem; height:2.6rem; border-radius:999px; background:rgba(0,0,0,.52); color:white; font-weight:900; }
 .ad-popup__body{ padding:1rem 1.25rem; display:grid; gap:.25rem; }
 .ad-popup__body b{ color:rgb(var(--text)); font-size:1.2rem; font-weight:1000; }
 .ad-popup__body span{ color:rgb(var(--muted)); }
 @keyframes popupIn{ from{ opacity:0; transform:translateY(18px) scale(.98); } to{ opacity:1; transform:none; } }
-@media(max-width:640px){ .ad-container{ padding-inline:.75rem; } .ad-banner,.ad-slider{ border-radius:1.35rem; } .ad-slider__image{ height:165px; } .ad-banner__content,.ad-slider__caption{ inset-inline:.65rem; bottom:.65rem; border-radius:1rem; padding:.65rem .75rem; } }
+@media(max-width:640px){ .ad-container{ padding-inline:.75rem; } .ad-hero-frame{ border-radius:1.35rem; min-height:168px; } .ad-hero-frame__media{ height:178px; } .ad-hero-frame__shade{ background:linear-gradient(0deg, rgba(0,0,0,.72), rgba(0,0,0,.10)); } .ad-hero-frame__content{ inset-inline:.9rem !important; bottom:.9rem; max-width:calc(100% - 1.8rem); } .ad-hero-frame__content b{ font-size:1.45rem; } .ad-hero-frame__content small{ font-size:.82rem; } .ad-bottom-frame{ border-radius:1.35rem; } .ad-bottom-frame__media{ height:160px; } .ad-bottom-frame__content{ inset-inline:.65rem; bottom:.65rem; border-radius:1rem; padding:.65rem .75rem; } }
 </style>
