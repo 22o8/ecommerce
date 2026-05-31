@@ -135,6 +135,18 @@
               <input type="checkbox" v-model="form.isEnabled" />
               <span>الإعلان مفعل ويظهر في المتجر</span>
             </label>
+            <div class="live-preview">
+              <div class="live-preview__media">
+                <video v-if="isVideoUrl(String(previewImages[0] || ''))" :src="api.buildAssetUrl(String(previewImages[0]))" muted playsinline />
+                <img v-else-if="previewImages[0]" :src="api.buildAssetUrl(String(previewImages[0]))" />
+                <Icon v-else :name="form.type === 'popup' ? 'mdi:bell-ring-outline' : 'mdi:image-outline'" />
+              </div>
+              <div class="min-w-0">
+                <b class="truncate rtl-text">{{ form.title || 'معاينة الإعلان' }}</b>
+                <p class="truncate rtl-text">{{ form.subtitle || placementLabel(form.placement) }}</p>
+                <small>{{ activeType.label }} • {{ form.isEnabled ? 'مفعل' : 'معطل' }}</small>
+              </div>
+            </div>
             <UiButton type="button" class="min-h-12" :disabled="saving || uploading" @click="saveAd">
               {{ saving ? 'جاري الحفظ...' : (editingId ? 'حفظ التعديل' : 'إنشاء الإعلان') }}
             </UiButton>
@@ -146,7 +158,7 @@
         <div class="ad-list-head">
           <div>
             <h2 class="rtl-text">قائمة الإعلانات</h2>
-            <p class="admin-muted text-sm rtl-text">تظهر الإعلانات هنا مباشرة بعد الحفظ أو الرفع.</p>
+            <p class="admin-muted text-sm rtl-text">أي إعلان تحفظه سيظهر هنا فورًا ككارت قابل للتعديل.</p>
           </div>
           <select v-model="filterType" class="admin-input h-11 w-full sm:w-56">
             <option value="all">كل الإعلانات</option>
@@ -162,11 +174,12 @@
         <div v-if="loading" class="empty-box">جاري التحميل...</div>
         <div v-else-if="!filteredAds.length" class="empty-box">لا توجد إعلانات حسب هذا الفلتر. غيّر الفلتر إلى "كل الإعلانات" أو أنشئ إعلانًا جديدًا.</div>
         <div v-else class="grid gap-3">
-          <article v-for="ad in filteredAds" :key="ad.id" class="ad-row">
-            <div class="ad-thumb">
-              <img v-if="ad.imageUrl || ad.imageUrls?.[0]" :src="api.buildAssetUrl(String(ad.imageUrl || ad.imageUrls?.[0] || ''))" />
-              <Icon v-else name="mdi:image-off-outline" class="text-2xl text-[rgb(var(--muted))]" />
-            </div>
+          <article v-for="ad in filteredAds" :key="ad.id" class="ad-row" :class="lastSavedId === ad.id ? 'is-fresh' : ''">
+            <button type="button" class="ad-thumb" @click="edit(ad)">
+              <video v-if="isVideoUrl(String(ad.imageUrl || ad.imageUrls?.[0] || ''))" :src="api.buildAssetUrl(String(ad.imageUrl || ad.imageUrls?.[0] || ''))" muted playsinline />
+              <img v-else-if="ad.imageUrl || ad.imageUrls?.[0]" :src="api.buildAssetUrl(String(ad.imageUrl || ad.imageUrls?.[0] || ''))" />
+              <Icon v-else :name="ad.type === 'popup' ? 'mdi:bell-ring-outline' : 'mdi:image-off-outline'" class="text-2xl text-[rgb(var(--muted))]" />
+            </button>
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-center gap-2">
                 <b class="truncate">{{ ad.title || 'بدون عنوان' }}</b>
@@ -210,6 +223,7 @@ const products = ref<any[]>([])
 const productQuery = ref('')
 const filterType = ref('all')
 const editingId = ref<string | null>(null)
+const lastSavedId = ref<string | null>(null)
 
 const adTypes = [
   { value: 'slider', label: 'سلايدر', icon: 'mdi:view-carousel-outline', hint: 'عدة صور تتحرك في أعلى أو آخر الصفحة' },
@@ -268,6 +282,19 @@ const filteredAds = computed(() => {
   return items.value.filter((x: any) => x.type === filterType.value)
 })
 
+function upsertAd(raw: any) {
+  const normalized = normalizeAds([raw])[0]
+  if (!normalized?.id) return
+  const idx = items.value.findIndex((x: any) => x.id === normalized.id)
+  if (idx >= 0) items.value.splice(idx, 1, normalized)
+  else items.value.unshift(normalized)
+  lastSavedId.value = normalized.id
+  filterType.value = 'all'
+  setTimeout(() => {
+    if (lastSavedId.value === normalized.id) lastSavedId.value = null
+  }, 3500)
+}
+
 function normalizeProducts(res: any) {
   if (Array.isArray(res)) return res
   if (Array.isArray(res?.items)) return res.items
@@ -301,11 +328,11 @@ async function load() {
       $fetch('/api/bff/admin/ads', { query: { _ts: Date.now() }, headers: { 'cache-control': 'no-cache' } }),
       $fetch('/api/bff/admin/products', { query: { page: 1, pageSize: 300, _ts: Date.now() }, headers: { 'cache-control': 'no-cache' } }).catch(() => []),
     ])
-    items.value = normalizeAds(adsRes)
+    const nextAds = normalizeAds(adsRes)
+    items.value = nextAds
     products.value = normalizeProducts(productsRes)
-  } catch {
-    items.value = []
-    products.value = []
+  } catch (e: any) {
+    toast.error(e?.data?.message || e?.message || 'تعذر تحميل الإعلانات')
   } finally { loading.value = false }
 }
 
@@ -337,6 +364,7 @@ function selectType(type: string) {
   form.type = type
   const first = allPlacements.find((x) => x.type === type)
   form.placement = first?.value || 'home_top'
+  if (type === 'popup') form.linkUrl = form.linkUrl || '/products'
   if (type === 'product') form.linkUrl = form.productId ? `/product/${form.productId}` : '/products'
 }
 function selectProduct(p: any) {
@@ -358,12 +386,8 @@ async function saveAd() {
       ? await $fetch(`/api/bff/admin/ads/${editingId.value}`, { method: 'PUT', body: payload() })
       : await $fetch('/api/bff/admin/ads', { method: 'POST', body: payload() })
 
-    if (saved?.id) {
-      const idx = items.value.findIndex((x: any) => x.id === saved.id)
-      if (idx >= 0) items.value[idx] = saved
-      else items.value.unshift(saved)
-    }
-    toast.success(editingId.value ? 'تم تحديث الإعلان' : 'تم إنشاء الإعلان')
+    if (saved?.id) upsertAd(saved)
+    toast.success(editingId.value ? 'تم تحديث الإعلان وظهر في القائمة' : 'تم إنشاء الإعلان وظهر في القائمة')
     resetForm()
     await load()
     emitAdsChanged()
@@ -412,6 +436,7 @@ function removePreview(idx: number) {
   form.imageUrls = arr
   form.imageUrl = arr[0] || ''
 }
+function isVideoUrl(url: string) { return /\.(mp4|webm|ogg)(\?|#|$)/i.test(url || '') }
 function typeLabel(type: string) { return adTypes.find((x) => x.value === type)?.label || type }
 function placementLabel(p: string) { return allPlacements.find((x) => x.value === p)?.label || p }
 
@@ -457,10 +482,20 @@ await load()
 .selected-product{ border:1px solid rgba(52,211,153,.25); background:rgba(52,211,153,.10); color:rgb(52 211 153); border-radius:18px; padding:.7rem .9rem; font-size:.8rem; font-weight:900; }
 .ad-row{ display:flex; align-items:center; gap:.9rem; border:1px solid rgba(var(--border), .9); background:rgba(var(--surface-2-rgb), .56); border-radius:24px; padding:.85rem; }
 .ad-thumb{ width:86px; height:86px; border-radius:20px; border:1px solid rgba(var(--border),.9); background:rgb(var(--surface-2)); display:grid; place-items:center; overflow:hidden; flex:0 0 auto; }
-.ad-thumb img{ width:100%; height:100%; object-fit:cover; }
+.ad-thumb img,.ad-thumb video{ width:100%; height:100%; object-fit:cover; }
 .pill{ border:1px solid rgba(var(--border), .9); background:rgba(var(--surface-rgb), .75); border-radius:999px; padding:.28rem .55rem; font-size:.72rem; color:rgb(var(--muted)); font-weight:900; }
 .pill.is-good{ color:rgb(52 211 153); border-color:rgba(52,211,153,.22); } .pill.is-off{ color:rgb(248 113 113); border-color:rgba(248,113,113,.22); }
 .ad-actions{ display:flex; gap:.45rem; flex-wrap:wrap; justify-content:flex-end; }
 .empty-box{ display:grid; place-items:center; min-height:240px; border:1px dashed rgba(var(--border), .9); border-radius:26px; color:rgb(var(--muted)); }
+
+.ad-row.is-fresh{ border-color:rgba(var(--primary),.7); box-shadow:0 0 0 1px rgba(var(--primary),.25), 0 24px 70px rgba(var(--primary),.14); animation:freshAdPulse 1.2s ease-in-out 2; }
+@keyframes freshAdPulse{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-3px); } }
+.live-preview{ display:flex; align-items:center; gap:.85rem; border:1px solid rgba(var(--primary),.22); background:linear-gradient(135deg, rgba(var(--primary),.12), rgba(var(--surface-rgb),.68)); border-radius:24px; padding:.75rem; }
+.live-preview__media{ width:72px; height:72px; border-radius:20px; overflow:hidden; display:grid; place-items:center; flex:0 0 auto; border:1px solid rgba(var(--border),.8); background:rgb(var(--surface-2)); color:rgb(var(--primary)); }
+.live-preview__media img,.live-preview__media video{ width:100%; height:100%; object-fit:cover; }
+.live-preview b{ display:block; color:rgb(var(--text)); font-weight:1000; }
+.live-preview p{ margin-top:.15rem; color:rgb(var(--muted)); font-size:.78rem; }
+.live-preview small{ display:inline-flex; margin-top:.35rem; color:rgb(var(--primary)); font-size:.72rem; font-weight:1000; }
+
 @media(max-width:920px){ .ads-hero,.builder-head,.ad-list-head{ flex-direction:column; } .ads-hero__actions{ justify-content:flex-start; } .ad-type-grid{ grid-template-columns:1fr; } .step-card{ flex-direction:column; } .ad-row{ align-items:flex-start; flex-direction:column; } .ad-thumb{ width:100%; height:190px; } .ad-actions{ justify-content:flex-start; } }
 </style>
