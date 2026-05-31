@@ -1,77 +1,69 @@
 <template>
-  <div class="ads-admin-page" dir="rtl">
+  <div class="ads-admin" dir="rtl">
     <section class="ads-hero-card">
-      <div class="hero-copy">
-        <span class="eyebrow">مركز الإعلانات</span>
+      <div>
+        <p class="ads-kicker">مركز الإعلانات</p>
         <h1>إدارة الإعلانات</h1>
         <p>
-          أنشئ إعلاناً، اختَر مكان ظهوره، وارفع الصورة أو الفيديو. الإعلان يظهر مباشرة في القائمة اليمنى بعد الحفظ.
+          أنشئ إعلاناً، حدّد نوعه ومكان ظهوره، ثم احفظ. أي إعلان محفوظ يظهر مباشرة في القائمة ويمكن تعديله أو تعطيله أو حذفه.
         </p>
       </div>
 
       <div class="hero-actions">
-        <button type="button" class="soft-btn" @click="loadAll(true)">
-          <Icon name="mdi:refresh" />
-          تحديث
-        </button>
-        <button type="button" class="soft-btn primary" @click="startCreate">
-          <Icon name="mdi:plus" />
-          إعلان جديد
-        </button>
-        <button type="button" class="soft-btn danger" @click="deleteAllAds">
-          <Icon name="mdi:trash-can-outline" />
-          حذف الكل
-        </button>
+        <button type="button" class="admin-secondary" @click="loadAll">تحديث</button>
+        <button type="button" class="admin-secondary" @click="startNewAd">إعلان جديد</button>
+        <button type="button" class="admin-danger" @click="removeAll">حذف الكل</button>
       </div>
     </section>
 
     <section class="ads-stats-grid">
-      <article v-for="card in statCards" :key="card.label" class="stat-card">
-        <Icon :name="card.icon" />
-        <strong>{{ card.value }}</strong>
-        <span>{{ card.label }}</span>
+      <article class="ads-stat">
+        <Icon name="mdi:bullhorn-outline" />
+        <strong>{{ stats.total }}</strong>
+        <span>كل الإعلانات</span>
+      </article>
+      <article class="ads-stat">
+        <Icon name="mdi:check-circle-outline" />
+        <strong>{{ stats.active }}</strong>
+        <span>مفعلة</span>
+      </article>
+      <article class="ads-stat">
+        <Icon name="mdi:view-carousel-outline" />
+        <strong>{{ stats.slider }}</strong>
+        <span>سلايدر</span>
+      </article>
+      <article class="ads-stat">
+        <Icon name="mdi:image-outline" />
+        <strong>{{ stats.banner }}</strong>
+        <span>بانر</span>
+      </article>
+      <article class="ads-stat">
+        <Icon name="mdi:bell-ring-outline" />
+        <strong>{{ stats.popup }}</strong>
+        <span>منبثقة</span>
       </article>
     </section>
 
-    <section v-if="errorMessage" class="ads-alert danger">
-      <Icon name="mdi:alert-circle-outline" />
-      <div>
-        <b>تنبيه</b>
-        <p>{{ errorMessage }}</p>
-      </div>
-      <button type="button" @click="loadAll(true)">إعادة المحاولة</button>
-    </section>
-
-    <section v-if="successMessage" class="ads-alert success">
-      <Icon name="mdi:check-circle-outline" />
-      <div>
-        <b>تم بنجاح</b>
-        <p>{{ successMessage }}</p>
-      </div>
-      <button type="button" @click="successMessage = ''">إغلاق</button>
-    </section>
-
     <section class="ads-main-grid">
-      <aside class="ads-library">
+      <aside class="ads-list-panel">
         <div class="panel-head">
           <div>
-            <span class="eyebrow">الإعلانات المحفوظة</span>
+            <p class="ads-kicker">الإعلانات المحفوظة</p>
             <h2>قائمة الإعلانات</h2>
-            <p>أي إعلان تحفظه يظهر هنا فوراً، وتقدر تعدله أو توقفه أو تحذفه.</p>
+            <p>القائمة تقرأ مباشرة من قاعدة البيانات. إذا كان الإعلان محفوظاً سيظهر هنا.</p>
           </div>
-          <span class="library-count">{{ filteredAds.length }}</span>
         </div>
 
-        <div class="library-tools">
-          <label class="search-box">
-            <Icon name="mdi:magnify" />
-            <input v-model="search" placeholder="ابحث بعنوان الإعلان أو الموضع..." />
-          </label>
-
-          <select v-model="filter" class="select-box">
+        <div class="list-toolbar">
+          <input
+            v-model="search"
+            class="admin-input"
+            placeholder="ابحث بالعنوان، النوع، الموضع..."
+          />
+          <select v-model="filterType" class="admin-input">
             <option value="all">كل الإعلانات</option>
-            <option value="active">المفعلة</option>
-            <option value="disabled">المعطلة</option>
+            <option value="active">المفعلة فقط</option>
+            <option value="disabled">المعطلة فقط</option>
             <option value="slider">سلايدر</option>
             <option value="banner">بانر</option>
             <option value="popup">منبثق</option>
@@ -79,246 +71,228 @@
           </select>
         </div>
 
-        <div v-if="loading" class="empty-state">
-          <Icon name="mdi:loading" class="spin" />
-          <b>جاري تحميل الإعلانات...</b>
+        <div v-if="loading" class="ads-empty">
+          <Icon name="mdi:loading" />
+          <span>جاري تحميل الإعلانات...</span>
         </div>
 
-        <div v-else-if="!filteredAds.length" class="empty-state">
-          <Icon name="mdi:bullhorn-outline" />
-          <b>لا توجد إعلانات ظاهرة هنا</b>
-          <p v-if="ads.length">
-            يوجد {{ ads.length }} إعلان لكن الفلتر الحالي يخفيها. اختر "كل الإعلانات".
-          </p>
-          <p v-else>
-            أنشئ أول إعلان من النموذج، وسيظهر هنا مباشرة بدون تحديث الصفحة.
-          </p>
-          <button v-if="filter !== 'all' || search" type="button" class="soft-btn" @click="clearFilters">
-            عرض كل الإعلانات
-          </button>
+        <div v-else-if="!items.length" class="ads-empty">
+          <Icon name="mdi:bullhorn-variant-outline" />
+          <b>لا توجد إعلانات محفوظة بعد</b>
+          <span>أنشئ إعلاناً من المحرر وسيظهر هنا مباشرة.</span>
         </div>
 
-        <div v-else class="ad-cards">
+        <div v-else-if="!filteredAds.length" class="ads-empty">
+          <Icon name="mdi:filter-off-outline" />
+          <b>لا توجد نتائج لهذا الفلتر</b>
+          <span>عدد الإعلانات الكلي: {{ items.length }}</span>
+          <button type="button" class="admin-secondary" @click="filterType = 'all'; search = ''">عرض الكل</button>
+        </div>
+
+        <div v-else class="ads-list">
           <article
             v-for="ad in filteredAds"
-            :key="ad._localKey"
+            :key="ad.id"
             class="ad-card"
-            :class="{ selected: selectedId === ad.id, fresh: freshId === ad.id }"
+            :class="{ selected: editingId === ad.id, fresh: lastSavedId === ad.id }"
           >
-            <button type="button" class="ad-thumb" @click="editAd(ad)">
+            <button type="button" class="ad-preview" @click="editAd(ad)">
               <video
-                v-if="isVideo(primaryMedia(ad))"
-                :src="asset(primaryMedia(ad))"
+                v-if="isVideoUrl(primaryMedia(ad))"
+                :src="assetUrl(primaryMedia(ad))"
                 muted
                 playsinline
               />
-              <img v-else-if="primaryMedia(ad)" :src="asset(primaryMedia(ad))" alt="" />
-              <Icon v-else :name="typeIcon(ad.type)" />
+              <img
+                v-else-if="primaryMedia(ad)"
+                :src="assetUrl(primaryMedia(ad))"
+                alt=""
+              />
+              <Icon v-else :name="ad.type === 'popup' ? 'mdi:bell-ring-outline' : 'mdi:image-off-outline'" />
             </button>
 
-            <div class="ad-body">
+            <div class="ad-content">
               <div class="ad-title-row">
-                <b>{{ ad.title || fallbackTitle(ad) }}</b>
-                <span :class="['status-pill', ad.isEnabled ? 'active' : 'paused']">
-                  {{ ad.isEnabled ? 'مفعل' : 'متوقف' }}
+                <b>{{ ad.title || 'إعلان بدون عنوان' }}</b>
+                <span :class="['state-pill', ad.isEnabled ? 'on' : 'off']">
+                  {{ ad.isEnabled ? 'مفعل' : 'معطل' }}
                 </span>
               </div>
 
-              <p>{{ ad.subtitle || 'بدون وصف مختصر' }}</p>
+              <p>{{ ad.subtitle || 'بدون وصف' }}</p>
 
               <div class="ad-meta">
                 <span>{{ typeLabel(ad.type) }}</span>
                 <span>{{ placementLabel(ad.placement) }}</span>
-                <span v-if="mediaList(ad).length">{{ mediaList(ad).length }} ملف</span>
+                <span v-if="ad.type === 'slider'">{{ mediaList(ad).length }} ملف</span>
               </div>
 
-              <small class="ltr">{{ ad.linkUrl || 'بدون رابط' }}</small>
+              <small class="keep-ltr">{{ ad.linkUrl || 'بدون رابط' }}</small>
+            </div>
 
-              <div class="ad-actions">
-                <button type="button" @click="editAd(ad)">
-                  <Icon name="mdi:pencil-outline" />
-                  تعديل
-                </button>
-                <button type="button" @click="toggleAd(ad)">
-                  <Icon :name="ad.isEnabled ? 'mdi:pause-circle-outline' : 'mdi:play-circle-outline'" />
-                  {{ ad.isEnabled ? 'تعطيل' : 'تفعيل' }}
-                </button>
-                <button type="button" class="danger-text" @click="deleteAd(ad)">
-                  <Icon name="mdi:delete-outline" />
-                  حذف
-                </button>
-              </div>
+            <div class="ad-actions">
+              <button type="button" class="admin-secondary" @click="editAd(ad)">تعديل</button>
+              <button type="button" class="admin-secondary" @click="toggleAd(ad)">
+                {{ ad.isEnabled ? 'تعطيل' : 'تفعيل' }}
+              </button>
+              <button type="button" class="admin-danger" @click="removeAd(ad.id)">حذف</button>
             </div>
           </article>
         </div>
       </aside>
 
-      <form class="ads-editor" @submit.prevent="saveAd">
-        <div class="panel-head">
+      <form class="ads-editor-panel" @submit.prevent="saveAd">
+        <div class="panel-head editor-head">
           <div>
-            <span class="eyebrow">محرر الإعلان</span>
-            <h2>{{ selectedId ? 'تعديل الإعلان' : 'إنشاء إعلان جديد' }}</h2>
-            <p>اتبع الخطوات: نوع الإعلان، مكان الظهور، المحتوى، ثم الحفظ.</p>
+            <p class="ads-kicker">محرر الإعلان</p>
+            <h2>{{ editingId ? 'تعديل إعلان' : 'إنشاء إعلان جديد' }}</h2>
+            <p>اتبع الخطوات: النوع، المكان، المحتوى، ثم الحفظ.</p>
           </div>
-
-          <button v-if="selectedId" type="button" class="soft-btn" @click="startCreate">
-            <Icon name="mdi:plus" />
-            جديد
-          </button>
+          <span class="type-badge">{{ currentType.label }}</span>
         </div>
 
-        <div class="step-card">
-          <div class="step-number">1</div>
-          <div class="step-content">
+        <div class="wizard-section">
+          <div class="wizard-number">1</div>
+          <div class="wizard-body">
             <h3>نوع الإعلان</h3>
-            <p>اختَر النوع الذي تريد ظهوره للزائر.</p>
-
-            <div class="ad-type-grid">
+            <div class="type-grid">
               <button
                 v-for="type in adTypes"
                 :key="type.value"
                 type="button"
-                class="type-choice"
+                class="type-card"
                 :class="{ active: form.type === type.value }"
-                @click="changeType(type.value)"
+                @click="selectType(type.value)"
               >
                 <Icon :name="type.icon" />
                 <b>{{ type.label }}</b>
-                <small>{{ type.help }}</small>
+                <small>{{ type.hint }}</small>
               </button>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
-          <div class="step-number">2</div>
-          <div class="step-content">
-            <h3>مكان الظهور</h3>
-            <p>المواضع تتغير حسب نوع الإعلان حتى لا يصير خلط.</p>
+        <div class="wizard-section">
+          <div class="wizard-number">2</div>
+          <div class="wizard-body">
+            <h3>مكان الظهور والمحتوى</h3>
 
             <div class="form-grid">
-              <label>
-                <span>الموضع</span>
-                <select v-model="form.placement" class="input">
-                  <option v-for="p in placementsForType" :key="p.value" :value="p.value">
+              <label class="field">
+                <span>موضع الظهور</span>
+                <select v-model="form.placement" class="admin-input">
+                  <option v-for="p in placementOptions" :key="p.value" :value="p.value">
                     {{ p.label }}
                   </option>
                 </select>
               </label>
 
-              <label>
+              <label class="field short">
                 <span>الترتيب</span>
-                <input v-model.number="form.sortOrder" type="number" class="input" />
+                <input v-model.number="form.sortOrder" type="number" class="admin-input" />
               </label>
             </div>
 
+            <label class="field">
+              <span>العنوان</span>
+              <input v-model="form.title" class="admin-input" placeholder="مثال: عروض العناية الكورية" />
+            </label>
+
+            <label class="field">
+              <span>الوصف المختصر</span>
+              <input v-model="form.subtitle" class="admin-input" placeholder="نص قصير يظهر تحت العنوان" />
+            </label>
+
             <div v-if="form.type === 'product'" class="product-picker">
-              <label>
+              <label class="field">
                 <span>اختيار المنتج</span>
-                <div class="search-box solid">
-                  <Icon name="mdi:magnify" />
-                  <input v-model="productSearch" placeholder="ابحث عن اسم المنتج أو البراند..." />
-                </div>
+                <input v-model="productQuery" class="admin-input" placeholder="ابحث باسم المنتج أو البراند" />
               </label>
 
-              <div class="product-grid">
+              <div class="product-results">
                 <button
-                  v-for="product in filteredProducts"
-                  :key="product.id"
+                  v-for="p in filteredProducts"
+                  :key="p.id"
                   type="button"
-                  class="product-card"
-                  :class="{ active: form.productId === product.id }"
-                  @click="selectProduct(product)"
+                  class="product-result"
+                  :class="{ active: form.productId === p.id }"
+                  @click="selectProduct(p)"
                 >
-                  <img v-if="productImage(product)" :src="asset(productImage(product))" alt="" />
-                  <span v-else class="product-fallback">
-                    <Icon name="mdi:package-variant-closed" />
-                  </span>
-                  <b>{{ productName(product) }}</b>
-                  <small>{{ productBrand(product) || 'بدون براند' }}</small>
+                  <img v-if="productImage(p)" :src="assetUrl(productImage(p))" alt="" />
+                  <Icon v-else name="mdi:package-variant-closed" />
+                  <b>{{ productName(p) }}</b>
+                  <small>{{ productBrand(p) || 'بدون براند' }}</small>
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="step-card">
-          <div class="step-number">3</div>
-          <div class="step-content">
-            <h3>النص والصورة</h3>
-            <p>المنبثق يمكن أن يكون نصاً فقط، أما السلايدر والبانر يفضّل لها صورة أو فيديو.</p>
+        <div class="wizard-section">
+          <div class="wizard-number">3</div>
+          <div class="wizard-body">
+            <h3>الصورة أو الفيديو والرابط</h3>
 
-            <label>
-              <span>العنوان</span>
-              <input v-model="form.title" class="input" placeholder="مثال: عروض العناية الكورية" />
-            </label>
-
-            <label>
-              <span>الوصف المختصر</span>
-              <input v-model="form.subtitle" class="input" placeholder="نص قصير يظهر تحت العنوان" />
-            </label>
-
-            <div class="upload-zone">
+            <div class="upload-box">
               <Icon name="mdi:cloud-upload-outline" />
               <b>{{ uploading ? 'جاري الرفع...' : 'اضغط لرفع صورة أو فيديو' }}</b>
-              <small>{{ form.type === 'slider' ? 'يمكن رفع أكثر من ملف للسلايدر' : 'ملف واحد يكفي' }}</small>
+              <small>{{ form.type === 'popup' ? 'اختياري للمنبثق' : 'مطلوب للسلايدر أو البانر' }}</small>
               <input
                 type="file"
                 accept="image/*,video/mp4,video/webm"
                 :multiple="form.type === 'slider'"
-                @change="pickFiles"
+                @change="onPickFile"
               />
             </div>
 
-            <label>
+            <label class="field">
               <span>رابط صورة/فيديو يدوي</span>
-              <input v-model="form.imageUrl" class="input ltr" placeholder="https://..." />
+              <input v-model="form.imageUrl" class="admin-input keep-ltr" placeholder="https://..." />
             </label>
 
-            <label>
+            <label class="field">
               <span>الرابط عند الضغط</span>
-              <input v-model="form.linkUrl" class="input ltr" placeholder="/products" />
+              <input v-model="form.linkUrl" class="admin-input keep-ltr" placeholder="/products" />
             </label>
 
-            <label class="check-row">
+            <label class="toggle-row">
               <input v-model="form.isEnabled" type="checkbox" />
               <span>الإعلان مفعل ويظهر للزوار</span>
             </label>
           </div>
         </div>
 
-        <div class="live-preview">
+        <section class="preview-box">
           <div>
-            <span class="eyebrow">معاينة قبل الحفظ</span>
-            <h3>{{ form.title || fallbackTitle(form) }}</h3>
+            <p class="ads-kicker">معاينة قبل الحفظ</p>
+            <h3>{{ form.title || 'عنوان الإعلان' }}</h3>
             <p>{{ form.subtitle || 'هنا يظهر وصف الإعلان للزائر.' }}</p>
             <div class="ad-meta">
-              <span>{{ typeLabel(form.type) }}</span>
+              <span>{{ currentType.label }}</span>
               <span>{{ placementLabel(form.placement) }}</span>
             </div>
           </div>
 
           <div class="preview-media">
             <template v-if="previewMedia.length">
-              <div v-for="(url, index) in previewMedia" :key="`${url}-${index}`" class="preview-tile">
-                <video v-if="isVideo(url)" :src="asset(url)" muted playsinline controls />
-                <img v-else :src="asset(url)" alt="" />
-                <button type="button" @click="removeMedia(index)">×</button>
+              <div v-for="(url, idx) in previewMedia" :key="`${url}-${idx}`" class="preview-item">
+                <video v-if="isVideoUrl(url)" :src="assetUrl(url)" muted playsinline controls />
+                <img v-else :src="assetUrl(url)" alt="" />
+                <button type="button" @click="removePreview(idx)">×</button>
               </div>
             </template>
             <div v-else class="preview-empty">
-              <Icon :name="typeIcon(form.type)" />
+              <Icon :name="form.type === 'popup' ? 'mdi:bell-ring-outline' : 'mdi:image-outline'" />
               <span>{{ form.type === 'popup' ? 'يمكن حفظ المنبثق كنص فقط' : 'ارفع صورة أو فيديو للمعاينة' }}</span>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div class="editor-footer">
-          <button type="button" class="soft-btn" @click="resetFormOnly">تفريغ الحقول</button>
-          <button type="submit" class="save-btn" :disabled="saving || uploading">
-            <Icon :name="saving ? 'mdi:loading' : 'mdi:content-save-outline'" :class="{ spin: saving }" />
-            {{ saving ? 'جاري الحفظ...' : selectedId ? 'حفظ التعديل' : 'إنشاء الإعلان' }}
-          </button>
+        <div class="sticky-save-bar">
+          <button type="button" class="admin-secondary" @click="startNewAd">تفريغ الحقول</button>
+          <UiButton type="submit" :disabled="saving || uploading">
+            {{ saving ? 'جاري الحفظ...' : (editingId ? 'حفظ التعديل' : 'حفظ الإعلان') }}
+          </UiButton>
         </div>
       </form>
     </section>
@@ -328,74 +302,49 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
+import UiButton from '~/components/ui/UiButton.vue'
+
+const toast = useToast()
 const api = useApi()
 const directUpload = useDirectAdminUpload()
-const toast = useToast()
 
-type AdType = 'slider' | 'banner' | 'popup' | 'product'
-
-type NormalizedAd = {
-  id: string
-  _localKey: string
-  type: AdType
-  placement: string
-  title: string
-  subtitle: string
-  imageUrl: string
-  imageUrls: string[]
-  linkUrl: string
-  productId: string
-  productTitle?: string
-  sortOrder: number
-  isEnabled: boolean
-  startAt?: any
-  endAt?: any
-  createdAt?: any
-  updatedAt?: any
-}
-
-const loading = ref(false)
+const loading = ref(true)
 const saving = ref(false)
 const uploading = ref(false)
-const ads = ref<NormalizedAd[]>([])
+const items = ref<any[]>([])
 const products = ref<any[]>([])
-const filter = ref('all')
 const search = ref('')
-const productSearch = ref('')
-const selectedId = ref<string | null>(null)
-const freshId = ref<string | null>(null)
-const errorMessage = ref('')
-const successMessage = ref('')
+const productQuery = ref('')
+const filterType = ref('all')
+const editingId = ref<string | null>(null)
+const lastSavedId = ref<string | null>(null)
 
 const adTypes = [
-  { value: 'slider' as AdType, label: 'سلايدر', icon: 'mdi:view-carousel-outline', help: 'صور أو فيديو متحرك فوق الهيرو أو أعلى/آخر الصفحات' },
-  { value: 'banner' as AdType, label: 'بانر', icon: 'mdi:image-outline', help: 'إعلان ثابت في موضع واضح داخل الصفحة' },
-  { value: 'popup' as AdType, label: 'إعلان منبثق', icon: 'mdi:bell-ring-outline', help: 'نافذة تظهر للزائر ويمكن أن تكون نصاً فقط' },
-  { value: 'product' as AdType, label: 'داخل منتج', icon: 'mdi:package-variant-closed', help: 'إعلان مرتبط بمنتج محدد من البحث' },
+  { value: 'slider', label: 'سلايدر', icon: 'mdi:view-carousel-outline', hint: 'صور أو فيديو متحرك فوق الهيرو أو أعلى/آخر الصفحة' },
+  { value: 'banner', label: 'بانر', icon: 'mdi:image-outline', hint: 'إعلان ثابت داخل الصفحة' },
+  { value: 'popup', label: 'إعلان منبثق', icon: 'mdi:bell-ring-outline', hint: 'نافذة تظهر للزائر ويمكن أن تكون نصاً فقط' },
+  { value: 'product', label: 'داخل منتج', icon: 'mdi:package-variant-closed', hint: 'إعلان مربوط بمنتج محدد من البحث' },
 ]
 
-const placementOptions = [
+const allPlacements = [
   { value: 'home_hero_slider', label: 'سلايدر فوق الهيرو / بداية الصفحة', type: 'slider' },
   { value: 'home_top_slider', label: 'سلايدر أعلى الرئيسية', type: 'slider' },
   { value: 'home_bottom_slider', label: 'سلايدر آخر الرئيسية', type: 'slider' },
   { value: 'page_top_slider', label: 'سلايدر أعلى الصفحات', type: 'slider' },
   { value: 'page_bottom_slider', label: 'سلايدر آخر الصفحات', type: 'slider' },
-
   { value: 'home_hero_top', label: 'بانر فوق الهيرو / بداية الصفحة', type: 'banner' },
   { value: 'home_top', label: 'بانر أعلى الرئيسية', type: 'banner' },
   { value: 'home_middle', label: 'بانر منتصف الرئيسية', type: 'banner' },
   { value: 'home_bottom', label: 'بانر آخر الرئيسية', type: 'banner' },
   { value: 'page_top', label: 'بانر أعلى الصفحات', type: 'banner' },
   { value: 'page_bottom', label: 'بانر آخر الصفحات', type: 'banner' },
-
   { value: 'popup', label: 'منبثق عام لكل الموقع', type: 'popup' },
   { value: 'home_popup', label: 'منبثق في الصفحة الرئيسية فقط', type: 'popup' },
-
   { value: 'product_page', label: 'داخل صفحة المنتج', type: 'product' },
 ]
 
 const form = reactive({
-  type: 'slider' as AdType,
+  type: 'slider',
   placement: 'home_hero_slider',
   title: '',
   subtitle: '',
@@ -403,278 +352,165 @@ const form = reactive({
   imageUrls: [] as string[],
   linkUrl: '/products',
   productId: '',
-  productTitle: '',
   sortOrder: 0,
   isEnabled: true,
 })
 
-const placementsForType = computed(() => placementOptions.filter((p) => p.type === form.type))
+const currentType = computed(() => adTypes.find((x) => x.value === form.type) || adTypes[0])
+const placementOptions = computed(() => allPlacements.filter((p) => p.type === form.type))
 
-const statCards = computed(() => [
-  { label: 'كل الإعلانات', value: ads.value.length, icon: 'mdi:bullhorn-outline' },
-  { label: 'مفعلة', value: ads.value.filter((x) => x.isEnabled).length, icon: 'mdi:check-circle-outline' },
-  { label: 'سلايدر', value: ads.value.filter((x) => x.type === 'slider').length, icon: 'mdi:view-carousel-outline' },
-  { label: 'بانر', value: ads.value.filter((x) => x.type === 'banner').length, icon: 'mdi:image-outline' },
-  { label: 'منبثقة', value: ads.value.filter((x) => x.type === 'popup').length, icon: 'mdi:bell-ring-outline' },
-])
+const stats = computed(() => ({
+  total: items.value.length,
+  active: items.value.filter((x) => x.isEnabled).length,
+  slider: items.value.filter((x) => x.type === 'slider').length,
+  banner: items.value.filter((x) => x.type === 'banner').length,
+  popup: items.value.filter((x) => x.type === 'popup').length,
+}))
+
+const previewMedia = computed(() => mediaFromForm())
 
 const filteredAds = computed(() => {
   const q = search.value.trim().toLowerCase()
+  return items.value.filter((ad: any) => {
+    const okType = filterType.value === 'all'
+      || (filterType.value === 'active' && ad.isEnabled)
+      || (filterType.value === 'disabled' && !ad.isEnabled)
+      || ad.type === filterType.value
 
-  return ads.value.filter((ad) => {
-    const matchesFilter =
-      filter.value === 'all'
-      || (filter.value === 'active' && ad.isEnabled)
-      || (filter.value === 'disabled' && !ad.isEnabled)
-      || ad.type === filter.value
+    if (!okType) return false
+    if (!q) return true
 
-    const haystack = `${ad.title} ${ad.subtitle} ${ad.placement} ${typeLabel(ad.type)} ${placementLabel(ad.placement)} ${ad.linkUrl}`.toLowerCase()
-    const matchesSearch = !q || haystack.includes(q)
-
-    return matchesFilter && matchesSearch
+    return [ad.title, ad.subtitle, ad.type, ad.placement, ad.linkUrl]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+      .includes(q)
   })
 })
 
-const previewMedia = computed(() => {
-  const list = [...(form.imageUrls || [])].filter(Boolean)
-  if (!list.length && form.imageUrl) list.push(form.imageUrl)
-  return Array.from(new Set(list))
-})
-
 const filteredProducts = computed(() => {
-  const q = productSearch.value.trim().toLowerCase()
+  const q = productQuery.value.trim().toLowerCase()
   const source = products.value || []
   if (!q) return source.slice(0, 12)
-
   return source
-    .filter((p: any) => `${productName(p)} ${productBrand(p)} ${p.slug || ''}`.toLowerCase().includes(q))
+    .filter((p: any) => `${productName(p)} ${p.slug || ''} ${productBrand(p)}`.toLowerCase().includes(q))
     .slice(0, 18)
 })
 
-function clearFilters() {
-  filter.value = 'all'
-  search.value = ''
-}
-
-function typeIcon(type: string) {
-  if (type === 'popup') return 'mdi:bell-ring-outline'
-  if (type === 'product') return 'mdi:package-variant-closed'
-  if (type === 'slider') return 'mdi:view-carousel-outline'
-  return 'mdi:image-outline'
-}
-
-function typeLabel(type: string) {
-  return adTypes.find((x) => x.value === type)?.label || type || 'إعلان'
-}
-
-function placementLabel(value: string) {
-  return placementOptions.find((x) => x.value === value)?.label || value || 'بدون موضع'
-}
-
-function fallbackTitle(ad: any) {
-  if (ad?.type === 'popup') return 'إعلان منبثق'
-  if (ad?.type === 'product') return 'إعلان داخل منتج'
-  if (ad?.type === 'slider') return 'سلايدر'
-  return 'بانر'
-}
-
-function enumType(value: any): AdType {
-  const raw = String(value ?? '').trim().toLowerCase()
-  if (raw === '1') return 'popup'
-  if (raw === '2') return 'banner'
-  if (raw === '3') return 'product'
-  if (raw === '4') return 'slider'
-  if (['popup', 'banner', 'product', 'slider'].includes(raw)) return raw as AdType
-  if (raw.includes('popup')) return 'popup'
-  if (raw.includes('product')) return 'product'
-  if (raw.includes('slider') || raw.includes('carousel')) return 'slider'
-  return 'banner'
-}
-
-function unwrapArray(input: any): any[] {
-  if (!input) return []
-
-  if (typeof input === 'string') {
-    try {
-      return unwrapArray(JSON.parse(input))
-    } catch {
-      return []
-    }
-  }
-
-  if (Array.isArray(input)) return input
-  if (Array.isArray(input?.$values)) return input.$values
-  if (Array.isArray(input?.items)) return input.items
-  if (Array.isArray(input?.data)) return input.data
-  if (Array.isArray(input?.value)) return input.value
-  if (Array.isArray(input?.result)) return input.result
-  if (Array.isArray(input?.ads)) return input.ads
-  if (Array.isArray(input?.items?.$values)) return input.items.$values
-  if (Array.isArray(input?.data?.$values)) return input.data.$values
-  if (Array.isArray(input?.result?.$values)) return input.result.$values
-  if (Array.isArray(input?.ads?.$values)) return input.ads.$values
-
+function unwrapList(res: any): any[] {
+  if (Array.isArray(res)) return res
+  if (Array.isArray(res?.items)) return res.items
+  if (Array.isArray(res?.data)) return res.data
+  if (Array.isArray(res?.value)) return res.value
+  if (Array.isArray(res?.$values)) return res.$values
+  if (Array.isArray(res?.items?.$values)) return res.items.$values
+  if (Array.isArray(res?.data?.$values)) return res.data.$values
   return []
 }
 
-function unwrapImageUrls(ad: any): string[] {
-  const raw =
-    ad?.imageUrls
-    ?? ad?.ImageUrls
-    ?? ad?.image_urls
-    ?? ad?.ImageUrlsJson
-    ?? ad?.imageUrlsJson
-    ?? null
+function normalizeAds(res: any): any[] {
+  return unwrapList(res)
+    .map((ad: any) => {
+      const rawType = ad?.type ?? ad?.Type ?? 'banner'
+      const normalizedType = typeof rawType === 'number'
+        ? ['slider', 'banner', 'popup', 'product'][rawType] || 'banner'
+        : String(rawType).trim().toLowerCase()
 
-  let arr: any[] = []
+      const rawImageUrls = ad?.imageUrls ?? ad?.ImageUrls
+      const imageUrls = Array.isArray(rawImageUrls)
+        ? rawImageUrls
+        : Array.isArray(rawImageUrls?.$values)
+          ? rawImageUrls.$values
+          : []
+      const imageUrl = ad?.imageUrl ?? ad?.ImageUrl ?? imageUrls[0] ?? ''
 
-  if (Array.isArray(raw)) arr = raw
-  else if (Array.isArray(raw?.$values)) arr = raw.$values
-  else if (typeof raw === 'string' && raw.trim().startsWith('[')) {
-    try { arr = JSON.parse(raw) } catch { arr = [] }
-  }
-
-  const primary = ad?.imageUrl ?? ad?.ImageUrl ?? ''
-  if (!arr.length && primary) arr = [primary]
-
-  return Array.from(new Set(arr.map((x) => String(x || '').trim()).filter(Boolean)))
-}
-
-function normalizeAd(raw: any, index = 0): NormalizedAd | null {
-  if (!raw || typeof raw !== 'object') return null
-
-  const id = String(raw.id ?? raw.Id ?? raw.adId ?? raw.AdId ?? '').trim()
-  const type = enumType(raw.type ?? raw.Type)
-  const imageUrls = unwrapImageUrls(raw)
-  const imageUrl = String(raw.imageUrl ?? raw.ImageUrl ?? imageUrls[0] ?? '').trim()
-  const title = String(raw.title ?? raw.Title ?? '').trim()
-  const subtitle = String(raw.subtitle ?? raw.Subtitle ?? '').trim()
-  const placement = String(raw.placement ?? raw.Placement ?? defaultPlacement(type)).trim()
-  const productId = String(raw.productId ?? raw.ProductId ?? '').trim()
-
-  if (!id && !title && !subtitle && !imageUrl && !imageUrls.length) return null
-
-  return {
-    id: id || `local-${Date.now()}-${index}`,
-    _localKey: id || `local-${Date.now()}-${index}`,
-    type,
-    placement,
-    title,
-    subtitle,
-    imageUrl,
-    imageUrls,
-    linkUrl: String(raw.linkUrl ?? raw.LinkUrl ?? '').trim(),
-    productId,
-    sortOrder: Number(raw.sortOrder ?? raw.SortOrder ?? 0),
-    isEnabled: (raw.isEnabled ?? raw.IsEnabled ?? true) !== false,
-    createdAt: raw.createdAt ?? raw.CreatedAt,
-    updatedAt: raw.updatedAt ?? raw.UpdatedAt,
-  }
-}
-
-function normalizeAds(input: any): NormalizedAd[] {
-  return unwrapArray(input)
-    .map((x, i) => normalizeAd(x, i))
-    .filter(Boolean) as NormalizedAd[]
-}
-
-function normalizeProducts(input: any) {
-  return unwrapArray(input)
-}
-
-function mergeAds(remote: NormalizedAd[], keepCurrentIfRemoteEmpty = true) {
-  if (!remote.length && keepCurrentIfRemoteEmpty && ads.value.length) return
-
-  const map = new Map<string, NormalizedAd>()
-
-  for (const ad of remote) map.set(ad.id, ad)
-  for (const ad of ads.value) {
-    if (!map.has(ad.id) && ad.id.startsWith('local-')) map.set(ad.id, ad)
-  }
-
-  ads.value = Array.from(map.values())
-    .sort((a, b) => {
-      if (a.type !== b.type) return a.type.localeCompare(b.type)
-      if (a.placement !== b.placement) return a.placement.localeCompare(b.placement)
-      return (a.sortOrder || 0) - (b.sortOrder || 0)
+      return {
+        id: String(ad?.id ?? ad?.Id ?? crypto.randomUUID()),
+        type: normalizedType,
+        placement: String(ad?.placement ?? ad?.Placement ?? 'home_top').trim(),
+        title: ad?.title ?? ad?.Title ?? '',
+        subtitle: ad?.subtitle ?? ad?.Subtitle ?? '',
+        imageUrl,
+        imageUrls: imageUrls.length ? imageUrls : (imageUrl ? [imageUrl] : []),
+        linkUrl: ad?.linkUrl ?? ad?.LinkUrl ?? '',
+        productId: ad?.productId ?? ad?.ProductId ?? '',
+        sortOrder: Number(ad?.sortOrder ?? ad?.SortOrder ?? 0),
+        isEnabled: (ad?.isEnabled ?? ad?.IsEnabled) !== false,
+        createdAt: ad?.createdAt ?? ad?.CreatedAt ?? null,
+        updatedAt: ad?.updatedAt ?? ad?.UpdatedAt ?? null,
+      }
     })
+    .filter((ad: any) => ad.id)
 }
 
-async function loadAll(manual = false) {
-  loading.value = true
-  errorMessage.value = ''
+function normalizeProducts(res: any): any[] {
+  return unwrapList(res)
+}
 
+function mediaFromForm() {
+  const list = Array.isArray(form.imageUrls) ? form.imageUrls.filter(Boolean) : []
+  if (list.length) return list
+  return form.imageUrl ? [form.imageUrl] : []
+}
+
+function mediaList(ad: any) {
+  const list = Array.isArray(ad?.imageUrls) ? ad.imageUrls.filter(Boolean) : []
+  if (list.length) return list
+  return ad?.imageUrl ? [ad.imageUrl] : []
+}
+
+function primaryMedia(ad: any) {
+  return mediaList(ad)[0] || ''
+}
+
+function assetUrl(url: string) {
+  return api.buildAssetUrl(url || '')
+}
+
+function productName(p: any) {
+  return p?.title || p?.name || p?.nameAr || 'منتج بدون اسم'
+}
+function productBrand(p: any) {
+  return p?.brand || p?.brandName || p?.brandSlug || ''
+}
+function productImage(p: any) {
+  return p?.imageUrl || p?.primaryImageUrl || p?.thumbnailUrl || p?.images?.[0]?.url || p?.assets?.[0]?.url || ''
+}
+
+function isVideoUrl(url: string) {
+  return /\.(mp4|webm|ogg)(\?|#|$)/i.test(url || '')
+}
+
+function typeLabel(type: string) {
+  return adTypes.find((x) => x.value === type)?.label || type
+}
+function placementLabel(placement: string) {
+  return allPlacements.find((x) => x.value === placement)?.label || placement
+}
+
+function emitAdsChanged() {
+  if (process.client) window.dispatchEvent(new CustomEvent('ads:changed'))
+}
+
+async function loadAll() {
+  loading.value = true
   try {
-    const [adminAds, activeAds, productsRes]: any[] = await Promise.all([
-      $fetch('/api/bff/admin/ads', {
-        query: { _ts: Date.now() },
-        headers: { 'cache-control': 'no-cache' },
-      }).catch((e) => ({ __error: e })),
-      $fetch('/api/bff/ads/active', {
-        query: { _ts: Date.now() },
-        headers: { 'cache-control': 'no-cache' },
-      }).catch(() => []),
-      $fetch('/api/bff/admin/products', {
-        query: { page: 1, pageSize: 300, _ts: Date.now() },
-        headers: { 'cache-control': 'no-cache' },
-      }).catch(() => []),
+    const [adsRes, productsRes]: any[] = await Promise.all([
+      $fetch('/api/bff/admin/ads', { query: { _ts: Date.now() }, headers: { 'cache-control': 'no-cache' } }),
+      $fetch('/api/bff/admin/products', { query: { page: 1, pageSize: 300, _ts: Date.now() }, headers: { 'cache-control': 'no-cache' } }).catch(() => []),
     ])
 
-    if (adminAds?.__error) {
-      throw adminAds.__error
-    }
-
-    const adminList = normalizeAds(adminAds)
-    const activeList = normalizeAds(activeAds)
-    const combined = [...adminList]
-
-    for (const ad of activeList) {
-      if (!combined.some((x) => x.id === ad.id)) combined.push(ad)
-    }
-
-    mergeAds(combined, true)
+    items.value = normalizeAds(adsRes)
     products.value = normalizeProducts(productsRes)
-
-    if (manual) {
-      successMessage.value = `تم تحديث القائمة. عدد الإعلانات: ${ads.value.length}`
-      setTimeout(() => { successMessage.value = '' }, 3000)
-    }
   } catch (e: any) {
-    errorMessage.value = e?.data?.message || e?.message || 'تعذر تحميل الإعلانات من الخادم'
+    toast.error(e?.data?.message || e?.message || 'تعذر تحميل الإعلانات')
   } finally {
     loading.value = false
   }
 }
 
-function defaultPlacement(type: AdType) {
-  if (type === 'slider') return 'home_hero_slider'
-  if (type === 'popup') return 'popup'
-  if (type === 'product') return 'product_page'
-  return 'home_hero_top'
-}
-
-function changeType(type: AdType) {
-  form.type = type
-  form.placement = defaultPlacement(type)
-
-  if (type === 'product') {
-    form.linkUrl = form.productId ? `/product/${form.productId}` : '/products'
-  }
-}
-
-function resetFormOnly() {
-  form.title = ''
-  form.subtitle = ''
-  form.imageUrl = ''
-  form.imageUrls = []
-  form.linkUrl = form.type === 'product' && form.productId ? `/product/${form.productId}` : '/products'
-  form.sortOrder = 0
-  form.isEnabled = true
-}
-
-function startCreate() {
-  selectedId.value = null
-  productSearch.value = ''
+function startNewAd() {
+  editingId.value = null
   Object.assign(form, {
     type: 'slider',
     placement: 'home_hero_slider',
@@ -684,41 +520,54 @@ function startCreate() {
     imageUrls: [],
     linkUrl: '/products',
     productId: '',
-    productTitle: '',
     sortOrder: 0,
     isEnabled: true,
   })
+  productQuery.value = ''
 }
 
-function editAd(ad: NormalizedAd) {
-  selectedId.value = ad.id
+function selectType(type: string) {
+  form.type = type
+  form.placement = allPlacements.find((p) => p.type === type)?.value || 'home_top'
+  if (type === 'popup' && !form.linkUrl) form.linkUrl = '/products'
+  if (type === 'product') form.linkUrl = form.productId ? `/product/${form.productId}` : '/products'
+}
+
+function selectProduct(product: any) {
+  form.productId = product.id
+  form.linkUrl = `/product/${product.id}`
+  productQuery.value = productName(product)
+}
+
+function editAd(ad: any) {
+  editingId.value = ad.id
   Object.assign(form, {
-    type: ad.type,
-    placement: ad.placement || defaultPlacement(ad.type),
+    type: ad.type || 'banner',
+    placement: ad.placement || 'home_top',
     title: ad.title || '',
     subtitle: ad.subtitle || '',
     imageUrl: ad.imageUrl || '',
-    imageUrls: [...(ad.imageUrls || [])],
+    imageUrls: mediaList(ad),
     linkUrl: ad.linkUrl || '/products',
     productId: ad.productId || '',
-    productTitle: ad.productTitle || '',
     sortOrder: Number(ad.sortOrder || 0),
     isEnabled: ad.isEnabled !== false,
   })
 
-  const product = products.value.find((p: any) => String(p.id) === String(ad.productId))
-  productSearch.value = product ? productName(product) : ''
+  const selected = products.value.find((p: any) => p.id === ad.productId)
+  productQuery.value = selected ? productName(selected) : ''
   if (process.client) window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function payload() {
+function buildPayload() {
+  const images = mediaFromForm()
   return {
     type: form.type,
-    placement: form.placement || defaultPlacement(form.type),
-    title: form.title || fallbackTitle(form),
+    placement: form.placement,
+    title: form.title || '',
     subtitle: form.subtitle || null,
-    imageUrl: form.imageUrl || previewMedia.value[0] || '',
-    imageUrls: previewMedia.value,
+    imageUrl: images[0] || '',
+    imageUrls: images,
     linkUrl: form.linkUrl || null,
     productId: form.type === 'product' && form.productId ? form.productId : null,
     sortOrder: Number(form.sortOrder || 0),
@@ -728,329 +577,210 @@ function payload() {
   }
 }
 
-function localAdFromPayload(saved: any, body: any): NormalizedAd {
-  return normalizeAd(saved || { ...body, id: selectedId.value || `local-${Date.now()}` })!
+function mergeSaved(raw: any) {
+  const normalized = normalizeAds([raw])[0]
+  if (!normalized) return
+  const index = items.value.findIndex((x) => x.id === normalized.id)
+  if (index >= 0) items.value.splice(index, 1, normalized)
+  else items.value.unshift(normalized)
+  lastSavedId.value = normalized.id
+  filterType.value = 'all'
+  search.value = ''
+  setTimeout(() => {
+    if (lastSavedId.value === normalized.id) lastSavedId.value = null
+  }, 3500)
 }
 
 async function saveAd() {
-  errorMessage.value = ''
-  successMessage.value = ''
-
-  if (form.type !== 'popup' && !previewMedia.value.length) {
-    errorMessage.value = 'ارفع صورة أو فيديو للبانر أو السلايدر أو إعلان المنتج.'
+  if (form.type !== 'popup' && mediaFromForm().length === 0) {
+    toast.error('ارفع صورة أو فيديو واحد على الأقل')
     return
   }
-
-  if (form.type === 'popup' && !String(form.title || form.subtitle || previewMedia.value[0] || '').trim()) {
-    errorMessage.value = 'الإعلان المنبثق يحتاج عنواناً أو وصفاً أو صورة.'
+  if (form.type === 'popup' && !String(form.title || form.subtitle || form.imageUrl).trim() && mediaFromForm().length === 0) {
+    toast.error('اكتب عنواناً أو وصفاً للإعلان المنبثق')
     return
   }
-
   if (form.type === 'product' && !form.productId) {
-    errorMessage.value = 'اختر المنتج أولاً حتى يظهر الإعلان داخل صفحة المنتج.'
+    toast.error('اختر المنتج أولاً')
     return
   }
 
   saving.value = true
-
   try {
-    const body = payload()
-    const saved: any = selectedId.value && !selectedId.value.startsWith('local-')
-      ? await $fetch(`/api/bff/admin/ads/${selectedId.value}`, { method: 'PUT', body })
+    const body = buildPayload()
+    const saved: any = editingId.value
+      ? await $fetch(`/api/bff/admin/ads/${editingId.value}`, { method: 'PUT', body })
       : await $fetch('/api/bff/admin/ads', { method: 'POST', body })
 
-    const normalized = localAdFromPayload(saved, body)
-
-    const idx = ads.value.findIndex((x) => x.id === normalized.id || (selectedId.value && x.id === selectedId.value))
-    if (idx >= 0) ads.value.splice(idx, 1, normalized)
-    else ads.value.unshift(normalized)
-
-    freshId.value = normalized.id
-    filter.value = 'all'
-    search.value = ''
-    selectedId.value = normalized.id
-    successMessage.value = 'تم حفظ الإعلان وظهر في القائمة.'
-
-    if (process.client) {
-      window.dispatchEvent(new CustomEvent('ads:changed'))
-    }
-
-    setTimeout(() => {
-      if (freshId.value === normalized.id) freshId.value = null
-    }, 4000)
-
-    await loadAll(false)
+    mergeSaved(saved)
+    await loadAll()
+    emitAdsChanged()
+    toast.success(editingId.value ? 'تم تحديث الإعلان' : 'تم حفظ الإعلان وظهر في القائمة')
+    startNewAd()
   } catch (e: any) {
-    errorMessage.value = e?.data?.message || e?.message || 'تعذر حفظ الإعلان'
+    toast.error(e?.data?.message || e?.message || 'تعذر حفظ الإعلان')
   } finally {
     saving.value = false
   }
 }
 
-async function toggleAd(ad: NormalizedAd) {
-  const body = {
-    type: ad.type,
-    placement: ad.placement,
-    title: ad.title || fallbackTitle(ad),
-    subtitle: ad.subtitle || null,
-    imageUrl: ad.imageUrl || mediaList(ad)[0] || '',
-    imageUrls: mediaList(ad),
-    linkUrl: ad.linkUrl || null,
-    productId: ad.type === 'product' && ad.productId ? ad.productId : null,
-    sortOrder: ad.sortOrder || 0,
-    isEnabled: !ad.isEnabled,
-    startAt: null,
-    endAt: null,
-  }
-
-  try {
-    const updated: any = await $fetch(`/api/bff/admin/ads/${ad.id}`, { method: 'PUT', body })
-    const normalized = localAdFromPayload(updated, body)
-    const idx = ads.value.findIndex((x) => x.id === ad.id)
-    if (idx >= 0) ads.value.splice(idx, 1, normalized)
-    if (process.client) window.dispatchEvent(new CustomEvent('ads:changed'))
-  } catch (e: any) {
-    errorMessage.value = e?.data?.message || e?.message || 'تعذر تغيير حالة الإعلان'
-  }
-}
-
-async function deleteAd(ad: NormalizedAd) {
-  if (!confirm('هل تريد حذف هذا الإعلان؟')) return
-
-  try {
-    if (!ad.id.startsWith('local-')) {
-      await $fetch(`/api/bff/admin/ads/${ad.id}`, { method: 'DELETE' })
-    }
-    ads.value = ads.value.filter((x) => x.id !== ad.id)
-    if (selectedId.value === ad.id) startCreate()
-    successMessage.value = 'تم حذف الإعلان.'
-    if (process.client) window.dispatchEvent(new CustomEvent('ads:changed'))
-  } catch (e: any) {
-    errorMessage.value = e?.data?.message || e?.message || 'تعذر حذف الإعلان'
-  }
-}
-
-async function deleteAllAds() {
-  if (!confirm('سيتم حذف كل الإعلانات. هل أنت متأكد؟')) return
-
-  try {
-    await $fetch('/api/bff/admin/ads', { method: 'DELETE' })
-    ads.value = []
-    startCreate()
-    successMessage.value = 'تم حذف جميع الإعلانات.'
-    if (process.client) window.dispatchEvent(new CustomEvent('ads:changed'))
-  } catch (e: any) {
-    errorMessage.value = e?.data?.message || e?.message || 'تعذر حذف الإعلانات'
-  }
-}
-
-async function pickFiles(event: Event) {
+async function onPickFile(event: Event) {
   const input = event.target as HTMLInputElement
   const files = Array.from(input.files || [])
   if (!files.length) return
 
   uploading.value = true
-
   try {
-    const uploaded: string[] = []
-
+    const urls: string[] = []
     for (const file of files) {
-      const url = await directUpload.upload('admin/ads/upload', file, {
-        maxMb: 150,
-        fallbackToBff: true,
-      })
-      if (url) uploaded.push(url)
+      const url = await directUpload.upload('admin/ads/upload', file, { maxMb: 150, fallbackToBff: true })
+      if (url) urls.push(url)
     }
 
     if (form.type === 'slider') {
-      form.imageUrls = Array.from(new Set([...form.imageUrls, ...uploaded]))
+      form.imageUrls = [...form.imageUrls, ...urls]
       form.imageUrl = form.imageUrls[0] || ''
     } else {
-      form.imageUrl = uploaded[0] || ''
+      form.imageUrl = urls[0] || form.imageUrl
       form.imageUrls = form.imageUrl ? [form.imageUrl] : []
     }
 
-    successMessage.value = 'تم رفع الملف بنجاح.'
+    toast.success('تم رفع الملف')
   } catch (e: any) {
-    errorMessage.value = e?.data?.message || e?.message || 'تعذر رفع الملف'
+    toast.error(e?.data?.message || e?.message || 'تعذر رفع الملف')
   } finally {
     uploading.value = false
     input.value = ''
   }
 }
 
-function removeMedia(index: number) {
-  const list = [...previewMedia.value]
-  list.splice(index, 1)
-  form.imageUrls = list
-  form.imageUrl = list[0] || ''
+function removePreview(index: number) {
+  const arr = [...mediaFromForm()]
+  arr.splice(index, 1)
+  form.imageUrls = arr
+  form.imageUrl = arr[0] || ''
 }
 
-function mediaList(ad: any): string[] {
-  const list = Array.isArray(ad?.imageUrls) ? ad.imageUrls.filter(Boolean) : []
-  if (!list.length && ad?.imageUrl) return [ad.imageUrl]
-  return list
+async function toggleAd(ad: any) {
+  try {
+    const body = {
+      ...ad,
+      imageUrls: mediaList(ad),
+      imageUrl: primaryMedia(ad),
+      isEnabled: !ad.isEnabled,
+      startAt: null,
+      endAt: null,
+    }
+    const saved: any = await $fetch(`/api/bff/admin/ads/${ad.id}`, { method: 'PUT', body })
+    mergeSaved(saved)
+    await loadAll()
+    emitAdsChanged()
+  } catch {
+    toast.error('تعذر تحديث الإعلان')
+  }
 }
 
-function primaryMedia(ad: any) {
-  return mediaList(ad)[0] || ''
+async function removeAd(id: string) {
+  if (!id || !confirm('هل تريد حذف هذا الإعلان؟')) return
+  try {
+    await $fetch(`/api/bff/admin/ads/${id}`, { method: 'DELETE' })
+    items.value = items.value.filter((x) => x.id !== id)
+    emitAdsChanged()
+    toast.success('تم حذف الإعلان')
+  } catch {
+    toast.error('تعذر حذف الإعلان')
+  }
 }
 
-function isVideo(url: string) {
-  return /\.(mp4|webm|ogg)(\?|#|$)/i.test(url || '')
+async function removeAll() {
+  if (!confirm('هل تريد حذف كل الإعلانات؟')) return
+  try {
+    await $fetch('/api/bff/admin/ads', { method: 'DELETE' })
+    items.value = []
+    emitAdsChanged()
+    toast.success('تم حذف كل الإعلانات')
+  } catch {
+    toast.error('تعذر حذف الكل')
+  }
 }
 
-function asset(url: string) {
-  return api.buildAssetUrl ? api.buildAssetUrl(url) : url
-}
-
-function productName(p: any) {
-  return p?.title || p?.name || p?.nameAr || 'منتج بدون اسم'
-}
-
-function productBrand(p: any) {
-  return p?.brand || p?.brandName || p?.brandSlug || ''
-}
-
-function productImage(p: any) {
-  return p?.imageUrl || p?.primaryImageUrl || p?.thumbnailUrl || p?.images?.[0]?.url || p?.assets?.[0]?.url || ''
-}
-
-function selectProduct(product: any) {
-  form.productId = product.id
-  form.productTitle = productName(product)
-  form.linkUrl = `/product/${product.id}`
-  productSearch.value = productName(product)
-}
-
-watch(() => form.imageUrl, (value) => {
-  if (value && !form.imageUrls.length) form.imageUrls = [value]
+watch(() => form.imageUrl, (url) => {
+  if (url && form.imageUrls.length === 0) form.imageUrls = [url]
 })
 
 watch(() => form.type, () => {
-  if (!placementsForType.value.some((p) => p.value === form.placement)) {
-    form.placement = defaultPlacement(form.type)
+  if (!placementOptions.value.some((p) => p.value === form.placement)) {
+    form.placement = placementOptions.value[0]?.value || 'home_top'
   }
 })
 
-await loadAll(false)
+await loadAll()
 </script>
 
 <style scoped>
-.ads-admin-page {
+.ads-admin {
   display: grid;
   gap: 1.25rem;
-  padding-bottom: 4rem;
+  padding-bottom: 3rem;
 }
 
 .ads-hero-card,
-.stat-card,
-.ads-library,
-.ads-editor,
-.step-card,
-.live-preview,
-.ads-alert {
+.ads-editor-panel,
+.ads-list-panel,
+.preview-box {
   border: 1px solid rgba(var(--border), .78);
   background:
-    radial-gradient(circle at top right, rgba(var(--primary), .11), transparent 36%),
-    rgba(var(--surface-rgb), .88);
-  box-shadow: 0 24px 90px rgba(0, 0, 0, .17);
-  border-radius: 30px;
+    radial-gradient(circle at top right, rgba(var(--primary), .12), transparent 34%),
+    rgba(var(--surface-rgb), .9);
+  border-radius: 32px;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, .18);
 }
 
 .ads-hero-card {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
   gap: 1rem;
-  padding: 1.35rem;
+  padding: 1.4rem;
 }
 
-.eyebrow {
+.ads-kicker {
   display: inline-flex;
-  margin-bottom: .45rem;
+  margin: 0 0 .45rem;
   color: rgb(var(--primary));
   font-size: .72rem;
   font-weight: 1000;
 }
 
-h1,
-h2,
-h3,
-p {
-  margin: 0;
-}
-
-h1,
+.ads-hero-card h1,
 .panel-head h2 {
+  margin: 0;
   color: rgb(var(--text));
+  font-size: clamp(1.35rem, 2.4vw, 2.4rem);
   font-weight: 1000;
   letter-spacing: -.04em;
 }
 
-h1 {
-  font-size: clamp(1.6rem, 3vw, 2.65rem);
-}
-
-.panel-head h2 {
-  font-size: clamp(1.25rem, 2vw, 1.9rem);
-}
-
-.hero-copy p,
+.ads-hero-card p,
 .panel-head p,
-.step-content p,
-.live-preview p,
-.empty-state p {
-  margin-top: .38rem;
+.preview-box p {
+  margin-top: .35rem;
   color: rgb(var(--muted));
   line-height: 1.8;
 }
 
-.hero-actions,
-.ad-actions,
-.editor-footer {
+.hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: .55rem;
+  gap: .6rem;
+  align-items: flex-start;
 }
 
-.soft-btn,
-.save-btn,
+.hero-actions button,
 .ad-actions button,
-.ads-alert button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: .35rem;
-  border: 1px solid rgba(var(--border), .78);
-  background: rgba(var(--surface-2-rgb), .78);
-  color: rgb(var(--text));
+.sticky-save-bar button {
   border-radius: 999px;
-  padding: .78rem 1rem;
-  font-weight: 1000;
-  transition: .2s ease;
-}
-
-.soft-btn:hover,
-.ad-actions button:hover,
-.ads-alert button:hover {
-  transform: translateY(-1px);
-  border-color: rgba(var(--primary), .55);
-}
-
-.soft-btn.primary,
-.save-btn {
-  border-color: rgba(var(--primary), .5);
-  background: linear-gradient(135deg, rgb(var(--primary)), rgba(var(--primary), .75));
-  color: white;
-}
-
-.soft-btn.danger,
-.danger-text,
-.ads-alert.danger button {
-  border-color: rgba(239, 68, 68, .35);
-  background: rgba(239, 68, 68, .1);
-  color: rgb(248, 113, 113);
+  padding: .75rem 1rem;
+  font-weight: 900;
 }
 
 .ads-stats-grid {
@@ -1059,209 +789,160 @@ h1 {
   gap: .8rem;
 }
 
-.stat-card {
-  display: grid;
-  gap: .4rem;
+.ads-stat {
+  border: 1px solid rgba(var(--border), .7);
+  background: rgba(var(--surface-rgb), .72);
+  border-radius: 24px;
   padding: 1rem;
 }
 
-.stat-card svg {
-  width: 1.35rem;
-  height: 1.35rem;
+.ads-stat svg {
   color: rgb(var(--primary));
 }
 
-.stat-card strong {
+.ads-stat strong {
+  display: block;
+  margin-top: .45rem;
   color: rgb(var(--text));
   font-size: 2rem;
   line-height: 1;
 }
 
-.stat-card span {
+.ads-stat span {
+  display: block;
+  margin-top: .4rem;
   color: rgb(var(--muted));
-  font-size: .83rem;
-  font-weight: 900;
-}
-
-.ads-alert {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: .75rem;
-  padding: .9rem 1rem;
-}
-
-.ads-alert > svg {
-  width: 1.6rem;
-  height: 1.6rem;
-}
-
-.ads-alert.danger {
-  border-color: rgba(239, 68, 68, .35);
-}
-
-.ads-alert.danger > svg {
-  color: rgb(248, 113, 113);
-}
-
-.ads-alert.success {
-  border-color: rgba(34, 197, 94, .35);
-}
-
-.ads-alert.success > svg {
-  color: rgb(74, 222, 128);
-}
-
-.ads-alert b {
-  color: rgb(var(--text));
-}
-
-.ads-alert p {
-  color: rgb(var(--muted));
+  font-weight: 800;
 }
 
 .ads-main-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(430px, 580px);
+  grid-template-columns: minmax(430px, 1fr) minmax(430px, 650px);
   gap: 1rem;
   align-items: start;
 }
 
-.ads-editor {
-  grid-column: 2;
-  grid-row: 1;
-  padding: 1rem;
+.ads-list-panel,
+.ads-editor-panel {
+  padding: 1.2rem;
 }
 
-.ads-library {
-  grid-column: 1;
-  grid-row: 1;
-  padding: 1rem;
-  position: sticky;
-  top: 1rem;
-  max-height: calc(100vh - 2rem);
-  overflow: auto;
-}
-
-.panel-head {
+.panel-head,
+.editor-head {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
   gap: 1rem;
   margin-bottom: 1rem;
 }
 
-.library-count {
-  display: grid;
-  place-items: center;
-  min-width: 42px;
-  height: 42px;
-  border-radius: 16px;
-  background: rgba(var(--primary), .15);
-  color: rgb(var(--primary));
-  font-weight: 1000;
-}
-
-.library-tools {
-  display: grid;
-  grid-template-columns: 1fr 190px;
-  gap: .65rem;
-  margin-bottom: .9rem;
-}
-
-.search-box,
-.input,
-.select-box {
-  width: 100%;
+.type-badge,
+.state-pill,
+.ad-meta span {
+  display: inline-flex;
+  align-items: center;
   border: 1px solid rgba(var(--border), .78);
-  background: rgba(var(--surface-2-rgb), .78);
+  background: rgba(var(--surface-2-rgb), .72);
+  border-radius: 999px;
+  padding: .35rem .65rem;
+  color: rgb(var(--text));
+  font-size: .75rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.list-toolbar {
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  gap: .65rem;
+  margin-bottom: 1rem;
+}
+
+.admin-input {
+  width: 100%;
+  border: 1px solid rgba(var(--border), .82);
+  background: rgba(var(--surface-2-rgb), .74);
   color: rgb(var(--text));
   border-radius: 18px;
-  padding: .82rem .95rem;
+  padding: .85rem 1rem;
   outline: none;
 }
 
-.search-box {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
+.admin-input:focus {
+  border-color: rgba(var(--primary), .75);
+  box-shadow: 0 0 0 4px rgba(var(--primary), .12);
 }
 
-.search-box input {
-  width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: rgb(var(--text));
-}
-
-.search-box.solid {
-  padding: .2rem .75rem;
-}
-
-.input:focus,
-.select-box:focus,
-.search-box:focus-within {
-  border-color: rgba(var(--primary), .65);
-  box-shadow: 0 0 0 4px rgba(var(--primary), .1);
-}
-
-.ad-cards {
+.ads-empty {
   display: grid;
-  gap: .75rem;
+  place-items: center;
+  gap: .55rem;
+  min-height: 190px;
+  border: 1px dashed rgba(var(--border), .75);
+  border-radius: 26px;
+  color: rgb(var(--muted));
+  text-align: center;
+  padding: 1rem;
+}
+
+.ads-empty svg {
+  width: 2rem;
+  height: 2rem;
+  color: rgb(var(--primary));
+}
+
+.ads-list {
+  display: grid;
+  gap: .8rem;
 }
 
 .ad-card {
   display: grid;
-  grid-template-columns: 96px 1fr;
+  grid-template-columns: 110px 1fr auto;
   gap: .85rem;
-  border: 1px solid rgba(var(--border), .72);
-  background: rgba(var(--surface-2-rgb), .58);
-  border-radius: 24px;
-  padding: .75rem;
+  align-items: center;
+  border: 1px solid rgba(var(--border), .75);
+  background: rgba(var(--surface-2-rgb), .64);
+  border-radius: 26px;
+  padding: .85rem;
   transition: .22s ease;
 }
 
 .ad-card:hover,
 .ad-card.selected,
 .ad-card.fresh {
-  border-color: rgba(var(--primary), .68);
-  background: rgba(var(--primary), .1);
   transform: translateY(-2px);
+  border-color: rgba(var(--primary), .75);
+  background: rgba(var(--primary), .1);
 }
 
-.ad-thumb {
+.ad-preview {
   display: grid;
   place-items: center;
-  width: 96px;
-  height: 92px;
-  border: 1px solid rgba(var(--border), .65);
-  background: rgba(var(--surface-rgb), .78);
-  color: rgb(var(--primary));
+  width: 110px;
+  height: 86px;
+  border: 1px solid rgba(var(--border), .72);
+  background: rgba(var(--surface-rgb), .9);
   border-radius: 20px;
   overflow: hidden;
+  color: rgb(var(--primary));
 }
 
-.ad-thumb img,
-.ad-thumb video {
+.ad-preview img,
+.ad-preview video {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.ad-thumb svg {
+.ad-preview svg {
   width: 2rem;
   height: 2rem;
 }
 
-.ad-body {
-  min-width: 0;
-}
-
 .ad-title-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
+  flex-wrap: wrap;
   gap: .45rem;
 }
 
@@ -1270,8 +951,8 @@ h1 {
   font-weight: 1000;
 }
 
-.ad-body p {
-  margin-top: .35rem;
+.ad-content p {
+  margin: .3rem 0;
   color: rgb(var(--muted));
   font-size: .86rem;
   white-space: nowrap;
@@ -1283,352 +964,302 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: .35rem;
-  margin-top: .55rem;
+  margin: .4rem 0;
 }
 
-.ad-meta span,
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid rgba(var(--border), .72);
-  background: rgba(var(--surface-rgb), .7);
-  color: rgb(var(--text));
-  border-radius: 999px;
-  padding: .25rem .55rem;
-  font-size: .73rem;
-  font-weight: 900;
-}
-
-.status-pill.active {
-  border-color: rgba(34, 197, 94, .42);
+.state-pill.on {
+  border-color: rgba(34, 197, 94, .45);
   color: rgb(74, 222, 128);
 }
 
-.status-pill.paused {
-  border-color: rgba(239, 68, 68, .38);
+.state-pill.off {
+  border-color: rgba(239, 68, 68, .45);
   color: rgb(248, 113, 113);
 }
 
-.ad-body small {
-  display: block;
-  margin-top: .45rem;
-  color: rgb(var(--muted));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .ad-actions {
-  margin-top: .65rem;
+  display: grid;
+  gap: .35rem;
 }
 
-.ad-actions button {
-  padding: .52rem .7rem;
-  font-size: .78rem;
-}
-
-.step-card {
+.wizard-section {
   display: grid;
   grid-template-columns: 48px 1fr;
-  gap: .85rem;
-  padding: .95rem;
-  margin-top: .85rem;
+  gap: .9rem;
+  padding: 1rem 0;
+  border-top: 1px solid rgba(var(--border), .55);
 }
 
-.step-number {
+.wizard-number {
   display: grid;
   place-items: center;
   width: 42px;
   height: 42px;
   border-radius: 16px;
-  color: white;
   background: linear-gradient(135deg, rgb(var(--primary)), rgba(var(--primary), .65));
+  color: white;
   font-weight: 1000;
 }
 
-.step-content {
+.wizard-body {
   display: grid;
-  gap: .75rem;
+  gap: .9rem;
 }
 
-.step-content h3,
-.live-preview h3 {
+.wizard-body h3 {
+  margin: .35rem 0 0;
   color: rgb(var(--text));
-  font-size: 1.05rem;
   font-weight: 1000;
 }
 
-.ad-type-grid {
+.type-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: .6rem;
+  gap: .65rem;
 }
 
-.type-choice {
-  display: grid;
-  gap: .35rem;
+.type-card {
   text-align: right;
-  border: 1px solid rgba(var(--border), .72);
-  background: rgba(var(--surface-2-rgb), .62);
+  border: 1px solid rgba(var(--border), .75);
+  background: rgba(var(--surface-2-rgb), .66);
+  border-radius: 22px;
+  padding: .9rem;
   color: rgb(var(--text));
-  border-radius: 20px;
-  padding: .85rem;
-  transition: .2s ease;
+  transition: .22s ease;
 }
 
-.type-choice:hover,
-.type-choice.active {
+.type-card:hover,
+.type-card.active {
   transform: translateY(-2px);
-  border-color: rgba(var(--primary), .65);
+  border-color: rgba(var(--primary), .76);
   background: rgba(var(--primary), .12);
 }
 
-.type-choice svg {
+.type-card svg {
   width: 1.35rem;
   height: 1.35rem;
   color: rgb(var(--primary));
 }
 
-.type-choice b {
-  font-weight: 1000;
+.type-card b,
+.type-card small {
+  display: block;
 }
 
-.type-choice small {
+.type-card small {
+  margin-top: .35rem;
   color: rgb(var(--muted));
-  line-height: 1.55;
+  line-height: 1.5;
 }
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 140px;
-  gap: .65rem;
+  grid-template-columns: 1fr 150px;
+  gap: .75rem;
 }
 
-label {
+.field {
   display: grid;
-  gap: .38rem;
+  gap: .4rem;
+}
+
+.field span,
+.toggle-row span {
   color: rgb(var(--text));
-  font-size: .86rem;
+  font-size: .85rem;
   font-weight: 900;
 }
 
-.product-grid {
+.product-results {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .55rem;
-  max-height: 260px;
+  max-height: 270px;
   overflow: auto;
-  padding-inline-end: .25rem;
 }
 
-.product-card {
+.product-result {
   display: grid;
   grid-template-columns: 52px 1fr;
   gap: .55rem;
   align-items: center;
   text-align: right;
-  border: 1px solid rgba(var(--border), .72);
-  background: rgba(var(--surface-2-rgb), .62);
+  border: 1px solid rgba(var(--border), .75);
+  background: rgba(var(--surface-2-rgb), .65);
   color: rgb(var(--text));
   border-radius: 18px;
   padding: .55rem;
 }
 
-.product-card.active {
-  border-color: rgba(var(--primary), .75);
-  background: rgba(var(--primary), .12);
+.product-result.active {
+  border-color: rgb(var(--primary));
+  background: rgba(var(--primary), .13);
 }
 
-.product-card img,
-.product-fallback {
+.product-result img,
+.product-result svg {
   width: 52px;
   height: 52px;
-  border-radius: 15px;
+  border-radius: 14px;
   object-fit: cover;
-  background: rgba(var(--border), .18);
 }
 
-.product-fallback {
-  display: grid;
-  place-items: center;
-}
-
-.product-card small {
+.product-result small {
   color: rgb(var(--muted));
 }
 
-.upload-zone {
+.upload-box {
   position: relative;
   display: grid;
   place-items: center;
   gap: .35rem;
-  min-height: 142px;
-  border: 1px dashed rgba(var(--primary), .58);
+  min-height: 155px;
+  border: 1px dashed rgba(var(--primary), .55);
   background: rgba(var(--primary), .08);
-  color: rgb(var(--text));
-  border-radius: 24px;
+  border-radius: 26px;
   text-align: center;
-  overflow: hidden;
+  color: rgb(var(--text));
 }
 
-.upload-zone svg {
+.upload-box svg {
   width: 2rem;
   height: 2rem;
   color: rgb(var(--primary));
 }
 
-.upload-zone small {
+.upload-box small {
   color: rgb(var(--muted));
 }
 
-.upload-zone input {
+.upload-box input {
   position: absolute;
   inset: 0;
   opacity: 0;
   cursor: pointer;
 }
 
-.check-row {
-  display: flex;
+.toggle-row {
+  display: inline-flex;
   align-items: center;
-  gap: .55rem;
+  gap: .5rem;
 }
 
-.live-preview {
-  display: grid;
-  gap: .9rem;
+.preview-box {
+  margin-top: 1rem;
   padding: 1rem;
-  margin-top: .85rem;
+}
+
+.preview-box h3 {
+  margin: 0;
+  color: rgb(var(--text));
+  font-size: 1.35rem;
+  font-weight: 1000;
 }
 
 .preview-media {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: .6rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: .65rem;
+  margin-top: 1rem;
 }
 
-.preview-tile {
+.preview-item {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(var(--border), .72);
-  background: rgba(var(--surface-2-rgb), .78);
   border-radius: 20px;
-  min-height: 130px;
+  min-height: 120px;
+  background: rgba(var(--surface-2-rgb), .85);
 }
 
-.preview-tile img,
-.preview-tile video {
+.preview-item img,
+.preview-item video {
   width: 100%;
-  height: 150px;
+  height: 160px;
   object-fit: cover;
 }
 
-.preview-tile button {
+.preview-item button {
   position: absolute;
-  top: .42rem;
-  inset-inline-end: .42rem;
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
+  top: .45rem;
+  inset-inline-end: .45rem;
+  width: 32px;
+  height: 32px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, .65);
   color: white;
+  background: rgba(0, 0, 0, .64);
   font-weight: 1000;
 }
 
-.preview-empty,
-.empty-state {
+.preview-empty {
+  grid-column: 1 / -1;
   display: grid;
   place-items: center;
-  gap: .55rem;
-  min-height: 170px;
+  gap: .4rem;
+  min-height: 130px;
   border: 1px dashed rgba(var(--border), .75);
   border-radius: 22px;
   color: rgb(var(--muted));
-  text-align: center;
-  padding: 1rem;
 }
 
-.preview-empty svg,
-.empty-state svg {
+.preview-empty svg {
   width: 2rem;
   height: 2rem;
   color: rgb(var(--primary));
 }
 
-.editor-footer {
+.sticky-save-bar {
   position: sticky;
   bottom: .75rem;
+  display: flex;
   justify-content: flex-end;
-  margin-top: .9rem;
+  gap: .65rem;
+  margin-top: 1rem;
   padding: .75rem;
-  border: 1px solid rgba(var(--border), .7);
-  background: rgba(var(--surface-rgb), .88);
+  border: 1px solid rgba(var(--border), .65);
+  background: rgba(var(--surface-rgb), .9);
   backdrop-filter: blur(18px);
   border-radius: 24px;
 }
 
-.ltr {
+.keep-ltr {
   direction: ltr;
   unicode-bidi: plaintext;
 }
 
-.spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(1turn); }
-}
-
-@media (max-width: 1220px) {
+@media (max-width: 1200px) {
   .ads-main-grid {
     grid-template-columns: 1fr;
-  }
-
-  .ads-editor,
-  .ads-library {
-    grid-column: auto;
-    grid-row: auto;
-  }
-
-  .ads-library {
-    position: relative;
-    top: auto;
-    max-height: none;
   }
 }
 
 @media (max-width: 760px) {
   .ads-hero-card,
   .panel-head,
-  .ads-alert {
+  .editor-head {
     flex-direction: column;
   }
 
-  .ads-stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .library-tools,
+  .ads-stats-grid,
+  .type-grid,
   .form-grid,
-  .ad-type-grid,
-  .product-grid {
+  .list-toolbar,
+  .product-results {
     grid-template-columns: 1fr;
   }
 
-  .step-card {
-    grid-template-columns: 1fr;
-  }
-
+  .wizard-section,
   .ad-card {
     grid-template-columns: 1fr;
   }
 
-  .ad-thumb {
+  .ad-preview {
     width: 100%;
-    height: 190px;
+    height: 180px;
+  }
+
+  .ad-actions {
+    display: flex;
+    flex-wrap: wrap;
   }
 }
 </style>
