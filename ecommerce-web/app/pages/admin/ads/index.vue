@@ -1,80 +1,66 @@
 <template>
-  <div class="ads-admin-page" dir="rtl">
-    <section class="ads-header-card">
+  <div class="ads-admin" dir="rtl">
+    <section class="ads-hero-card">
       <div>
-        <p class="ads-eyebrow">مركز الإعلانات</p>
+        <p class="ads-kicker">مركز الإعلانات</p>
         <h1>إدارة الإعلانات</h1>
         <p>
-          أنشئ إعلانك بخطوات واضحة. اختر النوع، حدّد مكان الظهور، ارفع الصورة أو الفيديو، ثم احفظ.
-          أي إعلان محفوظ سيظهر فورًا في القائمة.
+          أنشئ إعلاناً، حدّد نوعه ومكان ظهوره، ثم احفظ. أي إعلان محفوظ يظهر مباشرة في القائمة ويمكن تعديله أو تعطيله أو حذفه.
         </p>
       </div>
 
-      <div class="ads-header-actions">
-        <button type="button" class="ads-btn ghost" @click="loadAds" :disabled="loading">
-          تحديث
-        </button>
-        <button type="button" class="ads-btn ghost" @click="resetForm">
-          إعلان جديد
-        </button>
-        <button type="button" class="ads-btn danger" @click="deleteAllAds" :disabled="!ads.length || saving">
-          حذف الكل
-        </button>
+      <div class="hero-actions">
+        <button type="button" class="admin-secondary" @click="loadAll">تحديث</button>
+        <button type="button" class="admin-secondary" @click="startNewAd">إعلان جديد</button>
+        <button type="button" class="admin-danger" @click="removeAll">حذف الكل</button>
       </div>
-    </section>
-
-    <section class="ads-help-card">
-      <div class="help-title">
-        <span>طريقة الاستخدام السريعة</span>
-      </div>
-      <ol>
-        <li>اختر نوع الإعلان: سلايدر، بانر، إعلان منبثق، أو إعلان داخل منتج.</li>
-        <li>اختر مكان الظهور المناسب. السلايدر فوق الهيرو هو أفضل مكان لصورة أو فيديو جمالي.</li>
-        <li>ارفع صورة أو فيديو، أو ضع رابطًا مباشرًا من R2.</li>
-        <li>اضغط حفظ. الإعلان سيظهر مباشرة في القائمة ويمكن تعديله أو تعطيله.</li>
-      </ol>
     </section>
 
     <section class="ads-stats-grid">
-      <article class="stat-card">
-        <span>كل الإعلانات</span>
+      <article class="ads-stat">
+        <Icon name="mdi:bullhorn-outline" />
         <strong>{{ stats.total }}</strong>
+        <span>كل الإعلانات</span>
       </article>
-      <article class="stat-card">
-        <span>مفعّلة</span>
+      <article class="ads-stat">
+        <Icon name="mdi:check-circle-outline" />
         <strong>{{ stats.active }}</strong>
+        <span>مفعلة</span>
       </article>
-      <article class="stat-card">
-        <span>سلايدر</span>
+      <article class="ads-stat">
+        <Icon name="mdi:view-carousel-outline" />
         <strong>{{ stats.slider }}</strong>
+        <span>سلايدر</span>
       </article>
-      <article class="stat-card">
-        <span>بانر</span>
+      <article class="ads-stat">
+        <Icon name="mdi:image-outline" />
         <strong>{{ stats.banner }}</strong>
+        <span>بانر</span>
       </article>
-      <article class="stat-card">
-        <span>منبثقة</span>
+      <article class="ads-stat">
+        <Icon name="mdi:bell-ring-outline" />
         <strong>{{ stats.popup }}</strong>
+        <span>منبثقة</span>
       </article>
     </section>
 
-    <section class="ads-workspace">
+    <section class="ads-main-grid">
       <aside class="ads-list-panel">
-        <div class="panel-heading">
+        <div class="panel-head">
           <div>
-            <p class="ads-eyebrow">الإعلانات المحفوظة</p>
+            <p class="ads-kicker">الإعلانات المحفوظة</p>
             <h2>قائمة الإعلانات</h2>
-            <p>أي إعلان ينحفظ في قاعدة البيانات سيظهر هنا مباشرة.</p>
+            <p>القائمة تقرأ مباشرة من قاعدة البيانات. إذا كان الإعلان محفوظاً سيظهر هنا.</p>
           </div>
         </div>
 
-        <div class="ads-list-tools">
+        <div class="list-toolbar">
           <input
             v-model="search"
-            class="ads-input"
+            class="admin-input"
             placeholder="ابحث بالعنوان، النوع، الموضع..."
           />
-          <select v-model="filter" class="ads-input">
+          <select v-model="filterType" class="admin-input">
             <option value="all">كل الإعلانات</option>
             <option value="active">المفعلة فقط</option>
             <option value="disabled">المعطلة فقط</option>
@@ -85,19 +71,22 @@
           </select>
         </div>
 
-        <div v-if="loading" class="empty-state">
-          جاري تحميل الإعلانات...
+        <div v-if="loading" class="ads-empty">
+          <Icon name="mdi:loading" />
+          <span>جاري تحميل الإعلانات...</span>
         </div>
 
-        <div v-else-if="!ads.length" class="empty-state">
+        <div v-else-if="!items.length" class="ads-empty">
+          <Icon name="mdi:bullhorn-variant-outline" />
           <b>لا توجد إعلانات محفوظة بعد</b>
-          <span>احفظ أول إعلان وسيظهر هنا مباشرة.</span>
+          <span>أنشئ إعلاناً من المحرر وسيظهر هنا مباشرة.</span>
         </div>
 
-        <div v-else-if="!filteredAds.length" class="empty-state">
-          <b>لا توجد نتائج حسب الفلتر الحالي</b>
-          <span>عدد الإعلانات الكلي: {{ ads.length }}</span>
-          <button type="button" class="ads-btn ghost" @click="filter = 'all'; search = ''">عرض الكل</button>
+        <div v-else-if="!filteredAds.length" class="ads-empty">
+          <Icon name="mdi:filter-off-outline" />
+          <b>لا توجد نتائج لهذا الفلتر</b>
+          <span>عدد الإعلانات الكلي: {{ items.length }}</span>
+          <button type="button" class="admin-secondary" @click="filterType = 'all'; search = ''">عرض الكل</button>
         </div>
 
         <div v-else class="ads-list">
@@ -107,9 +96,9 @@
             class="ad-card"
             :class="{ selected: editingId === ad.id, fresh: lastSavedId === ad.id }"
           >
-            <button type="button" class="ad-media" @click="editAd(ad)">
+            <button type="button" class="ad-preview" @click="editAd(ad)">
               <video
-                v-if="isVideo(primaryMedia(ad))"
+                v-if="isVideoUrl(primaryMedia(ad))"
                 :src="assetUrl(primaryMedia(ad))"
                 muted
                 playsinline
@@ -119,55 +108,53 @@
                 :src="assetUrl(primaryMedia(ad))"
                 alt=""
               />
-              <span v-else class="media-placeholder">{{ shortType(ad.type) }}</span>
+              <Icon v-else :name="ad.type === 'popup' ? 'mdi:bell-ring-outline' : 'mdi:image-off-outline'" />
             </button>
 
-            <div class="ad-info">
-              <div class="ad-topline">
+            <div class="ad-content">
+              <div class="ad-title-row">
                 <b>{{ ad.title || 'إعلان بدون عنوان' }}</b>
-                <span :class="['status-pill', ad.isEnabled ? 'active' : 'off']">
+                <span :class="['state-pill', ad.isEnabled ? 'on' : 'off']">
                   {{ ad.isEnabled ? 'مفعل' : 'معطل' }}
                 </span>
               </div>
 
               <p>{{ ad.subtitle || 'بدون وصف' }}</p>
 
-              <div class="ad-tags">
+              <div class="ad-meta">
                 <span>{{ typeLabel(ad.type) }}</span>
                 <span>{{ placementLabel(ad.placement) }}</span>
-                <span>{{ mediaList(ad).length || 0 }} ملف</span>
+                <span v-if="ad.type === 'slider'">{{ mediaList(ad).length }} ملف</span>
               </div>
 
-              <small v-if="ad.linkUrl" class="keep-ltr">{{ ad.linkUrl }}</small>
+              <small class="keep-ltr">{{ ad.linkUrl || 'بدون رابط' }}</small>
             </div>
 
             <div class="ad-actions">
-              <button type="button" class="mini-btn" @click="editAd(ad)">تعديل</button>
-              <button type="button" class="mini-btn" @click="toggleAd(ad)">
+              <button type="button" class="admin-secondary" @click="editAd(ad)">تعديل</button>
+              <button type="button" class="admin-secondary" @click="toggleAd(ad)">
                 {{ ad.isEnabled ? 'تعطيل' : 'تفعيل' }}
               </button>
-              <button type="button" class="mini-btn danger" @click="deleteAd(ad)">حذف</button>
+              <button type="button" class="admin-danger" @click="removeAd(ad.id)">حذف</button>
             </div>
           </article>
         </div>
       </aside>
 
       <form class="ads-editor-panel" @submit.prevent="saveAd">
-        <div class="panel-heading editor-heading">
+        <div class="panel-head editor-head">
           <div>
-            <p class="ads-eyebrow">محرر الإعلان</p>
-            <h2>{{ editingId ? 'تعديل الإعلان' : 'إنشاء إعلان جديد' }}</h2>
-            <p>التصميم هنا مقسّم حتى يعرف الأدمن ماذا يفعل خطوة بخطوة.</p>
+            <p class="ads-kicker">محرر الإعلان</p>
+            <h2>{{ editingId ? 'تعديل إعلان' : 'إنشاء إعلان جديد' }}</h2>
+            <p>اتبع الخطوات: النوع، المكان، المحتوى، ثم الحفظ.</p>
           </div>
           <span class="type-badge">{{ currentType.label }}</span>
         </div>
 
-        <div class="step-box">
-          <div class="step-number">1</div>
-          <div class="step-content">
+        <div class="wizard-section">
+          <div class="wizard-number">1</div>
+          <div class="wizard-body">
             <h3>نوع الإعلان</h3>
-            <p>اختر شكل الإعلان الذي تريد إظهاره للزائر.</p>
-
             <div class="type-grid">
               <button
                 v-for="type in adTypes"
@@ -175,8 +162,9 @@
                 type="button"
                 class="type-card"
                 :class="{ active: form.type === type.value }"
-                @click="setType(type.value)"
+                @click="selectType(type.value)"
               >
+                <Icon :name="type.icon" />
                 <b>{{ type.label }}</b>
                 <small>{{ type.hint }}</small>
               </button>
@@ -184,97 +172,90 @@
           </div>
         </div>
 
-        <div class="step-box">
-          <div class="step-number">2</div>
-          <div class="step-content">
-            <h3>المكان والمحتوى</h3>
-            <p>حدد أين يظهر الإعلان ثم اكتب عنواناً قصيراً وواضحاً.</p>
+        <div class="wizard-section">
+          <div class="wizard-number">2</div>
+          <div class="wizard-body">
+            <h3>مكان الظهور والمحتوى</h3>
 
-            <div class="form-row">
-              <label>
+            <div class="form-grid">
+              <label class="field">
                 <span>موضع الظهور</span>
-                <select v-model="form.placement" class="ads-input">
-                  <option
-                    v-for="place in placementOptions"
-                    :key="place.value"
-                    :value="place.value"
-                  >
-                    {{ place.label }}
+                <select v-model="form.placement" class="admin-input">
+                  <option v-for="p in placementOptions" :key="p.value" :value="p.value">
+                    {{ p.label }}
                   </option>
                 </select>
               </label>
 
-              <label>
+              <label class="field short">
                 <span>الترتيب</span>
-                <input v-model.number="form.sortOrder" type="number" class="ads-input" />
+                <input v-model.number="form.sortOrder" type="number" class="admin-input" />
               </label>
             </div>
 
-            <label class="full-field">
+            <label class="field">
               <span>العنوان</span>
-              <input v-model="form.title" class="ads-input" placeholder="مثال: عروض العناية الكورية" />
+              <input v-model="form.title" class="admin-input" placeholder="مثال: عروض العناية الكورية" />
             </label>
 
-            <label class="full-field">
+            <label class="field">
               <span>الوصف المختصر</span>
-              <input v-model="form.subtitle" class="ads-input" placeholder="نص قصير يظهر تحت العنوان" />
+              <input v-model="form.subtitle" class="admin-input" placeholder="نص قصير يظهر تحت العنوان" />
             </label>
 
             <div v-if="form.type === 'product'" class="product-picker">
-              <label class="full-field">
-                <span>ابحث عن المنتج</span>
-                <input v-model="productSearch" class="ads-input" placeholder="اكتب اسم المنتج أو البراند" />
+              <label class="field">
+                <span>اختيار المنتج</span>
+                <input v-model="productQuery" class="admin-input" placeholder="ابحث باسم المنتج أو البراند" />
               </label>
 
               <div class="product-results">
                 <button
-                  v-for="product in filteredProducts"
-                  :key="product.id"
+                  v-for="p in filteredProducts"
+                  :key="p.id"
                   type="button"
                   class="product-result"
-                  :class="{ active: form.productId === product.id }"
-                  @click="selectProduct(product)"
+                  :class="{ active: form.productId === p.id }"
+                  @click="selectProduct(p)"
                 >
-                  <img v-if="productImage(product)" :src="assetUrl(productImage(product))" alt="" />
-                  <span v-else>{{ productName(product).slice(0, 1) }}</span>
-                  <b>{{ productName(product) }}</b>
-                  <small>{{ productBrand(product) }}</small>
+                  <img v-if="productImage(p)" :src="assetUrl(productImage(p))" alt="" />
+                  <Icon v-else name="mdi:package-variant-closed" />
+                  <b>{{ productName(p) }}</b>
+                  <small>{{ productBrand(p) || 'بدون براند' }}</small>
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="step-box">
-          <div class="step-number">3</div>
-          <div class="step-content">
+        <div class="wizard-section">
+          <div class="wizard-number">3</div>
+          <div class="wizard-body">
             <h3>الصورة أو الفيديو والرابط</h3>
-            <p>
-              السلايدر والبانر يحتاجان صورة أو فيديو. الإعلان المنبثق يمكن أن يكون نصاً فقط.
-            </p>
 
-            <label class="upload-zone">
+            <div class="upload-box">
+              <Icon name="mdi:cloud-upload-outline" />
+              <b>{{ uploading ? 'جاري الرفع...' : 'اضغط لرفع صورة أو فيديو' }}</b>
+              <small>{{ form.type === 'popup' ? 'اختياري للمنبثق' : 'مطلوب للسلايدر أو البانر' }}</small>
               <input
                 type="file"
                 accept="image/*,video/mp4,video/webm"
                 :multiple="form.type === 'slider'"
                 @change="onPickFile"
               />
-              <b>{{ uploading ? 'جاري الرفع...' : 'اضغط لرفع صورة أو فيديو' }}</b>
-              <span>يفضل صور عريضة أو فيديو قصير خفيف.</span>
-            </label>
+            </div>
 
-            <label class="full-field">
+            <label class="field">
               <span>رابط صورة/فيديو يدوي</span>
-              <input v-model="form.imageUrl" class="ads-input keep-ltr" placeholder="https://..." @change="syncManualUrl" />
+              <input v-model="form.imageUrl" class="admin-input keep-ltr" placeholder="https://..." />
             </label>
 
-            <label class="full-field">
+            <label class="field">
               <span>الرابط عند الضغط</span>
-              <input v-model="form.linkUrl" class="ads-input keep-ltr" placeholder="/products" />
+              <input v-model="form.linkUrl" class="admin-input keep-ltr" placeholder="/products" />
             </label>
 
-            <label class="toggle-field">
+            <label class="toggle-row">
               <input v-model="form.isEnabled" type="checkbox" />
               <span>الإعلان مفعل ويظهر للزوار</span>
             </label>
@@ -283,39 +264,35 @@
 
         <section class="preview-box">
           <div>
-            <p class="ads-eyebrow">معاينة قبل الحفظ</p>
+            <p class="ads-kicker">معاينة قبل الحفظ</p>
             <h3>{{ form.title || 'عنوان الإعلان' }}</h3>
             <p>{{ form.subtitle || 'هنا يظهر وصف الإعلان للزائر.' }}</p>
-            <div class="ad-tags">
+            <div class="ad-meta">
               <span>{{ currentType.label }}</span>
               <span>{{ placementLabel(form.placement) }}</span>
             </div>
           </div>
 
           <div class="preview-media">
-            <video
-              v-if="isVideo(previewMedia)"
-              :src="assetUrl(previewMedia)"
-              muted
-              controls
-              playsinline
-            />
-            <img
-              v-else-if="previewMedia"
-              :src="assetUrl(previewMedia)"
-              alt=""
-            />
-            <span v-else>لا توجد صورة أو فيديو للمعاينة</span>
+            <template v-if="previewMedia.length">
+              <div v-for="(url, idx) in previewMedia" :key="`${url}-${idx}`" class="preview-item">
+                <video v-if="isVideoUrl(url)" :src="assetUrl(url)" muted playsinline controls />
+                <img v-else :src="assetUrl(url)" alt="" />
+                <button type="button" @click="removePreview(idx)">×</button>
+              </div>
+            </template>
+            <div v-else class="preview-empty">
+              <Icon :name="form.type === 'popup' ? 'mdi:bell-ring-outline' : 'mdi:image-outline'" />
+              <span>{{ form.type === 'popup' ? 'يمكن حفظ المنبثق كنص فقط' : 'ارفع صورة أو فيديو للمعاينة' }}</span>
+            </div>
           </div>
         </section>
 
-        <div class="save-bar">
-          <button type="button" class="ads-btn ghost" @click="resetForm">
-            تفريغ الحقول
-          </button>
-          <button type="submit" class="ads-btn primary" :disabled="saving || uploading">
-            {{ saving ? 'جاري الحفظ...' : editingId ? 'حفظ التعديل' : 'حفظ الإعلان' }}
-          </button>
+        <div class="sticky-save-bar">
+          <button type="button" class="admin-secondary" @click="startNewAd">تفريغ الحقول</button>
+          <UiButton type="submit" :disabled="saving || uploading">
+            {{ saving ? 'جاري الحفظ...' : (editingId ? 'حفظ التعديل' : 'حفظ الإعلان') }}
+          </UiButton>
         </div>
       </form>
     </section>
@@ -325,62 +302,44 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
+import UiButton from '~/components/ui/UiButton.vue'
+
 const toast = useToast()
 const api = useApi()
 const directUpload = useDirectAdminUpload()
 
-type AdItem = {
-  id: string
-  type: string
-  placement: string
-  title: string
-  subtitle: string
-  imageUrl: string
-  imageUrls: string[]
-  linkUrl: string
-  productId: string
-  sortOrder: number
-  isEnabled: boolean
-  createdAt?: string | null
-  updatedAt?: string | null
-}
-
-const loading = ref(false)
+const loading = ref(true)
 const saving = ref(false)
 const uploading = ref(false)
-
-const ads = ref<AdItem[]>([])
+const items = ref<any[]>([])
 const products = ref<any[]>([])
 const search = ref('')
-const filter = ref('all')
-const productSearch = ref('')
+const productQuery = ref('')
+const filterType = ref('all')
 const editingId = ref<string | null>(null)
 const lastSavedId = ref<string | null>(null)
 
 const adTypes = [
-  { value: 'slider', label: 'سلايدر', hint: 'صورة أو فيديو متحرك فوق الهيرو أو أعلى/آخر الصفحة' },
-  { value: 'banner', label: 'بانر', hint: 'إعلان ثابت داخل الصفحة' },
-  { value: 'popup', label: 'إعلان منبثق', hint: 'نافذة تظهر للزائر ويمكن أن تكون نصاً فقط' },
-  { value: 'product', label: 'داخل منتج', hint: 'إعلان مربوط بمنتج محدد من البحث' },
+  { value: 'slider', label: 'سلايدر', icon: 'mdi:view-carousel-outline', hint: 'صور أو فيديو متحرك فوق الهيرو أو أعلى/آخر الصفحة' },
+  { value: 'banner', label: 'بانر', icon: 'mdi:image-outline', hint: 'إعلان ثابت داخل الصفحة' },
+  { value: 'popup', label: 'إعلان منبثق', icon: 'mdi:bell-ring-outline', hint: 'نافذة تظهر للزائر ويمكن أن تكون نصاً فقط' },
+  { value: 'product', label: 'داخل منتج', icon: 'mdi:package-variant-closed', hint: 'إعلان مربوط بمنتج محدد من البحث' },
 ]
 
-const placements = [
+const allPlacements = [
   { value: 'home_hero_slider', label: 'سلايدر فوق الهيرو / بداية الصفحة', type: 'slider' },
   { value: 'home_top_slider', label: 'سلايدر أعلى الرئيسية', type: 'slider' },
   { value: 'home_bottom_slider', label: 'سلايدر آخر الرئيسية', type: 'slider' },
   { value: 'page_top_slider', label: 'سلايدر أعلى الصفحات', type: 'slider' },
   { value: 'page_bottom_slider', label: 'سلايدر آخر الصفحات', type: 'slider' },
-
   { value: 'home_hero_top', label: 'بانر فوق الهيرو / بداية الصفحة', type: 'banner' },
   { value: 'home_top', label: 'بانر أعلى الرئيسية', type: 'banner' },
   { value: 'home_middle', label: 'بانر منتصف الرئيسية', type: 'banner' },
   { value: 'home_bottom', label: 'بانر آخر الرئيسية', type: 'banner' },
   { value: 'page_top', label: 'بانر أعلى الصفحات', type: 'banner' },
   { value: 'page_bottom', label: 'بانر آخر الصفحات', type: 'banner' },
-
   { value: 'popup', label: 'منبثق عام لكل الموقع', type: 'popup' },
   { value: 'home_popup', label: 'منبثق في الصفحة الرئيسية فقط', type: 'popup' },
-
   { value: 'product_page', label: 'داخل صفحة المنتج', type: 'product' },
 ]
 
@@ -398,47 +357,44 @@ const form = reactive({
 })
 
 const currentType = computed(() => adTypes.find((x) => x.value === form.type) || adTypes[0])
-const placementOptions = computed(() => placements.filter((x) => x.type === form.type))
-const previewMedia = computed(() => mediaFromForm()[0] || '')
+const placementOptions = computed(() => allPlacements.filter((p) => p.type === form.type))
 
 const stats = computed(() => ({
-  total: ads.value.length,
-  active: ads.value.filter((x) => x.isEnabled).length,
-  slider: ads.value.filter((x) => x.type === 'slider').length,
-  banner: ads.value.filter((x) => x.type === 'banner').length,
-  popup: ads.value.filter((x) => x.type === 'popup').length,
+  total: items.value.length,
+  active: items.value.filter((x) => x.isEnabled).length,
+  slider: items.value.filter((x) => x.type === 'slider').length,
+  banner: items.value.filter((x) => x.type === 'banner').length,
+  popup: items.value.filter((x) => x.type === 'popup').length,
 }))
+
+const previewMedia = computed(() => mediaFromForm())
 
 const filteredAds = computed(() => {
   const q = search.value.trim().toLowerCase()
-  return ads.value.filter((ad) => {
-    const matchesFilter =
-      filter.value === 'all' ||
-      (filter.value === 'active' && ad.isEnabled) ||
-      (filter.value === 'disabled' && !ad.isEnabled) ||
-      ad.type === filter.value
+  return items.value.filter((ad: any) => {
+    const okType = filterType.value === 'all'
+      || (filterType.value === 'active' && ad.isEnabled)
+      || (filterType.value === 'disabled' && !ad.isEnabled)
+      || ad.type === filterType.value
 
-    if (!matchesFilter) return false
+    if (!okType) return false
     if (!q) return true
 
-    return [
-      ad.title,
-      ad.subtitle,
-      ad.type,
-      ad.placement,
-      placementLabel(ad.placement),
-      ad.linkUrl,
-    ].filter(Boolean).join(' ').toLowerCase().includes(q)
+    return [ad.title, ad.subtitle, ad.type, ad.placement, ad.linkUrl]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+      .includes(q)
   })
 })
 
 const filteredProducts = computed(() => {
-  const q = productSearch.value.trim().toLowerCase()
-  const list = Array.isArray(products.value) ? products.value : []
-  if (!q) return list.slice(0, 10)
-  return list
-    .filter((p: any) => `${productName(p)} ${productBrand(p)} ${p?.slug || ''}`.toLowerCase().includes(q))
-    .slice(0, 16)
+  const q = productQuery.value.trim().toLowerCase()
+  const source = products.value || []
+  if (!q) return source.slice(0, 12)
+  return source
+    .filter((p: any) => `${productName(p)} ${p.slug || ''} ${productBrand(p)}`.toLowerCase().includes(q))
+    .slice(0, 18)
 })
 
 function unwrapList(res: any): any[] {
@@ -452,59 +408,43 @@ function unwrapList(res: any): any[] {
   return []
 }
 
-function normalizeAds(res: any): AdItem[] {
+function normalizeAds(res: any): any[] {
   return unwrapList(res)
-    .map((raw: any) => {
-      const rawType = raw?.type ?? raw?.Type ?? 'banner'
-      const type = typeof rawType === 'number'
+    .map((ad: any) => {
+      const rawType = ad?.type ?? ad?.Type ?? 'banner'
+      const normalizedType = typeof rawType === 'number'
         ? ['slider', 'banner', 'popup', 'product'][rawType] || 'banner'
-        : String(rawType || 'banner').toLowerCase().trim()
+        : String(rawType).trim().toLowerCase()
 
-      const rawUrls = raw?.imageUrls ?? raw?.ImageUrls ?? raw?.imageUrlsJson ?? raw?.ImageUrlsJson
-      const imageUrls = Array.isArray(rawUrls)
-        ? rawUrls
-        : Array.isArray(rawUrls?.$values)
-          ? rawUrls.$values
-          : typeof rawUrls === 'string' && rawUrls.trim().startsWith('[')
-            ? safeJsonArray(rawUrls)
-            : []
-
-      const imageUrl = raw?.imageUrl ?? raw?.ImageUrl ?? imageUrls[0] ?? ''
+      const rawImageUrls = ad?.imageUrls ?? ad?.ImageUrls
+      const imageUrls = Array.isArray(rawImageUrls)
+        ? rawImageUrls
+        : Array.isArray(rawImageUrls?.$values)
+          ? rawImageUrls.$values
+          : []
+      const imageUrl = ad?.imageUrl ?? ad?.ImageUrl ?? imageUrls[0] ?? ''
 
       return {
-        id: String(raw?.id ?? raw?.Id ?? ''),
-        type,
-        placement: String(raw?.placement ?? raw?.Placement ?? 'home_top').trim(),
-        title: raw?.title ?? raw?.Title ?? '',
-        subtitle: raw?.subtitle ?? raw?.Subtitle ?? '',
+        id: String(ad?.id ?? ad?.Id ?? crypto.randomUUID()),
+        type: normalizedType,
+        placement: String(ad?.placement ?? ad?.Placement ?? 'home_top').trim(),
+        title: ad?.title ?? ad?.Title ?? '',
+        subtitle: ad?.subtitle ?? ad?.Subtitle ?? '',
         imageUrl,
-        imageUrls: imageUrls.length ? imageUrls.filter(Boolean) : (imageUrl ? [imageUrl] : []),
-        linkUrl: raw?.linkUrl ?? raw?.LinkUrl ?? '',
-        productId: raw?.productId ?? raw?.ProductId ?? '',
-        sortOrder: Number(raw?.sortOrder ?? raw?.SortOrder ?? 0),
-        isEnabled: (raw?.isEnabled ?? raw?.IsEnabled) !== false,
-        createdAt: raw?.createdAt ?? raw?.CreatedAt ?? null,
-        updatedAt: raw?.updatedAt ?? raw?.UpdatedAt ?? null,
+        imageUrls: imageUrls.length ? imageUrls : (imageUrl ? [imageUrl] : []),
+        linkUrl: ad?.linkUrl ?? ad?.LinkUrl ?? '',
+        productId: ad?.productId ?? ad?.ProductId ?? '',
+        sortOrder: Number(ad?.sortOrder ?? ad?.SortOrder ?? 0),
+        isEnabled: (ad?.isEnabled ?? ad?.IsEnabled) !== false,
+        createdAt: ad?.createdAt ?? ad?.CreatedAt ?? null,
+        updatedAt: ad?.updatedAt ?? ad?.UpdatedAt ?? null,
       }
     })
-    .filter((x) => x.id)
+    .filter((ad: any) => ad.id)
 }
 
-function safeJsonArray(value: string) {
-  try {
-    const parsed = JSON.parse(value)
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-
-function normalizeProducts(res: any) {
+function normalizeProducts(res: any): any[] {
   return unwrapList(res)
-}
-
-function assetUrl(url: string) {
-  return api.buildAssetUrl(url || '')
 }
 
 function mediaFromForm() {
@@ -513,56 +453,55 @@ function mediaFromForm() {
   return form.imageUrl ? [form.imageUrl] : []
 }
 
-function mediaList(ad: AdItem) {
+function mediaList(ad: any) {
   const list = Array.isArray(ad?.imageUrls) ? ad.imageUrls.filter(Boolean) : []
   if (list.length) return list
   return ad?.imageUrl ? [ad.imageUrl] : []
 }
 
-function primaryMedia(ad: AdItem) {
+function primaryMedia(ad: any) {
   return mediaList(ad)[0] || ''
 }
 
-function isVideo(url: string) {
-  return /\.(mp4|webm|ogg)(\?|#|$)/i.test(url || '')
-}
-
-function shortType(type: string) {
-  if (type === 'slider') return 'S'
-  if (type === 'banner') return 'B'
-  if (type === 'popup') return 'P'
-  return 'AD'
-}
-
-function typeLabel(type: string) {
-  return adTypes.find((x) => x.value === type)?.label || type
-}
-
-function placementLabel(value: string) {
-  return placements.find((x) => x.value === value)?.label || value || 'بدون موضع'
+function assetUrl(url: string) {
+  return api.buildAssetUrl(url || '')
 }
 
 function productName(p: any) {
   return p?.title || p?.name || p?.nameAr || 'منتج بدون اسم'
 }
-
 function productBrand(p: any) {
   return p?.brand || p?.brandName || p?.brandSlug || ''
 }
-
 function productImage(p: any) {
-  return p?.imageUrl || p?.primaryImageUrl || p?.thumbnailUrl || p?.images?.[0]?.url || p?.images?.[0]?.imageUrl || ''
+  return p?.imageUrl || p?.primaryImageUrl || p?.thumbnailUrl || p?.images?.[0]?.url || p?.assets?.[0]?.url || ''
+}
+
+function isVideoUrl(url: string) {
+  return /\.(mp4|webm|ogg)(\?|#|$)/i.test(url || '')
+}
+
+function typeLabel(type: string) {
+  return adTypes.find((x) => x.value === type)?.label || type
+}
+function placementLabel(placement: string) {
+  return allPlacements.find((x) => x.value === placement)?.label || placement
 }
 
 function emitAdsChanged() {
   if (process.client) window.dispatchEvent(new CustomEvent('ads:changed'))
 }
 
-async function loadAds() {
+async function loadAll() {
   loading.value = true
   try {
-    const res = await api.get<any>('/admin/ads', { _ts: Date.now() }, { 'cache-control': 'no-cache' })
-    ads.value = normalizeAds(res)
+    const [adsRes, productsRes]: any[] = await Promise.all([
+      api.get('/admin/ads', { _ts: Date.now() }, { 'cache-control': 'no-cache' }),
+      api.get('/admin/products', { page: 1, pageSize: 300, _ts: Date.now() }, { 'cache-control': 'no-cache' }).catch(() => []),
+    ])
+
+    items.value = normalizeAds(adsRes)
+    products.value = normalizeProducts(productsRes)
   } catch (e: any) {
     toast.error(e?.data?.message || e?.message || 'تعذر تحميل الإعلانات')
   } finally {
@@ -570,16 +509,7 @@ async function loadAds() {
   }
 }
 
-async function loadProducts() {
-  try {
-    const res = await api.get<any>('/admin/products', { page: 1, pageSize: 300, _ts: Date.now() }, { 'cache-control': 'no-cache' })
-    products.value = normalizeProducts(res)
-  } catch {
-    products.value = []
-  }
-}
-
-function resetForm() {
+function startNewAd() {
   editingId.value = null
   Object.assign(form, {
     type: 'slider',
@@ -593,32 +523,23 @@ function resetForm() {
     sortOrder: 0,
     isEnabled: true,
   })
-  productSearch.value = ''
+  productQuery.value = ''
 }
 
-function setType(type: string) {
+function selectType(type: string) {
   form.type = type
-  const first = placements.find((x) => x.type === type)
-  form.placement = first?.value || 'home_top'
-  if (type === 'popup') {
-    form.linkUrl = form.linkUrl || '/products'
-  }
-  if (type === 'product') {
-    form.placement = 'product_page'
-  }
+  form.placement = allPlacements.find((p) => p.type === type)?.value || 'home_top'
+  if (type === 'popup' && !form.linkUrl) form.linkUrl = '/products'
+  if (type === 'product') form.linkUrl = form.productId ? `/product/${form.productId}` : '/products'
 }
 
 function selectProduct(product: any) {
   form.productId = product.id
   form.linkUrl = `/product/${product.id}`
-  productSearch.value = productName(product)
+  productQuery.value = productName(product)
 }
 
-function syncManualUrl() {
-  if (form.imageUrl) form.imageUrls = [form.imageUrl]
-}
-
-function editAd(ad: AdItem) {
+function editAd(ad: any) {
   editingId.value = ad.id
   Object.assign(form, {
     type: ad.type || 'banner',
@@ -632,20 +553,21 @@ function editAd(ad: AdItem) {
     sortOrder: Number(ad.sortOrder || 0),
     isEnabled: ad.isEnabled !== false,
   })
-  const product = products.value.find((p: any) => p.id === ad.productId)
-  productSearch.value = product ? productName(product) : ''
+
+  const selected = products.value.find((p: any) => p.id === ad.productId)
+  productQuery.value = selected ? productName(selected) : ''
   if (process.client) window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function buildPayload() {
-  const media = mediaFromForm()
+  const images = mediaFromForm()
   return {
     type: form.type,
     placement: form.placement,
     title: form.title || '',
     subtitle: form.subtitle || null,
-    imageUrl: media[0] || '',
-    imageUrls: media,
+    imageUrl: images[0] || '',
+    imageUrls: images,
     linkUrl: form.linkUrl || null,
     productId: form.type === 'product' && form.productId ? form.productId : null,
     sortOrder: Number(form.sortOrder || 0),
@@ -655,48 +577,46 @@ function buildPayload() {
   }
 }
 
-function mergeAd(raw: any) {
-  const ad = normalizeAds([raw])[0]
-  if (!ad) return
-  const index = ads.value.findIndex((x) => x.id === ad.id)
-  if (index >= 0) ads.value.splice(index, 1, ad)
-  else ads.value.unshift(ad)
-
-  filter.value = 'all'
+function mergeSaved(raw: any) {
+  const normalized = normalizeAds([raw])[0]
+  if (!normalized) return
+  const index = items.value.findIndex((x) => x.id === normalized.id)
+  if (index >= 0) items.value.splice(index, 1, normalized)
+  else items.value.unshift(normalized)
+  lastSavedId.value = normalized.id
+  filterType.value = 'all'
   search.value = ''
-  lastSavedId.value = ad.id
   setTimeout(() => {
-    if (lastSavedId.value === ad.id) lastSavedId.value = null
+    if (lastSavedId.value === normalized.id) lastSavedId.value = null
   }, 3500)
 }
 
 async function saveAd() {
-  const media = mediaFromForm()
-  if (form.type !== 'popup' && media.length === 0) {
-    toast.error('ارفع صورة أو فيديو أولاً')
+  if (form.type !== 'popup' && mediaFromForm().length === 0) {
+    toast.error('ارفع صورة أو فيديو واحد على الأقل')
     return
   }
-  if (form.type === 'popup' && !String(form.title || form.subtitle || media[0] || '').trim()) {
+  if (form.type === 'popup' && !String(form.title || form.subtitle || form.imageUrl).trim() && mediaFromForm().length === 0) {
     toast.error('اكتب عنواناً أو وصفاً للإعلان المنبثق')
     return
   }
   if (form.type === 'product' && !form.productId) {
-    toast.error('اختر المنتج المرتبط بالإعلان')
+    toast.error('اختر المنتج أولاً')
     return
   }
 
   saving.value = true
   try {
-    const payload = buildPayload()
-    const saved = editingId.value
-      ? await api.put<any>(`/admin/ads/${editingId.value}`, payload)
-      : await api.post<any>('/admin/ads', payload)
+    const body = buildPayload()
+    const saved: any = editingId.value
+      ? await api.put(`/admin/ads/${editingId.value}`, body)
+      : await api.post('/admin/ads', body)
 
-    mergeAd(saved)
-    await loadAds()
+    mergeSaved(saved)
+    await loadAll()
     emitAdsChanged()
     toast.success(editingId.value ? 'تم تحديث الإعلان' : 'تم حفظ الإعلان وظهر في القائمة')
-    resetForm()
+    startNewAd()
   } catch (e: any) {
     toast.error(e?.data?.message || e?.message || 'تعذر حفظ الإعلان')
   } finally {
@@ -713,10 +633,7 @@ async function onPickFile(event: Event) {
   try {
     const urls: string[] = []
     for (const file of files) {
-      const url = await directUpload.upload('admin/ads/upload', file, {
-        maxMb: 150,
-        fallbackToBff: true,
-      })
+      const url = await directUpload.upload('admin/ads/upload', file, { maxMb: 150, fallbackToBff: true })
       if (url) urls.push(url)
     }
 
@@ -737,167 +654,133 @@ async function onPickFile(event: Event) {
   }
 }
 
-async function toggleAd(ad: AdItem) {
+function removePreview(index: number) {
+  const arr = [...mediaFromForm()]
+  arr.splice(index, 1)
+  form.imageUrls = arr
+  form.imageUrl = arr[0] || ''
+}
+
+async function toggleAd(ad: any) {
   try {
-    const payload = {
-      type: ad.type,
-      placement: ad.placement,
-      title: ad.title,
-      subtitle: ad.subtitle || null,
-      imageUrl: primaryMedia(ad),
+    const body = {
+      ...ad,
       imageUrls: mediaList(ad),
-      linkUrl: ad.linkUrl || null,
-      productId: ad.type === 'product' && ad.productId ? ad.productId : null,
-      sortOrder: Number(ad.sortOrder || 0),
+      imageUrl: primaryMedia(ad),
       isEnabled: !ad.isEnabled,
       startAt: null,
       endAt: null,
     }
-
-    const saved = await api.put<any>(`/admin/ads/${ad.id}`, payload)
-    mergeAd(saved)
+    const saved: any = await api.put(`/admin/ads/${ad.id}`, body)
+    mergeSaved(saved)
+    await loadAll()
     emitAdsChanged()
-  } catch (e: any) {
-    toast.error(e?.data?.message || e?.message || 'تعذر تغيير حالة الإعلان')
+  } catch {
+    toast.error('تعذر تحديث الإعلان')
   }
 }
 
-async function deleteAd(ad: AdItem) {
-  if (!confirm('هل تريد حذف هذا الإعلان؟')) return
+async function removeAd(id: string) {
+  if (!id || !confirm('هل تريد حذف هذا الإعلان؟')) return
   try {
-    await api.del(`/admin/ads/${ad.id}`)
-    ads.value = ads.value.filter((x) => x.id !== ad.id)
-    if (editingId.value === ad.id) resetForm()
+    await api.del(`/admin/ads/${id}`)
+    items.value = items.value.filter((x) => x.id !== id)
     emitAdsChanged()
     toast.success('تم حذف الإعلان')
-  } catch (e: any) {
-    toast.error(e?.data?.message || e?.message || 'تعذر حذف الإعلان')
+  } catch {
+    toast.error('تعذر حذف الإعلان')
   }
 }
 
-async function deleteAllAds() {
-  if (!confirm('حذف كل الإعلانات؟')) return
+async function removeAll() {
+  if (!confirm('هل تريد حذف كل الإعلانات؟')) return
   try {
     await api.del('/admin/ads')
-    ads.value = []
-    resetForm()
+    items.value = []
     emitAdsChanged()
     toast.success('تم حذف كل الإعلانات')
-  } catch (e: any) {
-    toast.error(e?.data?.message || e?.message || 'تعذر حذف الإعلانات')
+  } catch {
+    toast.error('تعذر حذف الكل')
   }
 }
 
-onMounted(async () => {
-  await Promise.all([loadAds(), loadProducts()])
+watch(() => form.imageUrl, (url) => {
+  if (url && form.imageUrls.length === 0) form.imageUrls = [url]
 })
+
+watch(() => form.type, () => {
+  if (!placementOptions.value.some((p) => p.value === form.placement)) {
+    form.placement = placementOptions.value[0]?.value || 'home_top'
+  }
+})
+
+await loadAll()
 </script>
 
 <style scoped>
-.ads-admin-page {
+.ads-admin {
   display: grid;
-  gap: 1.2rem;
+  gap: 1.25rem;
   padding-bottom: 3rem;
 }
 
-.ads-header-card,
-.ads-help-card,
-.ads-list-panel,
+.ads-hero-card,
 .ads-editor-panel,
+.ads-list-panel,
 .preview-box {
-  border: 1px solid rgba(var(--border), .76);
+  border: 1px solid rgba(var(--border), .78);
   background:
-    radial-gradient(circle at top right, rgba(var(--primary), .12), transparent 35%),
+    radial-gradient(circle at top right, rgba(var(--primary), .12), transparent 34%),
     rgba(var(--surface-rgb), .9);
-  border-radius: 30px;
-  box-shadow: 0 22px 80px rgba(0, 0, 0, .16);
+  border-radius: 32px;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, .18);
 }
 
-.ads-header-card {
+.ads-hero-card {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
   padding: 1.4rem;
 }
 
-.ads-eyebrow {
-  margin: 0 0 .4rem;
+.ads-kicker {
+  display: inline-flex;
+  margin: 0 0 .45rem;
   color: rgb(var(--primary));
-  font-size: .75rem;
+  font-size: .72rem;
   font-weight: 1000;
 }
 
-.ads-header-card h1,
-.panel-heading h2 {
+.ads-hero-card h1,
+.panel-head h2 {
   margin: 0;
   color: rgb(var(--text));
-  font-size: clamp(1.45rem, 2.4vw, 2.6rem);
+  font-size: clamp(1.35rem, 2.4vw, 2.4rem);
   font-weight: 1000;
   letter-spacing: -.04em;
 }
 
-.ads-header-card p,
-.panel-heading p,
-.ads-help-card,
-.step-content p,
+.ads-hero-card p,
+.panel-head p,
 .preview-box p {
+  margin-top: .35rem;
   color: rgb(var(--muted));
   line-height: 1.8;
 }
 
-.ads-header-actions {
+.hero-actions {
   display: flex;
   flex-wrap: wrap;
   gap: .6rem;
   align-items: flex-start;
 }
 
-.ads-btn,
-.mini-btn {
-  border: 1px solid rgba(var(--border), .8);
-  background: rgba(var(--surface-2-rgb), .78);
-  color: rgb(var(--text));
+.hero-actions button,
+.ad-actions button,
+.sticky-save-bar button {
   border-radius: 999px;
-  padding: .72rem 1rem;
+  padding: .75rem 1rem;
   font-weight: 900;
-  cursor: pointer;
-  transition: .2s ease;
-}
-
-.ads-btn:hover,
-.mini-btn:hover {
-  transform: translateY(-1px);
-  border-color: rgba(var(--primary), .75);
-}
-
-.ads-btn.primary {
-  background: rgb(var(--primary));
-  color: rgb(var(--on-primary));
-  border-color: transparent;
-}
-
-.ads-btn.danger,
-.mini-btn.danger {
-  border-color: rgba(239, 68, 68, .45);
-  color: rgb(248, 113, 113);
-  background: rgba(239, 68, 68, .1);
-}
-
-.ads-help-card {
-  padding: 1rem 1.2rem;
-}
-
-.help-title {
-  color: rgb(var(--text));
-  font-weight: 1000;
-  margin-bottom: .65rem;
-}
-
-.ads-help-card ol {
-  margin: 0;
-  padding-inline-start: 1.25rem;
-  display: grid;
-  gap: .45rem;
 }
 
 .ads-stats-grid {
@@ -906,53 +789,75 @@ onMounted(async () => {
   gap: .8rem;
 }
 
-.stat-card {
+.ads-stat {
   border: 1px solid rgba(var(--border), .7);
   background: rgba(var(--surface-rgb), .72);
-  border-radius: 22px;
+  border-radius: 24px;
   padding: 1rem;
 }
 
-.stat-card span {
-  color: rgb(var(--muted));
-  font-weight: 800;
+.ads-stat svg {
+  color: rgb(var(--primary));
 }
 
-.stat-card strong {
+.ads-stat strong {
   display: block;
-  margin-top: .35rem;
+  margin-top: .45rem;
   color: rgb(var(--text));
   font-size: 2rem;
   line-height: 1;
 }
 
-.ads-workspace {
+.ads-stat span {
+  display: block;
+  margin-top: .4rem;
+  color: rgb(var(--muted));
+  font-weight: 800;
+}
+
+.ads-main-grid {
   display: grid;
-  grid-template-columns: minmax(420px, 1fr) minmax(460px, 640px);
+  grid-template-columns: minmax(430px, 1fr) minmax(430px, 650px);
   gap: 1rem;
   align-items: start;
 }
 
 .ads-list-panel,
 .ads-editor-panel {
-  padding: 1.15rem;
+  padding: 1.2rem;
 }
 
-.panel-heading {
+.panel-head,
+.editor-head {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1rem;
 }
 
-.ads-list-tools {
+.type-badge,
+.state-pill,
+.ad-meta span {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(var(--border), .78);
+  background: rgba(var(--surface-2-rgb), .72);
+  border-radius: 999px;
+  padding: .35rem .65rem;
+  color: rgb(var(--text));
+  font-size: .75rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.list-toolbar {
   display: grid;
-  grid-template-columns: 1fr 170px;
+  grid-template-columns: 1fr 180px;
   gap: .65rem;
   margin-bottom: 1rem;
 }
 
-.ads-input {
+.admin-input {
   width: 100%;
   border: 1px solid rgba(var(--border), .82);
   background: rgba(var(--surface-2-rgb), .74);
@@ -962,21 +867,27 @@ onMounted(async () => {
   outline: none;
 }
 
-.ads-input:focus {
+.admin-input:focus {
   border-color: rgba(var(--primary), .75);
   box-shadow: 0 0 0 4px rgba(var(--primary), .12);
 }
 
-.empty-state {
-  min-height: 170px;
-  border: 1px dashed rgba(var(--border), .75);
-  border-radius: 24px;
+.ads-empty {
   display: grid;
   place-items: center;
-  gap: .45rem;
-  text-align: center;
+  gap: .55rem;
+  min-height: 190px;
+  border: 1px dashed rgba(var(--border), .75);
+  border-radius: 26px;
   color: rgb(var(--muted));
+  text-align: center;
   padding: 1rem;
+}
+
+.ads-empty svg {
+  width: 2rem;
+  height: 2rem;
+  color: rgb(var(--primary));
 }
 
 .ads-list {
@@ -986,106 +897,84 @@ onMounted(async () => {
 
 .ad-card {
   display: grid;
-  grid-template-columns: 112px 1fr auto;
+  grid-template-columns: 110px 1fr auto;
   gap: .85rem;
   align-items: center;
   border: 1px solid rgba(var(--border), .75);
-  background: rgba(var(--surface-2-rgb), .66);
-  border-radius: 24px;
-  padding: .8rem;
-  transition: .2s ease;
+  background: rgba(var(--surface-2-rgb), .64);
+  border-radius: 26px;
+  padding: .85rem;
+  transition: .22s ease;
 }
 
 .ad-card:hover,
 .ad-card.selected,
 .ad-card.fresh {
+  transform: translateY(-2px);
   border-color: rgba(var(--primary), .75);
   background: rgba(var(--primary), .1);
-  transform: translateY(-2px);
 }
 
-.ad-media {
-  width: 112px;
-  height: 88px;
-  border: 1px solid rgba(var(--border), .7);
-  background: rgba(var(--surface-rgb), .9);
-  border-radius: 18px;
-  overflow: hidden;
+.ad-preview {
   display: grid;
   place-items: center;
+  width: 110px;
+  height: 86px;
+  border: 1px solid rgba(var(--border), .72);
+  background: rgba(var(--surface-rgb), .9);
+  border-radius: 20px;
+  overflow: hidden;
   color: rgb(var(--primary));
-  font-weight: 1000;
 }
 
-.ad-media img,
-.ad-media video {
+.ad-preview img,
+.ad-preview video {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.media-placeholder {
-  width: 46px;
-  height: 46px;
-  border-radius: 16px;
-  background: rgba(var(--primary), .14);
-  display: grid;
-  place-items: center;
+.ad-preview svg {
+  width: 2rem;
+  height: 2rem;
 }
 
-.ad-info {
-  min-width: 0;
-}
-
-.ad-topline {
+.ad-title-row {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: .45rem;
-  align-items: center;
 }
 
-.ad-topline b {
+.ad-title-row b {
   color: rgb(var(--text));
   font-weight: 1000;
 }
 
-.ad-info p {
+.ad-content p {
   margin: .3rem 0;
   color: rgb(var(--muted));
+  font-size: .86rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.ad-tags {
+.ad-meta {
   display: flex;
   flex-wrap: wrap;
   gap: .35rem;
-  margin: .45rem 0;
+  margin: .4rem 0;
 }
 
-.ad-tags span,
-.status-pill,
-.type-badge {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid rgba(var(--border), .78);
-  background: rgba(var(--surface-rgb), .72);
-  border-radius: 999px;
-  padding: .28rem .58rem;
-  color: rgb(var(--text));
-  font-size: .75rem;
-  font-weight: 900;
-}
-
-.status-pill.active {
-  color: rgb(74, 222, 128);
+.state-pill.on {
   border-color: rgba(34, 197, 94, .45);
+  color: rgb(74, 222, 128);
 }
 
-.status-pill.off {
-  color: rgb(248, 113, 113);
+.state-pill.off {
   border-color: rgba(239, 68, 68, .45);
+  color: rgb(248, 113, 113);
 }
 
 .ad-actions {
@@ -1093,204 +982,242 @@ onMounted(async () => {
   gap: .35rem;
 }
 
-.step-box {
+.wizard-section {
   display: grid;
-  grid-template-columns: 46px 1fr;
+  grid-template-columns: 48px 1fr;
   gap: .9rem;
   padding: 1rem 0;
-  border-top: 1px solid rgba(var(--border), .58);
+  border-top: 1px solid rgba(var(--border), .55);
 }
 
-.step-number {
+.wizard-number {
+  display: grid;
+  place-items: center;
   width: 42px;
   height: 42px;
   border-radius: 16px;
-  display: grid;
-  place-items: center;
   background: linear-gradient(135deg, rgb(var(--primary)), rgba(var(--primary), .65));
   color: white;
   font-weight: 1000;
 }
 
-.step-content {
+.wizard-body {
   display: grid;
   gap: .9rem;
 }
 
-.step-content h3 {
-  margin: .2rem 0 0;
+.wizard-body h3 {
+  margin: .35rem 0 0;
   color: rgb(var(--text));
-  font-size: 1rem;
   font-weight: 1000;
 }
 
 .type-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: .75rem;
+  gap: .65rem;
 }
 
 .type-card {
-  text-align: start;
-  border: 1px solid rgba(var(--border), .78);
-  background: rgba(var(--surface-2-rgb), .68);
-  color: rgb(var(--text));
+  text-align: right;
+  border: 1px solid rgba(var(--border), .75);
+  background: rgba(var(--surface-2-rgb), .66);
   border-radius: 22px;
-  padding: 1rem;
-  display: grid;
-  gap: .35rem;
-  cursor: pointer;
-  transition: .2s ease;
+  padding: .9rem;
+  color: rgb(var(--text));
+  transition: .22s ease;
 }
 
-.type-card small {
-  color: rgb(var(--muted));
-  line-height: 1.6;
-}
-
-.type-card.active,
-.type-card:hover {
-  border-color: rgba(var(--primary), .8);
+.type-card:hover,
+.type-card.active {
+  transform: translateY(-2px);
+  border-color: rgba(var(--primary), .76);
   background: rgba(var(--primary), .12);
 }
 
-.form-row {
+.type-card svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  color: rgb(var(--primary));
+}
+
+.type-card b,
+.type-card small {
+  display: block;
+}
+
+.type-card small {
+  margin-top: .35rem;
+  color: rgb(var(--muted));
+  line-height: 1.5;
+}
+
+.form-grid {
   display: grid;
-  grid-template-columns: 1fr 130px;
+  grid-template-columns: 1fr 150px;
   gap: .75rem;
 }
 
-label span {
-  display: block;
-  color: rgb(var(--text));
-  font-size: .86rem;
-  font-weight: 900;
-  margin-bottom: .35rem;
-}
-
-.full-field,
-.toggle-field {
-  display: block;
-}
-
-.toggle-field {
-  display: inline-flex;
-  align-items: center;
-  gap: .55rem;
-  color: rgb(var(--text));
-  font-weight: 900;
-}
-
-.upload-zone {
-  position: relative;
-  min-height: 118px;
-  border: 1px dashed rgba(var(--primary), .55);
-  background: rgba(var(--primary), .08);
-  border-radius: 24px;
+.field {
   display: grid;
-  place-items: center;
-  text-align: center;
-  gap: .3rem;
+  gap: .4rem;
+}
+
+.field span,
+.toggle-row span {
   color: rgb(var(--text));
-  cursor: pointer;
-}
-
-.upload-zone input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.upload-zone span {
-  color: rgb(var(--muted));
+  font-size: .85rem;
+  font-weight: 900;
 }
 
 .product-results {
   display: grid;
-  gap: .5rem;
-  max-height: 250px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .55rem;
+  max-height: 270px;
   overflow: auto;
 }
 
 .product-result {
   display: grid;
-  grid-template-columns: 44px 1fr auto;
-  gap: .65rem;
+  grid-template-columns: 52px 1fr;
+  gap: .55rem;
   align-items: center;
-  border: 1px solid rgba(var(--border), .72);
+  text-align: right;
+  border: 1px solid rgba(var(--border), .75);
   background: rgba(var(--surface-2-rgb), .65);
   color: rgb(var(--text));
   border-radius: 18px;
   padding: .55rem;
 }
 
-.product-result.active,
-.product-result:hover {
-  border-color: rgba(var(--primary), .75);
+.product-result.active {
+  border-color: rgb(var(--primary));
+  background: rgba(var(--primary), .13);
 }
 
 .product-result img,
-.product-result > span:first-child {
-  width: 44px;
-  height: 44px;
+.product-result svg {
+  width: 52px;
+  height: 52px;
   border-radius: 14px;
   object-fit: cover;
-  background: rgba(var(--primary), .12);
-  display: grid;
-  place-items: center;
-  font-weight: 1000;
 }
 
 .product-result small {
   color: rgb(var(--muted));
 }
 
-.preview-box {
-  padding: 1rem;
+.upload-box {
+  position: relative;
   display: grid;
-  grid-template-columns: 1fr 220px;
-  gap: 1rem;
+  place-items: center;
+  gap: .35rem;
+  min-height: 155px;
+  border: 1px dashed rgba(var(--primary), .55);
+  background: rgba(var(--primary), .08);
+  border-radius: 26px;
+  text-align: center;
+  color: rgb(var(--text));
+}
+
+.upload-box svg {
+  width: 2rem;
+  height: 2rem;
+  color: rgb(var(--primary));
+}
+
+.upload-box small {
+  color: rgb(var(--muted));
+}
+
+.upload-box input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.toggle-row {
+  display: inline-flex;
   align-items: center;
+  gap: .5rem;
+}
+
+.preview-box {
+  margin-top: 1rem;
+  padding: 1rem;
 }
 
 .preview-box h3 {
-  color: rgb(var(--text));
   margin: 0;
+  color: rgb(var(--text));
+  font-size: 1.35rem;
+  font-weight: 1000;
 }
 
 .preview-media {
-  min-height: 130px;
-  border: 1px solid rgba(var(--border), .72);
-  background: rgba(var(--surface-2-rgb), .68);
-  border-radius: 22px;
   display: grid;
-  place-items: center;
-  overflow: hidden;
-  color: rgb(var(--muted));
-  text-align: center;
-  padding: .75rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: .65rem;
+  margin-top: 1rem;
 }
 
-.preview-media img,
-.preview-media video {
+.preview-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  min-height: 120px;
+  background: rgba(var(--surface-2-rgb), .85);
+}
+
+.preview-item img,
+.preview-item video {
   width: 100%;
-  height: 100%;
+  height: 160px;
   object-fit: cover;
 }
 
-.save-bar {
+.preview-item button {
+  position: absolute;
+  top: .45rem;
+  inset-inline-end: .45rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  color: white;
+  background: rgba(0, 0, 0, .64);
+  font-weight: 1000;
+}
+
+.preview-empty {
+  grid-column: 1 / -1;
+  display: grid;
+  place-items: center;
+  gap: .4rem;
+  min-height: 130px;
+  border: 1px dashed rgba(var(--border), .75);
+  border-radius: 22px;
+  color: rgb(var(--muted));
+}
+
+.preview-empty svg {
+  width: 2rem;
+  height: 2rem;
+  color: rgb(var(--primary));
+}
+
+.sticky-save-bar {
   position: sticky;
-  bottom: 1rem;
-  z-index: 5;
+  bottom: .75rem;
   display: flex;
   justify-content: flex-end;
   gap: .65rem;
-  padding: .8rem;
   margin-top: 1rem;
-  border: 1px solid rgba(var(--border), .7);
-  background: rgba(var(--surface-rgb), .86);
-  backdrop-filter: blur(16px);
+  padding: .75rem;
+  border: 1px solid rgba(var(--border), .65);
+  background: rgba(var(--surface-rgb), .9);
+  backdrop-filter: blur(18px);
   border-radius: 24px;
 }
 
@@ -1299,62 +1226,40 @@ label span {
   unicode-bidi: plaintext;
 }
 
-@media (max-width: 1180px) {
-  .ads-workspace {
+@media (max-width: 1200px) {
+  .ads-main-grid {
     grid-template-columns: 1fr;
-  }
-
-  .ads-list-panel {
-    order: 2;
-  }
-
-  .ads-editor-panel {
-    order: 1;
   }
 }
 
 @media (max-width: 760px) {
-  .ads-header-card {
-    display: grid;
+  .ads-hero-card,
+  .panel-head,
+  .editor-head {
+    flex-direction: column;
   }
 
-  .ads-header-actions,
-  .save-bar {
-    justify-content: stretch;
-  }
-
-  .ads-header-actions .ads-btn,
-  .save-bar .ads-btn {
-    flex: 1;
-  }
-
-  .ads-stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .ads-list-tools,
-  .form-row,
+  .ads-stats-grid,
   .type-grid,
-  .preview-box {
+  .form-grid,
+  .list-toolbar,
+  .product-results {
     grid-template-columns: 1fr;
   }
 
+  .wizard-section,
   .ad-card {
-    grid-template-columns: 92px 1fr;
+    grid-template-columns: 1fr;
   }
 
-  .ad-media {
-    width: 92px;
-    height: 76px;
+  .ad-preview {
+    width: 100%;
+    height: 180px;
   }
 
   .ad-actions {
-    grid-column: 1 / -1;
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .step-box {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-wrap: wrap;
   }
 }
 </style>
