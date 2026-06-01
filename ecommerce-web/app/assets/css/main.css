@@ -1000,3 +1000,67 @@ html[dir="ltr"] .category-arrow-left{
 html[dir="ltr"] .category-arrow-right{
   transform: rotate(180deg);
 }
+
+/* =========================================================
+   Professional Admin Surfaces Unification
+   Applies the same premium dashboard language used in Ads
+   to: appearance, identity, categories, problem categories,
+   coupons, insights, orders and products.
+========================================================= */
+.admin-main-shell > *{
+  --admin-accent: 139 92 246;
+  --admin-panel-bg: rgba(12, 21, 34, .92);
+  --admin-panel-soft: rgba(16, 27, 43, .72);
+  --admin-line: rgba(119,136,170,.24);
+  --admin-copy: rgb(var(--text));
+  --admin-copy-muted: rgb(var(--muted));
+}
+.admin-main-shell :where(.admin-card,.panel,.card,.rounded-\[2rem\],.rounded-3xl,.rounded-2xl){
+  border-color: var(--admin-line) !important;
+  box-shadow: 0 18px 58px rgba(0,0,0,.16);
+}
+.admin-main-shell :where(input,select,textarea){
+  border:1px solid rgba(119,136,170,.34) !important;
+  background:rgba(8,15,26,.72) !important;
+  color:rgb(var(--text)) !important;
+  border-radius:14px !important;
+  min-height:44px;
+}
+.admin-main-shell :where(input,select,textarea):focus{
+  border-color:rgba(139,92,246,.78) !important;
+  box-shadow:0 0 0 4px rgba(139,92,246,.13) !important;
+  outline:none !important;
+}
+.admin-main-shell :where(label){
+  color:rgb(var(--text));
+  font-weight:800;
+}
+.admin-main-shell :where(button,.btn,.ui-button,a[role="button"]){
+  border-radius:14px;
+}
+.admin-main-shell :where(button:not(.plain):not([class*="text-"]):not([class*="bg-transparent"]):not([class*="border-0"])){ 
+  font-weight:850;
+}
+.admin-main-shell :where(h1,h2,h3){
+  letter-spacing:-.035em;
+}
+.admin-main-shell :where(table){
+  border-collapse:separate;
+  border-spacing:0;
+}
+.admin-main-shell :where(th){
+  color:rgb(var(--muted));
+  font-weight:950;
+}
+.admin-main-shell :where(.admin-link.router-link-active,.admin-link.router-link-exact-active){
+  background:linear-gradient(135deg, rgba(139,92,246,.24), rgba(99,102,241,.12));
+  color:#fff;
+  border-color:rgba(139,92,246,.45);
+}
+html:not(.theme-dark) .admin-main-shell :where(input,select,textarea){
+  background:rgba(255,255,255,.9) !important;
+  color:rgb(var(--text)) !important;
+}
+html:not(.theme-dark) .admin-main-shell :where(.admin-card,.panel,.card,.rounded-\[2rem\],.rounded-3xl,.rounded-2xl){
+  box-shadow:0 18px 50px rgba(15,23,42,.06);
+}

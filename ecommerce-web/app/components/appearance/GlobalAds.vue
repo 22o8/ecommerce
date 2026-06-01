@@ -101,13 +101,15 @@ function findAd(types: string[], placements: string[], requireMedia = true) {
     .sort((a: any, b: any) => adScore(a, placements.map(norm)) - adScore(b, placements.map(norm)) || Number(a?.sortOrder || 0) - Number(b?.sortOrder || 0))[0] || null
 }
 
+// مواضع الإعلانات المعتمدة فقط حتى لا يختلط البانر مع أماكن غير مطلوبة:
+// بداية الصفحة + آخر الصفحة. القيم القديمة تبقى مدعومة فقط للتوافق مع إعلانات محفوظة سابقاً.
 const topPlacements = computed(() => isHome.value
-  ? ['home_hero_slider', 'home_hero_top', 'home_top_slider', 'home_top', 'hero_top', 'top', 'above_hero']
-  : ['page_top_slider', 'page_top', 'top']
+  ? ['home_hero_slider', 'home_hero_top', 'home_top_slider', 'home_top', 'hero_top', 'above_hero']
+  : ['home_hero_slider', 'home_hero_top']
 )
 const bottomPlacements = computed(() => isHome.value
   ? ['home_bottom_slider', 'home_bottom', 'bottom', 'home_footer']
-  : ['page_bottom_slider', 'page_bottom', 'bottom']
+  : ['home_bottom_slider', 'home_bottom']
 )
 
 const topSlider = computed(() => findAd(['slider'], topPlacements.value))

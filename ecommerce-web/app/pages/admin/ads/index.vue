@@ -73,10 +73,15 @@
           <Icon name="mdi:bullhorn-outline" />
         </div>
 
+        <div class="form-helper-card">
+          <Icon name="mdi:lightbulb-on-outline" />
+          <span>الحقول داخل الصناديق الداكنة، أما الأزرار فهي بنفسجية أو ملوّنة حسب حالتها حتى يكون الاستخدام واضحاً.</span>
+        </div>
+
         <div class="form-grid">
           <label class="field full-width">
-            <span>نوع الإعلان</span>
-            <div class="segmented-tabs">
+            <span class="field-label field-label--choice"><Icon name="mdi:cursor-default-click-outline" /> نوع الإعلان <small>هذه أزرار اختيار وليست نصوصاً</small></span>
+            <div class="segmented-tabs segmented-tabs--clear">
               <button
                 v-for="type in adTypes"
                 :key="type.value"
@@ -91,12 +96,12 @@
           </label>
 
           <label class="field">
-            <span>عنوان الإعلان</span>
+            <span class="field-label"><Icon name="mdi:format-title" /> عنوان الإعلان</span>
             <input v-model="form.title" class="input-control" placeholder="اكتب عنوان الإعلان" />
           </label>
 
           <label class="field">
-            <span>مكان الظهور</span>
+            <span class="field-label"><Icon name="mdi:map-marker-radius-outline" /> مكان الظهور</span>
             <select v-model="form.placement" class="input-control select-control">
               <option value="" disabled>اختر مكان الظهور</option>
               <option v-for="p in placementOptions" :key="p.value" :value="p.value">
@@ -106,17 +111,17 @@
           </label>
 
           <label class="field">
-            <span>رابط الإعلان (اختياري)</span>
+            <span class="field-label"><Icon name="mdi:link-variant" /> رابط الإعلان (اختياري)</span>
             <input v-model="form.linkUrl" class="input-control keep-ltr" placeholder="https://example.com أو /products" />
           </label>
 
           <label class="field">
-            <span>ترتيب العرض</span>
+            <span class="field-label"><Icon name="mdi:sort-numeric-ascending" /> ترتيب العرض</span>
             <input v-model.number="form.sortOrder" type="number" class="input-control" min="0" />
           </label>
 
           <label class="field full-width">
-            <span>الوصف المختصر</span>
+            <span class="field-label"><Icon name="mdi:text-short" /> الوصف المختصر</span>
             <input v-model="form.subtitle" class="input-control" placeholder="نص قصير يظهر تحت العنوان" />
           </label>
 
@@ -145,8 +150,8 @@
           </div>
 
           <div class="field full-width">
-            <span>حالة الإعلان</span>
-            <div class="status-tabs">
+            <span class="field-label field-label--choice"><Icon name="mdi:toggle-switch-outline" /> حالة الإعلان <small>اختر حالة واضحة للإعلان</small></span>
+            <div class="status-tabs status-tabs--clear">
               <button type="button" :class="['status-tab on', { active: form.isEnabled }]" @click="form.isEnabled = true">
                 <Icon name="mdi:check-circle-outline" />
                 مفعل
@@ -187,9 +192,9 @@
 
         <div class="upload-drop">
           <Icon name="mdi:cloud-upload-outline" />
-          <b>{{ uploading ? 'جاري الرفع...' : 'اسحب وافلت الصورة أو الفيديو هنا' }}</b>
-          <span>أو</span>
-          <button type="button" class="upload-btn">اختر ملف</button>
+          <b>{{ uploading ? 'جاري الرفع...' : 'منطقة رفع الصور والفيديو' }}</b>
+          <span>اسحب الملف هنا أو استخدم زر الرفع الواضح</span>
+          <button type="button" class="upload-btn"><Icon name="mdi:upload" /> اختر ملف</button>
           <input
             type="file"
             accept="image/*,video/mp4,video/webm"
@@ -201,7 +206,7 @@
         <p class="upload-note">الصيغ المدعومة: JPG, PNG, GIF, MP4, WebM. يفضّل ضغط الفيديو قبل الرفع.</p>
 
         <label class="field">
-          <span>رابط صورة / فيديو يدوي</span>
+          <span class="field-label"><Icon name="mdi:link-box-outline" /> رابط صورة / فيديو يدوي</span>
           <input v-model="form.imageUrl" class="input-control keep-ltr" placeholder="https://..." />
         </label>
 
@@ -355,20 +360,16 @@ const adTypes = [
 ]
 
 const allPlacements = [
-  { value: 'home_hero_slider', label: 'سلايدر فوق الهيرو / بداية الصفحة', type: 'slider' },
-  { value: 'home_top_slider', label: 'سلايدر أعلى الرئيسية', type: 'slider' },
-  { value: 'home_bottom_slider', label: 'سلايدر آخر الرئيسية', type: 'slider' },
-  { value: 'page_top_slider', label: 'سلايدر أعلى الصفحات', type: 'slider' },
-  { value: 'page_bottom_slider', label: 'سلايدر آخر الصفحات', type: 'slider' },
-  { value: 'home_hero_top', label: 'بانر فوق الهيرو / بداية الصفحة', type: 'banner' },
-  { value: 'home_top', label: 'بانر أعلى الرئيسية', type: 'banner' },
-  { value: 'home_middle', label: 'بانر منتصف الرئيسية', type: 'banner' },
-  { value: 'home_bottom', label: 'بانر آخر الرئيسية', type: 'banner' },
-  { value: 'page_top', label: 'بانر أعلى الصفحات', type: 'banner' },
-  { value: 'page_bottom', label: 'بانر آخر الصفحات', type: 'banner' },
-  { value: 'popup', label: 'منبثق عام لكل الموقع', type: 'popup' },
-  { value: 'home_popup', label: 'منبثق في الصفحة الرئيسية فقط', type: 'popup' },
-  { value: 'product_page', label: 'داخل صفحة المنتج', type: 'product' },
+  // السلايدر يبقى مخصصاً للمساحات الكبيرة، فوق الهيرو أو آخر الصفحة فقط.
+  { value: 'home_hero_slider', label: 'سلايدر بداية الصفحة', type: 'slider' },
+  { value: 'home_bottom_slider', label: 'سلايدر آخر الصفحة', type: 'slider' },
+  // البانر حسب طلبك: بداية الصفحة أو آخر الصفحة فقط، بدون أعلى الصفحات/آخر الصفحات.
+  { value: 'home_hero_top', label: 'بانر بداية الصفحة', type: 'banner' },
+  { value: 'home_bottom', label: 'بانر آخر الصفحة', type: 'banner' },
+  // المنبثق مستقل ويظهر فوق الموقع.
+  { value: 'popup', label: 'إعلان منبثق عام', type: 'popup' },
+  { value: 'home_popup', label: 'إعلان منبثق للواجهة فقط', type: 'popup' },
+  { value: 'product_page', label: 'إعلان داخل صفحة منتج', type: 'product' },
 ]
 
 const form = reactive({
@@ -1169,6 +1170,65 @@ await loadAll()
 }
 .empty-card svg { color:var(--admin-purple); width:2rem; height:2rem; }
 .empty-card b { color:var(--admin-text); }
+
+
+.form-helper-card{
+  display:flex; align-items:center; gap:.65rem;
+  margin-bottom:1rem; padding:.8rem .95rem;
+  border:1px solid rgba(139,92,246,.32);
+  border-radius:14px;
+  color:#d7c8ff;
+  background:linear-gradient(135deg, rgba(139,92,246,.14), rgba(59,130,246,.08));
+  font-weight:800;
+}
+.form-helper-card svg{ color:#b98cff; font-size:1.25rem; }
+.field-label{
+  display:flex; align-items:center; gap:.45rem;
+  color:#eef4ff !important; font-size:.9rem; font-weight:1000;
+}
+.field-label svg{ color:#a78bfa; font-size:1.05rem; }
+.field-label small{
+  margin-inline-start:.35rem; color:#9fb0c8; font-size:.72rem; font-weight:800;
+}
+.field-label--choice{ color:#ffffff !important; }
+.segmented-tabs--clear{
+  padding:.35rem; gap:.35rem; border-radius:16px;
+  background:rgba(5,11,21,.9);
+  border:1px solid rgba(139,92,246,.26);
+}
+.segmented-tabs--clear .seg-tab{
+  border:1px solid rgba(119,136,170,.22) !important;
+  border-radius:12px;
+  background:linear-gradient(180deg, rgba(23,34,55,.82), rgba(10,17,28,.82));
+  color:#cbd7ea;
+}
+.segmented-tabs--clear .seg-tab.active{
+  color:#fff;
+  border-color:rgba(167,139,250,.65) !important;
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  box-shadow:0 12px 32px rgba(139,92,246,.22), inset 0 1px 0 rgba(255,255,255,.18);
+}
+.status-tabs--clear{
+  padding:.35rem; gap:.35rem; border-radius:16px;
+  background:rgba(5,11,21,.9);
+}
+.status-tabs--clear .status-tab{
+  border:1px solid rgba(119,136,170,.22) !important;
+  border-radius:12px;
+}
+.upload-panel{ position:relative; }
+.upload-panel::before{
+  content:'ملف الإعلان'; position:absolute; top:12px; inset-inline-start:1rem;
+  padding:.25rem .55rem; border-radius:999px;
+  background:rgba(139,92,246,.14); color:#c4a7ff; font-size:.72rem; font-weight:1000;
+}
+.upload-drop{
+  box-shadow:inset 0 0 0 1px rgba(168,85,247,.18), 0 18px 46px rgba(139,92,246,.08);
+}
+.upload-drop:hover{
+  border-color:rgba(196,167,255,.95);
+  background:radial-gradient(circle, rgba(139,92,246,.22), transparent 70%), rgba(139,92,246,.10);
+}
 
 @media (max-width: 1180px) {
   .editor-grid { grid-template-columns: 1fr; }
