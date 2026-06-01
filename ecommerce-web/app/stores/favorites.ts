@@ -48,7 +48,8 @@ export const useFavoritesStore = defineStore('favorites', () => {
   const count = computed(() => items.value.length)
 
   async function load() {
-    if (!auth.token) {
+    const hasToken = Boolean(auth.token || auth.access)
+    if (!hasToken) {
       items.value = []
       return
     }
@@ -58,6 +59,17 @@ export const useFavoritesStore = defineStore('favorites', () => {
       // Backend: GET /api/Favorites/my
       const list: any = await api.get('/Favorites/my')
       items.value = (Array.isArray(list) ? list : (list?.items ?? [])).map(normalizeFavoriteItem)
+    } catch (e: any) {
+      const status = e?.statusCode ?? e?.status ?? e?.response?.status
+      items.value = []
+
+      // لا تسمح لمفضلات المستخدم أن تكسر الصفحة الرئيسية إذا كان التوكن منتهي.
+      if (status === 401 || status === 403) {
+        try { await auth.logout() } catch {}
+        return
+      }
+
+      console.error('Favorites load failed:', e)
     } finally {
       loading.value = false
     }

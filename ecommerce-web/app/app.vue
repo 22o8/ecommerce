@@ -12,8 +12,17 @@ const fav = useFavoritesStore()
 auth.initFromCookies()
 
 watch(() => auth.isAuthed, async (v) => {
-  if (v) await fav.load()
-  else fav.items = []
+  if (!v) {
+    fav.items = []
+    return
+  }
+
+  try {
+    await fav.load()
+  } catch {
+    // لا نسمح لأي 401 من المفضلة أن يحول الموقع كله إلى صفحة خطأ.
+    fav.items = []
+  }
 }, { immediate: true })
 
 useHead({

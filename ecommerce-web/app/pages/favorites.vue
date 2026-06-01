@@ -12,11 +12,11 @@ const { items, loading } = storeToRefs(fav)
 const count = computed(() => items.value.length)
 
 onMounted(async () => {
-  if (auth.token) await fav.load()
+  if (auth.token || auth.access) await fav.load()
 })
 
 watch(
-  () => auth.token,
+  () => auth.token || auth.access,
   async (v) => {
     if (v) await fav.load()
     else items.value = []
@@ -36,7 +36,7 @@ watch(
       </div>
     </div>
 
-    <div v-if="!auth.token" class="mt-8 favorites-panel p-8">
+    <div v-if="!(auth.token || auth.access)" class="mt-8 favorites-panel p-8">
       <p class="text-lg font-semibold">{{ t('loginToCheckout') }}</p>
       <p class="text-sm opacity-80 mt-1">{{ t('favorites.subtitle') }}</p>
       <NuxtLink to="/login" class="inline-flex mt-5 btn-cta-animated rounded-full px-5 py-2.5 text-sm font-semibold">

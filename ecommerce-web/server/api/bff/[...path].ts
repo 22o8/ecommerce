@@ -142,6 +142,18 @@ export default defineEventHandler(async (event) => {
       return json
     }
 
+    const normalizedRoute = routePath.toLowerCase().replace(/^\/+/, '')
+
+    // Favorites are optional UI data. If an old/expired token exists, do not crash SSR/home page.
+    if ((res.status === 401 || res.status === 403) && normalizedRoute === 'favorites/my' && method === 'GET') {
+      const names = ['token', 'access', 'access_token', 'role', 'auth', 'user']
+      for (const n of names) {
+        try { deleteCookie(event, n, { path: '/' }) } catch {}
+      }
+      setResponseStatus(event, 200)
+      return []
+    }
+
     setResponseStatus(event, res.status)
 
     const responseCt = String(res.headers.get('content-type') || '').toLowerCase()
