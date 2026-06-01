@@ -1,231 +1,238 @@
 <template>
   <div class="ads-admin-page" dir="rtl">
-    <section class="ads-page-hero">
-      <div class="hero-copy">
-        <p class="eyebrow">مركز الإعلانات</p>
+    <header class="page-header">
+      <div class="page-title">
+        <p class="breadcrumb">الرئيسية · الإعلانات</p>
         <h1>إدارة الإعلانات</h1>
-        <p class="hero-text">
-          هذه الصفحة مخصصة لإنشاء الإعلانات ومراجعتها. أي إعلان يتم حفظه سيظهر مباشرة في القائمة اليمنى، ويمكنك تعديله أو تعطيله أو حذفه بدون الرجوع لقاعدة البيانات يدوياً.
-        </p>
-
-        <div class="admin-guide">
-          <b>طريقة الاستخدام السريعة:</b>
-          <ul>
-            <li>اختر نوع الإعلان: سلايدر، بانر، منبثق، أو إعلان داخل منتج.</li>
-            <li>حدد مكان الظهور المناسب، ثم أضف العنوان والصورة أو الفيديو.</li>
-            <li>راجع المعاينة قبل الحفظ حتى تتأكد من الشكل النهائي.</li>
-            <li>بعد الحفظ راقب القائمة اليمنى؛ الإعلان الجديد سيظهر بالأعلى مباشرة.</li>
-          </ul>
-        </div>
       </div>
+      <div class="top-actions">
+        <button type="button" class="header-btn" @click="loadAll">
+          <Icon name="mdi:refresh" />
+          <span>تحديث</span>
+        </button>
+        <button type="button" class="header-btn" @click="startNewAd">
+          <Icon name="mdi:plus" />
+          <span>إعلان جديد</span>
+        </button>
+        <button type="button" class="header-btn danger" @click="removeAll">
+          <Icon name="mdi:trash-can-outline" />
+          <span>حذف الكل</span>
+        </button>
+      </div>
+    </header>
 
-      <div class="hero-actions">
-        <button type="button" class="ghost-btn" @click="loadAll">تحديث القائمة</button>
-        <button type="button" class="ghost-btn" @click="startNewAd">إعلان جديد</button>
-        <button type="button" class="danger-btn" @click="removeAll">حذف الكل</button>
+    <section class="guide-banner">
+      <div class="guide-icon">
+        <Icon name="mdi:information-outline" />
+      </div>
+      <div>
+        <b>تعليمات إدارة الإعلانات</b>
+        <p>اختر نوع الإعلان، املأ المحتوى، حدد مكان الظهور وحالة الإعلان، ثم احفظ. الإعلان المحفوظ يظهر فوراً في القائمة ويمكن تعديله أو تعطيله أو حذفه.</p>
       </div>
     </section>
 
-    <section class="ads-stats-row">
-      <article class="stat-card">
-        <Icon name="mdi:bullhorn-outline" />
-        <strong>{{ stats.total }}</strong>
-        <span>كل الإعلانات</span>
+    <section class="stats-grid">
+      <article class="metric-card red">
+        <div class="metric-icon"><Icon name="mdi:bullhorn-outline" /></div>
+        <div>
+          <span>إجمالي الإعلانات</span>
+          <strong>{{ stats.total }}</strong>
+          <small>كل الإعلانات</small>
+        </div>
       </article>
-      <article class="stat-card">
-        <Icon name="mdi:check-circle-outline" />
-        <strong>{{ stats.active }}</strong>
-        <span>مفعلة</span>
+      <article class="metric-card green">
+        <div class="metric-icon"><Icon name="mdi:check-circle-outline" /></div>
+        <div>
+          <span>المفعلة</span>
+          <strong>{{ stats.active }}</strong>
+          <small>إعلانات نشطة</small>
+        </div>
       </article>
-      <article class="stat-card">
-        <Icon name="mdi:view-carousel-outline" />
-        <strong>{{ stats.slider }}</strong>
-        <span>سلايدر</span>
+      <article class="metric-card yellow">
+        <div class="metric-icon"><Icon name="mdi:clock-outline" /></div>
+        <div>
+          <span>المنتظرة</span>
+          <strong>0</strong>
+          <small>بانتظار النشر</small>
+        </div>
       </article>
-      <article class="stat-card">
-        <Icon name="mdi:image-outline" />
-        <strong>{{ stats.banner }}</strong>
-        <span>بانر</span>
-      </article>
-      <article class="stat-card">
-        <Icon name="mdi:bell-ring-outline" />
-        <strong>{{ stats.popup }}</strong>
-        <span>منبثقة</span>
+      <article class="metric-card purple">
+        <div class="metric-icon"><Icon name="mdi:archive-outline" /></div>
+        <div>
+          <span>الموقوفة</span>
+          <strong>{{ stats.total - stats.active }}</strong>
+          <small>إعلانات غير مفعلة</small>
+        </div>
       </article>
     </section>
 
-    <section class="ads-workspace">
-      <form class="editor-card" @submit.prevent="saveAd">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">محرر الإعلان</p>
-            <h2>{{ editingId ? 'تعديل إعلان محفوظ' : 'إنشاء إعلان جديد' }}</h2>
-            <p>املأ الحقول حسب الخطوات، ثم اضغط حفظ. الحفظ الناجح يحدّث القائمة مباشرة.</p>
-          </div>
-          <span class="soft-badge">{{ currentType.label }}</span>
+    <section class="editor-grid">
+      <form class="panel editor-panel" @submit.prevent="saveAd">
+        <div class="panel-title">
+          <h2>إنشاء / تعديل إعلان</h2>
+          <Icon name="mdi:bullhorn-outline" />
         </div>
 
-        <div class="step-box">
-          <div class="step-number">1</div>
-          <div class="step-content">
-            <h3>نوع الإعلان</h3>
-            <p>اختر نوع الإعلان حسب المكان الذي تريد عرضه فيه.</p>
-            <div class="type-options">
+        <div class="form-grid">
+          <label class="field full-width">
+            <span>نوع الإعلان</span>
+            <div class="segmented-tabs">
               <button
                 v-for="type in adTypes"
                 :key="type.value"
                 type="button"
-                class="type-option"
-                :class="{ active: form.type === type.value }"
+                :class="['seg-tab', { active: form.type === type.value }]"
                 @click="selectType(type.value)"
               >
                 <Icon :name="type.icon" />
                 <b>{{ type.label }}</b>
-                <small>{{ type.hint }}</small>
+              </button>
+            </div>
+          </label>
+
+          <label class="field">
+            <span>عنوان الإعلان</span>
+            <input v-model="form.title" class="input-control" placeholder="اكتب عنوان الإعلان" />
+          </label>
+
+          <label class="field">
+            <span>مكان الظهور</span>
+            <select v-model="form.placement" class="input-control select-control">
+              <option value="" disabled>اختر مكان الظهور</option>
+              <option v-for="p in placementOptions" :key="p.value" :value="p.value">
+                {{ p.label }}
+              </option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>رابط الإعلان (اختياري)</span>
+            <input v-model="form.linkUrl" class="input-control keep-ltr" placeholder="https://example.com أو /products" />
+          </label>
+
+          <label class="field">
+            <span>ترتيب العرض</span>
+            <input v-model.number="form.sortOrder" type="number" class="input-control" min="0" />
+          </label>
+
+          <label class="field full-width">
+            <span>الوصف المختصر</span>
+            <input v-model="form.subtitle" class="input-control" placeholder="نص قصير يظهر تحت العنوان" />
+          </label>
+
+          <div v-if="form.type === 'product'" class="product-picker full-width">
+            <label class="field">
+              <span>اختيار المنتج</span>
+              <input v-model="productQuery" class="input-control" placeholder="ابحث باسم المنتج أو البراند" />
+            </label>
+            <div class="product-results">
+              <button
+                v-for="p in filteredProducts"
+                :key="p.id"
+                type="button"
+                class="product-result"
+                :class="{ active: form.productId === p.id }"
+                @click="selectProduct(p)"
+              >
+                <img v-if="productImage(p)" :src="assetUrl(productImage(p))" alt="" />
+                <Icon v-else name="mdi:package-variant-closed" />
+                <span>
+                  <b>{{ productName(p) }}</b>
+                  <small>{{ productBrand(p) || 'بدون براند' }}</small>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div class="field full-width">
+            <span>حالة الإعلان</span>
+            <div class="status-tabs">
+              <button type="button" :class="['status-tab on', { active: form.isEnabled }]" @click="form.isEnabled = true">
+                <Icon name="mdi:check-circle-outline" />
+                مفعل
+              </button>
+              <button type="button" class="status-tab schedule" disabled>
+                <Icon name="mdi:clock-outline" />
+                مجدول
+              </button>
+              <button type="button" :class="['status-tab off', { active: !form.isEnabled }]" @click="form.isEnabled = false">
+                <Icon name="mdi:close-circle-outline" />
+                غير مفعل
               </button>
             </div>
           </div>
         </div>
 
-        <div class="step-box">
-          <div class="step-number">2</div>
-          <div class="step-content">
-            <h3>مكان الظهور والمحتوى</h3>
-            <div class="two-cols">
-              <label class="field">
-                <span>موضع الظهور</span>
-                <select v-model="form.placement" class="input-control">
-                  <option v-for="p in placementOptions" :key="p.value" :value="p.value">
-                    {{ p.label }}
-                  </option>
-                </select>
-              </label>
-              <label class="field compact-field">
-                <span>الترتيب</span>
-                <input v-model.number="form.sortOrder" type="number" class="input-control" />
-              </label>
-            </div>
-
-            <label class="field">
-              <span>العنوان</span>
-              <input v-model="form.title" class="input-control" placeholder="مثال: عروض العناية الكورية" />
-            </label>
-
-            <label class="field">
-              <span>الوصف المختصر</span>
-              <input v-model="form.subtitle" class="input-control" placeholder="نص قصير يظهر تحت العنوان" />
-            </label>
-
-            <div v-if="form.type === 'product'" class="product-picker">
-              <label class="field">
-                <span>اختيار المنتج</span>
-                <input v-model="productQuery" class="input-control" placeholder="ابحث باسم المنتج أو البراند" />
-              </label>
-              <div class="product-results">
-                <button
-                  v-for="p in filteredProducts"
-                  :key="p.id"
-                  type="button"
-                  class="product-result"
-                  :class="{ active: form.productId === p.id }"
-                  @click="selectProduct(p)"
-                >
-                  <img v-if="productImage(p)" :src="assetUrl(productImage(p))" alt="" />
-                  <Icon v-else name="mdi:package-variant-closed" />
-                  <span>
-                    <b>{{ productName(p) }}</b>
-                    <small>{{ productBrand(p) || 'بدون براند' }}</small>
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="step-box">
-          <div class="step-number">3</div>
-          <div class="step-content">
-            <h3>الصورة أو الفيديو والرابط</h3>
-            <div class="upload-zone">
-              <Icon name="mdi:cloud-upload-outline" />
-              <b>{{ uploading ? 'جاري الرفع...' : 'اضغط لرفع صورة أو فيديو' }}</b>
-              <small>{{ form.type === 'popup' ? 'اختياري للمنبثق؛ يمكن أن يكون نصاً فقط' : 'مطلوب للسلايدر أو البانر' }}</small>
-              <input
-                type="file"
-                accept="image/*,video/mp4,video/webm"
-                :multiple="form.type === 'slider'"
-                @change="onPickFile"
-              />
-            </div>
-
-            <label class="field">
-              <span>رابط صورة/فيديو يدوي</span>
-              <input v-model="form.imageUrl" class="input-control keep-ltr" placeholder="https://..." />
-            </label>
-
-            <label class="field">
-              <span>الرابط عند الضغط</span>
-              <input v-model="form.linkUrl" class="input-control keep-ltr" placeholder="/products" />
-            </label>
-
-            <label class="enable-row">
-              <input v-model="form.isEnabled" type="checkbox" />
-              <span>الإعلان مفعل ويظهر للزوار</span>
-            </label>
-          </div>
-        </div>
-
-        <section class="preview-card">
-          <div>
-            <p class="eyebrow">معاينة قبل الحفظ</p>
-            <h3>{{ form.title || 'عنوان الإعلان' }}</h3>
-            <p>{{ form.subtitle || 'هنا يظهر وصف الإعلان للزائر.' }}</p>
-            <div class="mini-meta">
-              <span>{{ currentType.label }}</span>
-              <span>{{ placementLabel(form.placement) }}</span>
-            </div>
-          </div>
-
-          <div class="preview-media-grid">
-            <template v-if="previewMedia.length">
-              <div v-for="(url, idx) in previewMedia" :key="`${url}-${idx}`" class="preview-media-item">
-                <video v-if="isVideoUrl(url)" :src="assetUrl(url)" muted playsinline controls />
-                <img v-else :src="assetUrl(url)" alt="" />
-                <button type="button" @click="removePreview(idx)">×</button>
-              </div>
-            </template>
-            <div v-else class="preview-placeholder">
-              <Icon :name="form.type === 'popup' ? 'mdi:bell-ring-outline' : 'mdi:image-outline'" />
-              <span>{{ form.type === 'popup' ? 'يمكن حفظ المنبثق كنص فقط' : 'ارفع صورة أو فيديو للمعاينة' }}</span>
-            </div>
-          </div>
-        </section>
-
         <div class="save-row">
-          <button type="button" class="ghost-btn" @click="startNewAd">تفريغ الحقول</button>
-          <UiButton type="submit" :disabled="saving || uploading">
+          <button type="button" class="secondary-action" @click="startNewAd">
+            <Icon name="mdi:refresh" />
+            إعادة تعيين
+          </button>
+          <button type="button" class="secondary-action" @click="saveAd" :disabled="saving || uploading">
+            <Icon name="mdi:content-save-plus-outline" />
+            حفظ ومتابعة
+          </button>
+          <UiButton type="submit" :disabled="saving || uploading" class="primary-save">
+            <Icon name="mdi:content-save-outline" />
             {{ saving ? 'جاري الحفظ...' : (editingId ? 'حفظ التعديل' : 'حفظ الإعلان') }}
           </UiButton>
         </div>
       </form>
 
-      <aside class="list-card">
-        <div class="section-head list-head">
-          <div>
-            <p class="eyebrow">الإعلانات المحفوظة</p>
-            <h2>قائمة الإعلانات</h2>
-            <p>هذه القائمة هي المرجع السريع لكل إعلان محفوظ. اضغط على الكرت للتعديل.</p>
-          </div>
-          <button type="button" class="ghost-btn small" @click="loadAll">تحديث</button>
+      <aside class="panel upload-panel">
+        <div class="panel-title">
+          <h2>ملف الإعلان</h2>
+          <Icon name="mdi:bullhorn-outline" />
         </div>
 
-        <div class="list-tools">
+        <div class="upload-drop">
+          <Icon name="mdi:cloud-upload-outline" />
+          <b>{{ uploading ? 'جاري الرفع...' : 'اسحب وافلت الصورة أو الفيديو هنا' }}</b>
+          <span>أو</span>
+          <button type="button" class="upload-btn">اختر ملف</button>
           <input
-            v-model="search"
-            class="input-control"
-            placeholder="ابحث بالعنوان، النوع، الموضع..."
+            type="file"
+            accept="image/*,video/mp4,video/webm"
+            :multiple="form.type === 'slider'"
+            @change="onPickFile"
           />
-          <select v-model="filterType" class="input-control">
+        </div>
+
+        <p class="upload-note">الصيغ المدعومة: JPG, PNG, GIF, MP4, WebM. يفضّل ضغط الفيديو قبل الرفع.</p>
+
+        <label class="field">
+          <span>رابط صورة / فيديو يدوي</span>
+          <input v-model="form.imageUrl" class="input-control keep-ltr" placeholder="https://..." />
+        </label>
+
+        <div class="ad-preview-card">
+          <div class="preview-copy">
+            <span>معاينة الإعلان</span>
+            <h3>{{ form.title || 'إعلان بدون عنوان' }}</h3>
+            <p>{{ form.subtitle || 'بدون وصف' }}</p>
+            <b :class="form.isEnabled ? 'active-state' : 'disabled-state'">{{ form.isEnabled ? 'مفعل' : 'معطل' }}</b>
+            <small class="keep-ltr">{{ form.linkUrl || '/products' }}</small>
+          </div>
+          <div class="preview-thumb">
+            <template v-if="previewMedia.length">
+              <video v-if="isVideoUrl(previewMedia[0])" :src="assetUrl(previewMedia[0])" muted playsinline controls />
+              <img v-else :src="assetUrl(previewMedia[0])" alt="" />
+            </template>
+            <Icon v-else name="mdi:image-outline" />
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="table-toolbar">
+        <div>
+          <h2>قائمة الإعلانات</h2>
+          <p>كل إعلان محفوظ يظهر هنا مع أدوات المعاينة والتعديل والحذف.</p>
+        </div>
+        <div class="table-filters">
+          <input v-model="search" class="input-control" placeholder="ابحث بالعنوان، النوع، المكان..." />
+          <select v-model="filterType" class="input-control select-control">
             <option value="all">كل الإعلانات</option>
             <option value="active">المفعلة فقط</option>
             <option value="disabled">المعطلة فقط</option>
@@ -234,75 +241,91 @@
             <option value="popup">منبثق</option>
             <option value="product">داخل منتج</option>
           </select>
+          <button type="button" class="secondary-action" @click="filterType = 'all'; search = ''">
+            <Icon name="mdi:filter-off-outline" />
+            إعادة الفلاتر
+          </button>
         </div>
+      </div>
 
-        <div v-if="loading" class="empty-card">
-          <Icon name="mdi:loading" />
-          <b>جاري تحميل الإعلانات...</b>
-        </div>
+      <div v-if="loading" class="empty-card">
+        <Icon name="mdi:loading" />
+        <b>جاري تحميل الإعلانات...</b>
+      </div>
 
-        <div v-else-if="!items.length" class="empty-card">
-          <Icon name="mdi:bullhorn-variant-outline" />
-          <b>لا توجد إعلانات محفوظة</b>
-          <span>أنشئ أول إعلان من المحرر وسيظهر هنا مباشرة.</span>
-        </div>
+      <div v-else-if="!items.length" class="empty-card">
+        <Icon name="mdi:bullhorn-variant-outline" />
+        <b>لا توجد إعلانات محفوظة</b>
+        <span>أنشئ أول إعلان من المحرر وسيظهر هنا مباشرة.</span>
+      </div>
 
-        <div v-else-if="!filteredAds.length" class="empty-card">
-          <Icon name="mdi:filter-off-outline" />
-          <b>الفلاتر تخفي الإعلانات</b>
-          <span>عدد الإعلانات المحفوظة: {{ items.length }}</span>
-          <button type="button" class="ghost-btn" @click="filterType = 'all'; search = ''">عرض الكل</button>
-        </div>
+      <div v-else-if="!filteredAds.length" class="empty-card">
+        <Icon name="mdi:filter-off-outline" />
+        <b>الفلاتر تخفي الإعلانات</b>
+        <span>عدد الإعلانات المحفوظة: {{ items.length }}</span>
+        <button type="button" class="secondary-action" @click="filterType = 'all'; search = ''">عرض الكل</button>
+      </div>
 
-        <div v-else class="ads-list-stack">
-          <article
-            v-for="ad in filteredAds"
-            :key="ad.id"
-            class="ad-row-card"
-            :class="{ selected: editingId === ad.id, fresh: lastSavedId === ad.id }"
-          >
-            <button type="button" class="row-media" @click="editAd(ad)">
-              <video
-                v-if="isVideoUrl(primaryMedia(ad))"
-                :src="assetUrl(primaryMedia(ad))"
-                muted
-                playsinline
-              />
-              <img
-                v-else-if="primaryMedia(ad)"
-                :src="assetUrl(primaryMedia(ad))"
-                alt=""
-              />
-              <Icon v-else :name="ad.type === 'popup' ? 'mdi:bell-ring-outline' : 'mdi:image-off-outline'" />
-            </button>
-
-            <button type="button" class="row-info" @click="editAd(ad)">
-              <strong>{{ ad.title || 'إعلان بدون عنوان' }}</strong>
-              <span>{{ ad.subtitle || 'بدون وصف' }}</span>
-              <div class="mini-meta">
-                <em>{{ typeLabel(ad.type) }}</em>
-                <em>{{ placementLabel(ad.placement) }}</em>
-                <em :class="ad.isEnabled ? 'active-state' : 'disabled-state'">
+      <div v-else class="ads-table-wrap">
+        <table class="ads-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الصورة / الفيديو</th>
+              <th>العنوان</th>
+              <th>النوع</th>
+              <th>مكان الظهور</th>
+              <th>الحالة</th>
+              <th>الترتيب</th>
+              <th>تاريخ الإنشاء</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(ad, idx) in filteredAds"
+              :key="ad.id"
+              :class="{ selected: editingId === ad.id, fresh: lastSavedId === ad.id }"
+            >
+              <td>{{ idx + 1 }}</td>
+              <td>
+                <button type="button" class="table-media" @click="editAd(ad)">
+                  <video v-if="isVideoUrl(primaryMedia(ad))" :src="assetUrl(primaryMedia(ad))" muted playsinline />
+                  <img v-else-if="primaryMedia(ad)" :src="assetUrl(primaryMedia(ad))" alt="" />
+                  <Icon v-else name="mdi:image-off-outline" />
+                </button>
+              </td>
+              <td>
+                <strong>{{ ad.title || 'إعلان بدون عنوان' }}</strong>
+                <small>{{ ad.subtitle || 'بدون وصف' }}</small>
+                <em class="keep-ltr">{{ ad.linkUrl || 'بدون رابط' }}</em>
+              </td>
+              <td><span class="pill purple-pill">{{ typeLabel(ad.type) }}</span></td>
+              <td><span class="pill">{{ placementLabel(ad.placement) }}</span></td>
+              <td>
+                <span :class="['pill', ad.isEnabled ? 'green-pill' : 'red-pill']">
                   {{ ad.isEnabled ? 'مفعل' : 'معطل' }}
-                </em>
-              </div>
-              <small class="keep-ltr">{{ ad.linkUrl || 'بدون رابط' }}</small>
-            </button>
-
-            <div class="row-actions">
-              <button type="button" class="ghost-btn tiny" @click="editAd(ad)">تعديل</button>
-              <button type="button" class="ghost-btn tiny" @click="toggleAd(ad)">
-                {{ ad.isEnabled ? 'تعطيل' : 'تفعيل' }}
-              </button>
-              <button type="button" class="danger-btn tiny" @click="removeAd(ad.id)">حذف</button>
-            </div>
-          </article>
-        </div>
-      </aside>
+                </span>
+              </td>
+              <td>{{ ad.sortOrder }}</td>
+              <td>{{ formatDate(ad.createdAt) }}</td>
+              <td>
+                <div class="table-actions">
+                  <button type="button" class="icon-action blue" title="معاينة" @click="editAd(ad)"><Icon name="mdi:eye-outline" /></button>
+                  <button type="button" class="icon-action amber" title="تعديل" @click="editAd(ad)"><Icon name="mdi:pencil-outline" /></button>
+                  <button type="button" class="icon-action red" title="حذف" @click="removeAd(ad.id)"><Icon name="mdi:trash-can-outline" /></button>
+                  <button type="button" class="mini-toggle" @click="toggleAd(ad)">
+                    {{ ad.isEnabled ? 'تعطيل' : 'تفعيل' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
   </div>
 </template>
-
 
 <script setup lang="ts">
 definePageMeta({ layout: 'admin', middleware: 'admin' })
@@ -491,6 +514,15 @@ function typeLabel(type: string) {
 }
 function placementLabel(placement: string) {
   return allPlacements.find((x) => x.value === placement)?.label || placement
+}
+
+function formatDate(value: any) {
+  if (!value) return '-'
+  try {
+    return new Intl.DateTimeFormat('ar-IQ', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value))
+  } catch {
+    return String(value).slice(0, 16)
+  }
 }
 
 function emitAdsChanged() {
@@ -724,539 +756,444 @@ await loadAll()
 
 <style scoped>
 .ads-admin-page {
+  --admin-bg: #070d16;
+  --admin-panel: rgba(13, 22, 35, .88);
+  --admin-panel-2: rgba(16, 27, 43, .72);
+  --admin-border: rgba(119, 136, 170, .22);
+  --admin-text: #eef4ff;
+  --admin-muted: #9fb0c8;
+  --admin-purple: #8b5cf6;
+  --admin-purple-2: #a855f7;
+  --admin-blue: #3b82f6;
+  --admin-green: #22c55e;
+  --admin-red: #ef4444;
+  --admin-yellow: #f59e0b;
   display: grid;
-  gap: 1.2rem;
-  padding-bottom: 3rem;
+  gap: 1.15rem;
+  color: var(--admin-text);
+  padding-bottom: 2.5rem;
 }
 
-.ads-page-hero,
-.editor-card,
-.list-card,
-.preview-card,
-.stat-card {
-  border: 1px solid rgba(var(--border), .72);
-  background: linear-gradient(145deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-2-rgb), .72));
-  border-radius: 28px;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, .16);
-}
-
-.ads-page-hero {
-  display: grid;
-  grid-template-columns: 1fr auto;
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 1rem;
-  padding: 1.35rem;
-  align-items: start;
 }
 
+.breadcrumb,
 .eyebrow {
   margin: 0 0 .35rem;
-  color: rgb(var(--primary));
-  font-size: .74rem;
-  font-weight: 1000;
+  color: var(--admin-muted);
+  font-size: .78rem;
+  font-weight: 800;
 }
 
-.ads-page-hero h1,
-.section-head h2 {
+.page-title h1,
+.panel-title h2,
+.table-toolbar h2 {
   margin: 0;
-  color: rgb(var(--text));
-  font-size: clamp(1.45rem, 2.4vw, 2.45rem);
+  color: var(--admin-text);
+  font-size: clamp(1.45rem, 2vw, 2.2rem);
   font-weight: 1000;
   letter-spacing: -.04em;
 }
 
-.hero-text,
-.section-head p,
-.preview-card p,
-.step-content p {
-  margin: .35rem 0 0;
-  color: rgb(var(--muted));
+.top-actions {
+  display: flex;
+  gap: .55rem;
+  flex-wrap: wrap;
+}
+
+.header-btn,
+.secondary-action,
+.upload-btn,
+.icon-action,
+.mini-toggle {
+  border: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, rgba(24, 35, 53, .92), rgba(11, 19, 31, .9));
+  color: var(--admin-text);
+  border-radius: 12px;
+  min-height: 42px;
+  padding: .65rem .9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  font-weight: 900;
+  transition: .18s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+.header-btn:hover,
+.secondary-action:hover,
+.upload-btn:hover,
+.icon-action:hover,
+.mini-toggle:hover {
+  transform: translateY(-1px);
+  border-color: rgba(139, 92, 246, .65);
+  background: rgba(139, 92, 246, .14);
+}
+.header-btn.danger {
+  border-color: rgba(239, 68, 68, .4);
+  color: #ff8d8d;
+  background: rgba(239, 68, 68, .12);
+}
+
+.guide-banner,
+.panel,
+.metric-card {
+  border: 1px solid var(--admin-border);
+  background:
+    radial-gradient(circle at top right, rgba(139, 92, 246, .12), transparent 36%),
+    linear-gradient(145deg, rgba(12, 21, 34, .96), rgba(8, 14, 24, .94));
+  border-radius: 16px;
+  box-shadow: 0 18px 70px rgba(0,0,0,.24);
+}
+
+.guide-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border-color: rgba(59, 130, 246, .45);
+  background: linear-gradient(135deg, rgba(20, 37, 68, .86), rgba(23, 23, 57, .7));
+}
+.guide-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: #9dbdff;
+  background: rgba(59, 130, 246, .18);
+}
+.guide-banner p {
+  margin: .25rem 0 0;
+  color: var(--admin-muted);
   line-height: 1.8;
 }
 
-.admin-guide {
-  margin-top: 1rem;
-  border: 1px solid rgba(var(--border), .58);
-  background: rgba(var(--surface-2-rgb), .55);
-  border-radius: 22px;
-  padding: 1rem;
-  color: rgb(var(--text));
-}
-
-.admin-guide b {
-  display: block;
-  margin-bottom: .5rem;
-}
-
-.admin-guide ul {
-  margin: 0;
-  padding-inline-start: 1.2rem;
-  color: rgb(var(--muted));
-  line-height: 1.9;
-}
-
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .55rem;
-  justify-content: flex-end;
-}
-
-.ghost-btn,
-.danger-btn {
-  border: 1px solid rgba(var(--border), .76);
-  background: rgba(var(--surface-2-rgb), .72);
-  color: rgb(var(--text));
-  border-radius: 999px;
-  padding: .75rem 1rem;
-  font-weight: 950;
-  transition: .2s ease;
-}
-
-.ghost-btn:hover {
-  border-color: rgba(var(--primary), .75);
-  background: rgba(var(--primary), .12);
-  transform: translateY(-1px);
-}
-
-.danger-btn {
-  border-color: rgba(239, 68, 68, .42);
-  background: rgba(239, 68, 68, .12);
-  color: rgb(248, 113, 113);
-}
-
-.small { padding: .55rem .85rem; }
-.tiny { padding: .45rem .7rem; font-size: .78rem; }
-
-.ads-stats-row {
+.stats-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: .8rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .9rem;
 }
-
-.stat-card {
-  padding: 1rem;
-}
-
-.stat-card svg { color: rgb(var(--primary)); }
-.stat-card strong {
-  display: block;
-  margin-top: .45rem;
-  color: rgb(var(--text));
-  font-size: 2rem;
-  line-height: 1;
-}
-.stat-card span {
-  display: block;
-  margin-top: .35rem;
-  color: rgb(var(--muted));
-  font-weight: 850;
-}
-
-.ads-workspace {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(380px, 500px);
-  gap: 1rem;
-  align-items: start;
-  direction: ltr;
-}
-
-.editor-card,
-.list-card {
-  direction: rtl;
-  padding: 1.2rem;
-}
-
-.list-card {
-  position: sticky;
-  top: 1rem;
-  max-height: calc(100vh - 2rem);
-  overflow: auto;
-}
-
-.section-head {
+.metric-card {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  align-items: flex-start;
-  margin-bottom: 1rem;
+  padding: 1rem 1.1rem;
 }
-
-.soft-badge,
-.mini-meta span,
-.mini-meta em {
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid rgba(var(--border), .7);
-  background: rgba(var(--surface-2-rgb), .75);
-  color: rgb(var(--text));
-  border-radius: 999px;
-  padding: .35rem .65rem;
-  font-size: .75rem;
-  font-style: normal;
-  font-weight: 900;
-}
-
-.step-box {
-  display: grid;
-  grid-template-columns: 44px 1fr;
-  gap: .85rem;
-  padding: 1rem 0;
-  border-top: 1px solid rgba(var(--border), .5);
-}
-
-.step-number {
+.metric-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 15px;
-  background: linear-gradient(135deg, rgb(var(--primary)), rgba(var(--primary), .62));
-  color: #fff;
-  font-weight: 1000;
+  font-size: 1.55rem;
+}
+.metric-card.red .metric-icon { background: rgba(239, 68, 68, .18); color: #ff8383; }
+.metric-card.green .metric-icon { background: rgba(34, 197, 94, .18); color: #50e68b; }
+.metric-card.yellow .metric-icon { background: rgba(245, 158, 11, .18); color: #ffc655; }
+.metric-card.purple .metric-icon { background: rgba(139, 92, 246, .2); color: #c4a7ff; }
+.metric-card span,
+.metric-card small {
+  display: block;
+  color: var(--admin-muted);
+  font-size: .83rem;
+}
+.metric-card strong {
+  display: block;
+  margin: .1rem 0;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--admin-text);
 }
 
-.step-content {
+.editor-grid {
   display: grid;
-  gap: .85rem;
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, .78fr);
+  gap: .9rem;
 }
-.step-content h3 {
-  margin: .2rem 0 0;
-  color: rgb(var(--text));
-  font-weight: 1000;
+.panel {
+  padding: 1rem;
 }
+.panel-title,
+.table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.panel-title svg,
+.table-toolbar svg { color: #a9c3ff; }
 
-.type-options {
+.form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: .65rem;
+  gap: .85rem 1rem;
 }
-
-.type-option {
-  text-align: right;
-  border: 1px solid rgba(var(--border), .72);
-  background: rgba(var(--surface-2-rgb), .58);
-  color: rgb(var(--text));
-  border-radius: 20px;
-  padding: .85rem;
-  transition: .2s ease;
-}
-.type-option:hover,
-.type-option.active {
-  border-color: rgba(var(--primary), .78);
-  background: rgba(var(--primary), .12);
-  transform: translateY(-1px);
-}
-.type-option svg {
-  color: rgb(var(--primary));
-  width: 1.25rem;
-  height: 1.25rem;
-}
-.type-option b,
-.type-option small { display: block; }
-.type-option small {
-  margin-top: .35rem;
-  color: rgb(var(--muted));
-  line-height: 1.55;
-}
-
-.two-cols {
-  display: grid;
-  grid-template-columns: 1fr 140px;
-  gap: .7rem;
-}
-
+.full-width { grid-column: 1 / -1; }
 .field {
   display: grid;
-  gap: .38rem;
+  gap: .42rem;
 }
-.field span,
-.enable-row span {
-  color: rgb(var(--text));
-  font-size: .85rem;
-  font-weight: 900;
+.field > span {
+  color: var(--admin-text);
+  font-size: .86rem;
+  font-weight: 950;
 }
-
 .input-control {
   width: 100%;
-  border: 1px solid rgba(var(--border), .78);
-  background: rgba(var(--surface-2-rgb), .72);
-  color: rgb(var(--text));
-  border-radius: 17px;
-  padding: .82rem .95rem;
+  min-height: 46px;
+  border: 1px solid rgba(119, 136, 170, .28);
+  background: rgba(8, 15, 26, .78);
+  color: var(--admin-text);
+  border-radius: 12px;
+  padding: .78rem .9rem;
   outline: none;
+  transition: .18s ease;
 }
+.input-control::placeholder { color: rgba(159, 176, 200, .58); }
 .input-control:focus {
-  border-color: rgba(var(--primary), .8);
-  box-shadow: 0 0 0 4px rgba(var(--primary), .13);
+  border-color: rgba(139, 92, 246, .78);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, .13);
 }
+.select-control { cursor: pointer; }
+.keep-ltr { direction: ltr; unicode-bidi: plaintext; text-align: left; }
+
+.segmented-tabs,
+.status-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid rgba(119, 136, 170, .28);
+  border-radius: 13px;
+  overflow: hidden;
+  background: rgba(8, 15, 26, .6);
+}
+.seg-tab,
+.status-tab {
+  min-height: 50px;
+  border-inline-start: 1px solid rgba(119, 136, 170, .22);
+  color: var(--admin-text);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  font-weight: 950;
+}
+.seg-tab:first-child,
+.status-tab:first-child { border-inline-start: 0; }
+.seg-tab.active {
+  background: linear-gradient(135deg, var(--admin-purple), var(--admin-purple-2));
+  color: white;
+}
+.status-tabs { grid-template-columns: repeat(3, 1fr); }
+.status-tab.on.active { background: rgba(34, 197, 94, .14); color: #52ee91; box-shadow: inset 0 0 0 1px rgba(34, 197, 94, .7); }
+.status-tab.schedule { color: #ffcc5c; background: rgba(245, 158, 11, .08); opacity: .86; cursor: not-allowed; }
+.status-tab.off.active { background: rgba(239, 68, 68, .14); color: #ff7b7b; box-shadow: inset 0 0 0 1px rgba(239, 68, 68, .7); }
 
 .product-results {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .55rem;
-  max-height: 260px;
+  max-height: 230px;
   overflow: auto;
 }
 .product-result {
   display: grid;
-  grid-template-columns: 52px 1fr;
+  grid-template-columns: 50px 1fr;
   gap: .55rem;
   align-items: center;
   text-align: right;
-  border: 1px solid rgba(var(--border), .7);
-  background: rgba(var(--surface-2-rgb), .6);
-  color: rgb(var(--text));
-  border-radius: 17px;
-  padding: .55rem;
+  border: 1px solid rgba(119,136,170,.24);
+  background: rgba(9, 16, 27, .72);
+  color: var(--admin-text);
+  border-radius: 14px;
+  padding: .5rem;
 }
-.product-result.active {
-  border-color: rgb(var(--primary));
-  background: rgba(var(--primary), .13);
-}
+.product-result.active { border-color: var(--admin-purple); background: rgba(139, 92, 246, .12); }
 .product-result img,
-.product-result svg {
-  width: 52px;
-  height: 52px;
-  border-radius: 13px;
-  object-fit: cover;
-}
-.product-result small { color: rgb(var(--muted)); }
-
-.upload-zone {
-  position: relative;
-  display: grid;
-  place-items: center;
-  gap: .35rem;
-  min-height: 145px;
-  border: 1px dashed rgba(var(--primary), .6);
-  background: rgba(var(--primary), .08);
-  border-radius: 24px;
-  color: rgb(var(--text));
-  text-align: center;
-}
-.upload-zone svg {
-  color: rgb(var(--primary));
-  width: 2rem;
-  height: 2rem;
-}
-.upload-zone small { color: rgb(var(--muted)); }
-.upload-zone input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.enable-row {
-  display: inline-flex;
-  gap: .5rem;
-  align-items: center;
-}
-
-.preview-card {
-  margin-top: 1rem;
-  padding: 1rem;
-}
-.preview-card h3 {
-  margin: 0;
-  color: rgb(var(--text));
-  font-size: 1.25rem;
-  font-weight: 1000;
-}
-.mini-meta {
-  display: flex;
-  gap: .35rem;
-  flex-wrap: wrap;
-  margin-top: .5rem;
-}
-
-.preview-media-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: .65rem;
-  margin-top: 1rem;
-}
-.preview-media-item {
-  position: relative;
-  overflow: hidden;
-  border-radius: 18px;
-  background: rgba(var(--surface-2-rgb), .78);
-}
-.preview-media-item img,
-.preview-media-item video {
-  width: 100%;
-  height: 155px;
-  object-fit: cover;
-}
-.preview-media-item button {
-  position: absolute;
-  top: .45rem;
-  inset-inline-end: .45rem;
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  color: white;
-  background: rgba(0,0,0,.65);
-  font-weight: 1000;
-}
-.preview-placeholder,
-.empty-card {
-  display: grid;
-  place-items: center;
-  gap: .45rem;
-  min-height: 150px;
-  border: 1px dashed rgba(var(--border), .72);
-  border-radius: 22px;
-  color: rgb(var(--muted));
-  text-align: center;
-  padding: 1rem;
-}
-.preview-placeholder svg,
-.empty-card svg {
-  color: rgb(var(--primary));
-  width: 2rem;
-  height: 2rem;
-}
-.empty-card b { color: rgb(var(--text)); }
+.product-result svg { width: 50px; height: 50px; border-radius: 12px; object-fit: cover; }
+.product-result small { color: var(--admin-muted); }
 
 .save-row {
-  position: sticky;
-  bottom: .75rem;
-  display: flex;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
   gap: .65rem;
   margin-top: 1rem;
-  padding: .75rem;
-  border: 1px solid rgba(var(--border), .65);
-  background: rgba(var(--surface-rgb), .9);
-  backdrop-filter: blur(16px);
-  border-radius: 22px;
+}
+.primary-save {
+  background: linear-gradient(135deg, var(--admin-purple), var(--admin-purple-2)) !important;
+  border-color: transparent !important;
+  color: white !important;
 }
 
-.list-tools {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: .55rem;
-  margin-bottom: .9rem;
-}
-
-.ads-list-stack {
-  display: grid;
-  gap: .75rem;
-}
-.ad-row-card {
-  display: grid;
-  grid-template-columns: 86px 1fr;
-  gap: .7rem;
-  border: 1px solid rgba(var(--border), .72);
-  background: rgba(var(--surface-2-rgb), .62);
-  border-radius: 22px;
-  padding: .75rem;
-  transition: .2s ease;
-}
-.ad-row-card:hover,
-.ad-row-card.selected,
-.ad-row-card.fresh {
-  border-color: rgba(var(--primary), .78);
-  background: rgba(var(--primary), .1);
-  transform: translateY(-1px);
-}
-.row-media {
+.upload-drop {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 86px;
-  height: 78px;
-  border: 1px solid rgba(var(--border), .7);
-  background: rgba(var(--surface-rgb), .82);
-  border-radius: 18px;
+  gap: .35rem;
+  min-height: 168px;
+  border: 1px dashed rgba(168, 85, 247, .68);
+  background:
+    radial-gradient(circle, rgba(139, 92, 246, .16), transparent 70%),
+    rgba(139, 92, 246, .07);
+  border-radius: 14px;
+  text-align: center;
+  color: var(--admin-text);
   overflow: hidden;
-  color: rgb(var(--primary));
 }
-.row-media img,
-.row-media video {
+.upload-drop > svg { width: 2.3rem; height: 2.3rem; color: #b98cff; }
+.upload-drop span,
+.upload-note { color: var(--admin-muted); }
+.upload-drop input { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.upload-btn {
+  min-height: 38px;
+  background: linear-gradient(135deg, var(--admin-purple), var(--admin-purple-2));
+  border-color: transparent;
+}
+.upload-note {
+  margin: .65rem 0 .85rem;
+  text-align: center;
+  font-size: .8rem;
+}
+
+.ad-preview-card {
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(245, 158, 11, .34);
+  background: rgba(15, 24, 39, .8);
+  border-radius: 14px;
+}
+.preview-copy span { color: var(--admin-muted); font-size: .78rem; font-weight: 800; }
+.preview-copy h3 { margin: .35rem 0 .25rem; font-size: 1.25rem; }
+.preview-copy p { margin: 0 0 .5rem; color: var(--admin-muted); }
+.preview-copy small { display:block; margin-top:.4rem; color:#61d4ff; }
+.preview-thumb {
+  display:grid; place-items:center;
+  min-height: 112px;
+  border-radius: 12px;
+  overflow:hidden;
+  background: rgba(8, 15, 26, .75);
+  color: var(--admin-purple);
+}
+.preview-thumb img,
+.preview-thumb video { width:100%; height:130px; object-fit:cover; }
+.preview-thumb svg { width: 2rem; height: 2rem; }
+.active-state,
+.disabled-state,
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: .28rem .62rem;
+  font-size: .78rem;
+  font-weight: 950;
+  border: 1px solid rgba(119,136,170,.24);
+  background: rgba(9,16,27,.72);
+  color: var(--admin-muted);
+}
+.active-state,
+.green-pill { color: #4ade80; background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.35); }
+.disabled-state,
+.red-pill { color: #ff7b7b; background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.38); }
+.purple-pill { color: #c4a7ff; background: rgba(139,92,246,.14); border-color: rgba(139,92,246,.38); }
+
+.table-panel { padding: 0; overflow: hidden; }
+.table-toolbar { padding: 1rem 1rem 0; }
+.table-toolbar p { margin: .3rem 0 0; color: var(--admin-muted); }
+.table-filters { display:grid; grid-template-columns: minmax(220px, 1fr) 170px 145px; gap:.55rem; min-width:min(680px, 100%); }
+.ads-table-wrap { overflow-x:auto; }
+.ads-table {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  border-collapse: collapse;
+  min-width: 980px;
 }
-.row-media svg { width: 1.8rem; height: 1.8rem; }
-.row-info {
+.ads-table th,
+.ads-table td {
+  border-top: 1px solid rgba(119,136,170,.18);
+  padding: .82rem .9rem;
   text-align: right;
-  color: inherit;
-  min-width: 0;
+  vertical-align: middle;
 }
-.row-info strong {
-  display: block;
-  color: rgb(var(--text));
+.ads-table th {
+  color: var(--admin-muted);
+  background: rgba(17, 29, 46, .86);
+  font-size: .8rem;
   font-weight: 1000;
 }
-.row-info > span {
-  display: block;
-  margin-top: .2rem;
-  color: rgb(var(--muted));
-  white-space: nowrap;
+.ads-table tbody tr { transition: .18s ease; }
+.ads-table tbody tr:hover,
+.ads-table tbody tr.selected,
+.ads-table tbody tr.fresh { background: rgba(139, 92, 246, .08); }
+.ads-table td strong { display:block; color:var(--admin-text); }
+.ads-table td small,
+.ads-table td em { display:block; color:var(--admin-muted); margin-top:.25rem; font-style:normal; }
+.table-media {
+  width: 78px;
+  height: 58px;
+  border-radius: 10px;
   overflow: hidden;
-  text-overflow: ellipsis;
+  display: grid;
+  place-items: center;
+  background: rgba(8, 15, 26, .85);
+  color: var(--admin-purple);
+  border: 1px solid rgba(119,136,170,.22);
 }
-.row-info small {
-  display: block;
-  margin-top: .35rem;
-  color: rgb(var(--muted));
-  opacity: .85;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.row-actions {
-  grid-column: 1 / -1;
-  display: flex;
-  gap: .45rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-.active-state {
-  border-color: rgba(34, 197, 94, .45) !important;
-  color: rgb(74, 222, 128) !important;
-}
-.disabled-state {
-  border-color: rgba(239, 68, 68, .45) !important;
-  color: rgb(248, 113, 113) !important;
-}
-.keep-ltr {
-  direction: ltr;
-  unicode-bidi: plaintext;
-}
+.table-media img,
+.table-media video { width:100%; height:100%; object-fit:cover; }
+.table-actions { display:flex; align-items:center; gap:.35rem; flex-wrap:wrap; }
+.icon-action { width:36px; height:36px; min-height:36px; padding:0; border-radius:9px; }
+.icon-action.blue { color:#93c5fd; border-color:rgba(59,130,246,.38); }
+.icon-action.amber { color:#fbbf24; border-color:rgba(245,158,11,.4); }
+.icon-action.red { color:#fb7185; border-color:rgba(239,68,68,.4); }
+.mini-toggle { min-height:36px; padding:.35rem .7rem; }
 
-@media (max-width: 1200px) {
-  .ads-workspace { grid-template-columns: 1fr; }
-  .list-card { position: static; max-height: none; }
+.empty-card {
+  display:grid;
+  place-items:center;
+  gap:.5rem;
+  min-height:180px;
+  color:var(--admin-muted);
+  text-align:center;
+  padding:1rem;
 }
+.empty-card svg { color:var(--admin-purple); width:2rem; height:2rem; }
+.empty-card b { color:var(--admin-text); }
 
+@media (max-width: 1180px) {
+  .editor-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .table-toolbar { flex-direction: column; }
+  .table-filters { min-width: 0; width: 100%; }
+}
 @media (max-width: 760px) {
-  .ads-page-hero,
-  .section-head {
-    grid-template-columns: 1fr;
-    flex-direction: column;
-  }
-  .ads-stats-row,
-  .type-options,
-  .two-cols,
-  .product-results {
-    grid-template-columns: 1fr;
-  }
-  .step-box,
-  .ad-row-card {
-    grid-template-columns: 1fr;
-  }
-  .row-media {
-    width: 100%;
-    height: 180px;
-  }
-  .hero-actions,
-  .save-row {
-    justify-content: stretch;
-  }
-  .hero-actions button,
-  .save-row button {
-    flex: 1;
-  }
+  .page-header,
+  .guide-banner,
+  .metric-card,
+  .panel-title { flex-direction: column; align-items: stretch; }
+  .top-actions,
+  .save-row,
+  .form-grid,
+  .stats-grid,
+  .table-filters,
+  .ad-preview-card,
+  .segmented-tabs,
+  .status-tabs,
+  .product-results { grid-template-columns: 1fr; }
+  .top-actions { display:grid; }
+  .seg-tab,
+  .status-tab { border-inline-start: 0; border-top: 1px solid rgba(119,136,170,.18); }
+  .seg-tab:first-child,
+  .status-tab:first-child { border-top:0; }
 }
 </style>
