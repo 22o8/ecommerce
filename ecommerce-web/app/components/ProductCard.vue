@@ -15,15 +15,37 @@
           :alt="displayName"
           fit="contain"
           wrapper-class="w-full h-full"
-          img-class="w-full h-full object-contain p-4 sm:p-5 transition duration-300 group-hover:scale-[1.02]"
+          img-class="w-full h-full object-contain p-5 sm:p-6 transition duration-300 group-hover:scale-[1.04]"
         />
+
+        <div class="product-card-badges">
+          <span v-if="discountPercent > 0" class="product-card-badge product-card-badge--discount keep-ltr">
+            -{{ discountPercent }}%
+          </span>
+          <span class="product-card-badge" :class="isOutOfStock ? 'product-card-badge--danger' : 'product-card-badge--ok'">
+            {{ stockLabel }}
+          </span>
+        </div>
+
+        <div class="product-card-view-hint">
+          <Icon name="mdi:eye-outline" class="text-base" />
+          <span>{{ locale === 'en' ? 'View details' : 'عرض التفاصيل' }}</span>
+        </div>
       </div>
     </div>
 
     <div class="product-card-content">
+      <div class="product-card-meta-row">
+        <span v-if="brandName" class="product-card-brand rtl-text line-clamp-1">{{ brandName }}</span>
+        <span v-if="categoryName" class="product-card-category rtl-text line-clamp-1">{{ categoryName }}</span>
+      </div>
+
       <div class="product-card-heading">
-        <h3 class="product-card-title rtl-text line-clamp-1 min-w-0">{{ displayName }}</h3>
-        <div class="product-card-price-line keep-ltr">{{ formatPrice(displayFinalPrice) }}</div>
+        <h3 class="product-card-title rtl-text line-clamp-2 min-w-0">{{ displayName }}</h3>
+        <div class="product-card-price-block">
+          <span v-if="discountPercent > 0" class="product-card-old-price keep-ltr">{{ formatPrice(priceValue) }}</span>
+          <span class="product-card-price-line keep-ltr">{{ formatPrice(displayFinalPrice) }}</span>
+        </div>
       </div>
 
       <p v-if="displayDescription && !props.compact" class="product-card-desc rtl-text line-clamp-2">
@@ -38,6 +60,7 @@
           @click.stop="addToCart"
           :disabled="isOutOfStock || adding"
         >
+          <Icon name="mdi:cart-plus" class="text-lg" />
           <span class="rtl-text">{{ t('common.addToCart') }}</span>
         </button>
 
@@ -48,6 +71,7 @@
           @click.stop="buyNow"
           :disabled="isOutOfStock || buying"
         >
+          <Icon name="mdi:flash" class="text-lg" />
           <span class="rtl-text">{{ t('common.buy') }}</span>
         </button>
       </div>
@@ -59,7 +83,7 @@ import SmartImage from '~/components/SmartImage.vue'
 import { formatIqd } from '~/composables/useMoney'
 
 const props = defineProps<{ product?: any; p?: any; compact?: boolean }>()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const cart = useCartStore()
 const { buildAssetUrl } = useApi()
 
@@ -67,6 +91,8 @@ const p = computed(() => props.product ?? props.p ?? {})
 
 const displayName = computed(() => String(p.value?.title ?? p.value?.name ?? ''))
 const displayDescription = computed(() => String(p.value?.description ?? '') || '')
+const brandName = computed(() => String(p.value?.brandName ?? p.value?.brand?.name ?? p.value?.brand ?? '').trim())
+const categoryName = computed(() => String(p.value?.categoryName ?? p.value?.category ?? '').trim())
 
 const priceValue = computed(() => p.value?.priceIqd ?? p.value?.price ?? p.value?.priceUsd)
 const discountPercent = computed(() => Number(p.value?.discountPercent ?? 0))
@@ -79,6 +105,7 @@ const displayFinalPrice = computed(() => {
 })
 
 const isOutOfStock = computed(() => Number(p.value?.stockQuantity ?? p.value?.StockQuantity ?? 0) <= 0)
+const stockLabel = computed(() => isOutOfStock.value ? (locale.value === 'en' ? 'Out' : 'نافد') : (locale.value === 'en' ? 'In stock' : 'متوفر'))
 
 const mainImage = computed(() => {
   const raw =
@@ -133,102 +160,236 @@ function goProduct() {
 
 <style scoped>
 .product-card-shell{
+  position:relative;
   display:flex;
   flex-direction:column;
   min-height:100%;
-  border-radius: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  padding: 0;
-  overflow: visible;
-  transition: transform .18s ease, opacity .18s ease;
+  border-radius: 1.65rem;
+  border: 1px solid rgba(var(--border), .88);
+  background:
+    linear-gradient(180deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-2-rgb), .82));
+  box-shadow:0 18px 42px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.07);
+  padding:.72rem;
+  overflow:hidden;
+  transition: transform .22s ease, opacity .18s ease, border-color .22s ease, box-shadow .22s ease, background .22s ease;
+  isolation:isolate;
 }
-.product-card-shell:hover{ transform: translateY(-2px); }
+.product-card-shell::before{
+  content:'';
+  position:absolute;
+  inset:auto -22% -30% -22%;
+  height:46%;
+  background:radial-gradient(circle at 50% 0, rgba(var(--primary), .18), transparent 64%);
+  opacity:.8;
+  pointer-events:none;
+  z-index:-1;
+}
+.product-card-shell:hover{
+  transform: translateY(-5px);
+  border-color:rgba(var(--primary), .36);
+  box-shadow:0 26px 60px rgba(0,0,0,.24), 0 0 0 1px rgba(var(--primary), .08) inset;
+}
 
 .product-card-media-wrap{
-  background: rgba(255,255,255,.04);
+  position:relative;
+  border-radius:1.25rem;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.02)),
+    rgba(var(--surface-2-rgb), .86);
+  overflow:hidden;
+  border:1px solid rgba(var(--border), .72);
 }
 .product-card-media{
-  aspect-ratio: 1 / 1.18;
-  border-radius: 0;
-  overflow: hidden;
-  background: rgba(255,255,255,.03);
+  position:relative;
+  aspect-ratio: 1 / 1.08;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 22% 16%, rgba(var(--primary), .12), transparent 42%),
+    rgba(255,255,255,.03);
 }
+.product-card-badges{
+  position:absolute;
+  inset:.7rem .7rem auto .7rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.45rem;
+  pointer-events:none;
+}
+.product-card-badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:1.8rem;
+  padding:0 .62rem;
+  border-radius:999px;
+  font-size:.72rem;
+  font-weight:1000;
+  border:1px solid transparent;
+  backdrop-filter:blur(12px);
+}
+.product-card-badge--discount{
+  color:#fff;
+  background:rgba(225,29,72,.72);
+  border-color:rgba(255,255,255,.18);
+}
+.product-card-badge--ok{
+  color:rgb(34 197 94);
+  background:rgba(34,197,94,.14);
+  border-color:rgba(34,197,94,.25);
+}
+.product-card-badge--danger{
+  color:rgb(248 113 113);
+  background:rgba(248,113,113,.13);
+  border-color:rgba(248,113,113,.25);
+}
+.product-card-view-hint{
+  position:absolute;
+  inset:auto .8rem .8rem .8rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:.4rem;
+  min-height:2.35rem;
+  border-radius:999px;
+  background:rgba(var(--surface-rgb), .74);
+  border:1px solid rgba(var(--border), .78);
+  color:rgb(var(--text));
+  font-size:.78rem;
+  font-weight:900;
+  opacity:0;
+  transform:translateY(8px);
+  transition:opacity .2s ease, transform .2s ease;
+  backdrop-filter:blur(14px);
+}
+.product-card-shell:hover .product-card-view-hint{ opacity:1; transform:translateY(0); }
 
 .product-card-content{
   display:grid;
-  gap:.7rem;
-  padding-top: .9rem;
+  gap:.72rem;
+  padding:.95rem .15rem .1rem;
 }
+.product-card-meta-row{
+  display:flex;
+  align-items:center;
+  gap:.45rem;
+  min-height:1.55rem;
+}
+.product-card-brand,.product-card-category{
+  display:inline-flex;
+  max-width:100%;
+  padding:.28rem .58rem;
+  border-radius:999px;
+  font-size:.7rem;
+  line-height:1.1;
+  font-weight:900;
+  border:1px solid rgba(var(--border), .78);
+  color:rgb(var(--muted));
+  background:rgba(var(--surface-rgb), .72);
+}
+.product-card-brand{ color:rgb(var(--text)); border-color:rgba(var(--primary), .22); background:rgba(var(--primary), .08); }
 .product-card-heading{
   display:grid;
-  grid-template-columns: minmax(0,1fr) auto;
-  gap: .75rem;
-  align-items:start;
+  gap:.6rem;
 }
 .product-card-title{
-  font-weight: 500;
-  font-size: 1.02rem;
-  line-height: 1.45;
+  min-height:2.85em;
+  font-weight:1000;
+  font-size:1.02rem;
+  line-height:1.42;
   color: rgb(var(--text-strong));
 }
+.product-card-price-block{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  gap:.45rem;
+}
 .product-card-price-line{
-  font-weight: 500;
-  font-size: 1rem;
+  font-weight:1000;
+  font-size:1.05rem;
   white-space: nowrap;
   color: rgb(var(--text-strong));
 }
+.product-card-old-price{
+  color:rgb(var(--muted));
+  font-size:.82rem;
+  font-weight:800;
+  text-decoration:line-through;
+  opacity:.78;
+}
 .product-card-desc{
-  font-size: .95rem;
-  line-height: 1.5;
+  min-height:3em;
+  font-size:.9rem;
+  line-height:1.55;
   color: rgb(var(--text-soft));
 }
 .product-card-actions{
   display:grid;
   grid-template-columns: 1fr 1fr;
-  gap: .8rem;
-  margin-top: .15rem;
+  gap: .6rem;
+  margin-top: .1rem;
 }
 .product-card-btn{
   min-height: 44px;
-  border-radius: 0;
+  border-radius: 1rem;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  font-weight: 500;
-  letter-spacing: 0;
+  gap:.35rem;
+  font-weight:1000;
   border: 1px solid transparent;
-  background: transparent;
   transition: transform .18s ease, opacity .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
-  padding: .7rem 1rem;
+  padding: .65rem .75rem;
+  font-size:.88rem;
 }
 .product-card-btn:hover{ transform: translateY(-1px); }
 .product-card-btn:disabled{ opacity:.55; cursor:not-allowed; }
-.product-card-btn--cart,
+.product-card-btn--cart{
+  color:#111;
+  background:linear-gradient(135deg, rgb(var(--primary)), rgba(var(--cta-glow-2), .92));
+  box-shadow:0 14px 28px rgba(var(--primary), .20);
+}
 .product-card-btn--buy{
-  background: #ffffff;
-  color: #111111;
-  border-color: rgba(255,255,255,.9);
+  color:rgb(var(--text));
+  background:rgba(var(--surface-rgb), .76);
+  border-color:rgba(var(--border), .82);
 }
-:global(html.theme-light) .product-card-btn--cart,
-:global(html.theme-light) .product-card-btn--buy{
-  background: #111111;
-  color: #ffffff;
-  border-color: rgba(17,17,17,.9);
+.product-card-btn--buy:hover{
+  border-color:rgba(var(--primary), .32);
+  background:rgba(var(--primary), .08);
 }
-.product-card-shell--compact .product-card-media{ aspect-ratio: 1 / 1.12; }
+.product-card-shell--compact .product-card-media{ aspect-ratio: 1 / 1.05; }
 .product-card-shell--compact .product-card-content{ gap:.58rem; padding-top:.75rem; }
-.product-card-shell--compact .product-card-title{ font-size:.97rem; }
+.product-card-shell--compact .product-card-title{ font-size:.96rem; }
 .product-card-shell--compact .product-card-price-line{ font-size:.96rem; }
-.product-card-shell--compact .product-card-btn{ min-height:40px; padding:.62rem .8rem; font-size:.92rem; }
+.product-card-shell--compact .product-card-btn{ min-height:40px; padding:.58rem .68rem; font-size:.82rem; }
+
+:global(html.theme-light) .product-card-shell{
+  background:linear-gradient(180deg, rgba(255,255,255,.995), rgba(255,255,255,.94));
+  box-shadow:0 20px 46px rgba(232,91,154,.08), 0 10px 28px rgba(20,20,20,.055);
+}
+:global(html.theme-light) .product-card-media-wrap{
+  background:linear-gradient(135deg, rgba(250,232,255,.88), rgba(255,255,255,.78));
+}
+:global(html.theme-light) .product-card-btn--cart{ color:#fff; }
+:global(html.theme-light) .product-card-btn--buy{ background:#fff; }
 
 @media (max-width: 640px){
-  .product-card-media{ aspect-ratio: 1 / 1.08; }
-  .product-card-title{ font-size:.94rem; }
-  .product-card-price-line{ font-size:.95rem; }
-  .product-card-desc{ font-size:.84rem; }
-  .product-card-actions{ gap:.55rem; }
-  .product-card-btn{ min-height:40px; padding:.62rem .7rem; font-size:.9rem; }
+  .product-card-shell{ border-radius:1.25rem; padding:.5rem; }
+  .product-card-media-wrap{ border-radius:1rem; }
+  .product-card-media{ aspect-ratio: 1 / 1.03; }
+  .product-card-badges{ inset:.48rem .48rem auto .48rem; }
+  .product-card-badge{ min-height:1.55rem; padding:0 .45rem; font-size:.64rem; }
+  .product-card-view-hint{ display:none; }
+  .product-card-content{ gap:.55rem; padding:.7rem .05rem .05rem; }
+  .product-card-meta-row{ min-height:1.25rem; }
+  .product-card-brand,.product-card-category{ font-size:.62rem; padding:.22rem .42rem; }
+  .product-card-title{ font-size:.88rem; min-height:2.7em; }
+  .product-card-price-line{ font-size:.9rem; }
+  .product-card-old-price{ font-size:.72rem; }
+  .product-card-desc{ font-size:.78rem; min-height:2.6em; }
+  .product-card-actions{ gap:.42rem; }
+  .product-card-btn{ min-height:38px; padding:.52rem .5rem; font-size:.76rem; border-radius:.82rem; }
+  .product-card-btn :deep(svg){ display:none; }
 }
 </style>

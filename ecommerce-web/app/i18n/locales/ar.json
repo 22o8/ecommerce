@@ -459,7 +459,13 @@
     "catMask": "ماسك",
     "catEyeCare": "العناية بالعين",
     "problemCategoriesTitle": "حلول المشاكل",
-    "problemCategoriesSubtitle": "تسوق حسب المشكلة التي تريد حلها بسرعة."
+    "problemCategoriesSubtitle": "تسوق حسب المشكلة التي تريد حلها بسرعة.",
+    "beautyKicker": "تجربة كوزمتك مصممة بعناية",
+    "beautyTitle": "اكتشفي جمالك بثقة",
+    "beautySubtitle": "واجهة متجر أكثر فخامة ووضوحاً، تجمع التصنيفات والبراندات والمنتجات المختارة بطريقة سهلة وسريعة للزبون.",
+    "beautyBrands": "براندات مختارة",
+    "beautyFeatured": "منتجات مميزة",
+    "beautySupport": "استشارة ومتابعة"
   },
   "productsPage": {
     "title": "المنتجات",

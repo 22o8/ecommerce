@@ -226,6 +226,66 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="min-h-screen home-page-shell">
+
+    <section class="mx-auto max-w-[92rem] px-4 pt-8 pb-8 lg:px-6 lg:pt-12">
+      <div class="home-luxury-hero">
+        <div class="home-luxury-hero__glow home-luxury-hero__glow--one" />
+        <div class="home-luxury-hero__glow home-luxury-hero__glow--two" />
+
+        <div class="home-luxury-hero__content rtl-text">
+          <div class="home-luxury-hero__kicker">
+            <span class="home-luxury-hero__dot" />
+            {{ t('home.beautyKicker') }}
+          </div>
+          <h1 class="home-luxury-hero__title">
+            {{ t('home.beautyTitle') }}
+          </h1>
+          <p class="home-luxury-hero__subtitle">
+            {{ t('home.beautySubtitle') }}
+          </p>
+
+          <div class="home-luxury-hero__actions">
+            <NuxtLink to="/products" class="home-luxury-hero__primary">
+              {{ t('homeHero.shopNow') }}
+              <Icon name="mdi:arrow-left" class="text-lg" />
+            </NuxtLink>
+            <NuxtLink to="/brands" class="home-luxury-hero__secondary">
+              {{ t('nav.brands') }}
+            </NuxtLink>
+          </div>
+
+          <div class="home-luxury-hero__stats">
+            <div class="home-luxury-hero__stat">
+              <strong>{{ topBrands.length || 0 }}+</strong>
+              <span>{{ t('home.beautyBrands') }}</span>
+            </div>
+            <div class="home-luxury-hero__stat">
+              <strong>{{ homeFeatured.length || 0 }}+</strong>
+              <span>{{ t('home.beautyFeatured') }}</span>
+            </div>
+            <div class="home-luxury-hero__stat">
+              <strong>24/7</strong>
+              <span>{{ t('home.beautySupport') }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="home-luxury-hero__visual" aria-hidden="true">
+          <div class="home-luxury-hero__orb home-luxury-hero__orb--large">
+            <img v-if="categoryCards[0]?.imageUrl" :src="buildAssetUrl(categoryCards[0].imageUrl)" alt="" />
+            <span v-else>✦</span>
+          </div>
+          <div class="home-luxury-hero__orb home-luxury-hero__orb--small home-luxury-hero__orb--top">
+            <img v-if="(topBrands[0]?.logoUrl || topBrands[0]?.imageUrl)" :src="buildAssetUrl(topBrands[0].logoUrl || topBrands[0].imageUrl)" alt="" />
+            <span v-else>Beauty</span>
+          </div>
+          <div class="home-luxury-hero__orb home-luxury-hero__orb--small home-luxury-hero__orb--bottom">
+            <img v-if="categoryCards[1]?.imageUrl" :src="buildAssetUrl(categoryCards[1].imageUrl)" alt="" />
+            <span v-else>Skin</span>
+          </div>
+        </div>
+      </div>
+    </section>
     <section class="mx-auto max-w-[92rem] px-4 pt-3 pb-8 lg:px-6">
       <div class="home-section-panel home-section-panel--categories category-command-center category-command-center--raised">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -332,7 +392,7 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
-    <section class="mx-auto max-w-6xl px-4 pb-20">
+    <section class="mx-auto max-w-[92rem] px-4 pb-20 lg:px-6">
       <div class="home-section-panel home-section-panel--brands">
         <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
@@ -352,7 +412,7 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
-    <section v-if="problemCards.length" class="mx-auto max-w-6xl px-4 pb-16">
+    <section v-if="problemCards.length" class="mx-auto max-w-[92rem] px-4 pb-16 lg:px-6">
       <div class="home-section-panel home-section-panel--categories">
         <div>
           <h2 class="text-2xl font-extrabold tracking-tight text-[rgb(var(--text))] sm:text-4xl">{{ t('home.problemCategoriesTitle') || 'حلول المشاكل' }}</h2>
@@ -378,7 +438,7 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
-    <section class="mx-auto max-w-6xl px-4 pb-16 pt-12 sm:pt-14">
+    <section class="mx-auto max-w-[92rem] px-4 pb-16 pt-12 sm:pt-14 lg:px-6">
       <div class="home-section-panel">
         <div class="flex flex-col items-center justify-center gap-4 text-center">
           <div class="section-kicker" />
@@ -412,7 +472,7 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div v-if="displayedFeatured.length" class="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+        <div v-if="displayedFeatured.length" class="product-grid-luxury mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
           <RevealOnScroll
             v-for="(p, idx) in displayedFeatured"
             :key="p.id"
@@ -727,6 +787,221 @@ onBeforeUnmount(() => {
   .category-dropdown-panel{border-radius:1.15rem;padding:.85rem;margin-top:.55rem}
   .category-dropdown-panel__grid{grid-template-columns:1fr;gap:.55rem;max-height:18rem;overflow:auto}
   .category-dropdown-panel__link{min-height:4.6rem;border-radius:1rem}
+}
+
+
+.home-page-shell{
+  position:relative;
+  overflow:hidden;
+}
+.home-page-shell::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 14% 12%, rgba(var(--primary), .12), transparent 30rem),
+    radial-gradient(circle at 86% 18%, rgba(var(--cta-glow-2), .10), transparent 28rem),
+    linear-gradient(180deg, rgba(var(--surface-2-rgb), .16), transparent 22rem);
+  opacity:.9;
+}
+.home-page-shell > section{ position:relative; z-index:1; }
+.home-luxury-hero{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0, 1.05fr) minmax(320px, .72fr);
+  gap:2rem;
+  align-items:center;
+  min-height:430px;
+  overflow:hidden;
+  border:1px solid rgba(var(--border), .88);
+  border-radius:2.25rem;
+  padding:2rem;
+  background:
+    linear-gradient(135deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .86)),
+    radial-gradient(circle at 16% 18%, rgba(var(--primary), .16), transparent 28rem);
+  box-shadow:0 28px 72px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.08);
+  isolation:isolate;
+}
+.home-luxury-hero::after{
+  content:'';
+  position:absolute;
+  inset:1px;
+  border-radius:2.15rem;
+  pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.05), transparent 35%, rgba(255,255,255,.025));
+  z-index:-1;
+}
+.home-luxury-hero__glow{
+  position:absolute;
+  border-radius:999px;
+  filter:blur(4px);
+  pointer-events:none;
+  opacity:.72;
+}
+.home-luxury-hero__glow--one{
+  width:26rem; height:26rem; right:-8rem; top:-11rem;
+  background:radial-gradient(circle, rgba(var(--primary), .22), transparent 68%);
+}
+.home-luxury-hero__glow--two{
+  width:24rem; height:24rem; left:-8rem; bottom:-12rem;
+  background:radial-gradient(circle, rgba(var(--cta-glow-2), .18), transparent 68%);
+}
+.home-luxury-hero__content{
+  position:relative;
+  z-index:2;
+  max-width:780px;
+}
+.home-luxury-hero__kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:.55rem;
+  min-height:2.25rem;
+  padding:0 .9rem;
+  border-radius:999px;
+  border:1px solid rgba(var(--primary), .28);
+  background:rgba(var(--primary), .10);
+  color:rgb(var(--text));
+  font-size:.78rem;
+  font-weight:900;
+}
+.home-luxury-hero__dot{
+  width:.58rem;
+  height:.58rem;
+  border-radius:999px;
+  background:rgb(var(--primary));
+  box-shadow:0 0 0 6px rgba(var(--primary), .12);
+}
+.home-luxury-hero__title{
+  margin-top:1.15rem;
+  max-width:13ch;
+  color:rgb(var(--text-strong));
+  font-size:clamp(2.7rem, 7vw, 6.8rem);
+  line-height:.95;
+  letter-spacing:-.06em;
+  font-weight:1000;
+}
+.home-luxury-hero__subtitle{
+  margin-top:1.1rem;
+  max-width:42rem;
+  color:rgb(var(--text-soft));
+  font-size:clamp(1rem, 1.45vw, 1.18rem);
+  line-height:1.9;
+}
+.home-luxury-hero__actions{
+  margin-top:1.6rem;
+  display:flex;
+  flex-wrap:wrap;
+  gap:.8rem;
+}
+.home-luxury-hero__primary,.home-luxury-hero__secondary{
+  min-height:3.15rem;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.55rem;
+  border-radius:999px;
+  padding:0 1.25rem;
+  font-weight:900;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+}
+.home-luxury-hero__primary{
+  color:#111;
+  background:linear-gradient(135deg, rgb(var(--primary)), rgba(var(--cta-glow-2), .92));
+  box-shadow:0 18px 38px rgba(var(--primary), .26);
+}
+.home-luxury-hero__secondary{
+  color:rgb(var(--text));
+  border:1px solid rgba(var(--border), .88);
+  background:rgba(var(--surface-rgb), .68);
+}
+.home-luxury-hero__primary:hover,.home-luxury-hero__secondary:hover{ transform:translateY(-2px); }
+.home-luxury-hero__stats{
+  margin-top:1.6rem;
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:.75rem;
+  max-width:38rem;
+}
+.home-luxury-hero__stat{
+  border:1px solid rgba(var(--border), .78);
+  border-radius:1.2rem;
+  background:rgba(var(--surface-rgb), .62);
+  padding:.9rem 1rem;
+}
+.home-luxury-hero__stat strong{
+  display:block;
+  color:rgb(var(--text-strong));
+  font-size:1.25rem;
+  line-height:1;
+  font-weight:1000;
+}
+.home-luxury-hero__stat span{
+  display:block;
+  margin-top:.35rem;
+  color:rgb(var(--muted));
+  font-size:.76rem;
+  font-weight:800;
+}
+.home-luxury-hero__visual{
+  position:relative;
+  z-index:2;
+  min-height:350px;
+}
+.home-luxury-hero__orb{
+  position:absolute;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  border:1px solid rgba(var(--border), .9);
+  background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
+  box-shadow:0 28px 70px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.14);
+  color:rgb(var(--text));
+  font-weight:1000;
+}
+.home-luxury-hero__orb img{ width:100%; height:100%; object-fit:cover; }
+.home-luxury-hero__orb--large{
+  inset:2rem 0 auto auto;
+  width:min(24rem, 100%);
+  aspect-ratio:1/1;
+  border-radius:36% 64% 46% 54% / 45% 40% 60% 55%;
+}
+.home-luxury-hero__orb--small{
+  width:7.2rem;
+  height:7.2rem;
+  border-radius:2rem;
+  backdrop-filter:blur(16px);
+}
+.home-luxury-hero__orb--top{ top:0; left:1rem; transform:rotate(-6deg); }
+.home-luxury-hero__orb--bottom{ bottom:1rem; right:3rem; transform:rotate(7deg); }
+.product-grid-luxury{ align-items:stretch; }
+.product-grid-luxury > *{ min-width:0; }
+:global(html.theme-light) .home-luxury-hero{
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.995), rgba(255,255,255,.94)),
+    radial-gradient(circle at 18% 18%, rgba(236,72,153,.12), transparent 28rem);
+  box-shadow:0 24px 70px rgba(232,91,154,.08), 0 14px 34px rgba(20,20,20,.05);
+}
+:global(html.theme-light) .home-luxury-hero__primary{ color:#fff; }
+:global(html.theme-light) .home-luxury-hero__secondary,
+:global(html.theme-light) .home-luxury-hero__stat{ background:rgba(255,255,255,.82); }
+@media (max-width: 1024px){
+  .home-luxury-hero{ grid-template-columns:1fr; padding:1.35rem; min-height:auto; }
+  .home-luxury-hero__visual{ min-height:260px; order:-1; }
+  .home-luxury-hero__orb--large{ width:min(20rem, 82vw); right:50%; transform:translateX(50%); top:.5rem; }
+  .home-luxury-hero__orb--top{ left:8%; top:1rem; }
+  .home-luxury-hero__orb--bottom{ right:8%; bottom:.5rem; }
+}
+@media (max-width: 640px){
+  .home-luxury-hero{ border-radius:1.6rem; padding:1rem; }
+  .home-luxury-hero::after{ border-radius:1.5rem; }
+  .home-luxury-hero__visual{ min-height:210px; }
+  .home-luxury-hero__orb--large{ width:17rem; }
+  .home-luxury-hero__orb--small{ width:5.6rem; height:5.6rem; border-radius:1.45rem; }
+  .home-luxury-hero__title{ font-size:3rem; max-width:12ch; }
+  .home-luxury-hero__subtitle{ font-size:.95rem; line-height:1.75; }
+  .home-luxury-hero__actions{ display:grid; grid-template-columns:1fr; }
+  .home-luxury-hero__stats{ grid-template-columns:1fr; }
 }
 
 </style>

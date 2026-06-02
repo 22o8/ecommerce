@@ -435,7 +435,13 @@
     "catMask": "Mask",
     "catEyeCare": "Eye care",
     "problemCategoriesTitle": "Problem solutions",
-    "problemCategoriesSubtitle": "Shop by the problem you want to solve quickly."
+    "problemCategoriesSubtitle": "Shop by the problem you want to solve quickly.",
+    "beautyKicker": "A curated cosmetics experience",
+    "beautyTitle": "Discover beauty with confidence",
+    "beautySubtitle": "A more polished storefront that presents categories, brands, and selected products clearly for fast customer browsing.",
+    "beautyBrands": "Curated brands",
+    "beautyFeatured": "Featured items",
+    "beautySupport": "Support and advice"
   },
   "productsPage": {
     "title": "Products",
