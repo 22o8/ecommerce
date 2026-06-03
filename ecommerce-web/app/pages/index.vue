@@ -924,6 +924,7 @@ onBeforeUnmount(() => {
 .home-luxury-hero__subtitle{
   margin-top:1.1rem;
   max-width:42rem;
+  color:rgb(var(--text-soft));
   font-size:clamp(1rem, 1.45vw, 1.18rem);
   line-height:1.9;
 }
@@ -945,7 +946,7 @@ onBeforeUnmount(() => {
   transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
 }
 .home-luxury-hero__primary{
-  color:#fff;
+  color:rgb(var(--text));
   background:linear-gradient(135deg, rgb(var(--primary)), rgba(var(--cta-glow-2), .92));
   box-shadow:0 18px 38px rgba(var(--primary), .26);
   text-shadow:0 1px 1px rgba(0,0,0,.22);
