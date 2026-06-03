@@ -924,7 +924,6 @@ onBeforeUnmount(() => {
 .home-luxury-hero__subtitle{
   margin-top:1.1rem;
   max-width:42rem;
-  color:rgb(var(--text-soft));
   font-size:clamp(1rem, 1.45vw, 1.18rem);
   line-height:1.9;
 }
