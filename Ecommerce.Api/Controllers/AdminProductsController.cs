@@ -410,11 +410,11 @@ public class AdminProductsController : ControllerBase
             return CategorySelectionResult.Success(parent.Key, "");
         }
 
+        // التفاصيل الدقيقة اختيارية: إذا اختار الأدمن التصنيف الرئيسي فقط نحفظ المنتج تحت التصنيف الرئيسي،
+        // وإذا اختار تصنيفًا دقيقًا نتحقق منه ونحفظه حتى تظهر الصفحات الدقيقة بدقة.
         if (string.IsNullOrWhiteSpace(subCategoryKey))
         {
-            return CategorySelectionResult.Fail(section == "problem"
-                ? "Problem detail category is required for this problem category"
-                : "Sub category is required for this category");
+            return CategorySelectionResult.Success(parent.Key, "");
         }
 
         var child = await _db.Categories

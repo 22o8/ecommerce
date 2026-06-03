@@ -76,9 +76,9 @@
             </div>
 
             <div>
-              <label class="mb-1 block text-sm text-white/80">{{ categorySubCategoryOptions.length ? (t('admin.preciseCategory') || 'التصنيف الدقيق') : (t('admin.preciseCategory') || 'التصنيف الدقيق') }}</label>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.preciseCategory') || 'التصنيف الدقيق' }} <span class="text-xs text-white/45">(اختياري)</span></label>
               <select v-model="form.subCategory" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
-                <option value="">{{ t('admin.preciseCategoryPlaceholder') || 'اختر تصنيفًا دقيقًا' }}</option>
+                <option value="">بدون تصنيف دقيق</option>
                 <option v-for="c in categorySubCategoryOptions" :key="c.key" :value="c.key">{{ c.nameAr }}</option>
               </select>
             </div>
