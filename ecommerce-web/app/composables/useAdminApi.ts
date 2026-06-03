@@ -98,5 +98,13 @@ export function useAdminApi() {
       fd.append('file', file)
       return await api.postForm<T>(`/admin/brands/${id}/logo`, fd)
     },
+
+
+    // Admin Brand Discounts
+    listBrandDiscounts: <T>() => api.get<T>('/admin/brand-discounts'),
+    previewBrandDiscountProducts: <T>(brandSlug: string) => api.get<T>(`/admin/brand-discounts/${brandSlug}/products`),
+    applyBrandDiscount: <T>(payload: { brandSlug: string; discountPercent: number; publishedOnly?: boolean }) =>
+      api.post<T>('/admin/brand-discounts/apply', payload),
+    clearBrandDiscount: <T>(brandSlug: string) => api.post<T>('/admin/brand-discounts/clear', { brandSlug }),
   }
 }
