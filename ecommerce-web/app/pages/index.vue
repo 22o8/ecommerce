@@ -3,12 +3,15 @@ import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useAsyncData } from '#app'
 import { useBrandsStore } from '~/stores/brands'
 import { useProductsStore } from '~/stores/products'
+import siteLogoSrc from '~/assets/img/site-logo.jpg'
 
 const { t, locale } = useI18n()
 const { categories, problemCategories, fetchCategories, fetchProblemChildren } = useCategories()
 
 const brandsStore = useBrandsStore()
 const productsStore = useProductsStore()
+const appearance = useAppearanceStore()
+if (!appearance.loaded) await appearance.refresh()
 
 await useAsyncData(
   'home-prefetch',
@@ -158,6 +161,7 @@ const problemCards = computed(() => {
 })
 
 const { buildAssetUrl } = useApi()
+const heroLogo = computed(() => appearance.data.siteLogoUrl ? buildAssetUrl(appearance.data.siteLogoUrl) : siteLogoSrc)
 const categoryRail = ref<HTMLElement | null>(null)
 const problemCategoryRail = ref<HTMLElement | null>(null)
 const dragState = { active: false, moved: false, startX: 0, startScroll: 0, target: null as HTMLElement | null }
@@ -240,10 +244,6 @@ onBeforeUnmount(() => {
           <h1 class="home-luxury-hero__title">
             {{ t('home.beautyTitle') }}
           </h1>
-          <p class="home-luxury-hero__subtitle">
-            {{ t('home.beautySubtitle') }}
-          </p>
-
           <div class="home-luxury-hero__actions">
             <NuxtLink to="/products" class="home-luxury-hero__primary">
               {{ t('homeHero.shopNow') }}
@@ -270,18 +270,19 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div class="home-luxury-hero__visual" aria-hidden="true">
-          <div class="home-luxury-hero__orb home-luxury-hero__orb--large">
-            <img v-if="categoryCards[0]?.imageUrl" :src="buildAssetUrl(categoryCards[0].imageUrl)" alt="" />
-            <span v-else>✦</span>
-          </div>
-          <div class="home-luxury-hero__orb home-luxury-hero__orb--small home-luxury-hero__orb--top">
-            <img v-if="(topBrands[0]?.logoUrl || topBrands[0]?.imageUrl)" :src="buildAssetUrl(topBrands[0].logoUrl || topBrands[0].imageUrl)" alt="" />
-            <span v-else>Beauty</span>
-          </div>
-          <div class="home-luxury-hero__orb home-luxury-hero__orb--small home-luxury-hero__orb--bottom">
-            <img v-if="categoryCards[1]?.imageUrl" :src="buildAssetUrl(categoryCards[1].imageUrl)" alt="" />
-            <span v-else>Skin</span>
+        <div class="home-luxury-hero__visual home-luxury-hero__visual--logo" aria-hidden="true">
+          <div class="home-luxury-hero__logo-stage">
+            <div class="home-luxury-hero__logo-ring home-luxury-hero__logo-ring--one" />
+            <div class="home-luxury-hero__logo-ring home-luxury-hero__logo-ring--two" />
+            <div class="home-luxury-hero__orb home-luxury-hero__orb--large home-luxury-hero__orb--logo">
+              <img :src="heroLogo" alt="" />
+            </div>
+            <div class="home-luxury-hero__orb home-luxury-hero__orb--small home-luxury-hero__orb--top">
+              <span>Beauty</span>
+            </div>
+            <div class="home-luxury-hero__orb home-luxury-hero__orb--small home-luxury-hero__orb--bottom">
+              <span>Store</span>
+            </div>
           </div>
         </div>
       </div>
@@ -906,9 +907,10 @@ onBeforeUnmount(() => {
   transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
 }
 .home-luxury-hero__primary{
-  color:#111;
+  color:#fff;
   background:linear-gradient(135deg, rgb(var(--primary)), rgba(var(--cta-glow-2), .92));
   box-shadow:0 18px 38px rgba(var(--primary), .26);
+  text-shadow:0 1px 1px rgba(0,0,0,.22);
 }
 .home-luxury-hero__secondary{
   color:rgb(var(--text));
@@ -948,6 +950,32 @@ onBeforeUnmount(() => {
   z-index:2;
   min-height:350px;
 }
+.home-luxury-hero__visual--logo{
+  display:grid;
+  place-items:center;
+}
+.home-luxury-hero__logo-stage{
+  position:relative;
+  width:min(24rem, 100%);
+  aspect-ratio:1/1;
+  display:grid;
+  place-items:center;
+}
+.home-luxury-hero__logo-ring{
+  position:absolute;
+  border-radius:999px;
+  pointer-events:none;
+}
+.home-luxury-hero__logo-ring--one{
+  inset:-1.35rem;
+  border:1px solid rgba(var(--primary), .22);
+  background:radial-gradient(circle, rgba(var(--primary), .13), transparent 67%);
+}
+.home-luxury-hero__logo-ring--two{
+  inset:2rem;
+  border:1px dashed rgba(var(--border), .9);
+  opacity:.7;
+}
 .home-luxury-hero__orb{
   position:absolute;
   display:grid;
@@ -961,10 +989,18 @@ onBeforeUnmount(() => {
 }
 .home-luxury-hero__orb img{ width:100%; height:100%; object-fit:cover; }
 .home-luxury-hero__orb--large{
-  inset:2rem 0 auto auto;
-  width:min(24rem, 100%);
+  position:relative;
+  width:min(20rem, 84%);
   aspect-ratio:1/1;
   border-radius:36% 64% 46% 54% / 45% 40% 60% 55%;
+}
+.home-luxury-hero__orb--logo{
+  background:linear-gradient(145deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .88));
+  padding:2.1rem;
+}
+.home-luxury-hero__orb--logo img{
+  object-fit:contain;
+  filter:drop-shadow(0 18px 28px rgba(0,0,0,.22));
 }
 .home-luxury-hero__orb--small{
   width:7.2rem;
@@ -988,7 +1024,8 @@ onBeforeUnmount(() => {
 @media (max-width: 1024px){
   .home-luxury-hero{ grid-template-columns:1fr; padding:1.35rem; min-height:auto; }
   .home-luxury-hero__visual{ min-height:260px; order:-1; }
-  .home-luxury-hero__orb--large{ width:min(20rem, 82vw); right:50%; transform:translateX(50%); top:.5rem; }
+  .home-luxury-hero__logo-stage{ width:min(20rem, 82vw); }
+  .home-luxury-hero__orb--large{ width:min(17rem, 78vw); }
   .home-luxury-hero__orb--top{ left:8%; top:1rem; }
   .home-luxury-hero__orb--bottom{ right:8%; bottom:.5rem; }
 }
@@ -996,7 +1033,9 @@ onBeforeUnmount(() => {
   .home-luxury-hero{ border-radius:1.6rem; padding:1rem; }
   .home-luxury-hero::after{ border-radius:1.5rem; }
   .home-luxury-hero__visual{ min-height:210px; }
-  .home-luxury-hero__orb--large{ width:17rem; }
+  .home-luxury-hero__logo-stage{ width:17rem; }
+  .home-luxury-hero__orb--large{ width:14.5rem; }
+  .home-luxury-hero__orb--logo{ padding:1.55rem; }
   .home-luxury-hero__orb--small{ width:5.6rem; height:5.6rem; border-radius:1.45rem; }
   .home-luxury-hero__title{ font-size:3rem; max-width:12ch; }
   .home-luxury-hero__subtitle{ font-size:.95rem; line-height:1.75; }
