@@ -75,6 +75,23 @@ const topBrands = computed(() => {
   }
   return uniq.slice(0, 10)
 })
+
+const brandOrbitIndex = ref(0)
+let brandOrbitTimer: ReturnType<typeof setInterval> | null = null
+const orbitBrands = computed(() => (topBrands.value ?? []).filter((b: any) => !!b && !!(b.logoUrl || b.imageUrl || b.logo || b.image)))
+const orbitBrandTop = computed(() => {
+  const list = orbitBrands.value
+  if (!list.length) return null
+  return list[brandOrbitIndex.value % list.length]
+})
+const orbitBrandBottom = computed(() => {
+  const list = orbitBrands.value
+  if (!list.length) return null
+  return list[(brandOrbitIndex.value + 1) % list.length]
+})
+function brandOrbitSrc(brand: any) {
+  return buildAssetUrl(brand?.logoUrl || brand?.imageUrl || brand?.logo || brand?.image || '')
+}
 const categoryCards = computed(() => {
   const accents = [
     'from-cyan-500/25 to-indigo-500/10',
@@ -219,11 +236,17 @@ onMounted(() => {
   categoryRail.value?.addEventListener('wheel', onRailWheel, { passive: false })
   problemCategoryRail.value?.addEventListener('wheel', onRailWheel, { passive: false })
   ensureTopRatedLoaded()
+  brandOrbitTimer = setInterval(() => {
+    if (orbitBrands.value.length > 1) {
+      brandOrbitIndex.value = (brandOrbitIndex.value + 1) % orbitBrands.value.length
+    }
+  }, 2600)
 })
 
 onBeforeUnmount(() => {
   categoryRail.value?.removeEventListener('wheel', onRailWheel as any)
   problemCategoryRail.value?.removeEventListener('wheel', onRailWheel as any)
+  if (brandOrbitTimer) clearInterval(brandOrbitTimer)
 })
 
 </script>
@@ -277,11 +300,27 @@ onBeforeUnmount(() => {
             <div class="home-luxury-hero__orb home-luxury-hero__orb--large home-luxury-hero__orb--logo">
               <img :src="heroLogo" alt="" />
             </div>
-            <div class="home-luxury-hero__orb home-luxury-hero__orb--small home-luxury-hero__orb--top">
-              <span>Beauty</span>
+            <div class="home-luxury-hero__orb home-luxury-hero__orb--small home-luxury-hero__orb--top brand-orbit-card">
+              <Transition name="brand-orbit-fade" mode="out-in">
+                <img
+                  v-if="orbitBrandTop"
+                  :key="`top-${orbitBrandTop.id || orbitBrandTop.slug || brandOrbitIndex}`"
+                  :src="brandOrbitSrc(orbitBrandTop)"
+                  :alt="orbitBrandTop.name || 'Brand'"
+                />
+                <span v-else key="beauty">Beauty</span>
+              </Transition>
             </div>
-            <div class="home-luxury-hero__orb home-luxury-hero__orb--small home-luxury-hero__orb--bottom">
-              <span>Store</span>
+            <div class="home-luxury-hero__orb home-luxury-hero__orb--small home-luxury-hero__orb--bottom brand-orbit-card">
+              <Transition name="brand-orbit-fade" mode="out-in">
+                <img
+                  v-if="orbitBrandBottom"
+                  :key="`bottom-${orbitBrandBottom.id || orbitBrandBottom.slug || brandOrbitIndex}`"
+                  :src="brandOrbitSrc(orbitBrandBottom)"
+                  :alt="orbitBrandBottom.name || 'Brand'"
+                />
+                <span v-else key="store">Store</span>
+              </Transition>
             </div>
           </div>
         </div>
@@ -1010,6 +1049,50 @@ onBeforeUnmount(() => {
 }
 .home-luxury-hero__orb--top{ top:0; left:1rem; transform:rotate(-6deg); }
 .home-luxury-hero__orb--bottom{ bottom:1rem; right:3rem; transform:rotate(7deg); }
+
+.home-luxury-hero__primary{
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(var(--primary), .55);
+}
+.home-luxury-hero__primary::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg, rgba(255,255,255,.18), transparent 42%, rgba(255,255,255,.10));
+  opacity:.75;
+  pointer-events:none;
+}
+.home-luxury-hero__primary > *{ position:relative; z-index:1; }
+.brand-orbit-card{
+  background:linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .84));
+  padding:.55rem;
+}
+.brand-orbit-card img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:1.45rem;
+  filter:none;
+}
+.brand-orbit-card span{
+  display:grid;
+  place-items:center;
+  width:100%;
+  height:100%;
+  border-radius:1.45rem;
+  background:rgba(var(--surface-rgb), .72);
+}
+.brand-orbit-fade-enter-active,
+.brand-orbit-fade-leave-active{
+  transition:opacity .35s ease, transform .35s ease;
+}
+.brand-orbit-fade-enter-from,
+.brand-orbit-fade-leave-to{
+  opacity:0;
+  transform:scale(.92) rotate(-3deg);
+}
+
 .product-grid-luxury{ align-items:stretch; }
 .product-grid-luxury > *{ min-width:0; }
 :global(html.theme-light) .home-luxury-hero{
@@ -1018,7 +1101,7 @@ onBeforeUnmount(() => {
     radial-gradient(circle at 18% 18%, rgba(236,72,153,.12), transparent 28rem);
   box-shadow:0 24px 70px rgba(232,91,154,.08), 0 14px 34px rgba(20,20,20,.05);
 }
-:global(html.theme-light) .home-luxury-hero__primary{ color:#fff; }
+:global(html.theme-light) .home-luxury-hero__primary{ color:#fff; background:linear-gradient(135deg, #111827, rgb(var(--primary))); box-shadow:0 18px 38px rgba(17,24,39,.16), 0 14px 34px rgba(var(--primary), .20); }
 :global(html.theme-light) .home-luxury-hero__secondary,
 :global(html.theme-light) .home-luxury-hero__stat{ background:rgba(255,255,255,.82); }
 @media (max-width: 1024px){
