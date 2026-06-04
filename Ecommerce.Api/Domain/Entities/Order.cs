@@ -14,8 +14,13 @@ public class Order
     public decimal DiscountAmountIqd { get; set; }
     public string? CouponCode { get; set; }
 
-    public string Status { get; set; } = "PendingPayment";
+    // حالات فواتير الشراء:
+    // PendingSale = قيد التنفيذ، Sold = تم البيع، NotSold = لم تبع/ملغاة
+    public string Status { get; set; } = "PendingSale";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? SoldAt { get; set; }
+    public decimal ProfitIqd { get; set; } = 0m;
+    public decimal ProfitUsd { get; set; } = 0m;
 
     public List<OrderItem> Items { get; set; } = new();
     public List<Payment> Payments { get; set; } = new();

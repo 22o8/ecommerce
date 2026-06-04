@@ -80,6 +80,15 @@ public static class DbBootstrapper
             @"CREATE INDEX IF NOT EXISTS ""IX_Orders_UserId"" ON ""Orders"" (""UserId"");",
             @"CREATE INDEX IF NOT EXISTS ""IX_Orders_CreatedAt"" ON ""Orders"" (""CreatedAt"");",
 
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""SoldAt"" timestamp with time zone NULL;",
+
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""ProfitIqd"" numeric(18,2) NOT NULL DEFAULT 0;",
+
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""ProfitUsd"" numeric(18,2) NOT NULL DEFAULT 0;",
+
             // OrderItems
             @"CREATE TABLE IF NOT EXISTS ""OrderItems"" (
                 ""Id"" uuid NOT NULL,

@@ -260,6 +260,10 @@ onBeforeUnmount(() => {
         <div class="home-luxury-hero__glow home-luxury-hero__glow--two" />
 
         <div class="home-luxury-hero__content rtl-text">
+          <div class="home-luxury-hero__kicker">
+            <span class="home-luxury-hero__dot" />
+            {{ t('home.beautyKicker') }}
+          </div>
           <h1 class="home-luxury-hero__title">
             {{ t('home.beautyTitle') }}
           </h1>

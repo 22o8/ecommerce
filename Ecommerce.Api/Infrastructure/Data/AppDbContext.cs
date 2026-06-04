@@ -234,6 +234,15 @@ public class AppDbContext : DbContext
             .Property(x => x.CouponCode)
             .HasMaxLength(80);
 
+        modelBuilder.Entity<Order>()
+            .Property(x => x.ProfitIqd)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Order>()
+            .Property(x => x.ProfitUsd)
+            .HasPrecision(18, 2);
+
+
         modelBuilder.Entity<CouponUsage>()
             .Property(x => x.DeviceKeyHash)
             .HasMaxLength(128);

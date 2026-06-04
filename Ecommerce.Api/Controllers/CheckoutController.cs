@@ -161,7 +161,7 @@ public class CheckoutController : ControllerBase
         var order = new Order
         {
             UserId = userId,
-            Status = "PendingPayment",
+            Status = "PendingSale",
             SubtotalUsd = subtotalUsd,
             SubtotalIqd = subtotalIqd,
             DiscountAmountUsd = couponResult.discountUsd,
@@ -193,7 +193,6 @@ public class CheckoutController : ControllerBase
         };
 
         order.Payments.Add(payment);
-        product.StockQuantity = Math.Max(0, product.StockQuantity - qty);
         if (couponResult.coupon != null)
         {
             couponResult.coupon.UsedCount += 1;
@@ -245,7 +244,7 @@ public class CheckoutController : ControllerBase
         var insufficient = items.Select(i => new { item = i, product = products.First(x => x.Id == i.ProductId) }).FirstOrDefault(x => x.product.StockQuantity < x.item.Quantity);
         if (insufficient != null) return BadRequest(new { message = "Insufficient stock", productId = insufficient.product.Id, available = insufficient.product.StockQuantity });
 
-        var order = new Order { UserId = userId, Status = "PendingPayment", TotalUsd = 0, TotalIqd = 0 };
+        var order = new Order { UserId = userId, Status = "PendingSale", TotalUsd = 0, TotalIqd = 0 };
         decimal subtotalUsd = 0m;
         decimal subtotalIqd = 0m;
 
@@ -279,12 +278,6 @@ public class CheckoutController : ControllerBase
         order.CouponCode = couponResult.coupon?.Code;
         order.TotalUsd = Math.Max(0m, subtotalUsd - couponResult.discountUsd);
         order.TotalIqd = Math.Max(0m, subtotalIqd - couponResult.discountIqd);
-
-        foreach (var i in items)
-        {
-            var p = products.First(x => x.Id == i.ProductId);
-            p.StockQuantity = Math.Max(0, p.StockQuantity - i.Quantity);
-        }
 
         var payment = new Payment
         {
@@ -355,7 +348,7 @@ public class CheckoutController : ControllerBase
         {
             Id = Guid.NewGuid(),
             UserId = userId,
-            Status = "Paid",
+            Status = "PendingSale",
             CreatedAt = DateTime.UtcNow,
             Items = new List<OrderItem>(),
             Payments = new List<Payment>()
@@ -381,7 +374,6 @@ public class CheckoutController : ControllerBase
                 UnitPriceIqd = p.PriceIqd,
                 LineTotalIqd = lineTotalIqd
             });
-            p.StockQuantity = Math.Max(0, p.StockQuantity - i.Quantity);
         }
 
         var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, products);
@@ -399,7 +391,7 @@ public class CheckoutController : ControllerBase
         {
             Order = order,
             Provider = "WhatsApp",
-            Status = "Succeeded",
+            Status = "Pending",
             ProviderRef = $"WA-{Guid.NewGuid():N}",
             AmountUsd = order.TotalUsd,
             AmountIqd = order.TotalIqd
@@ -443,7 +435,7 @@ public class CheckoutController : ControllerBase
         var order = new Order
         {
             UserId = userId,
-            Status = "PendingPayment",
+            Status = "PendingSale",
             SubtotalUsd = priceUsd,
             SubtotalIqd = priceIqd,
             TotalUsd = priceUsd,
