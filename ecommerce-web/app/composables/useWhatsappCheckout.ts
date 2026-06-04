@@ -62,20 +62,44 @@ export function useWhatsappCheckout() {
   }
 
   const buildCartMessage = (items: WhatsappMessageItem[], meta?: WhatsappMessageMeta) => {
-    const when = new Date().toLocaleString('ar-IQ')
+    const when = new Date().toLocaleString('ar-IQ', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
     const format = (v: any) => formatIqd(v)
     const subtotal = items.reduce((s, i) => s + ((Number(i.price) || 0) * (Number(i.quantity) || 0)), 0)
+    const finalTotal = Number(meta?.finalTotalIqd ?? subtotal)
+    const shortOrderCode = meta?.orderId
+      ? String(meta.orderId).replace(/-/g, '').slice(-8).toUpperCase()
+      : ''
+
+    const productLines = items.map((i, idx) => {
+      const quantity = Math.max(1, Number(i.quantity) || 1)
+      const lineTotal = (Number(i.price) || 0) * quantity
+      const discountNote = i.discountPercent
+        ? `\n   خصم المنتج: ${i.discountPercent}% من ${format(i.originalPrice || i.price)}`
+        : ''
+
+      return [
+        `${idx + 1}) ${i.title}`,
+        `   الكمية: ${quantity}`,
+        `   المجموع: ${format(lineTotal)}${discountNote}`
+      ].join('\n')
+    })
 
     const lines = [
-      'طلب جديد من المتجر',
-      `الوقت: ${when}`,
-      ...(meta?.orderId ? [`رقم الطلب: ${meta.orderId}`] : []),
+      '🛍️ طلب جديد من المتجر',
+      '━━━━━━━━━━━━━━',
+      `🕒 وقت الطلب: ${when}`,
+      ...(shortOrderCode ? [`🔖 كود الطلب: #${shortOrderCode}`] : []),
       '',
-      'المنتجات:',
-      ...items.map(i =>
-        `- ${i.title} × ${i.quantity} = ${format((Number(i.price) || 0) * (Number(i.quantity) || 0))}${i.discountPercent ? ` (خصم ${i.discountPercent}% من ${format(i.originalPrice || i.price)})` : ''}`
-      ),
+      '📦 المنتجات المطلوبة:',
+      ...productLines,
       '',
+      '💰 ملخص الطلب:',
       `الإجمالي قبل الخصم: ${format(subtotal)}`,
       ...(meta?.couponCode
         ? [
@@ -83,7 +107,9 @@ export function useWhatsappCheckout() {
             `قيمة الخصم: ${format(Number(meta.discountAmountIqd || 0))}`
           ]
         : []),
-      `الإجمالي النهائي: ${format(meta?.finalTotalIqd ?? subtotal)}`
+      `الإجمالي النهائي: ${format(finalTotal)}`,
+      '━━━━━━━━━━━━━━',
+      'يرجى تأكيد توفر المنتجات وطريقة الاستلام مع الزبون.'
     ]
 
     return lines.join('\n')

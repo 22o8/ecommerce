@@ -122,7 +122,8 @@
         </main>
       </div>
     </div>
-  </div>
+    <PageNavigationControls />
+</div>
 </template>
 
 <script setup lang="ts">
