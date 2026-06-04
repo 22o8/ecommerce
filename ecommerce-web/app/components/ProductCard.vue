@@ -68,7 +68,7 @@
           type="button"
           class="product-card-btn product-card-btn--buy"
           :class="props.compact ? 'product-card-btn--compact' : ''"
-          @click.stop="buyNow"
+          @click.stop="openBuyConfirm"
           :disabled="isOutOfStock || buying"
         >
           <Icon name="mdi:flash" class="text-lg" />
@@ -77,6 +77,51 @@
       </div>
     </div>
   </article>
+
+  <Teleport to="body">
+    <Transition name="buy-confirm-fade">
+      <div
+        v-if="showBuyConfirm"
+        class="buy-confirm-overlay"
+        role="dialog"
+        aria-modal="true"
+        @click.self="closeBuyConfirm"
+      >
+        <div class="buy-confirm-card">
+          <button type="button" class="buy-confirm-close" aria-label="إغلاق" @click="closeBuyConfirm">
+            <Icon name="mdi:close" />
+          </button>
+
+          <div class="buy-confirm-icon">
+            <Icon name="mdi:cart-check" />
+          </div>
+
+          <div class="buy-confirm-title rtl-text">تأكيد الشراء</div>
+          <p class="buy-confirm-text rtl-text">
+            هل تريد إكمال شراء هذا المنتج الآن؟
+          </p>
+
+          <div class="buy-confirm-product">
+            <img :src="mainImage" :alt="displayName" />
+            <div>
+              <b class="rtl-text">{{ displayName }}</b>
+              <span class="keep-ltr">{{ formatPrice(displayFinalPrice) }}</span>
+            </div>
+          </div>
+
+          <div class="buy-confirm-actions">
+            <button type="button" class="buy-confirm-btn buy-confirm-btn--ghost" @click="closeBuyConfirm">
+              إلغاء
+            </button>
+            <button type="button" class="buy-confirm-btn buy-confirm-btn--main" :disabled="buying" @click="confirmBuyNow">
+              <Icon name="mdi:flash" />
+              تأكيد الشراء
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 <script setup lang="ts">
 import SmartImage from '~/components/SmartImage.vue'
@@ -121,6 +166,7 @@ const mainImage = computed(() => {
 
 const adding = ref(false)
 const buying = ref(false)
+const showBuyConfirm = ref(false)
 
 function formatPrice(v: any) {
   return formatIqd(v)
@@ -138,13 +184,25 @@ function addToCart() {
 
 const { checkoutSingleProduct } = useWhatsappCheckout()
 
-async function buyNow() {
+function openBuyConfirm() {
+  if (isOutOfStock.value || buying.value) return
+  showBuyConfirm.value = true
+}
+
+function closeBuyConfirm() {
+  if (buying.value) return
+  showBuyConfirm.value = false
+}
+
+async function confirmBuyNow() {
   if (isOutOfStock.value || buying.value) return
   buying.value = true
   try {
     await checkoutSingleProduct(p.value, 1)
+    showBuyConfirm.value = false
   } catch {
     cart.add(p.value)
+    showBuyConfirm.value = false
     navigateTo('/cart')
   } finally {
     setTimeout(() => { buying.value = false }, 250)
@@ -392,4 +450,95 @@ function goProduct() {
   .product-card-btn{ min-height:38px; padding:.52rem .5rem; font-size:.76rem; border-radius:.82rem; }
   .product-card-btn :deep(svg){ display:none; }
 }
+
+.buy-confirm-overlay{
+  position:fixed;
+  inset:0;
+  z-index:300;
+  display:grid;
+  place-items:center;
+  padding:1rem;
+  background:rgba(0,0,0,.58);
+  backdrop-filter:blur(12px);
+}
+.buy-confirm-card{
+  position:relative;
+  width:min(92vw, 440px);
+  border-radius:1.8rem;
+  border:1px solid rgba(var(--border), .85);
+  background:linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .94));
+  color:rgb(var(--text-strong));
+  padding:1.35rem;
+  box-shadow:0 28px 90px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.buy-confirm-close{
+  position:absolute;
+  inset-inline-end:.9rem;
+  top:.9rem;
+  width:2.25rem;
+  height:2.25rem;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(var(--border), .82);
+  background:rgba(var(--surface-rgb), .75);
+}
+.buy-confirm-icon{
+  width:3.2rem;
+  height:3.2rem;
+  border-radius:1.1rem;
+  display:grid;
+  place-items:center;
+  color:#111;
+  background:linear-gradient(135deg, rgb(var(--primary)), rgba(var(--cta-glow-2), .92));
+  font-size:1.55rem;
+}
+.buy-confirm-title{ margin-top:1rem; font-size:1.35rem; font-weight:1000; }
+.buy-confirm-text{ margin-top:.4rem; color:rgb(var(--text-soft)); line-height:1.8; }
+.buy-confirm-product{
+  margin-top:1rem;
+  padding:.75rem;
+  border-radius:1.15rem;
+  border:1px solid rgba(var(--border), .78);
+  background:rgba(var(--surface-rgb), .55);
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+}
+.buy-confirm-product img{
+  width:4.4rem;
+  height:4.4rem;
+  object-fit:cover;
+  border-radius:.9rem;
+  border:1px solid rgba(var(--border), .68);
+}
+.buy-confirm-product div{ min-width:0; display:grid; gap:.2rem; }
+.buy-confirm-product b{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.buy-confirm-product span{ color:rgb(var(--primary)); font-weight:1000; }
+.buy-confirm-actions{
+  margin-top:1.1rem;
+  display:grid;
+  grid-template-columns:1fr 1.2fr;
+  gap:.65rem;
+}
+.buy-confirm-btn{
+  min-height:2.9rem;
+  border-radius:1rem;
+  font-weight:1000;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.35rem;
+  border:1px solid rgba(var(--border), .8);
+}
+.buy-confirm-btn--ghost{ background:rgba(var(--surface-rgb), .65); }
+.buy-confirm-btn--main{
+  color:#111;
+  border-color:transparent;
+  background:linear-gradient(135deg, rgb(var(--primary)), rgba(var(--cta-glow-2), .92));
+}
+.buy-confirm-fade-enter-active,.buy-confirm-fade-leave-active{ transition:opacity .18s ease; }
+.buy-confirm-fade-enter-from,.buy-confirm-fade-leave-to{ opacity:0; }
+
+
 </style>

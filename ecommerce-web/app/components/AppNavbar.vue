@@ -2,12 +2,29 @@
   <header class="sticky top-0 z-50">
     <div class="bg-app/80 backdrop-blur supports-[backdrop-filter]:bg-app/70 border-b border-app">
       <div class="mx-auto max-w-7xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3">
-        <NuxtLink to="/" class="flex items-center min-w-0">
-          <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black overflow-hidden">
-            <img v-if="resolvedLogo" :src="resolvedLogo" alt="Site logo" class="h-full w-full object-cover" />
-            <Icon v-else name="mdi:shopping-outline" class="text-xl animate-floaty" />
-          </div>
-        </NuxtLink>
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+          <NuxtLink to="/" class="flex items-center min-w-0" title="الرئيسية" aria-label="الرئيسية">
+            <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black overflow-hidden">
+              <img v-if="resolvedLogo" :src="resolvedLogo" alt="Site logo" class="h-full w-full object-cover" />
+              <Icon v-else name="mdi:shopping-outline" class="text-xl animate-floaty" />
+            </div>
+          </NuxtLink>
+
+          <button
+            v-if="canGoBack"
+            type="button"
+            class="nav-back-btn"
+            title="رجوع للصفحة السابقة"
+            aria-label="رجوع للصفحة السابقة"
+            @click="goBack"
+          >
+            <Icon name="mdi:arrow-right" class="text-lg" />
+          </button>
+
+          <NuxtLink to="/" class="nav-home-link rtl-text" title="الرئيسية">
+            الرئيسية
+          </NuxtLink>
+        </div>
 
         <div class="flex-1" />
 
@@ -324,6 +341,14 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', onDocClick)
 })
 
+const canGoBack = computed(() => route.path !== '/')
+
+function goBack() {
+  if (!import.meta.client) return
+  if (window.history.length > 1) router.back()
+  else router.push('/')
+}
+
 async function logout(){
   auth.logout()
   if (route.path.startsWith('/admin')) router.push('/')
@@ -332,6 +357,49 @@ async function logout(){
 
 
 <style scoped>
+
+.nav-back-btn{
+  width: 2.45rem;
+  height: 2.45rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(var(--border), .9);
+  background: rgba(var(--surface-rgb), .78);
+  color: rgb(var(--text-strong));
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+.nav-back-btn:hover{
+  transform: translateY(-1px);
+  border-color: rgba(var(--primary), .52);
+  background: rgba(var(--primary), .10);
+}
+.nav-home-link{
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.45rem;
+  padding: 0 .85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--border), .84);
+  background: rgba(var(--surface-rgb), .62);
+  color: rgb(var(--text-strong));
+  font-weight: 900;
+  font-size: .92rem;
+  text-decoration: none;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+.nav-home-link:hover{
+  transform: translateY(-1px);
+  border-color: rgba(var(--primary), .48);
+  background: rgba(var(--primary), .09);
+}
+@media (max-width: 640px){
+  .nav-home-link{ display:none; }
+  .nav-back-btn{ width:2.25rem; height:2.25rem; }
+}
+
 .mobile-search-shell{
   display:flex;
   align-items:center;

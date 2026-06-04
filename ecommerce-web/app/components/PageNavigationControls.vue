@@ -58,8 +58,8 @@ function handleScroll() {
   const distanceToBottom = docHeight - (scrollTop + viewport)
   const longPage = docHeight > viewport + 220
 
-  // يظهر السهم عندما يصل المستخدم إلى نهاية الصفحة تقريباً.
-  showTop.value = longPage && scrollTop > 260 && distanceToBottom <= Math.max(180, viewport * 0.2)
+  // يظهر سهم الصعود بمجرد نزول المستخدم مسافة واضحة، وليس فقط عند نهاية الصفحة.
+  showTop.value = longPage && scrollTop > 360
 }
 
 function goBack() {
