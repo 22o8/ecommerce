@@ -21,32 +21,6 @@
           <NuxtLink :to="intro.secondaryButtonUrl || '/brands'" class="intro-page__ghost">{{ intro.secondaryButtonText || 'تصفح البراندات' }}</NuxtLink>
           <NuxtLink to="/" class="intro-page__skip">الدخول للمتجر</NuxtLink>
         </div>
-
-        <div v-if="!isStandalone" class="intro-install-panel">
-          <div class="intro-install-head">
-            <span class="intro-install-icon">
-              <Icon name="mdi:cellphone-arrow-down" />
-            </span>
-            <div>
-              <strong>احصل على التطبيق</strong>
-              <span>ثبت المتجر على الشاشة الرئيسية وافتحه مثل التطبيق بدون المتصفح.</span>
-            </div>
-          </div>
-
-          <div class="intro-install-actions">
-            <button type="button" class="intro-install-btn intro-install-btn--android" @click="installAndroidApp">
-              <Icon name="mdi:android" />
-              تنزيل مباشر للأندرويد
-            </button>
-
-            <NuxtLink to="/ios-install" class="intro-install-btn intro-install-btn--ios">
-              <Icon name="mdi:apple-ios" />
-              تعليمات الآيفون
-            </NuxtLink>
-          </div>
-
-          <p v-if="installMessage" class="intro-install-message">{{ installMessage }}</p>
-        </div>
       </section>
     </main>
   </div>

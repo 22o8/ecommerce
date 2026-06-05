@@ -60,7 +60,7 @@ export default defineNuxtConfig({
     pageTransition: { name: 'page', mode: 'out-in' },
     layoutTransition: { name: 'layout', mode: 'out-in' },
     head: {
-      title: 'Dr.Seoul Beauty Store',
+      title: 'DR SEOUL BEAUTY',
       titleTemplate: '%s',
       // ✅ Arabic first (RTL)
       // Force LTR for all locales.
