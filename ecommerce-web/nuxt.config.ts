@@ -48,9 +48,9 @@ export default defineNuxtConfig({
         process.env.NUXT_PUBLIC_WHATSAPP_PHONE ||
         '9647704252132',
 
-      supportEmail: process.env.NUXT_PUBLIC_SUPPORT_EMAIL || 'info@example.com',
+      supportEmail: process.env.NUXT_PUBLIC_SUPPORT_EMAIL || 'dr@drseoulbeauty.store',
       supportPhone: process.env.NUXT_PUBLIC_SUPPORT_PHONE || '9640000000000',
-      instagramUrl: process.env.NUXT_PUBLIC_INSTAGRAM_URL || 'https://instagram.com/',
+      instagramUrl: process.env.NUXT_PUBLIC_INSTAGRAM_URL || 'https://www.instagram.com/dr.seoul_beauty?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==',
 
       heroImage: process.env.NUXT_PUBLIC_HERO_IMAGE || '',
     },
