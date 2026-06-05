@@ -403,7 +403,6 @@ function goProduct() {
 .product-card-btn:hover{ transform: translateY(-1px); }
 .product-card-btn:disabled{ opacity:.55; cursor:not-allowed; }
 .product-card-btn--cart{
-  color:#111;
   background:linear-gradient(135deg, rgb(var(--primary)), rgba(var(--cta-glow-2), .92));
   box-shadow:0 14px 28px rgba(var(--primary), .20);
 }
