@@ -117,15 +117,7 @@
       <div class="tips-grid">
         <div>
           <Icon name="mdi:check-circle-outline" />
-          <span>الطريقة تعمل فقط من Safari على iPhone و iPad.</span>
-        </div>
-        <div>
-          <Icon name="mdi:check-circle-outline" />
-          <span>إذا لم يظهر الخيار، حدّث iOS أو افتح الرابط من Safari مباشرة.</span>
-        </div>
-        <div>
-          <Icon name="mdi:check-circle-outline" />
-          <span>بعد التثبيت لا تحتاج الدخول للمتصفح كل مرة.</span>
+          <span>البرنامج هذا يعمل بشكل مؤقت فقط قريبا سيتم رفع البرنامج على app store</span>
         </div>
       </div>
     </section>
