@@ -281,16 +281,27 @@ public class AdminPurchaseInvoicesController : ControllerBase
 
             if (orderIds.Count == 0) return Ok(new { deleted = 0 });
 
-            var couponUsages = await _db.CouponUsages.Where(x => orderIds.Contains(x.OrderId)).ToListAsync();
-            var downloadTokens = await _db.DownloadTokens.Where(x => orderIds.Contains(x.OrderId)).ToListAsync();
-            var payments = await _db.Payments.Where(x => orderIds.Contains(x.OrderId)).ToListAsync();
-            var items = await _db.OrderItems.Where(x => orderIds.Contains(x.OrderId)).ToListAsync();
-            var orders = await _db.Orders.Where(x => orderIds.Contains(x.Id)).ToListAsync();
+            var couponUsages = await _db.CouponUsages
+                .Where(x => x.OrderId.HasValue && orderIds.Contains(x.OrderId.Value))
+                .ToListAsync();
+
+            var downloadTokens = await _db.DownloadTokens
+                .Where(x => orderIds.Contains(x.OrderId))
+                .ToListAsync();
+
+            var orders = await _db.Orders
+                .Include(o => o.Items)
+                .Include(o => o.Payments)
+                .Where(x => orderIds.Contains(x.Id))
+                .ToListAsync();
+
+            var removedItems = orders.SelectMany(o => o.Items).ToList();
+            var removedPayments = orders.SelectMany(o => o.Payments).ToList();
 
             if (couponUsages.Count > 0) _db.CouponUsages.RemoveRange(couponUsages);
             if (downloadTokens.Count > 0) _db.DownloadTokens.RemoveRange(downloadTokens);
-            if (payments.Count > 0) _db.Payments.RemoveRange(payments);
-            if (items.Count > 0) _db.OrderItems.RemoveRange(items);
+            if (removedItems.Count > 0) _db.OrderItems.RemoveRange(removedItems);
+            if (removedPayments.Count > 0) _db.Payments.RemoveRange(removedPayments);
             if (orders.Count > 0) _db.Orders.RemoveRange(orders);
 
             await _db.SaveChangesAsync();
