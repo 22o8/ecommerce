@@ -1,7 +1,7 @@
 {
   "name": "Dr.Seoul Beauty Store",
   "short_name": "Beauty Store",
-  "description": "متجر كوزمتك سريع وأنيق",
+  "description": "Dr.Seoul Beauty | Korean Skincare Iraq🇰🇷",
   "start_url": "/intro?source=pwa",
   "scope": "/",
   "display": "standalone",
@@ -11,7 +11,7 @@
   "dir": "rtl",
   "lang": "ar",
   "icons": [
-    { "src": "/pwa-icon-512.jpg", "sizes": "512x512", "type": "image/jpeg", "purpose": "any maskable" },
+    { "src": "/favicon.ico", "sizes": "512x512", "type": "image/x-icon", "purpose": "any maskable" },
     { "src": "/favicon.ico", "sizes": "64x64", "type": "image/x-icon" }
   ]
 }
