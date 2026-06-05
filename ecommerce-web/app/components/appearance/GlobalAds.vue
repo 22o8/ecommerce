@@ -188,7 +188,7 @@ function isVideo(url?: string) {
 function mediaComponent(url?: string) { return isVideo(url) ? 'video' : 'img' }
 function mediaAttrs(path?: string, alt?: string) {
   const src = asset(path)
-  if (isVideo(src)) return { src, autoplay: true, muted: true, loop: true, playsinline: true, controls: false }
+  if (isVideo(src)) return { src, autoplay: true, muted: true, loop: true, playsinline: true, preload: 'auto', controls: false, disablepictureinpicture: true, controlslist: 'nodownload noplaybackrate noremoteplayback' }
   return { src, alt: alt || 'advertisement', loading: 'eager' }
 }
 const asset = (p?: string) => {
@@ -219,7 +219,7 @@ function openPopupSoon() {
   if (!popupAd.value) return
   popupTimer = setTimeout(() => {
     showPopup.value = Boolean(popupAd.value)
-  }, 650)
+  }, 220)
 }
 async function loadAds() {
   if (!enabled.value) return

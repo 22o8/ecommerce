@@ -5,9 +5,25 @@
       class="intro-page__media"
       :src="embedSrc"
       allow="autoplay; encrypted-media; picture-in-picture"
+      loading="eager"
+      fetchpriority="high"
       allowfullscreen
     />
-    <video v-else-if="videoSrc" class="intro-page__media" :src="videoSrc" autoplay muted loop playsinline />
+    <video
+      v-else-if="videoSrc"
+      ref="introVideoEl"
+      class="intro-page__media"
+      :src="videoSrc"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="auto"
+      disablepictureinpicture
+      controlslist="nodownload noplaybackrate noremoteplayback"
+      @loadedmetadata="forcePlayIntroVideo"
+      @canplay="forcePlayIntroVideo"
+    />
     <div v-else class="intro-page__fallback" />
     <div class="intro-page__overlay" />
 
@@ -17,9 +33,8 @@
         <h1>{{ intro.title || 'Dr.Seoul Beauty' }}</h1>
         <p>{{ intro.subtitle || 'منتجات مختارة بعناية لتجربة كوزمتك أنيقة وسريعة.' }}</p>
         <div class="intro-page__actions">
-          <NuxtLink :to="intro.buttonUrl || '/products'" class="intro-page__primary">{{ intro.buttonText || 'ابدأ الآن' }}</NuxtLink>
-          <NuxtLink :to="intro.secondaryButtonUrl || '/brands'" class="intro-page__ghost">{{ intro.secondaryButtonText || 'تصفح البراندات' }}</NuxtLink>
-          <NuxtLink to="/" class="intro-page__skip">الدخول للمتجر</NuxtLink>
+          <NuxtLink :to="intro.buttonUrl || '/products'" prefetch class="intro-page__primary">{{ intro.buttonText || 'ابدأ الآن' }}</NuxtLink>
+          <NuxtLink :to="intro.secondaryButtonUrl || '/brands'" prefetch class="intro-page__ghost">{{ intro.secondaryButtonText || 'تصفح البراندات' }}</NuxtLink>
         </div>
       </section>
     </main>
@@ -27,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 definePageMeta({ layout: 'default' })
 const appearance = useAppearanceStore()
@@ -39,6 +54,19 @@ const isIOS = ref(false)
 const isAndroid = ref(false)
 const isStandalone = ref(false)
 const installMessage = ref('')
+const introVideoEl = ref<HTMLVideoElement | null>(null)
+
+async function forcePlayIntroVideo() {
+  await nextTick()
+  const el = introVideoEl.value
+  if (!el) return
+  el.muted = true
+  el.playsInline = true
+  try {
+    el.currentTime = el.currentTime || 0
+    await el.play()
+  } catch {}
+}
 
 onMounted(() => {
   const ua = window.navigator.userAgent || ''
@@ -102,10 +130,12 @@ const videoSrc = computed(() => {
   if (!raw || isEmbeddableVideo(raw)) return ''
   return buildAssetUrl(raw)
 })
+
+watch(videoSrc, () => forcePlayIntroVideo(), { flush: 'post' })
 </script>
 
 <style scoped>
-.intro-page__media,.intro-page__fallback{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; }
+.intro-page__media,.intro-page__fallback{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; transform:translateZ(0); will-change:transform; }
 .intro-page__fallback{ background:radial-gradient(circle at 76% 18%, rgba(var(--primary),.38), transparent 36%), radial-gradient(circle at 18% 76%, rgba(236,72,153,.24), transparent 42%), #050509; }
 .intro-page__overlay{ position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.90), rgba(0,0,0,.45), rgba(0,0,0,.78)); }
 .intro-page__card{ width:min(94vw,800px); border:1px solid rgba(255,255,255,.15); border-radius:40px; padding:clamp(1.7rem,4vw,3.2rem); background:rgba(8,8,14,.56); backdrop-filter:blur(18px); box-shadow:0 32px 90px rgba(0,0,0,.42); }
@@ -113,11 +143,10 @@ const videoSrc = computed(() => {
 .intro-page h1{ margin-top:1.1rem; font-size:clamp(2.6rem,8vw,6.4rem); line-height:.95; font-weight:1000; letter-spacing:-.06em; }
 .intro-page p{ margin-top:1rem; max-width:620px; color:rgba(255,255,255,.82); font-size:clamp(1rem,1.7vw,1.2rem); line-height:1.9; }
 .intro-page__actions{ display:flex; flex-wrap:wrap; gap:.8rem; margin-top:2rem; }
-.intro-page__primary,.intro-page__ghost,.intro-page__skip{ display:inline-flex; align-items:center; justify-content:center; min-height:52px; border-radius:999px; padding:0 1.3rem; font-weight:1000; transition:.2s ease; }
+.intro-page__primary,.intro-page__ghost{ display:inline-flex; align-items:center; justify-content:center; min-height:52px; border-radius:999px; padding:0 1.3rem; font-weight:1000; transition:.2s ease; }
 .intro-page__primary{ background:rgb(var(--primary)); color:#050509; }
 .intro-page__ghost{ border:1px solid rgba(255,255,255,.18); color:white; background:rgba(255,255,255,.08); }
-.intro-page__skip{ color:rgba(255,255,255,.72); }
-.intro-page__primary:hover,.intro-page__ghost:hover,.intro-page__skip:hover{ transform:translateY(-2px); }
+.intro-page__primary:hover,.intro-page__ghost:hover{ transform:translateY(-2px); }
 .intro-install-panel{ margin-top:1.2rem; display:grid; gap:1rem; border:1px solid rgba(255,255,255,.14); border-radius:1.5rem; padding:1rem; background:linear-gradient(135deg, rgba(var(--primary),.16), rgba(255,255,255,.07)); }
 .intro-install-head{ display:flex; gap:.85rem; align-items:center; }
 .intro-install-icon{ flex:0 0 auto; width:2.9rem; height:2.9rem; border-radius:1rem; display:grid; place-items:center; background:rgba(var(--primary),.24); color:rgb(var(--primary)); font-size:1.35rem; }
