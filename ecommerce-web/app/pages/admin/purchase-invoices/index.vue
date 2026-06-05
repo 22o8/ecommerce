@@ -8,10 +8,16 @@
           كل عملية شراء تظهر هنا بحالة <b>قيد التنفيذ</b>. لا يتم خصم كمية المنتج ولا تسجيل الأرباح إلا بعد ضغط <b>تم البيع</b>.
         </p>
       </div>
-      <button class="btn ghost" type="button" @click="fetchInvoices" :disabled="loading">
-        <Icon name="mdi:refresh" />
-        تحديث
-      </button>
+      <div class="hero-actions">
+        <button class="btn ghost" type="button" @click="fetchInvoices" :disabled="loading">
+          <Icon name="mdi:refresh" />
+          تحديث
+        </button>
+        <button class="btn danger" type="button" @click="deleteAllInvoices" :disabled="loading || invoices.length === 0">
+          <Icon name="mdi:trash-can-outline" />
+          حذف الكل
+        </button>
+      </div>
     </section>
 
     <section class="rules-card">
@@ -118,7 +124,16 @@
               <Icon name="mdi:close" />
               لم تبع
             </button>
-            <span v-else class="sold-note">تم حفظ الفاتورة وتسجيل الأرباح</span>
+            <button
+              class="btn danger-outline"
+              type="button"
+              :disabled="busyId === invoice.id"
+              @click="deleteInvoice(invoice)"
+            >
+              <Icon name="mdi:trash-can-outline" />
+              حذف
+            </button>
+            <span v-if="invoice.status === 'Sold'" class="sold-note">تم حفظ الفاتورة وتسجيل الأرباح</span>
           </div>
         </div>
       </article>
@@ -260,6 +275,36 @@ async function markNotSold(invoice: Invoice) {
   }
 }
 
+async function deleteInvoice(invoice: Invoice) {
+  const ok = confirm(`هل تريد حذف الفاتورة #${invoiceCode(invoice)} نهائياً؟`)
+  if (!ok) return
+  busyId.value = invoice.id
+  error.value = ''
+  try {
+    await api.del(`/admin/purchase-invoices/${invoice.id}`)
+    invoices.value = invoices.value.filter(x => x.id !== invoice.id)
+  } catch (e: any) {
+    error.value = extractErr(e)
+  } finally {
+    busyId.value = ''
+  }
+}
+
+async function deleteAllInvoices() {
+  const ok = confirm('هل تريد حذف جميع الفواتير؟\nسيتم حذف الفواتير غير المكتملة، أما الفواتير المباعة فستبقى محفوظة في سجل الأرباح.')
+  if (!ok) return
+  loading.value = true
+  error.value = ''
+  try {
+    await api.del('/admin/purchase-invoices/all')
+    await fetchInvoices()
+  } catch (e: any) {
+    error.value = extractErr(e)
+  } finally {
+    loading.value = false
+  }
+}
+
 fetchInvoices()
 </script>
 
@@ -273,6 +318,7 @@ fetchInvoices()
   padding:18px;
 }
 .admin-hero-card{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+.hero-actions{ display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }
 .eyebrow{ color:rgb(var(--primary)); font-weight:900; font-size:12px; margin-bottom:8px; }
 h1{ font-size:clamp(28px,4vw,52px); font-weight:1000; line-height:1.05; }
 .hint{ color:rgb(var(--muted)); margin-top:10px; max-width:820px; line-height:1.9; }
@@ -295,6 +341,7 @@ h1{ font-size:clamp(28px,4vw,52px); font-weight:1000; line-height:1.05; }
 .btn.primary{ background:linear-gradient(135deg, rgba(var(--primary),.95), rgba(var(--primary),.7)); border-color:rgba(var(--primary),.55); color:white; }
 .btn.success{ border-color:rgba(16,185,129,.45); background:rgba(16,185,129,.14); color:rgb(16,185,129); }
 .btn.danger{ border-color:rgba(239,68,68,.45); background:rgba(239,68,68,.14); color:rgb(248,113,113); }
+.btn.danger-outline{ border-color:rgba(239,68,68,.34); background:transparent; color:rgb(248,113,113); }
 .btn.ghost{ background:rgba(var(--surface-2-rgb),.85); }
 .invoices-card{ display:grid; gap:14px; }
 .invoice-row{ display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:16px; padding:16px; border:1px solid rgba(var(--border),.88); border-radius:24px; background:rgba(var(--surface-2-rgb),.62); }

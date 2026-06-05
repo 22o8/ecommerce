@@ -237,4 +237,69 @@ public class AdminPurchaseInvoicesController : ControllerBase
             return StatusCode(500, new { message = "Failed to cancel invoice.", detail = ex.Message });
         }
     }
+
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteOne(Guid id)
+    {
+        try
+        {
+            var order = await _db.Orders
+                .Include(o => o.Items)
+                .Include(o => o.Payments)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            if (order == null) return NotFound(new { message = "Invoice not found." });
+
+            var couponUsages = await _db.CouponUsages.Where(x => x.OrderId == id).ToListAsync();
+            var downloadTokens = await _db.DownloadTokens.Where(x => x.OrderId == id).ToListAsync();
+
+            if (couponUsages.Count > 0) _db.CouponUsages.RemoveRange(couponUsages);
+            if (downloadTokens.Count > 0) _db.DownloadTokens.RemoveRange(downloadTokens);
+            if (order.Items.Count > 0) _db.OrderItems.RemoveRange(order.Items);
+            if (order.Payments.Count > 0) _db.Payments.RemoveRange(order.Payments);
+            _db.Orders.Remove(order);
+
+            await _db.SaveChangesAsync();
+            return Ok(new { id, deleted = true });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to delete invoice.", detail = ex.Message });
+        }
+    }
+
+    [HttpDelete("all")]
+    public async Task<IActionResult> DeleteAll()
+    {
+        try
+        {
+            var orderIds = await _db.Orders
+                .Where(o => o.Items.Any(i => i.ProductId != null))
+                .Select(o => o.Id)
+                .ToListAsync();
+
+            if (orderIds.Count == 0) return Ok(new { deleted = 0 });
+
+            var couponUsages = await _db.CouponUsages.Where(x => orderIds.Contains(x.OrderId)).ToListAsync();
+            var downloadTokens = await _db.DownloadTokens.Where(x => orderIds.Contains(x.OrderId)).ToListAsync();
+            var payments = await _db.Payments.Where(x => orderIds.Contains(x.OrderId)).ToListAsync();
+            var items = await _db.OrderItems.Where(x => orderIds.Contains(x.OrderId)).ToListAsync();
+            var orders = await _db.Orders.Where(x => orderIds.Contains(x.Id)).ToListAsync();
+
+            if (couponUsages.Count > 0) _db.CouponUsages.RemoveRange(couponUsages);
+            if (downloadTokens.Count > 0) _db.DownloadTokens.RemoveRange(downloadTokens);
+            if (payments.Count > 0) _db.Payments.RemoveRange(payments);
+            if (items.Count > 0) _db.OrderItems.RemoveRange(items);
+            if (orders.Count > 0) _db.Orders.RemoveRange(orders);
+
+            await _db.SaveChangesAsync();
+            return Ok(new { deleted = orders.Count });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to delete invoices.", detail = ex.Message });
+        }
+    }
+
 }
