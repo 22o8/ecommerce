@@ -26,6 +26,7 @@ watch(() => auth.isAuthed, async (v) => {
 }, { immediate: true })
 
 useHead({
+  title: 'DR SEOUL BEAUTY',
   htmlAttrs: {
     // Keep layout stable: always LTR and do not change structural classes when locale changes.
     lang: locale,
