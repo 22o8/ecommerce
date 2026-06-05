@@ -60,6 +60,8 @@ export default defineNuxtConfig({
     pageTransition: { name: 'page', mode: 'out-in' },
     layoutTransition: { name: 'layout', mode: 'out-in' },
     head: {
+      title: 'Dr.Seoul Beauty Store',
+      titleTemplate: '%s',
       // ✅ Arabic first (RTL)
       // Force LTR for all locales.
       htmlAttrs: { lang: 'en', dir: 'ltr', class: 'theme-light' },
@@ -74,7 +76,7 @@ export default defineNuxtConfig({
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
-        { rel: 'apple-touch-icon', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
       ],
       script: [{ children: "if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}))}" }],
     },
@@ -92,6 +94,7 @@ export default defineNuxtConfig({
       '/products': { headers: { 'cache-control': 'no-store' } },
       '/products/**': { headers: { 'cache-control': 'no-store' } },
       '/intro': { headers: { 'cache-control': 'no-store' } },
+      '/ios-install': { headers: { 'cache-control': 'no-store' } },
       '/services': { headers: { 'cache-control': 'no-store' } },
       '/services/**': { headers: { 'cache-control': 'no-store' } },
 
