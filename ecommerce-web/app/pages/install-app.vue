@@ -80,24 +80,6 @@
         </NuxtLink>
       </article>
     </section>
-
-    <section class="install-benefits">
-      <div>
-        <Icon name="mdi:rocket-launch-outline" />
-        <strong>فتح أسرع</strong>
-        <span>الدخول للمتجر بضغطة واحدة.</span>
-      </div>
-      <div>
-        <Icon name="mdi:shield-check-outline" />
-        <strong>نفس أمان الموقع</strong>
-        <span>التطبيق يعمل على رابط المتجر الرسمي.</span>
-      </div>
-      <div>
-        <Icon name="mdi:palette-outline" />
-        <strong>تجربة موبايل أنيقة</strong>
-        <span>واجهة مرتبة ومناسبة للهاتف.</span>
-      </div>
-    </section>
   </main>
 </template>
 
