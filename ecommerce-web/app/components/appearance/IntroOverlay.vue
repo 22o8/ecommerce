@@ -21,7 +21,7 @@
       <div class="intro-screen__overlay" />
       <div class="intro-screen__content rtl-text">
         <div class="intro-screen__badge">Beauty Store</div>
-        <h1>{{ intro.title || 'اكتشفي جمالك بثقة' }}</h1>
+        <h1>{{ intro.title || 'Dr.Seoul Beauty' }}</h1>
         <p>{{ intro.subtitle || 'منتجات مختارة بعناية لتجربة كوزمتك أنيقة وسريعة.' }}</p>
         <div class="intro-screen__actions">
           <button type="button" class="intro-screen__primary" @click="startNow">

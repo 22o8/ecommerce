@@ -14,7 +14,7 @@
     <main class="relative z-10 grid min-h-screen place-items-center px-4 py-12">
       <section class="intro-page__card">
         <span class="intro-page__badge">Beauty Store</span>
-        <h1>{{ intro.title || 'اكتشفي جمالك بثقة' }}</h1>
+        <h1>{{ intro.title || 'Dr.Seoul Beauty' }}</h1>
         <p>{{ intro.subtitle || 'منتجات مختارة بعناية لتجربة كوزمتك أنيقة وسريعة.' }}</p>
         <div class="intro-page__actions">
           <NuxtLink :to="intro.buttonUrl || '/products'" class="intro-page__primary">{{ intro.buttonText || 'ابدأ الآن' }}</NuxtLink>

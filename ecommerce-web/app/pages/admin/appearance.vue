@@ -66,8 +66,8 @@
             </label>
             <UiInput v-model="draft.intro.videoUrl" placeholder="رابط MP4 مباشر أو YouTube/Instagram/TikTok" dir="ltr" />
             <div class="intro-note rtl-text">ملاحظة: روابط Instagram/Reels ليست ملف فيديو مباشر، لذلك نعرضها كـ iframe إن أمكن. أفضل حل للفيديو التجاري هو رفع MP4 مباشر إلى R2 أو استخدام رابط MP4.</div>
-            <UiInput v-model="draft.intro.title" placeholder="العنوان الرئيسي مثل: اكتشفي جمالك بثقة" />
-            <UiInput v-model="draft.intro.subtitle" placeholder="وصف قصير: منتجات مختارة بعناية لبشرتك" />
+            <UiInput v-model="draft.intro.title" placeholder="العنوان الرئيسي مثل: Dr.Seoul Beauty" />
+            <UiInput v-model="draft.intro.subtitle" placeholder="وصف قصير:Korean Skincare Iraq🇰🇷" />
             <div class="grid gap-3 sm:grid-cols-2">
               <UiInput v-model="draft.intro.buttonText" placeholder="زر رئيسي: ابدأ الآن" />
               <UiInput v-model="draft.intro.buttonUrl" placeholder="/products" dir="ltr" />
@@ -111,8 +111,8 @@
             <div class="intro-preview__overlay" />
             <div class="intro-preview__content rtl-text">
               <span>Beauty Store</span>
-              <h3>{{ draft.intro.title || 'اكتشفي جمالك بثقة' }}</h3>
-              <p>{{ draft.intro.subtitle || 'منتجات مختارة بعناية لتجربة كوزمتك أنيقة وسريعة.' }}</p>
+              <h3>{{ draft.intro.title || 'Dr.Seoul Beauty' }}</h3>
+              <p>{{ draft.intro.subtitle || 'منتجات مختارة بعناية لتجربة كوزمتك أنيقة ' }}</p>
               <div class="intro-preview__actions">
                 <button>{{ draft.intro.buttonText || 'ابدأ الآن' }}</button>
                 <button class="ghost">{{ draft.intro.secondaryButtonText || 'تصفح البراندات' }}</button>

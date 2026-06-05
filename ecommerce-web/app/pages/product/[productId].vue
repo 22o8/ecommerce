@@ -356,9 +356,6 @@ watch(() => auth.isAuthed, async (v) => {
             <Icon name="mdi:close" />
           </button>
 
-          <div class="buy-confirm-icon">
-            <Icon name="mdi:cart-check" />
-          </div>
 
           <div class="buy-confirm-title rtl-text">تأكيد الشراء</div>
           <p class="buy-confirm-text rtl-text">هل تريد إكمال شراء هذا المنتج الآن؟</p>
