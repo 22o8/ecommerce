@@ -39,7 +39,7 @@ export default defineNuxtConfig({
         'https://ecommerce-api-22o8.fly.dev',
 
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-      siteName: process.env.NUXT_PUBLIC_SITE_NAME || 'Ecommerce',
+      siteName: process.env.NUXT_PUBLIC_SITE_NAME || 'DR SEOUL BEAUTY',
 
       // WhatsApp number (without +)
       // ✅ نقرأ من NUXT_PUBLIC_WHATSAPP_NUMBER (أو القديم NUXT_PUBLIC_WHATSAPP_PHONE) ونضع رقمك كافتراضي
@@ -69,12 +69,22 @@ export default defineNuxtConfig({
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'theme-color', content: '#a78bfa' },
+        { name: 'description', content: 'DR SEOUL BEAUTY - متجر كوزمتك ومنتجات عناية مختارة بعناية.' },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:title', content: 'DR SEOUL BEAUTY' },
+        { property: 'og:description', content: 'متجر كوزمتك ومنتجات عناية مختارة بعناية.' },
+        { property: 'og:image', content: '/og-image.png' },
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:title', content: 'DR SEOUL BEAUTY' },
+        { name: 'twitter:description', content: 'متجر كوزمتك ومنتجات عناية مختارة بعناية.' },
+        { name: 'twitter:image', content: '/og-image.png' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-        { name: 'apple-mobile-web-app-title', content: 'Beauty Store' },
+        { name: 'apple-mobile-web-app-title', content: 'DR SEOUL BEAUTY' },
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=drseoul-20260605' },
+        { rel: 'shortcut icon', type: 'image/x-icon', href: '/favicon.ico?v=drseoul-20260605' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
       ],
@@ -108,6 +118,7 @@ export default defineNuxtConfig({
       '/**/*.jpeg': { headers: { 'cache-control': 'public, max-age=2592000' } },
       '/**/*.webp': { headers: { 'cache-control': 'public, max-age=2592000' } },
       '/**/*.svg': { headers: { 'cache-control': 'public, max-age=2592000' } },
+      '/favicon.ico': { headers: { 'cache-control': 'no-cache, no-store, must-revalidate' } },
       '/**/*.ico': { headers: { 'cache-control': 'public, max-age=2592000' } },
 
       // NOTE: لا نستخدم SWR للمنتجات حتى ما يصير تأخير/بيانات قديمة

@@ -22,7 +22,12 @@
       disablepictureinpicture
       controlslist="nodownload noplaybackrate noremoteplayback"
       @loadedmetadata="forcePlayIntroVideo"
+      @loadeddata="forcePlayIntroVideo"
       @canplay="forcePlayIntroVideo"
+      @canplaythrough="forcePlayIntroVideo"
+      @pause="forcePlayIntroVideo"
+      @stalled="forcePlayIntroVideo"
+      @waiting="forcePlayIntroVideo"
     />
     <div v-else class="intro-page__fallback" />
     <div class="intro-page__overlay" />
@@ -42,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 definePageMeta({ layout: 'default' })
 const appearance = useAppearanceStore()
@@ -55,18 +60,70 @@ const isAndroid = ref(false)
 const isStandalone = ref(false)
 const installMessage = ref('')
 const introVideoEl = ref<HTMLVideoElement | null>(null)
+let introPlayTimer: any = null
+let introRetryTimer: any = null
+let introUserEventsBound = false
 
 async function forcePlayIntroVideo() {
   await nextTick()
   const el = introVideoEl.value
   if (!el) return
+
+  // أهم إعدادات تشغيل الفيديو تلقائياً على الهاتف
   el.muted = true
+  el.defaultMuted = true
   el.playsInline = true
+  el.setAttribute('muted', '')
+  el.setAttribute('playsinline', '')
+  el.setAttribute('webkit-playsinline', '')
+  el.setAttribute('preload', 'auto')
+
   try {
-    el.currentTime = el.currentTime || 0
-    await el.play()
-  } catch {}
+    // لا نعيد الفيديو للبداية إذا كان بدأ يشتغل فعلاً
+    if (el.paused || el.readyState < 3) {
+      await el.play()
+    }
+  } catch {
+    // بعض أجهزة iPhone/Android تؤخر التشغيل لغاية أول لمسة.
+  }
 }
+
+
+function startIntroVideoRetry() {
+  if (typeof window === 'undefined') return
+  stopIntroVideoRetry()
+  let tries = 0
+  introRetryTimer = window.setInterval(() => {
+    tries++
+    forcePlayIntroVideo()
+    const el = introVideoEl.value
+    if ((el && !el.paused && el.currentTime > 0) || tries > 18) {
+      stopIntroVideoRetry()
+    }
+  }, 350)
+}
+
+function stopIntroVideoRetry() {
+  if (typeof window === 'undefined') return
+  if (introRetryTimer) {
+    window.clearInterval(introRetryTimer)
+    introRetryTimer = null
+  }
+}
+
+function bindIntroUserPlayback() {
+  if (introUserEventsBound || typeof window === 'undefined') return
+  introUserEventsBound = true
+  const play = () => forcePlayIntroVideo()
+  window.addEventListener('pointerdown', play, { passive: true })
+  window.addEventListener('touchstart', play, { passive: true })
+  window.addEventListener('click', play, { passive: true })
+}
+
+function handleVisibilityPlay() {
+  if (typeof document !== 'undefined' && !document.hidden) forcePlayIntroVideo()
+}
+
 
 onMounted(() => {
   const ua = window.navigator.userAgent || ''
@@ -74,10 +131,21 @@ onMounted(() => {
   isAndroid.value = /android/i.test(ua)
   isStandalone.value = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true
 
+  bindIntroUserPlayback()
+  document.addEventListener('visibilitychange', handleVisibilityPlay)
+  startIntroVideoRetry()
+  introPlayTimer = window.setTimeout(() => forcePlayIntroVideo(), 60)
+
   window.addEventListener('beforeinstallprompt', (event: any) => {
     event.preventDefault()
     deferredPrompt.value = event
   })
+})
+
+onBeforeUnmount(() => {
+  stopIntroVideoRetry()
+  if (introPlayTimer) window.clearTimeout(introPlayTimer)
+  document.removeEventListener('visibilitychange', handleVisibilityPlay)
 })
 
 async function installAndroidApp() {
@@ -131,11 +199,19 @@ const videoSrc = computed(() => {
   return buildAssetUrl(raw)
 })
 
-watch(videoSrc, () => forcePlayIntroVideo(), { flush: 'post' })
+watch(videoSrc, () => {
+  useHead({
+    link: videoSrc.value ? [
+      { rel: 'preload', as: 'video', href: videoSrc.value, fetchpriority: 'high' as any }
+    ] : []
+  })
+  startIntroVideoRetry()
+  forcePlayIntroVideo()
+}, { flush: 'post', immediate: true })
 </script>
 
 <style scoped>
-.intro-page__media,.intro-page__fallback{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; transform:translateZ(0); will-change:transform; }
+.intro-page__media,.intro-page__fallback{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; transform:translateZ(0); will-change:transform; backface-visibility:hidden; }
 .intro-page__fallback{ background:radial-gradient(circle at 76% 18%, rgba(var(--primary),.38), transparent 36%), radial-gradient(circle at 18% 76%, rgba(236,72,153,.24), transparent 42%), #050509; }
 .intro-page__overlay{ position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.90), rgba(0,0,0,.45), rgba(0,0,0,.78)); }
 .intro-page__card{ width:min(94vw,800px); border:1px solid rgba(255,255,255,.15); border-radius:40px; padding:clamp(1.7rem,4vw,3.2rem); background:rgba(8,8,14,.56); backdrop-filter:blur(18px); box-shadow:0 32px 90px rgba(0,0,0,.42); }
