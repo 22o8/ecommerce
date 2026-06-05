@@ -74,7 +74,7 @@ export default defineNuxtConfig({
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
-        { rel: 'apple-touch-icon', href: '/pwa-icon-512.jpg' },
+        { rel: 'apple-touch-icon', href: '/favicon.ico' },
       ],
       script: [{ children: "if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}))}" }],
     },
