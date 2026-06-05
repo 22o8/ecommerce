@@ -533,7 +533,6 @@ function goProduct() {
 }
 .buy-confirm-btn--ghost{ background:rgba(var(--surface-rgb), .65); }
 .buy-confirm-btn--main{
-  color:#111;
   border-color:transparent;
   background:linear-gradient(135deg, rgb(var(--primary)), rgba(var(--cta-glow-2), .92));
 }
