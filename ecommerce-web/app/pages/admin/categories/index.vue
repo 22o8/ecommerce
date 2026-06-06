@@ -46,6 +46,15 @@
               املأ بيانات التصنيف الرئيسي. إذا يحتاج أقساماً داخله، فعّل خيار التصنيفات الدقيقة ثم احفظ، بعدها افتح زر الإدارة الخاص به.
             </div>
 
+            <div v-if="parentConflict" class="duplicate-alert rtl-text">
+              <strong>تنبيه: يوجد تصنيف مشابه بالفعل</strong>
+              <span>{{ conflictLabel(parentConflict.item) }} — السبب: {{ parentConflict.reason }}</span>
+              <div class="duplicate-alert__actions">
+                <UiButton variant="secondary" @click="goToConflict(parentConflict.item)">عرض مكانه</UiButton>
+                <UiButton variant="ghost" @click="editItem(parentConflict.item)">تعديل الموجود</UiButton>
+              </div>
+            </div>
+
             <div class="grid gap-2">
               <label class="admin-label">الاسم بالعربي</label>
               <UiInput v-model="form.nameAr" placeholder="مثال: عناية البشرة" />
@@ -131,7 +140,7 @@
             </div>
 
             <div v-if="visibleDetailedItems.length" class="grid gap-3">
-              <article v-for="item in visibleDetailedItems" :key="item.id" class="category-admin-card has-detail" :class="selectedParentId === item.id ? 'is-selected' : ''">
+              <article v-for="item in visibleDetailedItems" :id="`category-${item.id}`" :key="item.id" class="category-admin-card has-detail" :class="selectedParentId === item.id ? 'is-selected' : ''">
                 <div class="category-admin-card__media" @click="selectParent(item)">
                   <img v-if="item.imageUrl" :src="buildAssetUrl(item.imageUrl)" alt="" />
                   <span v-else>{{ item.nameAr?.slice(0,1) }}</span>
@@ -157,7 +166,7 @@
                 <div class="category-admin-card__actions">
                   <UiButton variant="ghost" @click="selectParent(item)">إدارة التصنيفات الدقيقة</UiButton>
                   <UiButton variant="secondary" @click="editItem(item)">تعديل</UiButton>
-                  <UiButton variant="destructive" @click="remove(item.id)">حذف</UiButton>
+                  <UiButton variant="danger" @click="remove(item.id)">حذف</UiButton>
                 </div>
               </article>
             </div>
@@ -174,7 +183,7 @@
             </div>
 
             <div v-if="visibleDirectItems.length" class="grid gap-3">
-              <article v-for="item in visibleDirectItems" :key="item.id" class="category-admin-card is-direct">
+              <article v-for="item in visibleDirectItems" :id="`category-${item.id}`" :key="item.id" class="category-admin-card is-direct">
                 <div class="category-admin-card__media" @click="editItem(item)">
                   <img v-if="item.imageUrl" :src="buildAssetUrl(item.imageUrl)" alt="" />
                   <span v-else>{{ item.nameAr?.slice(0,1) }}</span>
@@ -199,7 +208,7 @@
 
                 <div class="category-admin-card__actions">
                   <UiButton variant="secondary" @click="editItem(item)">تعديل</UiButton>
-                  <UiButton variant="destructive" @click="remove(item.id)">حذف</UiButton>
+                  <UiButton variant="danger" @click="remove(item.id)">حذف</UiButton>
                 </div>
               </article>
             </div>
@@ -224,6 +233,14 @@
           <div class="detail-drawer__content">
             <section class="drawer-form">
               <h3>{{ childEditingId ? 'تعديل تصنيف دقيق' : 'إضافة تصنيف دقيق' }}</h3>
+              <div v-if="childConflict" class="duplicate-alert duplicate-alert--compact rtl-text">
+                <strong>تنبيه: يوجد تصنيف دقيق مشابه بالفعل</strong>
+                <span>{{ conflictLabel(childConflict.item) }} — السبب: {{ childConflict.reason }}</span>
+                <div class="duplicate-alert__actions">
+                  <UiButton variant="secondary" @click="goToConflict(childConflict.item)">عرض مكانه</UiButton>
+                  <UiButton variant="ghost" @click="editChild(childConflict.item)">تعديل الموجود</UiButton>
+                </div>
+              </div>
               <div class="grid gap-3 sm:grid-cols-2">
                 <div class="grid gap-2">
                   <label class="admin-label">الاسم بالعربي</label>
@@ -274,7 +291,7 @@
 
               <div v-if="childLoading" class="empty-panel">جاري تحميل التصنيفات الدقيقة...</div>
               <div v-else-if="childItems.length === 0" class="empty-panel">لا توجد تصنيفات دقيقة بعد.</div>
-              <article v-else v-for="item in childItems" :key="item.id" class="child-card">
+              <article v-else v-for="item in childItems" :id="`category-${item.id}`" :key="item.id" class="child-card">
                 <div class="child-card__media">
                   <img v-if="item.imageUrl" :src="buildAssetUrl(item.imageUrl)" alt="" />
                   <span v-else>{{ item.nameAr?.slice(0,1) }}</span>
@@ -286,7 +303,7 @@
                 </div>
                 <div class="child-card__actions">
                   <UiButton variant="secondary" @click="editChild(item)">تعديل</UiButton>
-                  <UiButton variant="destructive" @click="remove(item.id)">حذف</UiButton>
+                  <UiButton variant="danger" @click="remove(item.id)">حذف</UiButton>
                 </div>
               </article>
             </section>
@@ -337,6 +354,86 @@ const visibleDetailedItems = computed(() => detailedItems.value.filter(matchesSe
 const visibleDirectItems = computed(() => directItems.value.filter(matchesSearch))
 const showDetailSection = computed(() => filterMode.value === 'all' || filterMode.value === 'detail')
 const showDirectSection = computed(() => filterMode.value === 'all' || filterMode.value === 'direct')
+
+type ConflictResult = { item: any; reason: string } | null
+
+const parentConflict = computed<ConflictResult>(() => findCategoryConflict(form, items.value, editingId.value))
+const childConflict = computed<ConflictResult>(() => findCategoryConflict(childForm, childItems.value, childEditingId.value))
+
+function normalizeDuplicateText(value: any) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function normalizeSlugText(value: any) {
+  return String(value || '').trim().toLowerCase().replace(/[_\s]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+}
+
+function findCategoryConflict(source: any, list: any[], currentId = ''): ConflictResult {
+  const key = normalizeSlugText(source.key)
+  const nameAr = normalizeDuplicateText(source.nameAr)
+  const nameEn = normalizeDuplicateText(source.nameEn)
+  const desc = normalizeDuplicateText(source.descriptionAr)
+  const values = [key, nameAr, nameEn].filter((x) => x.length >= 2)
+  const descWords = desc.split(' ').filter((x) => x.length >= 4)
+
+  for (const item of list || []) {
+    if (!item?.id || item.id === currentId) continue
+    const itemKey = normalizeSlugText(item.key)
+    const itemNameAr = normalizeDuplicateText(item.nameAr)
+    const itemNameEn = normalizeDuplicateText(item.nameEn)
+    const itemDesc = normalizeDuplicateText(item.descriptionAr)
+    const itemValues = [itemKey, itemNameAr, itemNameEn].filter((x) => x.length >= 2)
+
+    if (key && itemKey && key === itemKey) return { item, reason: 'نفس المفتاح' }
+    if (nameAr && itemNameAr && nameAr === itemNameAr) return { item, reason: 'نفس الاسم العربي' }
+    if (nameEn && itemNameEn && nameEn === itemNameEn) return { item, reason: 'نفس الاسم الإنكليزي' }
+
+    for (const value of values) {
+      for (const itemValue of itemValues) {
+        if (value.length >= 4 && itemValue.length >= 4 && (value.includes(itemValue) || itemValue.includes(value))) {
+          return { item, reason: 'تشابه قوي في الاسم أو المفتاح' }
+        }
+      }
+    }
+
+    for (const word of descWords) {
+      if ([itemKey, itemNameAr, itemNameEn, itemDesc].some((v) => v && v.includes(word))) {
+        return { item, reason: `الكلمة المفتاحية "${word}" موجودة ضمن تصنيف آخر` }
+      }
+    }
+  }
+  return null
+}
+
+function conflictLabel(item: any) {
+  const place = item?.parentId ? `داخل: ${selectedParent.value?.nameAr || 'تصنيف رئيسي'}` : (item?.hasDetailSections ? 'ضمن تصنيفات تحتوي أقسام دقيقة' : 'ضمن التصنيفات المباشرة')
+  return `${item?.nameAr || 'تصنيف'} (${item?.key || 'بدون مفتاح'}) — ${place}`
+}
+
+async function goToConflict(item: any) {
+  if (!item?.id) return
+  search.value = ''
+  filterMode.value = 'all'
+
+  if (item.parentId) {
+    const parent = items.value.find((x: any) => x.id === item.parentId)
+    if (parent) {
+      selectedParentId.value = parent.id
+      await loadChildren(parent.id)
+    }
+  }
+
+  await nextTick()
+  document.getElementById(`category-${item.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+}
 
 function resetForm() {
   editingId.value = ''
@@ -429,6 +526,12 @@ function editChild(item: any) {
 }
 
 async function save() {
+  const conflict = parentConflict.value
+  if (conflict) {
+    toast.error(`يوجد تصنيف مشابه: ${conflict.item?.nameAr || conflict.item?.key}`)
+    await goToConflict(conflict.item)
+    return
+  }
   try {
     const body = { ...form, section, parentId: null }
     const currentId = editingId.value
@@ -450,12 +553,23 @@ async function save() {
       await loadChildren(currentId)
     }
   } catch (e: any) {
+    if (e?.data?.conflict) {
+      toast.error(`${e?.data?.message || 'يوجد تصنيف مشابه بالفعل'}: ${e.data.conflict.nameAr || e.data.conflict.key}`)
+      await goToConflict(e.data.conflict)
+      return
+    }
     toast.error(e?.data?.message || e?.message || 'تعذر حفظ التصنيف')
   }
 }
 
 async function saveChild() {
   if (!selectedParentId.value) return toast.error('اختر تصنيفًا رئيسيًا أولًا')
+  const conflict = childConflict.value
+  if (conflict) {
+    toast.error(`يوجد تصنيف دقيق مشابه: ${conflict.item?.nameAr || conflict.item?.key}`)
+    await goToConflict(conflict.item)
+    return
+  }
   try {
     const body = { ...childForm, section, parentId: selectedParentId.value, hasDetailSections: false }
     if (childEditingId.value) {
@@ -469,6 +583,11 @@ async function saveChild() {
     await loadChildren(selectedParentId.value)
     await load()
   } catch (e: any) {
+    if (e?.data?.conflict) {
+      toast.error(`${e?.data?.message || 'يوجد تصنيف دقيق مشابه بالفعل'}: ${e.data.conflict.nameAr || e.data.conflict.key}`)
+      await goToConflict(e.data.conflict)
+      return
+    }
     toast.error(e?.data?.message || e?.message || 'تعذر حفظ التصنيف الدقيق')
   }
 }
@@ -573,6 +692,33 @@ onMounted(load)
   border-radius: 1rem;
   background: rgb(var(--surface-2));
   padding: .75rem;
+}
+
+.duplicate-alert {
+  display: grid;
+  gap: .65rem;
+  border: 1px solid rgba(245, 158, 11, .45);
+  background: rgba(245, 158, 11, .10);
+  color: rgb(var(--text));
+  border-radius: 1.2rem;
+  padding: .9rem 1rem;
+  font-size: .86rem;
+  line-height: 1.8;
+}
+.duplicate-alert strong {
+  color: rgb(var(--text));
+  font-weight: 950;
+}
+.duplicate-alert span {
+  color: rgb(var(--muted));
+}
+.duplicate-alert__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+.duplicate-alert--compact {
+  margin: .75rem 0;
 }
 .toggle-box,
 .detail-switch {

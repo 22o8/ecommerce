@@ -81,8 +81,6 @@ public class AdminCategoriesController : ControllerBase
         if (string.IsNullOrWhiteSpace(key)) key = Slugify(req.NameEn) ?? Slugify(req.NameAr);
         if (string.IsNullOrWhiteSpace(key)) return BadRequest(new { message = "Category key is required" });
         if (string.IsNullOrWhiteSpace(req.NameAr)) return BadRequest(new { message = "Arabic name is required" });
-        if (await _db.Categories.AnyAsync(x => x.Key.ToLower() == key))
-            return BadRequest(new { message = "Category already exists" });
 
         var normalizedSection = NormalizeSection(req.Section);
         Guid? normalizedParentId = null;
@@ -94,6 +92,15 @@ public class AdminCategoriesController : ControllerBase
                 return BadRequest(new { message = "Parent section mismatch" });
             normalizedParentId = parent.Id;
         }
+
+        var conflict = await FindConflictAsync(key, req.NameAr, req.NameEn, normalizedSection, normalizedParentId, null);
+        if (conflict is not null)
+            return BadRequest(new
+            {
+                message = "يوجد تصنيف مشابه بالفعل",
+                conflict = ToConflictPayload(conflict),
+                reason = GetConflictReason(conflict, key, req.NameAr, req.NameEn)
+            });
 
         var entity = new CategoryDefinition
         {
@@ -125,8 +132,6 @@ public class AdminCategoriesController : ControllerBase
 
         var key = Slugify(req.Key);
         if (string.IsNullOrWhiteSpace(key)) key = entity.Key;
-        if (await _db.Categories.AnyAsync(x => x.Id != id && x.Key.ToLower() == key))
-            return BadRequest(new { message = "Category already exists" });
 
         var normalizedSection = NormalizeSection(req.Section);
         Guid? normalizedParentId = null;
@@ -139,6 +144,15 @@ public class AdminCategoriesController : ControllerBase
                 return BadRequest(new { message = "Parent section mismatch" });
             normalizedParentId = parent.Id;
         }
+
+        var conflict = await FindConflictAsync(key, req.NameAr, req.NameEn, normalizedSection, normalizedParentId, id);
+        if (conflict is not null)
+            return BadRequest(new
+            {
+                message = "يوجد تصنيف مشابه بالفعل",
+                conflict = ToConflictPayload(conflict),
+                reason = GetConflictReason(conflict, key, req.NameAr, req.NameEn)
+            });
 
         entity.Key = key;
         entity.NameAr = string.IsNullOrWhiteSpace(req.NameAr) ? entity.NameAr : req.NameAr.Trim();
@@ -199,6 +213,49 @@ public class AdminCategoriesController : ControllerBase
         var stored = await _storage.UploadAsync(stream, key, file.ContentType);
 
         return Ok(new { url = stored.Url, key = stored.Key });
+    }
+
+
+    private async Task<CategoryDefinition?> FindConflictAsync(string key, string? nameAr, string? nameEn, string section, Guid? parentId, Guid? currentId)
+    {
+        var normalizedKey = Slugify(key);
+        var normalizedNameAr = NormalizeText(nameAr);
+        var normalizedNameEn = NormalizeText(nameEn);
+
+        return await _db.Categories.AsNoTracking()
+            .Where(x => x.Section.ToLower() == section && x.ParentId == parentId && (!currentId.HasValue || x.Id != currentId.Value))
+            .FirstOrDefaultAsync(x =>
+                x.Key.ToLower() == normalizedKey ||
+                x.NameAr.ToLower() == normalizedNameAr ||
+                (!string.IsNullOrWhiteSpace(normalizedNameEn) && (x.NameEn ?? string.Empty).ToLower() == normalizedNameEn));
+    }
+
+    private static object ToConflictPayload(CategoryDefinition item) => new
+    {
+        item.Id,
+        item.Key,
+        item.NameAr,
+        item.NameEn,
+        item.ParentId,
+        item.HasDetailSections,
+        item.SortOrder,
+        item.IsActive
+    };
+
+    private static string GetConflictReason(CategoryDefinition item, string key, string? nameAr, string? nameEn)
+    {
+        if (item.Key.Equals(Slugify(key), StringComparison.OrdinalIgnoreCase)) return "نفس المفتاح";
+        if (NormalizeText(item.NameAr) == NormalizeText(nameAr)) return "نفس الاسم العربي";
+        if (!string.IsNullOrWhiteSpace(nameEn) && NormalizeText(item.NameEn) == NormalizeText(nameEn)) return "نفس الاسم الإنكليزي";
+        return "تشابه في بيانات التصنيف";
+    }
+
+    private static string NormalizeText(string? value)
+    {
+        var s = (value ?? string.Empty).Trim().ToLowerInvariant();
+        s = s.Replace('أ', 'ا').Replace('إ', 'ا').Replace('آ', 'ا').Replace('ى', 'ي').Replace('ة', 'ه');
+        s = Regex.Replace(s, "\\s+", " ");
+        return s;
     }
 
     private static string NormalizeSection(string? value)
