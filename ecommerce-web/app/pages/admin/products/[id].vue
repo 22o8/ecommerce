@@ -294,7 +294,7 @@ async function loadCategorySubCategories() {
 }
 
 watch(() => form.category, () => { loadCategorySubCategories() })
-const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || '') })))
+const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false) })))
 const problemSubCategoryItems = ref<any[]>([])
 const problemSubCategoryOptions = computed(() => (problemSubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
@@ -452,8 +452,9 @@ async function reloadAll() {
     })
   )
 
-  tasks.push(fetchCategories(false, 'regular').catch(() => {}))
-  tasks.push(fetchCategories(false, 'problem').catch(() => {}))
+  // نجبر تحديث التصنيفات عند فتح تعديل المنتج حتى لا تبقى قائمة تصنيفات حل المشكلة قديمة بعد الإضافة من لوحة الإدارة.
+  tasks.push(fetchCategories(true, 'regular').catch(() => {}))
+  tasks.push(fetchCategories(true, 'problem').catch(() => {}))
 
   // ننتظر أولاً المنتج حتى يصير عندنا id صحيح للصور
   await Promise.all(tasks)
@@ -503,7 +504,7 @@ async function onSave() {
       isFeatured: Boolean(form.isFeatured),
     })
     toast.success(t('common.saved'))
-    await Promise.all([loadProduct(), fetchCategories(false, 'regular'), fetchCategories(false, 'problem')])
+    await Promise.all([loadProduct(), fetchCategories(true, 'regular'), fetchCategories(true, 'problem')])
     await loadCategorySubCategories()
     await loadProblemSubCategories()
   } catch (e: any) {

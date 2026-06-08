@@ -251,7 +251,7 @@ async function loadCategorySubCategories() {
 }
 
 watch(() => form.category, () => { loadCategorySubCategories() })
-const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || '') })))
+const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false) })))
 const problemSubCategoryItems = ref<any[]>([])
 const problemSubCategoryOptions = computed(() => (problemSubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
@@ -311,7 +311,8 @@ const fileInput = ref<HTMLInputElement | null>(null)
 
 onMounted(async () => {
   try {
-    const [res] = await Promise.all([listBrands(), fetchCategories(false, 'regular'), fetchCategories(false, 'problem')])
+    // نجبر تحديث التصنيفات هنا حتى تظهر أي تصنيفات حل مشكلة تمت إضافتها من لوحة الإدارة مباشرة بدون كاش قديم.
+    const [res] = await Promise.all([listBrands(), fetchCategories(true, 'regular'), fetchCategories(true, 'problem')])
     await loadCategorySubCategories()
     brands.value = (res?.items || res || []) as BrandItem[]
     await loadProblemSubCategories()
