@@ -4,14 +4,16 @@
       <section v-if="zone === 'top' && primaryTopAd" class="ad-container ad-container--hero">
         <div class="ad-hero-frame" :class="`ad-hero-frame--${primaryTopAd.type || 'banner'}`">
           <NuxtLink :to="safeLink(primaryTopAd.linkUrl)" class="ad-hero-frame__link">
-            <Transition name="fade" mode="out-in">
+            <div class="ad-hero-frame__media-layer">
               <component
-                :is="mediaComponent(currentTopMedia)"
-                :key="currentTopMedia"
-                v-bind="mediaAttrs(currentTopMedia, primaryTopAd.title || 'advertisement')"
+                v-for="(media, idx) in topMedia"
+                :is="mediaComponent(media)"
+                :key="media"
+                v-bind="mediaAttrs(media, primaryTopAd.title || 'advertisement')"
                 class="ad-hero-frame__media"
+                :class="{ 'is-active': idx === sliderIndex }"
               />
-            </Transition>
+            </div>
             <div class="ad-hero-frame__shade" />
             <div v-if="primaryTopAd.title || primaryTopAd.subtitle" class="ad-hero-frame__content rtl-text">
               <span class="ad-hero-frame__eyebrow">إعلان</span>
@@ -189,14 +191,9 @@ function mediaComponent(url?: string) { return isVideo(url) ? 'video' : 'img' }
 function mediaAttrs(path?: string, alt?: string) {
   const src = asset(path)
   if (isVideo(src)) return { src, autoplay: true, muted: true, loop: true, playsinline: true, preload: 'auto', controls: false, disablepictureinpicture: true, controlslist: 'nodownload noplaybackrate noremoteplayback' }
-  return { src, alt: alt || 'advertisement', loading: 'eager' }
+  return { src, alt: alt || 'advertisement', loading: 'eager', decoding: 'async', fetchpriority: 'high' }
 }
-const asset = (p?: string) => {
-  const url = api.buildAssetUrl(p || '')
-  if (!url) return ''
-  const sep = url.includes('?') ? '&' : '?'
-  return `${url}${sep}v=${encodeURIComponent(String(loadingKey.value || '1'))}`
-}
+const asset = (p?: string) => api.buildAssetUrl(p || '')
 function safeLink(link?: string) {
   const v = String(link || '#').trim()
   return v || '#'
@@ -260,8 +257,10 @@ onBeforeUnmount(() => {
 .ad-hero-frame{ border-radius:clamp(1.35rem,2.2vw,2.4rem); min-height:clamp(180px,23vw,360px); }
 .ad-bottom-frame{ border-radius:2rem; }
 .ad-hero-frame__link,.ad-bottom-frame__link{ display:block; position:relative; min-height:inherit; color:inherit; }
-.ad-hero-frame__media,.ad-bottom-frame__media{ display:block; width:100%; object-fit:cover; background:rgb(var(--surface-2)); }
-.ad-hero-frame__media{ height:clamp(190px,24vw,380px); }
+.ad-hero-frame__media-layer{ position:relative; width:100%; height:clamp(190px,24vw,380px); overflow:hidden; background:linear-gradient(135deg, rgba(var(--surface-rgb),.92), rgba(var(--surface-2-rgb),.72)); }
+.ad-hero-frame__media{ position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; object-position:center; opacity:0; transform:translateZ(0); transition:opacity .28s ease; background:transparent; }
+.ad-hero-frame__media.is-active{ opacity:1; z-index:1; }
+.ad-bottom-frame__media{ display:block; width:100%; object-fit:contain; object-position:center; background:linear-gradient(135deg, rgba(var(--surface-rgb),.92), rgba(var(--surface-2-rgb),.72)); }
 .ad-bottom-frame__media{ height:clamp(150px,18vw,270px); }
 .ad-hero-frame__shade{ pointer-events:none; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.66), rgba(0,0,0,.24) 44%, rgba(0,0,0,.08)); }
 :global(html[dir="rtl"]) .ad-hero-frame__shade{ background:linear-gradient(270deg, rgba(0,0,0,.66), rgba(0,0,0,.24) 44%, rgba(0,0,0,.08)); }
@@ -282,7 +281,7 @@ onBeforeUnmount(() => {
 .ad-popup-card{ position:relative; z-index:1; width:min(94vw, 660px); overflow:hidden; border-radius:2rem; border:1px solid rgba(255,255,255,.16); background:linear-gradient(145deg, rgb(var(--surface)), rgb(var(--surface-2))); box-shadow:0 34px 100px rgba(0,0,0,.55), 0 0 0 1px rgba(var(--primary),.16); animation:popupIn .28s ease both; }
 .ad-popup-card__link{ display:grid; color:inherit; text-decoration:none; }
 .ad-popup-card__media-wrap{ max-height:min(62vh, 430px); overflow:hidden; background:rgb(var(--surface-2)); }
-.ad-popup-card__media{ display:block; width:100%; height:100%; max-height:min(62vh, 430px); object-fit:cover; }
+.ad-popup-card__media{ display:block; width:100%; height:100%; max-height:min(62vh, 430px); object-fit:contain; object-position:center; background:rgb(var(--surface-2)); }
 .ad-popup-card__content{ display:grid; gap:.55rem; padding:1.25rem; text-align:center; }
 .ad-popup-card__content.is-text-only{ min-height:280px; place-content:center; padding:2rem; background:radial-gradient(circle at top right, rgba(var(--primary),.22), transparent 45%); }
 .ad-popup-card__content b{ color:rgb(var(--text)); font-size:clamp(1.35rem,2.4vw,2rem); font-weight:1000; line-height:1.2; }
@@ -297,7 +296,7 @@ onBeforeUnmount(() => {
 @media(max-width:640px){
   .ad-container{ padding-inline:.75rem; }
   .ad-hero-frame{ border-radius:1.35rem; min-height:168px; }
-  .ad-hero-frame__media{ height:178px; }
+  .ad-hero-frame__media-layer{ height:178px; }
   .ad-hero-frame__shade{ background:linear-gradient(0deg, rgba(0,0,0,.72), rgba(0,0,0,.10)); }
   .ad-hero-frame__content{ inset-inline:.9rem !important; bottom:.9rem; max-width:calc(100% - 1.8rem); }
   .ad-hero-frame__content b{ font-size:1.45rem; }

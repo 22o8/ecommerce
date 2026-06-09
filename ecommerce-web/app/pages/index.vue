@@ -223,7 +223,7 @@ function isHeroVideo(url?: string) {
 function heroMediaAttrs(url?: string) {
   const src = buildAssetUrl(url || '')
   if (isHeroVideo(src)) return { src, autoplay: true, muted: true, loop: true, playsinline: true, preload: 'auto', controls: false }
-  return { src, alt: heroInlineAd.value?.title || heroInlineAd.value?.Title || 'advertisement', loading: 'eager' }
+  return { src, alt: heroInlineAd.value?.title || heroInlineAd.value?.Title || 'advertisement', loading: 'eager', decoding: 'async', fetchpriority: 'high' }
 }
 function safeAdLink(link?: string) {
   const value = String(link || '').trim()
@@ -1047,7 +1047,8 @@ onBeforeUnmount(() => {
 .home-luxury-hero__inline-ad-media{
   width:100%;
   height:clamp(14rem, 22vw, 18rem);
-  object-fit:cover;
+  object-fit:contain;
+  object-position:center;
   display:block;
 }
 .home-luxury-hero__inline-ad-text{
