@@ -179,6 +179,75 @@ const problemCards = computed(() => {
 
 const { buildAssetUrl } = useApi()
 const heroLogo = computed(() => appearance.data.siteLogoUrl ? buildAssetUrl(appearance.data.siteLogoUrl) : siteLogoSrc)
+
+const homeAds = useState<any[]>('home-inline-ads', () => [])
+const homeAdIndex = ref(0)
+let homeAdTimer: ReturnType<typeof setInterval> | null = null
+
+function normalizeAdValue(value: any) {
+  return String(value ?? '').trim().toLowerCase()
+}
+function normalizeAdType(ad: any) {
+  const raw = ad?.type ?? ad?.Type ?? ''
+  if (typeof raw === 'number') return ['slider', 'banner', 'popup', 'product'][raw] || ''
+  return normalizeAdValue(raw)
+}
+function normalizeAdPlacement(ad: any) {
+  return normalizeAdValue(ad?.placement ?? ad?.Placement ?? '')
+}
+function adMediaList(ad: any) {
+  const raw = ad?.imageUrls ?? ad?.ImageUrls
+  const arr = Array.isArray(raw) ? raw : (Array.isArray(raw?.$values) ? raw.$values : [])
+  const merged = arr.length ? arr : ((ad?.imageUrl || ad?.ImageUrl) ? [ad?.imageUrl || ad?.ImageUrl] : [])
+  return merged.map((x: any) => String(x || '').trim()).filter(Boolean)
+}
+function firstAdMedia(ad: any) {
+  return adMediaList(ad)[0] || ''
+}
+function adHasContent(ad: any) {
+  return Boolean(firstAdMedia(ad) || String(ad?.title || ad?.Title || ad?.subtitle || ad?.Subtitle || '').trim())
+}
+function isAdEnabled(ad: any) {
+  return (ad?.isEnabled ?? ad?.IsEnabled) !== false
+}
+const heroInlineAd = computed(() => {
+  return (homeAds.value || [])
+    .filter((ad: any) => isAdEnabled(ad) && ['banner', 'slider'].includes(normalizeAdType(ad)) && normalizeAdPlacement(ad) === 'home_hero_inline' && adHasContent(ad))
+    .sort((a: any, b: any) => Number(a?.sortOrder ?? a?.SortOrder ?? 0) - Number(b?.sortOrder ?? b?.SortOrder ?? 0))[0] || null
+})
+const heroInlineMediaItems = computed(() => heroInlineAd.value ? adMediaList(heroInlineAd.value) : [])
+const currentHeroInlineMedia = computed(() => heroInlineMediaItems.value[homeAdIndex.value] || heroInlineMediaItems.value[0] || '')
+function isHeroVideo(url?: string) {
+  return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(String(url || ''))
+}
+function heroMediaAttrs(url?: string) {
+  const src = buildAssetUrl(url || '')
+  if (isHeroVideo(src)) return { src, autoplay: true, muted: true, loop: true, playsinline: true, preload: 'auto', controls: false }
+  return { src, alt: heroInlineAd.value?.title || heroInlineAd.value?.Title || 'advertisement', loading: 'eager' }
+}
+function safeAdLink(link?: string) {
+  const value = String(link || '').trim()
+  return value || '#'
+}
+async function loadHomeAds() {
+  try {
+    const res: any = await $fetch('/api/bff/ads/active', { query: { _t: Date.now() } })
+    homeAds.value = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : (Array.isArray(res?.data) ? res.data : []))
+  } catch {
+    homeAds.value = []
+  }
+}
+function startHomeAdTimer() {
+  if (homeAdTimer) clearInterval(homeAdTimer)
+  if (heroInlineMediaItems.value.length <= 1) return
+  homeAdTimer = setInterval(() => {
+    homeAdIndex.value = (homeAdIndex.value + 1) % heroInlineMediaItems.value.length
+  }, 5200)
+}
+watch(heroInlineMediaItems, () => {
+  homeAdIndex.value = 0
+  startHomeAdTimer()
+})
 const categoryRail = ref<HTMLElement | null>(null)
 const problemCategoryRail = ref<HTMLElement | null>(null)
 const dragState = { active: false, moved: false, startX: 0, startScroll: 0, target: null as HTMLElement | null }
@@ -233,6 +302,7 @@ function scrollRail(direction: 'prev' | 'next', rail: HTMLElement | null) {
 }
 
 onMounted(() => {
+  loadHomeAds()
   categoryRail.value?.addEventListener('wheel', onRailWheel, { passive: false })
   problemCategoryRail.value?.addEventListener('wheel', onRailWheel, { passive: false })
   ensureTopRatedLoaded()
@@ -247,6 +317,7 @@ onBeforeUnmount(() => {
   categoryRail.value?.removeEventListener('wheel', onRailWheel as any)
   problemCategoryRail.value?.removeEventListener('wheel', onRailWheel as any)
   if (brandOrbitTimer) clearInterval(brandOrbitTimer)
+  if (homeAdTimer) clearInterval(homeAdTimer)
 })
 
 </script>
@@ -260,14 +331,7 @@ onBeforeUnmount(() => {
         <div class="home-luxury-hero__glow home-luxury-hero__glow--two" />
 
         <div class="home-luxury-hero__content rtl-text">
-          <div class="home-luxury-hero__kicker">
-            <span class="home-luxury-hero__dot" />
-            {{ t('home.beautyKicker') }}
-          </div>
-          <h1 class="home-luxury-hero__title">
-            {{ t('home.beautyTitle') }}
-          </h1>
-          <div class="home-luxury-hero__actions">
+          <div class="home-luxury-hero__actions home-luxury-hero__actions--moved">
             <NuxtLink to="/products" class="home-luxury-hero__primary">
               {{ t('homeHero.shopNow') }}
               <Icon name="mdi:arrow-left" class="text-lg" />
@@ -277,19 +341,21 @@ onBeforeUnmount(() => {
             </NuxtLink>
           </div>
 
-          <div class="home-luxury-hero__stats">
-            <div class="home-luxury-hero__stat">
-              <strong>{{ topBrands.length || 0 }}+</strong>
-              <span>{{ t('home.beautyBrands') }}</span>
-            </div>
-            <div class="home-luxury-hero__stat">
-              <strong>{{ homeFeatured.length || 0 }}+</strong>
-              <span>{{ t('home.beautyFeatured') }}</span>
-            </div>
-            <div class="home-luxury-hero__stat">
-              <strong>24/7</strong>
-              <span>{{ t('home.beautySupport') }}</span>
-            </div>
+          <div v-if="heroInlineAd" class="home-luxury-hero__inline-ad">
+            <NuxtLink :to="safeAdLink(heroInlineAd.linkUrl || heroInlineAd.LinkUrl)" class="home-luxury-hero__inline-ad-link">
+              <component
+                v-if="currentHeroInlineMedia"
+                :is="isHeroVideo(currentHeroInlineMedia) ? 'video' : 'img'"
+                :key="currentHeroInlineMedia"
+                v-bind="heroMediaAttrs(currentHeroInlineMedia)"
+                class="home-luxury-hero__inline-ad-media"
+              />
+              <div v-if="heroInlineAd.title || heroInlineAd.Title || heroInlineAd.subtitle || heroInlineAd.Subtitle" class="home-luxury-hero__inline-ad-text">
+                <span>إعلان</span>
+                <b>{{ heroInlineAd.title || heroInlineAd.Title }}</b>
+                <small v-if="heroInlineAd.subtitle || heroInlineAd.Subtitle">{{ heroInlineAd.subtitle || heroInlineAd.Subtitle }}</small>
+              </div>
+            </NuxtLink>
           </div>
         </div>
 
@@ -957,6 +1023,59 @@ onBeforeUnmount(() => {
   background:rgba(var(--surface-rgb), .68);
 }
 .home-luxury-hero__primary:hover,.home-luxury-hero__secondary:hover{ transform:translateY(-2px); }
+
+.home-luxury-hero__actions--moved{
+  margin-top:0;
+  padding-top:8.4rem;
+}
+.home-luxury-hero__inline-ad{
+  margin-top:1.1rem;
+  width:min(36rem, 100%);
+  border:1px solid rgba(var(--border), .82);
+  border-radius:1.45rem;
+  overflow:hidden;
+  background:rgba(var(--surface-rgb), .66);
+  box-shadow:0 18px 48px rgba(0,0,0,.16);
+}
+.home-luxury-hero__inline-ad-link{
+  position:relative;
+  display:block;
+  min-height:8.5rem;
+  color:rgb(var(--text));
+}
+.home-luxury-hero__inline-ad-media{
+  width:100%;
+  height:clamp(8.5rem, 18vw, 13rem);
+  object-fit:cover;
+  display:block;
+}
+.home-luxury-hero__inline-ad-text{
+  position:absolute;
+  inset:auto 1rem 1rem 1rem;
+  display:grid;
+  gap:.2rem;
+  max-width:22rem;
+  padding:.85rem 1rem;
+  border-radius:1rem;
+  background:rgba(var(--surface-rgb), .78);
+  border:1px solid rgba(var(--border), .7);
+  backdrop-filter:blur(16px);
+}
+.home-luxury-hero__inline-ad-text span{
+  color:rgb(var(--primary));
+  font-size:.72rem;
+  font-weight:1000;
+}
+.home-luxury-hero__inline-ad-text b{
+  color:rgb(var(--text-strong));
+  font-size:1rem;
+  font-weight:1000;
+}
+.home-luxury-hero__inline-ad-text small{
+  color:rgb(var(--muted));
+  font-size:.78rem;
+  font-weight:800;
+}
 .home-luxury-hero__stats{
   margin-top:1.6rem;
   display:grid;
@@ -1123,7 +1242,8 @@ onBeforeUnmount(() => {
   .home-luxury-hero__title{ font-size:3rem; max-width:12ch; }
   .home-luxury-hero__subtitle{ font-size:.95rem; line-height:1.75; }
   .home-luxury-hero__actions{ display:grid; grid-template-columns:1fr; }
-  .home-luxury-hero__stats{ grid-template-columns:1fr; }
+  .home-luxury-hero__actions--moved{ padding-top:1rem; }
+  .home-luxury-hero__inline-ad-link{ min-height:7rem; }
 }
 
 </style>

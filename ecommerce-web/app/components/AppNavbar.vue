@@ -21,8 +21,8 @@
             <Icon name="mdi:arrow-right" class="text-lg" />
           </button>
 
-          <NuxtLink to="/" class="nav-home-link rtl-text" title="الرئيسية">
-            الرئيسية
+          <NuxtLink to="/" class="nav-home-link nav-brand-name rtl-text" title="Dr.Seoul Beauty">
+            Dr.Seoul Beauty
           </NuxtLink>
         </div>
 

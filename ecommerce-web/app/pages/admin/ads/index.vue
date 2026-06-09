@@ -362,9 +362,11 @@ const adTypes = [
 const allPlacements = [
   // السلايدر يبقى مخصصاً للمساحات الكبيرة، فوق الهيرو أو آخر الصفحة فقط.
   { value: 'home_hero_slider', label: 'سلايدر بداية الصفحة', type: 'slider' },
+  { value: 'home_hero_inline', label: 'سلايدر داخل فراغ الواجهة الرئيسية', type: 'slider' },
   { value: 'home_bottom_slider', label: 'سلايدر آخر الصفحة', type: 'slider' },
   // البانر حسب طلبك: بداية الصفحة أو آخر الصفحة فقط، بدون أعلى الصفحات/آخر الصفحات.
   { value: 'home_hero_top', label: 'بانر بداية الصفحة', type: 'banner' },
+  { value: 'home_hero_inline', label: 'إعلان داخل فراغ الواجهة الرئيسية', type: 'banner' },
   { value: 'home_bottom', label: 'بانر آخر الصفحة', type: 'banner' },
   // المنبثق مستقل ويظهر فوق الموقع.
   { value: 'popup', label: 'إعلان منبثق عام', type: 'popup' },
