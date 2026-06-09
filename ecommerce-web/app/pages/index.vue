@@ -331,16 +331,6 @@ onBeforeUnmount(() => {
         <div class="home-luxury-hero__glow home-luxury-hero__glow--two" />
 
         <div class="home-luxury-hero__content rtl-text">
-          <div class="home-luxury-hero__actions home-luxury-hero__actions--moved">
-            <NuxtLink to="/products" class="home-luxury-hero__primary">
-              {{ t('homeHero.shopNow') }}
-              <Icon name="mdi:arrow-left" class="text-lg" />
-            </NuxtLink>
-            <NuxtLink to="/brands" class="home-luxury-hero__secondary">
-              {{ t('nav.brands') }}
-            </NuxtLink>
-          </div>
-
           <div v-if="heroInlineAd" class="home-luxury-hero__inline-ad">
             <NuxtLink :to="safeAdLink(heroInlineAd.linkUrl || heroInlineAd.LinkUrl)" class="home-luxury-hero__inline-ad-link">
               <component
@@ -355,6 +345,16 @@ onBeforeUnmount(() => {
                 <b>{{ heroInlineAd.title || heroInlineAd.Title }}</b>
                 <small v-if="heroInlineAd.subtitle || heroInlineAd.Subtitle">{{ heroInlineAd.subtitle || heroInlineAd.Subtitle }}</small>
               </div>
+            </NuxtLink>
+          </div>
+
+          <div class="home-luxury-hero__actions home-luxury-hero__actions--moved">
+            <NuxtLink to="/products" class="home-luxury-hero__primary">
+              {{ t('homeHero.shopNow') }}
+              <Icon name="mdi:arrow-left" class="text-lg" />
+            </NuxtLink>
+            <NuxtLink to="/brands" class="home-luxury-hero__secondary">
+              {{ t('nav.brands') }}
             </NuxtLink>
           </div>
         </div>
@@ -1025,12 +1025,13 @@ onBeforeUnmount(() => {
 .home-luxury-hero__primary:hover,.home-luxury-hero__secondary:hover{ transform:translateY(-2px); }
 
 .home-luxury-hero__actions--moved{
-  margin-top:0;
-  padding-top:8.4rem;
+  margin-top:1rem;
+  padding-top:0;
 }
 .home-luxury-hero__inline-ad{
-  margin-top:1.1rem;
-  width:min(36rem, 100%);
+  margin-top:0;
+  width:100%;
+  max-width:44rem;
   border:1px solid rgba(var(--border), .82);
   border-radius:1.45rem;
   overflow:hidden;
@@ -1040,12 +1041,12 @@ onBeforeUnmount(() => {
 .home-luxury-hero__inline-ad-link{
   position:relative;
   display:block;
-  min-height:8.5rem;
+  min-height:14rem;
   color:rgb(var(--text));
 }
 .home-luxury-hero__inline-ad-media{
   width:100%;
-  height:clamp(8.5rem, 18vw, 13rem);
+  height:clamp(14rem, 22vw, 18rem);
   object-fit:cover;
   display:block;
 }
@@ -1242,8 +1243,9 @@ onBeforeUnmount(() => {
   .home-luxury-hero__title{ font-size:3rem; max-width:12ch; }
   .home-luxury-hero__subtitle{ font-size:.95rem; line-height:1.75; }
   .home-luxury-hero__actions{ display:grid; grid-template-columns:1fr; }
-  .home-luxury-hero__actions--moved{ padding-top:1rem; }
-  .home-luxury-hero__inline-ad-link{ min-height:7rem; }
+  .home-luxury-hero__actions--moved{ margin-top:.85rem; padding-top:0; }
+  .home-luxury-hero__inline-ad-link{ min-height:10rem; }
+  .home-luxury-hero__inline-ad-media{ height:10rem; }
 }
 
 </style>
