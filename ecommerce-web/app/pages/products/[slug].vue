@@ -14,6 +14,7 @@ const { isInWishlist, toggle: toggleWishlist } = useWishlist()
 const { checkoutSingleProduct } = useWhatsappCheckout()
 
 const productId = computed(() => String(route.params.slug || ''))
+const actualProductId = computed(() => String(product.value?.id || product.value?.Id || productId.value || ''))
 
 const { data: product, pending, error, refresh } = await useAsyncData(
   () => `product-${productId.value}`,
@@ -192,7 +193,7 @@ async function submitReview() {
   }
   reviewSubmitting.value = true
   try {
-    const res: any = await api.post(`/Products/${productId.value}/rate`, {
+    const res: any = await api.post(`/Products/${actualProductId.value}/rate`, {
       rating: Number(reviewForm.rating || 5),
       comment: reviewForm.comment || null,
     })

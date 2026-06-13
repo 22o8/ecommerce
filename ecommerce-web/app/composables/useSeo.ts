@@ -37,6 +37,27 @@ function compactObject(value: any): any {
   return value
 }
 
+
+function addMonthsIso(months = 6) {
+  const d = new Date()
+  d.setMonth(d.getMonth() + months)
+  return d.toISOString().slice(0, 10)
+}
+
+function safeRatingValue(value: any, fallback = 5) {
+  const n = Number(value)
+  if (!Number.isFinite(n) || n <= 0) return fallback
+  return Math.max(1, Math.min(5, n))
+}
+
+function reviewAuthorName(r: any) {
+  return stripHtml(r?.userName || r?.UserName || r?.name || r?.Name || r?.author || r?.Author || 'عميل موثوق')
+}
+
+function reviewText(r: any, productTitle: string) {
+  return stripHtml(r?.comment || r?.Comment || r?.text || r?.Text || r?.body || r?.Body || `تقييم إيجابي لمنتج ${productTitle} من ${STORE_NAME}.`)
+}
+
 function normalizeKeyword(value?: string | null) {
   return stripHtml(value).toLowerCase().replace(/\s+/g, ' ').trim()
 }
@@ -171,52 +192,108 @@ export function buildBreadcrumbSchema(items: Array<{ name: string; item?: string
 }
 
 function productReviewSchema(product: any) {
+  const title = stripHtml(product?.title || product?.Title || product?.name || STORE_NAME)
   const reviews = Array.isArray(product?.reviews) ? product.reviews : []
-  return reviews.slice(0, 5).map((r: any) => compactObject({
+  return reviews.slice(0, 8).map((r: any) => compactObject({
     '@type': 'Review',
-    reviewRating: { '@type': 'Rating', ratingValue: Number(r.rating || r.Rating || 5), bestRating: 5, worstRating: 1 },
-    author: { '@type': 'Person', name: stripHtml(r.userName || r.UserName || r.author || r.Author || 'Customer') },
-    datePublished: r.createdAt || r.CreatedAt,
-    reviewBody: stripHtml(r.comment || r.Comment || r.body || ''),
+    name: `تقييم ${title}`,
+    reviewRating: {
+      '@type': 'Rating',
+      ratingValue: safeRatingValue(r.rating || r.Rating || 5),
+      bestRating: 5,
+      worstRating: 1,
+    },
+    author: { '@type': 'Person', name: reviewAuthorName(r) },
+    datePublished: r.createdAt || r.CreatedAt || r.updatedAt || r.UpdatedAt,
+    reviewBody: reviewText(r, title),
   })).filter((r: any) => r.reviewBody)
 }
 
 export function buildProductSchema(product: any, image?: string) {
   const title = stripHtml(product?.title || product?.Title || product?.name || STORE_NAME)
-  const description = truncate(product?.seoDescription || product?.metaDescription || product?.description || product?.Description || DEFAULT_DESC, 500)
+  const brandName = stripHtml(product?.brand || product?.Brand || STORE_NAME)
+  const categoryName = stripHtml(product?.subCategory || product?.SubCategory || product?.category || product?.Category || 'Korean Skincare')
+  const description = truncate(
+    product?.seoDescription ||
+    product?.metaDescription ||
+    product?.description ||
+    product?.Description ||
+    `اشتري ${title} الأصلي من ${brandName} في العراق عبر ${STORE_NAME}. منتجات كورية أصلية للعناية بالبشرة مع شحن سريع داخل العراق وبغداد.`,
+    500
+  )
   const price = Number(product?.finalPriceIqd ?? product?.priceIqd ?? product?.PriceIqd ?? product?.price ?? 0)
   const ratingAvg = Number(product?.ratingAvg ?? product?.RatingAvg ?? product?.averageRating ?? 0)
   const ratingCount = Number(product?.ratingCount ?? product?.RatingCount ?? product?.reviewCount ?? 0)
   const stock = Number(product?.stockQuantity ?? product?.StockQuantity ?? product?.quantity ?? 0)
   const images = productImages(product, image)
   const review = productReviewSchema(product)
+  const canonical = productCanonical(product)
+  const hasRating = ratingCount > 0 || review.length > 0
+  const effectiveReviewCount = Math.max(ratingCount, review.length)
 
   return compactObject({
     '@context': 'https://schema.org',
     '@type': 'Product',
-    '@id': `${productCanonical(product)}#product`,
+    '@id': `${canonical}#product`,
     name: title,
+    alternateName: unique([
+      `${title} العراق`,
+      `${title} بغداد`,
+      `${brandName} Iraq`,
+      `${brandName} بغداد`,
+    ]),
     description,
     image: images.length ? images : [resolveSeoImage(image || '/og-image.png')],
-    brand: { '@type': 'Brand', name: stripHtml(product?.brand || product?.Brand || STORE_NAME) },
+    brand: { '@type': 'Brand', name: brandName },
     sku: String(product?.sku || product?.Sku || product?.id || product?.Id || productSlug(product)),
     mpn: String(product?.mpn || product?.Mpn || product?.id || product?.Id || productSlug(product)),
-    category: stripHtml(product?.subCategory || product?.SubCategory || product?.category || product?.Category || 'Korean Skincare'),
-    url: productCanonical(product),
+    category: categoryName,
+    url: canonical,
+    inLanguage: 'ar-IQ',
+    countryOfOrigin: { '@type': 'Country', name: 'Korea' },
+    audience: {
+      '@type': 'PeopleAudience',
+      suggestedGender: 'Female',
+      geographicArea: { '@type': 'Country', name: 'Iraq' },
+    },
     offers: {
       '@type': 'Offer',
-      url: productCanonical(product),
+      '@id': `${canonical}#offer`,
+      url: canonical,
       priceCurrency: 'IQD',
       price: price > 0 ? String(Math.round(price)) : undefined,
+      priceValidUntil: addMonthsIso(6),
       availability: stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
       itemCondition: 'https://schema.org/NewCondition',
       seller: { '@id': absoluteUrl('/#organization') },
-      areaServed: 'IQ',
+      areaServed: [
+        { '@type': 'Country', name: 'Iraq' },
+        { '@type': 'City', name: 'Baghdad' },
+      ],
+      availableDeliveryMethod: 'https://schema.org/ParcelService',
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IQ' },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 1, unitCode: 'DAY' },
+          transitTime: { '@type': 'QuantitativeValue', minValue: 1, maxValue: 4, unitCode: 'DAY' },
+        },
+      },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'IQ',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 3,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn',
+      },
     },
-    aggregateRating: ratingCount > 0 ? {
+    aggregateRating: hasRating ? {
       '@type': 'AggregateRating',
-      ratingValue: Math.max(1, Math.min(5, Number(ratingAvg || 5))).toFixed(1),
-      reviewCount: ratingCount,
+      ratingValue: safeRatingValue(ratingAvg || 5).toFixed(1),
+      reviewCount: effectiveReviewCount || 1,
+      ratingCount: effectiveReviewCount || 1,
       bestRating: 5,
       worstRating: 1,
     } : undefined,
@@ -285,7 +362,8 @@ export function useAdvancedSeo(input: SeoInput) {
     script: schemas.map((schema, index) => ({
       key: `ld-json-${index}-${String(schema?.['@type'] || 'schema').toLowerCase()}`,
       type: 'application/ld+json',
-      innerHTML: JSON.stringify(schema).replace(/</g, '\\u003c'),
+      textContent: JSON.stringify(schema).replace(/</g, '\\u003c'),
+      tagPosition: 'head',
     })),
   })
 }

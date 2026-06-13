@@ -373,6 +373,7 @@ public class ProductsController : ControllerBase
     [HttpGet("slug/{slug}")]
     public async Task<IActionResult> GetBySlug([FromRoute] string slug)
     {
+        var currentUserId = CurrentUserId;
         slug = N(slug);
         var p = await _db.Products.AsNoTracking().Where(x => x.IsPublished && x.Slug.ToLower() == slug)
             .Select(x => new
@@ -397,7 +398,25 @@ public class ProductsController : ControllerBase
                 x.CreatedAt,
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
                 favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
-                images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList()
+                images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList(),
+                reviews = _db.ProductReviews.Where(r => r.ProductId == x.Id).OrderByDescending(r => r.UpdatedAt).Take(10).Select(r => new
+                {
+                    r.Id,
+                    r.Rating,
+                    r.Comment,
+                    r.CreatedAt,
+                    r.UpdatedAt,
+                    userId = r.UserId,
+                    userName = _db.Users.Where(u => u.Id == r.UserId).Select(u => u.FullName).FirstOrDefault()
+                }).ToList(),
+                myReview = currentUserId == null ? null : _db.ProductReviews.Where(r => r.ProductId == x.Id && r.UserId == currentUserId).Select(r => new
+                {
+                    r.Id,
+                    r.Rating,
+                    r.Comment,
+                    r.CreatedAt,
+                    r.UpdatedAt
+                }).FirstOrDefault()
             }).FirstOrDefaultAsync();
         if (p == null) return NotFound(new { message = "Product not found" });
         return Ok(p);
