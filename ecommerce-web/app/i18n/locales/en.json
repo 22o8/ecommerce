@@ -142,6 +142,7 @@
       "isActive": "Active",
       "images": "Images",
       "addImage": "Add image",
+      "products.empty": "No products yet. Start by adding your first product.",
       "removeImage": "Remove",
       "submit": "Create product",
       "updateSubmit": "Update product",
