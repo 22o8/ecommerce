@@ -53,6 +53,7 @@ export default defineNuxtConfig({
       instagramUrl: process.env.NUXT_PUBLIC_INSTAGRAM_URL || 'https://www.instagram.com/dr.seoul_beauty?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==',
 
       heroImage: process.env.NUXT_PUBLIC_HERO_IMAGE || '',
+      gaId: process.env.NUXT_PUBLIC_GA_ID || '',
     },
   },
 
@@ -103,6 +104,8 @@ export default defineNuxtConfig({
       '/': { headers: { 'cache-control': 'no-store' } },
       '/products': { headers: { 'cache-control': 'no-store' } },
       '/products/**': { headers: { 'cache-control': 'no-store' } },
+      '/iraq': { headers: { 'cache-control': 'no-store' } },
+      '/iraq/**': { headers: { 'cache-control': 'no-store' } },
       '/intro': { headers: { 'cache-control': 'no-store' } },
       '/ios-install': { headers: { 'cache-control': 'no-store' } },
       '/services': { headers: { 'cache-control': 'no-store' } },

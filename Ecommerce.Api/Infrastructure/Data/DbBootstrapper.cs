@@ -223,6 +223,21 @@ public static class DbBootstrapper
             @"CREATE INDEX IF NOT EXISTS ""IX_ProductReviews_ProductId_CreatedAt""
               ON ""ProductReviews"" (""ProductId"", ""CreatedAt"");",
 
+            @"ALTER TABLE IF EXISTS ""ProductReviews""
+              ADD COLUMN IF NOT EXISTS ""ReviewerName"" character varying(160) NULL;",
+
+            @"ALTER TABLE IF EXISTS ""ProductReviews""
+              ADD COLUMN IF NOT EXISTS ""IsVerifiedPurchase"" boolean NOT NULL DEFAULT FALSE;",
+
+            @"ALTER TABLE IF EXISTS ""ProductReviews""
+              ADD COLUMN IF NOT EXISTS ""ImageUrlsJson"" jsonb NULL;",
+
+            @"ALTER TABLE IF EXISTS ""ProductReviews""
+              ADD COLUMN IF NOT EXISTS ""Status"" character varying(40) NOT NULL DEFAULT 'Approved';",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_ProductReviews_ProductId_Status_CreatedAt""
+              ON ""ProductReviews"" (""ProductId"", ""Status"", ""CreatedAt"");",
+
             @"CREATE TABLE IF NOT EXISTS ""Categories"" (
                 ""Id"" uuid NOT NULL,
                 ""Key"" character varying(80) NOT NULL,

@@ -200,6 +200,23 @@ public class AppDbContext : DbContext
             .HasMaxLength(1500);
 
         modelBuilder.Entity<ProductReview>()
+            .Property(x => x.ReviewerName)
+            .HasMaxLength(160);
+
+        modelBuilder.Entity<ProductReview>()
+            .Property(x => x.Status)
+            .HasMaxLength(40)
+            .HasDefaultValue("Approved");
+
+        modelBuilder.Entity<ProductReview>()
+            .Property(x => x.ImageUrlsJson)
+            .HasColumnType("jsonb");
+
+        modelBuilder.Entity<ProductReview>()
+            .HasIndex(x => new { x.ProductId, x.Status, x.CreatedAt });
+
+
+        modelBuilder.Entity<ProductReview>()
             .HasIndex(x => new { x.ProductId, x.UserId })
             .IsUnique();
 

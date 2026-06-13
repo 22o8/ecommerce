@@ -4,6 +4,7 @@ import { findIraqSeoCity, iraqSeoCities, iraqSeoKeywords } from '~/data/iraqSeo'
 
 const route = useRoute()
 const api = useApi()
+const config = useRuntimeConfig()
 const citySlug = computed(() => String(route.params.city || ''))
 const city = computed(() => findIraqSeoCity(citySlug.value))
 if (!city.value) throw createError({ statusCode: 404, statusMessage: 'City SEO page not found' })
@@ -34,6 +35,11 @@ useAdvancedSeo({
       areaServed: [{ '@type': 'City', name: city.value!.nameEn }, { '@type': 'Country', name: 'Iraq' }],
       address: { '@type': 'PostalAddress', addressLocality: city.value!.nameEn, addressCountry: 'IQ' },
       priceRange: 'IQD',
+      telephone: String(config.public.supportPhone || ''),
+      email: String(config.public.supportEmail || ''),
+      sameAs: [String(config.public.instagramUrl || '')].filter(Boolean),
+      openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'], opens: '10:00', closes: '23:00' }],
+      makesOffer: city.value!.keywords.slice(0, 6).map((kw: string) => ({ '@type': 'Offer', itemOffered: { '@type': 'Product', name: kw }, areaServed: city.value!.nameEn, priceCurrency: 'IQD' })),
     },
     buildCollectionPageSchema({ name: city.value!.title, description: city.value!.description, url: absoluteUrl(`/iraq/${city.value!.slug}`), image: '/og-image.png' }),
     buildBreadcrumbSchema([{ name: 'Home', item: absoluteUrl('/') }, { name: 'Iraq', item: absoluteUrl('/iraq') }, { name: city.value!.nameAr, item: absoluteUrl(`/iraq/${city.value!.slug}`) }]),

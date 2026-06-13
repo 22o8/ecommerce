@@ -51,7 +51,7 @@ function safeRatingValue(value: any, fallback = 5) {
 }
 
 function reviewAuthorName(r: any) {
-  return stripHtml(r?.userName || r?.UserName || r?.name || r?.Name || r?.author || r?.Author || 'عميل موثوق')
+  return stripHtml(r?.reviewerName || r?.ReviewerName || r?.userName || r?.UserName || r?.name || r?.Name || r?.author || r?.Author || 'عميل موثوق')
 }
 
 function reviewText(r: any, productTitle: string) {

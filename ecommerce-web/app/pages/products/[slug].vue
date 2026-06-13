@@ -12,6 +12,7 @@ const toast = useToast()
 const favStore = useFavoritesStore()
 const { isInWishlist, toggle: toggleWishlist } = useWishlist()
 const { checkoutSingleProduct } = useWhatsappCheckout()
+const analytics = useAnalytics()
 
 const productId = computed(() => String(route.params.slug || ''))
 const actualProductId = computed(() => String(product.value?.id || product.value?.Id || productId.value || ''))
@@ -54,7 +55,7 @@ const isOutOfStock = computed(() => Number(product.value?.stockQuantity ?? 0) <=
 const favoriteKey = computed(() => String(product.value?.id ?? productId.value ?? ''))
 const isFavorite = computed(() => favoriteKey.value ? isInWishlist(favoriteKey.value) : false)
 
-const reviewForm = reactive({ rating: 5, comment: '' })
+const reviewForm = reactive({ rating: 5, comment: '', reviewerName: '', imageUrls: '' })
 const reviewSubmitting = ref(false)
 const actionBusy = ref(false)
 const showBuyConfirm = ref(false)
@@ -62,6 +63,11 @@ const showBuyConfirm = ref(false)
 watch(myReview, (v) => {
   reviewForm.rating = Number(v?.rating ?? 5)
   reviewForm.comment = String(v?.comment ?? '')
+  reviewForm.reviewerName = String(v?.reviewerName ?? '')
+}, { immediate: true })
+
+watch(product, (p) => {
+  if (p) analytics.viewItem(p)
 }, { immediate: true })
 
 const { data: productAds } = await useAsyncData(
@@ -136,11 +142,22 @@ function starFill(n: number) {
   return avgRating.value >= n
 }
 
+function reviewImages(r: any): string[] {
+  try {
+    const raw = r?.imageUrlsJson || r?.ImageUrlsJson
+    const arr = typeof raw === 'string' ? JSON.parse(raw) : raw
+    return Array.isArray(arr) ? arr : []
+  } catch {
+    return []
+  }
+}
+
 function addToCart() {
   if (!product.value || isOutOfStock.value || actionBusy.value) return
   actionBusy.value = true
   try {
     cart.add(product.value)
+    analytics.addToCart(product.value, 1)
     toast.success('تمت الإضافة إلى السلة')
   } finally {
     setTimeout(() => { actionBusy.value = false }, 220)
@@ -161,6 +178,7 @@ async function confirmBuyNow() {
   if (!product.value || isOutOfStock.value || actionBusy.value) return
   actionBusy.value = true
   try {
+    analytics.beginCheckout([{ product: product.value, quantity: 1 }], Number(finalPriceIqd.value || 0))
     await checkoutSingleProduct(product.value, 1)
     showBuyConfirm.value = false
   } catch {
@@ -196,6 +214,8 @@ async function submitReview() {
     const res: any = await api.post(`/Products/${actualProductId.value}/rate`, {
       rating: Number(reviewForm.rating || 5),
       comment: reviewForm.comment || null,
+      reviewerName: reviewForm.reviewerName || null,
+      imageUrls: reviewForm.imageUrls.split('\n').map(x => x.trim()).filter(Boolean),
     })
     toast.success(res?.message || 'تم حفظ التقييم')
     await refresh()
@@ -331,11 +351,24 @@ watch(() => auth.isAuthed, async (v) => {
               </button>
             </div>
 
+            <input
+              v-model="reviewForm.reviewerName"
+              class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none review-input"
+              placeholder="اسم يظهر على التقييم - اختياري"
+            />
+
             <textarea
               v-model="reviewForm.comment"
               rows="4"
               class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none review-textarea"
               placeholder="اكتب رأيك عن المنتج"
+            ></textarea>
+
+            <textarea
+              v-model="reviewForm.imageUrls"
+              rows="2"
+              class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none review-textarea"
+              placeholder="روابط صور التقييم - اختياري، كل رابط بسطر"
             ></textarea>
 
             <div class="flex flex-wrap items-center gap-3">
@@ -352,12 +385,15 @@ watch(() => auth.isAuthed, async (v) => {
             <div v-else class="grid gap-3">
               <div v-for="r in reviews" :key="r.id" class="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <div class="flex items-center justify-between gap-3 flex-wrap">
-                  <div class="font-bold">{{ r.userName || 'مستخدم' }}</div>
+                  <div class="flex items-center gap-2 flex-wrap"><div class="font-bold">{{ r.userName || r.reviewerName || 'مستخدم' }}</div><span v-if="r.isVerifiedPurchase" class="verified-badge">✓ مشتري موثق</span></div>
                   <div class="flex items-center gap-1 text-amber-400">
                     <Icon v-for="n in 5" :key="n" :name="Number(r.rating) >= n ? 'mdi:star' : 'mdi:star-outline'" class="text-base" />
                   </div>
                 </div>
                 <div v-if="r.comment" class="mt-2 text-sm text-white/80 whitespace-pre-line rtl-text">{{ r.comment }}</div>
+                <div v-if="reviewImages(r).length" class="mt-3 flex gap-2 overflow-x-auto">
+                  <img v-for="img in reviewImages(r)" :key="img" :src="img" class="h-20 w-20 rounded-2xl object-cover border border-white/10" alt="review image" loading="lazy" />
+                </div>
               </div>
             </div>
           </div>
@@ -464,6 +500,8 @@ watch(() => auth.isAuthed, async (v) => {
 .product-favorite-btn{ min-height:56px; min-width:56px; border-radius:999px; border:1px solid rgba(255,255,255,.84); display:inline-flex; align-items:center; justify-content:center; background:#fff; color:#111; box-shadow:0 12px 26px rgba(255,255,255,.08), 0 10px 18px rgba(0,0,0,.18); transition:transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease; }
 .product-favorite-btn:hover{ transform:translateY(-1px); }
 .review-textarea{ resize:vertical; min-height:120px; }
+.review-input{ min-height:48px; }
+.verified-badge{display:inline-flex;align-items:center;border-radius:999px;padding:.25rem .55rem;background:rgba(14,165,233,.15);color:#38bdf8;font-size:.72rem;font-weight:900;}
 .product-related-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:1rem; }
 
 :global(html.theme-light) .product-action-btn--main,
@@ -478,7 +516,8 @@ watch(() => auth.isAuthed, async (v) => {
   background:#000;
 }
 :global(html.theme-light) .product-price-card{ background:linear-gradient(180deg, #ffffff, #f8f3f8); border-color:rgba(24,24,24,.08); }
-:global(html.theme-light) .review-textarea{ background:#fff; border-color:rgba(24,24,24,.12); color:#161616; }
+:global(html.theme-light) .review-textarea,
+:global(html.theme-light) .review-input{ background:#fff; border-color:rgba(24,24,24,.12); color:#161616; }
 :global(html.theme-dark) .product-action-btn--main,
 :global(html.theme-dark) .product-favorite-btn{
   background:#fff;

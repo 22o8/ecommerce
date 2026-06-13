@@ -58,7 +58,7 @@ public class ProductsController : ControllerBase
         ["oil-cleanser"] = new[] { "oil cleanser", "cleansing oil", "زيتي" },
     };
 
-    public record SaveRatingRequest(int Rating, string? Comment);
+    public record SaveRatingRequest(int Rating, string? Comment, string? ReviewerName, string[]? ImageUrls);
 
     private static bool ContainsAny(string haystack, IEnumerable<string> needles)
         => needles.Any(n => haystack.Contains(n, StringComparison.OrdinalIgnoreCase));
@@ -167,7 +167,7 @@ public class ProductsController : ControllerBase
     private async Task RefreshProductRatingAsync(Guid productId)
     {
         var stats = await _db.ProductReviews
-            .Where(x => x.ProductId == productId)
+            .Where(x => x.ProductId == productId && x.Status == "Approved")
             .GroupBy(x => x.ProductId)
             .Select(g => new
             {
@@ -337,21 +337,29 @@ public class ProductsController : ControllerBase
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
                 favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
                 images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList(),
-                reviews = _db.ProductReviews.Where(r => r.ProductId == x.Id).OrderByDescending(r => r.UpdatedAt).Take(10).Select(r => new
+                reviews = _db.ProductReviews.Where(r => r.ProductId == x.Id && r.Status == "Approved").OrderByDescending(r => r.UpdatedAt).Take(24).Select(r => new
                 {
                     r.Id,
                     r.Rating,
                     r.Comment,
+                    r.ReviewerName,
+                    r.IsVerifiedPurchase,
+                    r.ImageUrlsJson,
+                    r.Status,
                     r.CreatedAt,
                     r.UpdatedAt,
                     userId = r.UserId,
-                    userName = _db.Users.Where(u => u.Id == r.UserId).Select(u => u.FullName).FirstOrDefault()
+                    userName = r.ReviewerName ?? _db.Users.Where(u => u.Id == r.UserId).Select(u => u.FullName).FirstOrDefault()
                 }).ToList(),
                 myReview = currentUserId == null ? null : _db.ProductReviews.Where(r => r.ProductId == x.Id && r.UserId == currentUserId).Select(r => new
                 {
                     r.Id,
                     r.Rating,
                     r.Comment,
+                    r.ReviewerName,
+                    r.IsVerifiedPurchase,
+                    r.ImageUrlsJson,
+                    r.Status,
                     r.CreatedAt,
                     r.UpdatedAt
                 }).FirstOrDefault()
@@ -399,21 +407,29 @@ public class ProductsController : ControllerBase
                 viewCount = _db.ProductViews.Count(v => v.ProductId == x.Id),
                 favoriteCount = _db.Favorites.Count(f => f.ProductId == x.Id),
                 images = _db.ProductImages.Where(i => i.ProductId == x.Id).OrderBy(i => i.SortOrder).Select(i => new { i.Id, i.Url, i.Alt, i.SortOrder }).ToList(),
-                reviews = _db.ProductReviews.Where(r => r.ProductId == x.Id).OrderByDescending(r => r.UpdatedAt).Take(10).Select(r => new
+                reviews = _db.ProductReviews.Where(r => r.ProductId == x.Id && r.Status == "Approved").OrderByDescending(r => r.UpdatedAt).Take(24).Select(r => new
                 {
                     r.Id,
                     r.Rating,
                     r.Comment,
+                    r.ReviewerName,
+                    r.IsVerifiedPurchase,
+                    r.ImageUrlsJson,
+                    r.Status,
                     r.CreatedAt,
                     r.UpdatedAt,
                     userId = r.UserId,
-                    userName = _db.Users.Where(u => u.Id == r.UserId).Select(u => u.FullName).FirstOrDefault()
+                    userName = r.ReviewerName ?? _db.Users.Where(u => u.Id == r.UserId).Select(u => u.FullName).FirstOrDefault()
                 }).ToList(),
                 myReview = currentUserId == null ? null : _db.ProductReviews.Where(r => r.ProductId == x.Id && r.UserId == currentUserId).Select(r => new
                 {
                     r.Id,
                     r.Rating,
                     r.Comment,
+                    r.ReviewerName,
+                    r.IsVerifiedPurchase,
+                    r.ImageUrlsJson,
+                    r.Status,
                     r.CreatedAt,
                     r.UpdatedAt
                 }).FirstOrDefault()
@@ -465,6 +481,17 @@ public class ProductsController : ControllerBase
         var rating = Math.Clamp(req.Rating, 1, 5);
         var comment = string.IsNullOrWhiteSpace(req.Comment) ? null : req.Comment.Trim();
         if (comment?.Length > 1500) comment = comment[..1500];
+        var reviewerName = string.IsNullOrWhiteSpace(req.ReviewerName) ? null : req.ReviewerName.Trim();
+        if (reviewerName?.Length > 160) reviewerName = reviewerName[..160];
+        var imageUrls = (req.ImageUrls ?? Array.Empty<string>())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Where(x => x.StartsWith("http", StringComparison.OrdinalIgnoreCase) || x.StartsWith("/", StringComparison.OrdinalIgnoreCase))
+            .Take(6)
+            .ToArray();
+        var imageUrlsJson = imageUrls.Length == 0 ? null : System.Text.Json.JsonSerializer.Serialize(imageUrls);
+        var verified = await _db.Orders
+            .AnyAsync(o => o.UserId == userId.Value && o.Status == "Sold" && o.Items.Any(i => i.ProductId == id));
 
         var existing = await _db.ProductReviews.FirstOrDefaultAsync(x => x.ProductId == id && x.UserId == userId);
         if (existing == null)
@@ -475,6 +502,10 @@ public class ProductsController : ControllerBase
                 UserId = userId.Value,
                 Rating = rating,
                 Comment = comment,
+                ReviewerName = reviewerName,
+                ImageUrlsJson = imageUrlsJson,
+                IsVerifiedPurchase = verified,
+                Status = "Approved",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             });
@@ -483,6 +514,10 @@ public class ProductsController : ControllerBase
         {
             existing.Rating = rating;
             existing.Comment = comment;
+            existing.ReviewerName = reviewerName ?? existing.ReviewerName;
+            existing.ImageUrlsJson = imageUrlsJson;
+            existing.IsVerifiedPurchase = existing.IsVerifiedPurchase || verified;
+            existing.Status = "Approved";
             existing.UpdatedAt = DateTime.UtcNow;
         }
 

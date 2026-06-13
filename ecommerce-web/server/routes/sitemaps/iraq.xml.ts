@@ -1,4 +1,4 @@
-const citySlugs = ['baghdad', 'basra', 'erbil', 'najaf', 'karbala', 'mosul', 'kirkuk', 'anbar']
+const citySlugs = ['baghdad', 'basra', 'erbil', 'najaf', 'karbala', 'mosul', 'kirkuk', 'sulaymaniyah', 'duhok', 'babil', 'diyala', 'dhi-qar', 'anbar']
 export default defineEventHandler((event) => {
   const site = siteUrlFromConfig()
   const urls = [
