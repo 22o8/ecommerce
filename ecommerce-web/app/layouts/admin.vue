@@ -149,6 +149,7 @@ const links = computed(() => [
   { to: '/admin/coupons', label: t('admin.couponsLabel') || 'Coupons', icon: 'mdi:ticket-percent-outline' },
   { to: '/admin/ads', label: t('admin.adsLabel') || 'Ads', icon: 'mdi:bullhorn-outline' },
   { to: '/admin/seo', label: 'SEO Dashboard', icon: 'mdi:magnify-scan' },
+  { to: '/admin/seo/blogs', label: 'Blog SEO Manager', icon: 'mdi:post-outline' },
   { to: '/admin/seo/competitors', label: 'Competitor Analyzer', icon: 'mdi:sitemap-outline' },
   { to: '/admin/identity', label: 'هوية المتجر', icon: 'mdi:storefront-edit-outline' },
   { to: '/admin/categories', label: t('admin.categoriesLabel') || 'التصنيفات', icon: 'mdi:shape-outline' },
