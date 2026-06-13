@@ -69,6 +69,9 @@ const filtered = computed(() => {
     return name.includes(s) || slug.includes(s) || desc.includes(s)
   })
 })
+
+useAdvancedSeo({ title: 'براندات العناية الكورية', description: 'تصفح براندات DR SEOUL BEAUTY المختارة من منتجات العناية والتجميل الكوري.', canonical: absoluteUrl('/brands') })
+
 </script>
 
 <style scoped>

@@ -320,6 +320,16 @@ onBeforeUnmount(() => {
   if (homeAdTimer) clearInterval(homeAdTimer)
 })
 
+
+useAdvancedSeo({
+  title: 'DR SEOUL BEAUTY - متجر العناية الكورية الأصلي',
+  description: 'تسوقي أفضل منتجات العناية بالبشرة والتجميل الكوري من DR SEOUL BEAUTY: تونرات، سيرومات، واقيات شمس، ماسكات وبراندات كورية مختارة بعناية.',
+  keywords: ['DR SEOUL BEAUTY', 'korean skincare iraq', 'منتجات كورية للعناية بالبشرة', 'كوزمتك كوري', 'Anua', 'COSRX', 'Tenzero'],
+  canonical: absoluteUrl('/'),
+  image: heroLogo.value || '/og-image.png',
+  schema: buildBreadcrumbSchema([{ name: 'Home', item: absoluteUrl('/') }]),
+})
+
 </script>
 
 <template>

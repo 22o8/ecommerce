@@ -148,6 +148,8 @@ const links = computed(() => [
   { to: '/admin/insights', label: t('admin.insights'), icon: 'mdi:chart-areaspline' },
   { to: '/admin/coupons', label: t('admin.couponsLabel') || 'Coupons', icon: 'mdi:ticket-percent-outline' },
   { to: '/admin/ads', label: t('admin.adsLabel') || 'Ads', icon: 'mdi:bullhorn-outline' },
+  { to: '/admin/seo', label: 'SEO Dashboard', icon: 'mdi:magnify-scan' },
+  { to: '/admin/seo/competitors', label: 'Competitor Analyzer', icon: 'mdi:sitemap-outline' },
   { to: '/admin/identity', label: 'هوية المتجر', icon: 'mdi:storefront-edit-outline' },
   { to: '/admin/categories', label: t('admin.categoriesLabel') || 'التصنيفات', icon: 'mdi:shape-outline' },
   { to: '/admin/problem-categories', label: t('admin.problemCategoriesLabel') || 'تصنيفات حل المشاكل', icon: 'mdi:medical-bag' },

@@ -76,6 +76,32 @@ const { data: productAds } = await useAsyncData(
 
 const productAd = computed(() => Array.isArray(productAds.value) ? productAds.value[0] : null)
 const productAdImage = computed(() => productAd.value?.imageUrl ? api.buildAssetUrl(productAd.value.imageUrl) : '')
+const productSeoImage = computed(() => activeImage.value || productAdImage.value || '/og-image.png')
+if (product.value) {
+  const p: any = product.value
+  useAdvancedSeo({
+    title: `${p.title || p.name} - ${p.brand || 'Korean Skincare'}`,
+    description: seoDescription(p.description, `اشتري ${p.title || p.name} من DR SEOUL BEAUTY مع منتجات عناية كورية أصلية ومختارة.`),
+    keywords: productSeoKeywords(p),
+    canonical: productCanonical(p),
+    url: productCanonical(p),
+    image: productSeoImage.value,
+    type: 'product',
+    schema: [
+      buildProductSchema(p, productSeoImage.value),
+      buildBreadcrumbSchema([
+        { name: 'Home', item: absoluteUrl('/') },
+        { name: p.category || 'Products', item: absoluteUrl(`/categories/${encodeURIComponent(String(p.category || 'products'))}`) },
+        { name: p.brand || 'Brand', item: absoluteUrl(`/brands/${encodeURIComponent(String(p.brand || 'brand').toLowerCase())}`) },
+        { name: p.title || p.name, item: productCanonical(p) },
+      ]),
+      buildFaqSchema([
+        { question: `ما فائدة ${p.title || 'هذا المنتج'}؟`, answer: p.description || 'منتج عناية كوري مختار بعناية من DR SEOUL BEAUTY.' },
+        { question: 'هل المنتج متوفر؟', answer: Number(p.stockQuantity ?? 0) > 0 ? 'نعم، المنتج متوفر حالياً.' : 'المنتج غير متوفر حالياً.' },
+      ]),
+    ],
+  })
+}
 
 const { data: similar } = await useAsyncData(
   () => `product-similar-${productId.value}-${categoryKey.value}-${subCategoryKey.value}`,

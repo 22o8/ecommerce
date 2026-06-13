@@ -1,10 +1,12 @@
-// server/routes/robots.txt.ts
 export default defineEventHandler((event) => {
-  const config = useRuntimeConfig()
-  const siteUrl = String(config.public.siteUrl || 'http://localhost:3000')
-
+  const siteUrl = siteUrlFromConfig()
   const txt = `User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /orders
+
 Sitemap: ${siteUrl}/sitemap.xml
 `
   setHeader(event, 'content-type', 'text/plain; charset=utf-8')

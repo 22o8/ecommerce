@@ -296,6 +296,9 @@ watch(
   },
   { deep: true }
 )
+
+useAdvancedSeo({ title: 'منتجات العناية الكورية', description: 'تصفح كل منتجات DR SEOUL BEAUTY من تونر وسيروم ومرطبات وواقي شمس ومنتجات تجميل كورية مختارة.', canonical: absoluteUrl('/products') })
+
 </script>
 
 <style scoped>

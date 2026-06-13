@@ -98,6 +98,21 @@ watch([q, sort], async () => {
 })
 
 const brandLogo = computed(() => buildAssetUrl(brand.value?.logoUrl || ''))
+
+const brandSeoImage = computed(() => brandLogo.value || '/og-image.png')
+watchEffect(() => {
+  const b: any = brand.value
+  const name = b?.name || slug.value
+  useAdvancedSeo({
+    title: `${name} منتجات كورية أصلية`,
+    description: seoDescription(b?.description, `تصفح منتجات ${name} الأصلية في متجر DR SEOUL BEAUTY للعناية الكورية بالبشرة والتجميل.`),
+    keywords: [name, `${name} Iraq`, `${name} Korean skincare`, 'DR SEOUL BEAUTY'],
+    canonical: absoluteUrl(`/brands/${encodeURIComponent(slug.value)}`),
+    image: brandSeoImage.value,
+    schema: buildBreadcrumbSchema([{ name: 'Home', item: absoluteUrl('/') }, { name: 'Brands', item: absoluteUrl('/brands') }, { name, item: absoluteUrl(`/brands/${encodeURIComponent(slug.value)}`) }]),
+  })
+})
+
 </script>
 
 

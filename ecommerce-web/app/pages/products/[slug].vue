@@ -1,9 +1,621 @@
 <script setup lang="ts">
+import SmartImage from '~/components/SmartImage.vue'
+import ProductCard from '~/components/ProductCard.vue'
+import { formatIqd } from '~/composables/useMoney'
+
 const route = useRoute()
-const id = String(route.params.slug || '')
-await navigateTo(id ? `/product/${id}` : '/products', { replace: true })
+const { t } = useI18n()
+const api = useApi()
+const cart = useCartStore()
+const auth = useAuthStore()
+const toast = useToast()
+const favStore = useFavoritesStore()
+const { isInWishlist, toggle: toggleWishlist } = useWishlist()
+const { checkoutSingleProduct } = useWhatsappCheckout()
+
+const productId = computed(() => String(route.params.slug || ''))
+
+const { data: product, pending, error, refresh } = await useAsyncData(
+  () => `product-${productId.value}`,
+  async () => {
+    if (!productId.value) return null
+    const key = productId.value
+    const p = await api.get<any>(`/Products/slug/${encodeURIComponent(key)}`).catch(async () => await api.get<any>(`/Products/${key}`))
+    const trackId = p?.id || p?.Id || key
+    api.post(`/Products/${trackId}/view`, {}).catch(() => {})
+    return p
+  },
+  { watch: [productId] }
+)
+
+const images = computed(() => Array.isArray(product.value?.images) ? product.value.images : [])
+const reviews = computed(() => Array.isArray(product.value?.reviews) ? product.value.reviews : [])
+const myReview = computed(() => product.value?.myReview || null)
+
+const activeIndex = ref(0)
+watch(images, () => { activeIndex.value = 0 })
+
+const activeImage = computed(() => {
+  const im = images.value?.[activeIndex.value]
+  const raw = im?.url || im || product.value?.coverImage || ''
+  return raw ? api.buildAssetUrl(String(raw)) : '/hero-placeholder.svg'
+})
+
+const priceIqd = computed(() => Number(product.value?.priceIqd ?? 0))
+const discountPercent = computed(() => Number(product.value?.discountPercent ?? 0))
+const finalPriceIqd = computed(() => Number(product.value?.finalPriceIqd ?? (discountPercent.value > 0 ? (priceIqd.value * (100 - discountPercent.value) / 100) : priceIqd.value)))
+const brand = computed(() => String(product.value?.brand ?? ''))
+const categoryKey = computed(() => String(product.value?.category ?? ''))
+const subCategoryKey = computed(() => String(product.value?.subCategory ?? ''))
+const avgRating = computed(() => Number(product.value?.ratingAvg ?? 0))
+const ratingCount = computed(() => Number(product.value?.ratingCount ?? 0))
+const isOutOfStock = computed(() => Number(product.value?.stockQuantity ?? 0) <= 0)
+const favoriteKey = computed(() => String(product.value?.id ?? productId.value ?? ''))
+const isFavorite = computed(() => favoriteKey.value ? isInWishlist(favoriteKey.value) : false)
+
+const reviewForm = reactive({ rating: 5, comment: '' })
+const reviewSubmitting = ref(false)
+const actionBusy = ref(false)
+const showBuyConfirm = ref(false)
+
+watch(myReview, (v) => {
+  reviewForm.rating = Number(v?.rating ?? 5)
+  reviewForm.comment = String(v?.comment ?? '')
+}, { immediate: true })
+
+const { data: productAds } = await useAsyncData(
+  () => `product-ads-${productId.value}`,
+  async () => {
+    if (!productId.value) return []
+    const res: any = await $fetch('/api/bff/ads/active', {
+      query: { type: 'product', placement: 'product_page', productId: productId.value, _ts: Date.now() },
+      headers: { 'cache-control': 'no-cache' },
+    }).catch(() => [])
+    return Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : [])
+  },
+  { watch: [productId] }
+)
+
+const productAd = computed(() => Array.isArray(productAds.value) ? productAds.value[0] : null)
+const productAdImage = computed(() => productAd.value?.imageUrl ? api.buildAssetUrl(productAd.value.imageUrl) : '')
+const productSeoImage = computed(() => activeImage.value || productAdImage.value || '/og-image.png')
+const productFaq = computed(() => [
+  { question: `ما فائدة ${product.value?.title || 'هذا المنتج'}؟`, answer: product.value?.description || 'منتج عناية كوري مختار بعناية من DR SEOUL BEAUTY.' },
+  { question: 'هل المنتج متوفر للطلب؟', answer: isOutOfStock.value ? 'المنتج غير متوفر حالياً.' : 'نعم، المنتج متوفر حالياً ويمكن طلبه من المتجر.' },
+  { question: 'هل يمكن استخدام الكوبون على هذا المنتج؟', answer: product.value?.isCouponAllowed === false ? 'هذا المنتج غير مشمول بالكوبونات حالياً.' : 'نعم، يمكن استخدام الكوبونات المتاحة حسب شروط العرض.' },
+])
+
+if (product.value) {
+  const p: any = product.value
+  const title = `${p.title || p.name} - ${p.brand || 'Korean Skincare'}`
+  const desc = seoDescription(p.description, `اشتري ${p.title || p.name} من DR SEOUL BEAUTY مع منتجات عناية كورية أصلية ومختارة.`)
+  useAdvancedSeo({
+    title,
+    description: desc,
+    keywords: productSeoKeywords(p),
+    canonical: productCanonical(p),
+    url: productCanonical(p),
+    image: productSeoImage.value,
+    type: 'product',
+    schema: [
+      buildProductSchema(p, productSeoImage.value),
+      buildBreadcrumbSchema([
+        { name: 'Home', item: absoluteUrl('/') },
+        { name: p.category || 'Products', item: absoluteUrl(`/categories/${encodeURIComponent(String(p.category || 'products'))}`) },
+        { name: p.brand || 'Brand', item: absoluteUrl(`/brands/${encodeURIComponent(String(p.brand || 'brand').toLowerCase())}`) },
+        { name: p.title || p.name, item: productCanonical(p) },
+      ]),
+      buildFaqSchema(productFaq.value),
+    ],
+  })
+}
+
+const { data: similar } = await useAsyncData(
+  () => `product-similar-${productId.value}-${categoryKey.value}-${subCategoryKey.value}`,
+  async () => {
+    const primaryCategory = subCategoryKey.value || categoryKey.value
+    if (!primaryCategory) return []
+    const res = await api.get<any>('/Products', {
+      page: 1,
+      pageSize: 8,
+      category: primaryCategory,
+      sort: 'new'
+    })
+    const items = Array.isArray(res?.items) ? res.items : []
+    return items.filter((x: any) => String(x?.id) !== String(productId.value)).slice(0, 4)
+  },
+  { watch: [productId, categoryKey, subCategoryKey] }
+)
+
+function fmt(v: any) {
+  return formatIqd(v)
+}
+
+function starFill(n: number) {
+  return avgRating.value >= n
+}
+
+function addToCart() {
+  if (!product.value || isOutOfStock.value || actionBusy.value) return
+  actionBusy.value = true
+  try {
+    cart.add(product.value)
+    toast.success('تمت الإضافة إلى السلة')
+  } finally {
+    setTimeout(() => { actionBusy.value = false }, 220)
+  }
+}
+
+function openBuyConfirm() {
+  if (!product.value || isOutOfStock.value || actionBusy.value) return
+  showBuyConfirm.value = true
+}
+
+function closeBuyConfirm() {
+  if (actionBusy.value) return
+  showBuyConfirm.value = false
+}
+
+async function confirmBuyNow() {
+  if (!product.value || isOutOfStock.value || actionBusy.value) return
+  actionBusy.value = true
+  try {
+    await checkoutSingleProduct(product.value, 1)
+    showBuyConfirm.value = false
+  } catch {
+    addToCart()
+    showBuyConfirm.value = false
+    await navigateTo('/cart')
+  } finally {
+    setTimeout(() => { actionBusy.value = false }, 260)
+  }
+}
+
+async function toggleFavorite(){
+  if (!auth.isAuthed) {
+    toast.error('يجب تسجيل الدخول أولاً')
+    return
+  }
+  if (!favoriteKey.value) return
+  try {
+    await toggleWishlist(favoriteKey.value)
+    toast.success(isFavorite.value ? 'تمت إضافة المنتج إلى المفضلة' : 'تمت إزالة المنتج من المفضلة')
+  } catch (e:any) {
+    toast.error(e?.data?.message || e?.message || 'تعذر تحديث المفضلة')
+  }
+}
+
+async function submitReview() {
+  if (!auth.isAuthed) {
+    toast.error('يجب تسجيل الدخول أولاً')
+    return
+  }
+  reviewSubmitting.value = true
+  try {
+    const res: any = await api.post(`/Products/${productId.value}/rate`, {
+      rating: Number(reviewForm.rating || 5),
+      comment: reviewForm.comment || null,
+    })
+    toast.success(res?.message || 'تم حفظ التقييم')
+    await refresh()
+  } catch (e: any) {
+    toast.error(e?.data?.message || e?.message || 'تعذر حفظ التقييم')
+  } finally {
+    reviewSubmitting.value = false
+  }
+}
+
+watch(() => auth.isAuthed, async (v) => {
+  if (v) await favStore.load()
+}, { immediate: true })
 </script>
 
 <template>
-  <div />
+  <div class="mx-auto max-w-6xl px-4 py-6 sm:py-10 product-page">
+    <div v-if="pending" class="text-muted">{{ t('common.loading') }}</div>
+
+    <div v-else-if="error || !product" class="rounded-2xl border border-app bg-surface p-6">
+      <div class="font-extrabold">{{ t('common.notFound') }}</div>
+      <button class="mt-3 btn" @click="refresh">{{ t('common.retry') }}</button>
+    </div>
+
+    <div v-else class="grid gap-6 sm:gap-8">
+      <div class="product-layout-grid">
+        <div class="grid gap-4 product-media-col self-start">
+          <div class="relative overflow-hidden product-gallery-shell rounded-[1.8rem] sm:rounded-[2rem]">
+            <div class="group relative product-hero-media">
+              <SmartImage
+                :src="activeImage"
+                :alt="product.title"
+                fit="contain"
+                wrapper-class="w-full h-full bg-white/5"
+                img-class="w-full h-full object-contain transition duration-500 group-hover:scale-[1.02]"
+              />
+              <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/10 via-black/0 to-transparent pointer-events-none"></div>
+              <div v-if="discountPercent > 0" class="absolute top-4 right-4">
+                <div class="product-badge-hero keep-ltr">-{{ discountPercent }}%</div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="images.length" class="product-thumbs-row">
+            <button
+              v-for="(im, idx) in images"
+              :key="im.id || idx"
+              class="product-thumb-btn"
+              :class="idx === activeIndex ? 'is-active' : ''"
+              @click="activeIndex = idx"
+              type="button"
+            >
+              <img class="h-full w-full object-cover" :src="api.buildAssetUrl(String(im.url || im))" :alt="product.title" />
+            </button>
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:gap-5 product-info-col self-start">
+          <div class="product-sheet rounded-[1.8rem] sm:rounded-[2rem] p-4 sm:p-6">
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+              <span v-if="brand" class="product-meta-pill">{{ brand }}</span>
+              <span v-if="categoryKey" class="product-meta-pill product-meta-pill--ghost">{{ categoryKey }}</span>
+              <span v-if="subCategoryKey" class="product-meta-pill product-meta-pill--ghost">{{ subCategoryKey }}</span>
+            </div>
+
+            <h1 class="product-title text-2xl sm:text-3xl lg:text-[2.1rem] font-extrabold leading-[1.35] rtl-text break-words">
+              {{ product.title }}
+            </h1>
+
+            <div class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3">
+              <div class="flex items-center gap-1 text-amber-400">
+                <Icon v-for="n in 5" :key="n" :name="starFill(n) ? 'mdi:star' : 'mdi:star-outline'" class="text-lg" />
+              </div>
+              <div class="text-sm text-white/75">{{ avgRating.toFixed(1) }} / 5</div>
+              <div class="text-sm text-white/55">({{ ratingCount }} تقييم)</div>
+            </div>
+
+            <div class="product-price-card mt-4 sm:mt-5">
+              <div>
+                <div class="text-3xl sm:text-[2.2rem] font-black keep-ltr">{{ fmt(finalPriceIqd) }}</div>
+                <div v-if="discountPercent > 0" class="mt-1 text-sm text-muted keep-ltr">
+                  <span class="line-through opacity-70">{{ fmt(priceIqd) }}</span>
+                </div>
+              </div>
+              <div v-if="isOutOfStock" class="inline-flex rounded-full bg-[rgb(var(--danger))]/15 px-4 py-2 text-sm font-bold text-[rgb(var(--danger))] rtl-text">
+                {{ t('common.unavailable') }}
+              </div>
+            </div>
+
+            <div class="mt-4 sm:mt-5 product-main-actions">
+              <button class="product-action-btn product-action-btn--main" @click="addToCart" :disabled="isOutOfStock || actionBusy">
+                <Icon name="mdi:cart-plus" class="text-lg" />
+                <span class="rtl-text">{{ t('common.addToCart') }}</span>
+              </button>
+              <button class="product-action-btn product-action-btn--main" @click="openBuyConfirm" :disabled="isOutOfStock || actionBusy">
+                <Icon name="mdi:flash" class="text-lg" />
+                <span class="rtl-text">{{ t('common.buy') }}</span>
+              </button>
+              <button class="product-favorite-btn" type="button" @click="toggleFavorite" :aria-label="t('wishlist.toggle')">
+                <Icon :name="isFavorite ? 'mdi:heart' : 'mdi:heart-outline'" class="text-[1.15rem]" />
+              </button>
+            </div>
+          </div>
+
+          <div class="product-sheet rounded-[1.8rem] sm:rounded-[2rem] p-4 sm:p-6">
+            <div class="font-extrabold mb-3 rtl-text text-lg">{{ t('products.description') }}</div>
+            <div class="product-description text-sm sm:text-[15px] text-muted whitespace-pre-line rtl-text leading-8">{{ product.description }}</div>
+          </div>
+
+          <a
+            v-if="productAd && productAdImage"
+            :href="productAd.linkUrl || '#'"
+            class="product-ad-card"
+            :target="productAd.linkUrl ? '_blank' : undefined"
+          >
+            <img :src="productAdImage" :alt="productAd.title || 'ad'" />
+            <div class="product-ad-card__body">
+              <span>إعلان</span>
+              <b>{{ productAd.title || 'عرض خاص لهذا المنتج' }}</b>
+              <small v-if="productAd.subtitle">{{ productAd.subtitle }}</small>
+            </div>
+          </a>
+
+          <div class="product-sheet rounded-[1.8rem] sm:rounded-[2rem] p-4 sm:p-6 grid gap-4">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div class="font-extrabold rtl-text">إضافة تقييم</div>
+              <div class="text-sm text-white/60">يمكنك تعديل تقييمك لاحقًا</div>
+            </div>
+
+            <div class="flex items-center gap-2 text-amber-400">
+              <button v-for="n in 5" :key="n" type="button" class="transition hover:scale-110" @click="reviewForm.rating = n">
+                <Icon :name="reviewForm.rating >= n ? 'mdi:star' : 'mdi:star-outline'" class="text-2xl" />
+              </button>
+            </div>
+
+            <textarea
+              v-model="reviewForm.comment"
+              rows="4"
+              class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none review-textarea"
+              placeholder="اكتب رأيك عن المنتج"
+            ></textarea>
+
+            <div class="flex flex-wrap items-center gap-3">
+              <button class="product-action-btn product-action-btn--main product-action-btn--review" :disabled="reviewSubmitting" @click="submitReview">
+                {{ myReview ? 'تحديث التقييم' : 'إرسال التقييم' }}
+              </button>
+              <div v-if="!auth.isAuthed" class="text-sm text-amber-300">يجب تسجيل الدخول أولاً</div>
+            </div>
+          </div>
+
+          <div class="product-sheet rounded-[1.8rem] sm:rounded-[2rem] p-4 sm:p-5 grid gap-4">
+            <div class="font-extrabold rtl-text">التقييمات</div>
+            <div v-if="!reviews.length" class="text-sm text-white/60">لا توجد تقييمات بعد</div>
+            <div v-else class="grid gap-3">
+              <div v-for="r in reviews" :key="r.id" class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                  <div class="font-bold">{{ r.userName || 'مستخدم' }}</div>
+                  <div class="flex items-center gap-1 text-amber-400">
+                    <Icon v-for="n in 5" :key="n" :name="Number(r.rating) >= n ? 'mdi:star' : 'mdi:star-outline'" class="text-base" />
+                  </div>
+                </div>
+                <div v-if="r.comment" class="mt-2 text-sm text-white/80 whitespace-pre-line rtl-text">{{ r.comment }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="(similar?.length || 0) > 0" class="product-related-section product-sheet rounded-[1.8rem] sm:rounded-[2rem] p-4 sm:p-6">
+        <div class="flex items-center justify-between gap-3 flex-wrap mb-4">
+          <div class="text-lg sm:text-xl font-extrabold rtl-text">{{ t('products.youMayAlsoLike') }}</div>
+          <NuxtLink :to="`/products?category=${encodeURIComponent(subCategoryKey || categoryKey)}`" class="text-sm text-[rgb(var(--primary))]">{{ t('home.viewAll') }}</NuxtLink>
+        </div>
+        <div class="product-related-grid">
+          <ProductCard v-for="p in similar" :key="p.id" :p="p" compact />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <Teleport to="body">
+    <Transition name="buy-confirm-fade">
+      <div
+        v-if="showBuyConfirm && product"
+        class="buy-confirm-overlay"
+        role="dialog"
+        aria-modal="true"
+        @click.self="closeBuyConfirm"
+      >
+        <div class="buy-confirm-card">
+          <button type="button" class="buy-confirm-close" aria-label="إغلاق" @click="closeBuyConfirm">
+            <Icon name="mdi:close" />
+          </button>
+
+
+          <div class="buy-confirm-title rtl-text">تأكيد الشراء</div>
+          <p class="buy-confirm-text rtl-text">هل تريد إكمال شراء هذا المنتج الآن؟</p>
+
+          <div class="buy-confirm-product">
+            <img :src="activeImage" :alt="product.title" />
+            <div>
+              <b class="rtl-text">{{ product.title }}</b>
+              <span class="keep-ltr">{{ fmt(finalPriceIqd) }}</span>
+            </div>
+          </div>
+
+          <div class="buy-confirm-actions">
+            <button type="button" class="buy-confirm-btn buy-confirm-btn--ghost" @click="closeBuyConfirm">
+              إلغاء
+            </button>
+            <button type="button" class="buy-confirm-btn buy-confirm-btn--main" :disabled="actionBusy" @click="confirmBuyNow">
+              <Icon name="mdi:flash" />
+              تأكيد الشراء
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
+
+<style scoped>
+.product-gallery-shell,
+.product-sheet{
+  border:1px solid rgba(var(--border), .95);
+  background:rgb(var(--surface));
+}
+:global(html.theme-light) .product-gallery-shell,
+:global(html.theme-light) .product-sheet{
+  background:linear-gradient(180deg, rgba(255,255,255,.99), rgba(255,247,252,.95));
+  box-shadow:0 20px 48px rgba(24,24,24,.06), 0 10px 24px rgba(232,91,154,.08);
+}
+:global(html.theme-dark) .product-gallery-shell,
+:global(html.theme-dark) .product-sheet{
+  background:linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .90));
+  box-shadow:0 20px 52px rgba(0,0,0,.28);
+}
+.product-layout-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.02fr) minmax(360px,.98fr);
+  gap:1.5rem;
+  align-items:start;
+}
+.product-hero-media{ min-height:560px; aspect-ratio:1 / 1; }
+.product-thumbs-row{ display:flex; gap:.8rem; overflow-x:auto; padding:.15rem .05rem .25rem; scrollbar-width:none; }
+.product-thumbs-row::-webkit-scrollbar{ display:none; }
+.product-thumb-btn{ flex:0 0 auto; width:84px; height:84px; overflow:hidden; border-radius:1.1rem; border:1px solid rgba(var(--border), .9); opacity:.86; transition:transform .2s ease, opacity .2s ease, border-color .2s ease, box-shadow .2s ease; box-shadow:0 10px 24px rgba(0,0,0,.12); }
+.product-thumb-btn:hover{ opacity:1; transform:translateY(-2px); }
+.product-thumb-btn.is-active{ opacity:1; border-color:rgba(var(--primary), .72); box-shadow:0 0 0 3px rgba(var(--primary), .18), 0 12px 28px rgba(0,0,0,.16); }
+.product-badge-hero{ padding:.7rem 1rem; border-radius:999px; background:linear-gradient(135deg, rgba(239,68,68,.98), rgba(244,63,94,.92)); color:#fff; font-size:.85rem; font-weight:900; box-shadow:0 18px 40px rgba(239,68,68,.28); }
+.product-meta-pill{ display:inline-flex; align-items:center; padding:.45rem .85rem; border-radius:999px; background:rgba(var(--primary), .14); border:1px solid rgba(var(--primary), .2); color:rgb(var(--text)); font-size:.78rem; font-weight:800; }
+.product-meta-pill--ghost{ background:rgba(255,255,255,.06); border-color:rgba(var(--border), .9); }
+.product-price-card{ display:flex; justify-content:space-between; align-items:flex-end; gap:1rem; flex-wrap:wrap; border-radius:1.5rem; padding:1rem 1.15rem; background:linear-gradient(180deg, rgba(var(--surface-2-rgb), .92), rgba(var(--surface-rgb), .84)); border:1px solid rgba(var(--border), .85); }
+.product-description{ word-break:break-word; overflow-wrap:anywhere; }
+.product-main-actions{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)) auto; gap:.8rem; align-items:stretch; }
+.product-action-btn{ min-height:56px; border-radius:999px; border:1px solid rgba(var(--border), .95); display:inline-flex; align-items:center; justify-content:center; gap:.6rem; width:100%; padding:.95rem 1.1rem; font-weight:900; transition:transform .2s ease, box-shadow .2s ease, opacity .2s ease, background .2s ease; }
+.product-action-btn:hover{ transform:translateY(-1px); }
+.product-action-btn:disabled{ opacity:.55; cursor:not-allowed; }
+.product-action-btn--main{
+  background:#fff;
+  color:#111;
+  box-shadow:0 16px 34px rgba(255,255,255,.10), 0 10px 22px rgba(0,0,0,.18);
+  border-color:rgba(255,255,255,.84);
+}
+.product-action-btn--review{ width:auto; min-width:170px; }
+.product-favorite-btn{ min-height:56px; min-width:56px; border-radius:999px; border:1px solid rgba(255,255,255,.84); display:inline-flex; align-items:center; justify-content:center; background:#fff; color:#111; box-shadow:0 12px 26px rgba(255,255,255,.08), 0 10px 18px rgba(0,0,0,.18); transition:transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease; }
+.product-favorite-btn:hover{ transform:translateY(-1px); }
+.review-textarea{ resize:vertical; min-height:120px; }
+.product-related-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:1rem; }
+
+:global(html.theme-light) .product-action-btn--main,
+:global(html.theme-light) .product-favorite-btn{
+  background:#111;
+  color:#fff;
+  border-color:rgba(17,17,17,.82);
+  box-shadow:0 14px 30px rgba(24,24,24,.16), 0 4px 12px rgba(24,24,24,.10);
+}
+:global(html.theme-light) .product-action-btn--main:hover,
+:global(html.theme-light) .product-favorite-btn:hover{
+  background:#000;
+}
+:global(html.theme-light) .product-price-card{ background:linear-gradient(180deg, #ffffff, #f8f3f8); border-color:rgba(24,24,24,.08); }
+:global(html.theme-light) .review-textarea{ background:#fff; border-color:rgba(24,24,24,.12); color:#161616; }
+:global(html.theme-dark) .product-action-btn--main,
+:global(html.theme-dark) .product-favorite-btn{
+  background:#fff;
+  color:#111;
+  border-color:rgba(255,255,255,.84);
+  box-shadow:0 16px 34px rgba(255,255,255,.10), 0 10px 22px rgba(0,0,0,.18);
+}
+:global(html.theme-dark) .product-action-btn--main:hover,
+:global(html.theme-dark) .product-favorite-btn:hover{
+  background:#f5f5f5;
+}
+
+@media (max-width: 1180px){
+  .product-layout-grid{ grid-template-columns:1fr; }
+  .product-hero-media{ min-height:460px; }
+}
+@media (max-width: 640px){
+  .product-page{ padding-top:1rem; padding-bottom:2rem; }
+  .product-hero-media{ min-height:320px; }
+  .product-thumb-btn{ width:64px; height:64px; border-radius:1rem; }
+  .product-price-card{ padding:.95rem 1rem; }
+  .product-main-actions{ grid-template-columns:1fr 1fr; }
+  .product-favorite-btn{ grid-column:1 / -1; min-height:50px; }
+  .product-action-btn{ min-height:50px; padding:.85rem .8rem; font-size:.92rem; }
+  .product-related-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:.75rem; }
+}
+
+.product-ad-card{
+  display:block;
+  overflow:hidden;
+  border-radius:1.8rem;
+  border:1px solid rgba(var(--primary), .22);
+  background:linear-gradient(180deg, rgba(var(--primary), .10), rgba(var(--surface-rgb), .74));
+  box-shadow:var(--shadow-soft);
+}
+.product-ad-card img{ width:100%; max-height:280px; object-fit:cover; display:block; }
+.product-ad-card__body{ padding:1rem; display:grid; gap:.25rem; }
+.product-ad-card__body span{ width:max-content; border-radius:999px; padding:.25rem .55rem; background:rgba(var(--primary), .14); color:rgb(var(--primary)); font-size:.72rem; font-weight:1000; }
+.product-ad-card__body b{ color:rgb(var(--text)); font-size:1rem; }
+.product-ad-card__body small{ color:rgb(var(--muted)); line-height:1.6; }
+
+
+
+.buy-confirm-overlay{
+  position:fixed;
+  inset:0;
+  z-index:900;
+  display:grid;
+  place-items:center;
+  padding:1rem;
+  background:rgba(2,6,23,.62);
+  backdrop-filter:blur(18px) saturate(125%);
+}
+.buy-confirm-card{
+  position:relative;
+  width:min(94vw, 470px);
+  border-radius:2rem;
+  border:1px solid rgba(var(--border), .9);
+  background:
+    radial-gradient(circle at top right, rgba(var(--primary),.16), transparent 34%),
+    linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .95));
+  color:rgb(var(--fg));
+  padding:1.45rem;
+  box-shadow:0 34px 100px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.buy-confirm-close{
+  position:absolute;
+  inset-inline-end:.95rem;
+  top:.95rem;
+  width:2.35rem;
+  height:2.35rem;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(var(--border), .88);
+  background:rgba(var(--surface-rgb), .72);
+  color:rgb(var(--fg));
+}
+.buy-confirm-icon{
+  width:3.35rem;
+  height:3.35rem;
+  border-radius:1.15rem;
+  display:grid;
+  place-items:center;
+  color:white;
+  background:linear-gradient(135deg, rgb(var(--primary)), #ec4899);
+  font-size:1.65rem;
+  box-shadow:0 16px 36px rgba(var(--primary),.28);
+}
+.buy-confirm-title{ margin-top:1rem; font-size:1.45rem; font-weight:1000; color:rgb(var(--fg)); }
+.buy-confirm-text{ margin-top:.45rem; color:rgb(var(--muted)); line-height:1.8; }
+.buy-confirm-product{
+  margin-top:1rem;
+  padding:.8rem;
+  border-radius:1.25rem;
+  border:1px solid rgba(var(--border), .78);
+  background:rgba(var(--surface-rgb), .64);
+  display:flex;
+  align-items:center;
+  gap:.85rem;
+}
+.buy-confirm-product img{
+  width:4.7rem;
+  height:4.7rem;
+  object-fit:cover;
+  border-radius:1rem;
+  border:1px solid rgba(var(--border), .72);
+  background:rgba(var(--surface-2-rgb),.7);
+}
+.buy-confirm-product div{ min-width:0; display:grid; gap:.25rem; }
+.buy-confirm-product b{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:rgb(var(--fg)); }
+.buy-confirm-product span{ color:rgb(var(--primary)); font-weight:1000; }
+.buy-confirm-actions{
+  margin-top:1.15rem;
+  display:grid;
+  grid-template-columns:1fr 1.25fr;
+  gap:.7rem;
+}
+.buy-confirm-btn{
+  min-height:3rem;
+  border-radius:1rem;
+  font-weight:1000;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.4rem;
+  border:1px solid rgba(var(--border), .82);
+  transition:.18s ease;
+}
+.buy-confirm-btn:hover{ transform:translateY(-1px); }
+.buy-confirm-btn--ghost{ background:rgba(var(--surface-rgb), .7); color:rgb(var(--fg)); }
+.buy-confirm-btn--main{
+  border-color:transparent;
+  color:white;
+  background:linear-gradient(135deg, rgb(var(--primary)), #ec4899);
+  box-shadow:0 14px 32px rgba(var(--primary),.24);
+}
+.buy-confirm-fade-enter-active,.buy-confirm-fade-leave-active{ transition:opacity .18s ease; }
+.buy-confirm-fade-enter-from,.buy-confirm-fade-leave-to{ opacity:0; }
+
+</style>

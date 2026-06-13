@@ -166,4 +166,13 @@ async function loadChildren() {
 watch(categoryItem, () => {
   loadChildren()
 }, { immediate: true })
+
+useAdvancedSeo({
+  title: `${categoryLabel.value} | تصنيف منتجات العناية`,
+  description: seoDescription(categoryDescription.value, `تصفح منتجات ${categoryLabel.value} ضمن متجر DR SEOUL BEAUTY للعناية الكورية بالبشرة.`),
+  keywords: [categoryLabel.value, categoryKey.value, 'korean skincare iraq', 'DR SEOUL BEAUTY'],
+  canonical: absoluteUrl(`/collections/${encodeURIComponent(categoryKey.value)}`),
+  schema: buildBreadcrumbSchema([{ name: 'Home', item: absoluteUrl('/') }, { name: 'Collections', item: absoluteUrl('/products') }, { name: categoryLabel.value, item: absoluteUrl(`/collections/${encodeURIComponent(categoryKey.value)}`) }]),
+})
+
 </script>

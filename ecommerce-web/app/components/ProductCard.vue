@@ -12,7 +12,10 @@
       <div class="product-card-media">
         <SmartImage
           :src="mainImage || ''"
-          :alt="displayName"
+          :alt="`${displayName} - ${brandName || 'DR SEOUL BEAUTY'}`"
+          :title="displayName"
+          width="480"
+          height="480"
           fit="contain"
           wrapper-class="w-full h-full"
           img-class="w-full h-full object-contain p-5 sm:p-6 transition duration-300 group-hover:scale-[1.04]"
@@ -210,9 +213,9 @@ async function confirmBuyNow() {
 }
 
 function goProduct() {
-  const id = String(p.value?.id ?? '')
-  if (!id) return
-  navigateTo(`/product/${id}`)
+  const slug = String(p.value?.slug || p.value?.Slug || p.value?.id || '')
+  if (!slug) return
+  navigateTo(`/products/${encodeURIComponent(slug)}`)
 }
 </script>
 

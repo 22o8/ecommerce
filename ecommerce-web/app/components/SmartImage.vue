@@ -6,6 +6,11 @@
       :src="currentSrc"
       :alt="props.alt"
       :loading="props.loading"
+      :title="props.title || props.alt"
+      :width="props.width"
+      :height="props.height"
+      decoding="async"
+      :fetchpriority="props.fetchpriority"
       :style="props.imgStyle"
       :class="[
         'block w-full h-full select-none',
@@ -24,6 +29,10 @@ import { useApi } from '~/composables/useApi'
 type SmartImageProps = {
   src: string
   alt?: string
+  title?: string
+  width?: number | string
+  height?: number | string
+  fetchpriority?: 'high' | 'low' | 'auto'
   fit?: 'cover' | 'contain'
   loading?: 'lazy' | 'eager'
   wrapperClass?: string
@@ -36,6 +45,10 @@ type SmartImageProps = {
 
 const props = withDefaults(defineProps<SmartImageProps>(), {
   alt: '',
+  title: '',
+  width: undefined,
+  height: undefined,
+  fetchpriority: 'auto',
   fit: 'cover',
   loading: 'lazy',
   wrapperClass: '',
