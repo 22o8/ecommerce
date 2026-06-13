@@ -17,7 +17,7 @@ await useAsyncData(
   'home-prefetch',
   async () => {
     await Promise.allSettled([
-      brandsStore.fetchPublic(),
+      brandsStore.fetchPublic(1000),
       productsStore.fetchFeatured(8),
       productsStore.fetchDiscounts(8),
       productsStore.fetchTopRated(8),
@@ -73,7 +73,7 @@ const topBrands = computed(() => {
     seen.add(key)
     uniq.push(b)
   }
-  return uniq.slice(0, 10)
+  return uniq
 })
 
 const brandOrbitIndex = ref(0)

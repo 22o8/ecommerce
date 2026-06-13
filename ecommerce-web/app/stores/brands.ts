@@ -46,7 +46,7 @@ export const useBrandsStore = defineStore('brands', () => {
     }
   }
 
-  const fetchPublic = async (take: number = 10) => {
+  const fetchPublic = async (take: number = 1000) => {
     loading.value = true
     try {
       // بعض السيرفرات تدعم take/pageSize وبعضها لا؛ جرّب take أولاً.
