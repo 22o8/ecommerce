@@ -24,7 +24,7 @@
 
     <p class="hint">
       - تظهر معاينة مباشرة بعد الاختيار. <br />
-      - بعد الرفع، تتحول الروابط إلى روابط من السيرفر وتظهر بالفرونت.
+      - يمكنك رفع صور كبيرة؛ سيتم ضغطها وتحويلها تلقائياً إلى WebP قبل الرفع لتجنب خطأ الصورة كبيرة.
     </p>
 
     <div v-if="errors.length" class="errors">
@@ -167,12 +167,65 @@ const clearAll = () => {
 const normalizeResponseToUrls = (res: UploadResponse): string[] => {
   // نحاول نقرأ بأي شكل يرجعه الباك
   if ((res as any).urls?.length) return (res as any).urls;
+  if ((res as any).items?.length) return (res as any).items.map((x: any) => x.url || x.Url).filter(Boolean);
   if ((res as any).images?.length) return (res as any).images;
   if ((res as any).files?.length) return (res as any).files;
   if ((res as any).url) return [(res as any).url];
   if ((res as any).path) return [(res as any).path];
   return [];
 };
+
+
+const getApiOrigin = () => {
+  const config = useRuntimeConfig()
+  const raw = String((config.public as any)?.apiOrigin || (config.public as any)?.apiBase || '').trim()
+  if (!raw || !raw.startsWith('http')) return ''
+  return raw.replace(/\/$/, '').replace(/\/api$/i, '')
+}
+
+const getAuthHeaders = () => {
+  const access = useCookie<string | null>('access').value
+  const token = useCookie<string | null>('token').value || useCookie<string | null>('access_token').value
+  const bearer = String(access || token || '').trim()
+  return bearer ? { Authorization: `Bearer ${bearer}` } : {}
+}
+
+const optimizeImageFile = async (file: File): Promise<File> => {
+  // ضغط وتحويل WebP داخل المتصفح قبل الرفع لتقليل LCP وحل مشكلة الملفات الكبيرة.
+  if (!file.type.startsWith('image/')) return file
+
+  const bitmap = await createImageBitmap(file)
+  const max = 1800
+  const ratio = Math.min(1, max / Math.max(bitmap.width, bitmap.height))
+  const width = Math.max(1, Math.round(bitmap.width * ratio))
+  const height = Math.max(1, Math.round(bitmap.height * ratio))
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return file
+  ctx.drawImage(bitmap, 0, 0, width, height)
+
+  const blob: Blob | null = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.82))
+  if (!blob) return file
+
+  const baseName = file.name.replace(/\.[^.]+$/, '') || 'image'
+  return new File([blob], `${baseName}.webp`, { type: 'image/webp', lastModified: Date.now() })
+}
+
+const directUploadToBackend = async (endpoint: string, formData: FormData) => {
+  const origin = getApiOrigin()
+  if (!origin) return null
+  return await $fetch<UploadResponse>(`${origin}/api${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`, {
+    method: 'POST',
+    body: formData,
+    headers: getAuthHeaders(),
+    credentials: 'include',
+    timeout: 180000,
+  })
+}
 
 const uploadNow = async () => {
   errors.value = [];
@@ -190,10 +243,14 @@ const uploadNow = async () => {
   try {
     const fd = new FormData();
 
-    // ✅ أهم نقطة: اسم الحقل لازم يطابق اللي بالباك
     // Backend يعتمد 'files' للرفع.
     for (const it of files.value) {
-      fd.append('files', it.file)
+      try {
+        fd.append('files', await optimizeImageFile(it.file))
+      } catch {
+        // إذا فشل الضغط داخل المتصفح لأي سبب، نرفع الأصل مباشرة إلى الباك.
+        fd.append('files', it.file)
+      }
     }
 
     // إذا تحتاج تربط الرفع بمنتج
@@ -201,7 +258,9 @@ const uploadNow = async () => {
       fd.append('productId', String(props.productId));
     }
 
-    const res = await upload<UploadResponse>(UPLOAD_ENDPOINT.value, fd);
+    // للصور الكبيرة نرفع مباشرة إلى الـ Backend/Fly.io لتجاوز حد Vercel Functions.
+    const direct = props.productId ? await directUploadToBackend(UPLOAD_ENDPOINT.value, fd).catch(() => null) : null
+    const res = direct || await upload<UploadResponse>(UPLOAD_ENDPOINT.value, fd)
     const urls = normalizeResponseToUrls(res);
 
     if (!urls.length) {

@@ -19,11 +19,11 @@ var config = builder.Configuration;
 // Allow large direct uploads to the backend (videos/images bypass Vercel BFF).
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Limits.MaxRequestBodySize = 160L * 1024L * 1024L;
+    options.Limits.MaxRequestBodySize = 500L * 1024L * 1024L;
 });
 builder.Services.Configure<FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 160L * 1024L * 1024L;
+    options.MultipartBodyLengthLimit = 500L * 1024L * 1024L;
     options.ValueLengthLimit = int.MaxValue;
     options.MultipartHeadersLengthLimit = int.MaxValue;
 });
@@ -300,7 +300,12 @@ app.Use(async (context, next) =>
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
-    RequestPath = "/uploads"
+    RequestPath = "/uploads",
+    OnPrepareResponse = ctx =>
+    {
+        // صور المنتجات بعد التحويل WebP تحمل أسماء فريدة، لذلك الكاش الطويل آمن ومفيد للأداء.
+        ctx.Context.Response.Headers.CacheControl = "public,max-age=31536000,immutable";
+    }
 });
 
 app.UseRouting();

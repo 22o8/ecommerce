@@ -6,6 +6,9 @@ using Ecommerce.Api.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp;
 
 namespace Ecommerce.Api.Controllers;
 
@@ -271,11 +274,12 @@ public class AdminProductsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/images")]
-    [RequestSizeLimit(30_000_000)]
+    [RequestSizeLimit(500_000_000)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 500_000_000)]
     public async Task<IActionResult> UploadImages([FromRoute] Guid id, [FromForm] List<IFormFile>? files, [FromForm] string? alt = null)
     {
-        // Some clients send field name "images" instead of "files".
-        // To be resilient, fall back to reading any multipart files from the request.
+        // يقبل صور كبيرة بدون رسالة "image too large".
+        // يتم تحويل كل صورة تلقائياً إلى WebP مضغوط ومناسب للويب قبل الحفظ.
         files ??= new List<IFormFile>();
         if (files.Count == 0 && Request.HasFormContentType)
         {
@@ -295,7 +299,10 @@ public class AdminProductsController : ControllerBase
             .MaxAsync();
 
         var sort = currentMaxSort ?? 0;
-        var allowedExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".webp" };
+        var allowedExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif"
+        };
         var created = new List<object>();
 
         foreach (var file in files)
@@ -304,14 +311,44 @@ public class AdminProductsController : ControllerBase
 
             var ext = Path.GetExtension(file.FileName);
             if (string.IsNullOrWhiteSpace(ext) || !allowedExt.Contains(ext))
-                return BadRequest(new { message = "Invalid file type. Allowed: jpg, jpeg, png, webp" });
+                return BadRequest(new { message = "Invalid file type. Allowed: jpg, jpeg, png, webp, bmp, gif" });
 
-            var key = $"products/{id}/{Guid.NewGuid():N}{ext.ToLowerInvariant()}";
+            var safeAlt = string.IsNullOrWhiteSpace(alt)
+                ? $"{product.Title} - DR SEOUL BEAUTY Iraq"
+                : alt.Trim();
 
-            await using var stream = file.OpenReadStream();
-            var contentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType;
+            await using var originalStream = file.OpenReadStream();
+            await using var webpStream = new MemoryStream();
 
-            var upload = await _storage.UploadAsync(stream, key, contentType, HttpContext.RequestAborted);
+            try
+            {
+                using var image = await Image.LoadAsync(originalStream, HttpContext.RequestAborted);
+
+                const int maxDimension = 1800;
+                if (image.Width > maxDimension || image.Height > maxDimension)
+                {
+                    image.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Size = new Size(maxDimension, maxDimension),
+                        Mode = ResizeMode.Max
+                    }));
+                }
+
+                await image.SaveAsWebpAsync(webpStream, new WebpEncoder
+                {
+                    Quality = 82
+                }, HttpContext.RequestAborted);
+            }
+            catch
+            {
+                // إذا فشل التحويل لأي سبب، ارفع الملف الأصلي بدل ما تفشل العملية.
+                originalStream.Position = 0;
+                await originalStream.CopyToAsync(webpStream, HttpContext.RequestAborted);
+            }
+
+            webpStream.Position = 0;
+            var key = $"products/{id}/{Guid.NewGuid():N}.webp";
+            var upload = await _storage.UploadAsync(webpStream, key, "image/webp", HttpContext.RequestAborted);
 
             sort += 1;
             var img = new ProductImage
@@ -319,17 +356,22 @@ public class AdminProductsController : ControllerBase
                 Id = Guid.NewGuid(),
                 ProductId = id,
                 Url = upload.Url,
-                Alt = alt,
+                Alt = safeAlt,
                 SortOrder = sort,
                 CreatedAt = DateTime.UtcNow
             };
 
             _db.ProductImages.Add(img);
-            created.Add(new { img.Id, img.Url, img.Alt, img.SortOrder });
+            created.Add(new { img.Id, img.Url, img.Alt, img.SortOrder, format = "webp" });
         }
 
         await _db.SaveChangesAsync();
-        return Ok(new { items = created });
+        return Ok(new
+        {
+            items = created,
+            urls = created.Select(x => x.GetType().GetProperty("Url")?.GetValue(x)?.ToString()).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray(),
+            message = "Images uploaded and optimized successfully."
+        });
     }
 
     [HttpDelete("{id:guid}/images/{imageId:guid}")]

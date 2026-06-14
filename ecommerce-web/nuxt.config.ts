@@ -65,7 +65,7 @@ export default defineNuxtConfig({
       titleTemplate: '%s',
       // ✅ Arabic first (RTL)
       // Force LTR for all locales.
-      htmlAttrs: { lang: 'en', dir: 'ltr', class: 'theme-light' },
+      htmlAttrs: { lang: 'ar', dir: 'rtl', class: 'theme-light' },
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -102,8 +102,8 @@ export default defineNuxtConfig({
       // ✅ صفحات ديناميكية لازم تكون دائمًا أحدث نسخة
       // حتى ما تحتاج Redeploy حتى يبان المنتج/التعديل.
       '/': { headers: { 'cache-control': 'no-store' } },
-      '/products': { headers: { 'cache-control': 'no-store' } },
-      '/products/**': { headers: { 'cache-control': 'no-store' } },
+      '/products': { headers: { 'cache-control': 'public, max-age=120, s-maxage=300, stale-while-revalidate=600' } },
+      '/products/**': { headers: { 'cache-control': 'public, max-age=120, s-maxage=300, stale-while-revalidate=600' } },
       '/iraq': { headers: { 'cache-control': 'no-store' } },
       '/iraq/**': { headers: { 'cache-control': 'no-store' } },
       '/intro': { headers: { 'cache-control': 'no-store' } },
@@ -114,6 +114,8 @@ export default defineNuxtConfig({
       // Long-term cache for built assets
       '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
       '/icons/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+      '/api/bff/uploads/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+      '/api/uploads/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
 
       // ✅ كاش للصور
       '/**/*.png': { headers: { 'cache-control': 'public, max-age=2592000' } },

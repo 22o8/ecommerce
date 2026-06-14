@@ -14,7 +14,12 @@
           class="img"
           :class="{ zooming: zoomed }"
           :src="current"
-          :alt="title || 'Product'"
+          :alt="title || 'Product image - DR SEOUL BEAUTY'"
+          :title="title || 'Product image - DR SEOUL BEAUTY'"
+          width="900"
+          height="900"
+          loading="eager"
+          fetchpriority="high"
           fit="contain"
           :img-style="imgStyle"
           wrapper-class="w-full h-full"
@@ -41,11 +46,12 @@
         v-for="(src,i) in images"
         :key="src + i"
         type="button"
+        :aria-label="`عرض صورة ${i + 1} من ${images.length}`"
         class="thumb"
         :class="{ active: i===index }"
         @click="setIndex(i)"
       >
-        <SmartImage class="thumbImg" :src="src" :alt="title || 'thumb'" fit="cover" wrapper-class="w-full h-full" img-class="w-full h-full" />
+        <SmartImage class="thumbImg" :src="src" :alt="`${title || 'Product'} thumbnail ${i + 1}`" :title="`${title || 'Product'} thumbnail ${i + 1}`" width="120" height="120" fit="cover" wrapper-class="w-full h-full" img-class="w-full h-full" />
       </button>
     </div>
 
@@ -67,7 +73,7 @@
             @touchmove.passive="onFsTouchMove"
             @touchend.passive="onFsTouchEnd"
           >
-            <SmartImage class="fsImg" :src="current" :alt="title || 'Product'" />
+            <SmartImage class="fsImg" :src="current" :alt="title || 'Product image - DR SEOUL BEAUTY'" :title="title || 'Product image - DR SEOUL BEAUTY'" width="1200" height="1200" fit="contain" />
 
             <button v-if="images.length>1" class="fsNav left" type="button" @click.stop="prev" aria-label="Prev">
               <Icon name="mdi:chevron-left" class="text-3xl" />
@@ -78,7 +84,7 @@
           </div>
 
           <div class="fsDots" v-if="images.length>1">
-            <button v-for="(src,i) in images" :key="'d'+i" type="button" class="dot" :class="{ on: i===index }" @click="setIndex(i)" />
+            <button v-for="(src,i) in images" :key="'d'+i" type="button" class="dot" :aria-label="`الانتقال إلى صورة ${i + 1}`" :class="{ on: i===index }" @click="setIndex(i)" />
           </div>
         </div>
       </div>

@@ -4,9 +4,9 @@
       :class="['relative overflow-hidden', props.rounded, props.background, props.wrapperClass]">
     <img
       :src="currentSrc"
-      :alt="props.alt"
+      :alt="computedAlt"
       :loading="props.loading"
-      :title="props.title || props.alt"
+      :title="props.title || computedAlt"
       :width="props.width"
       :height="props.height"
       decoding="async"
@@ -89,6 +89,8 @@ watch(
 )
 
 const currentSrc = computed(() => srcRef.value || FALLBACK)
+
+const computedAlt = computed(() => props.alt || props.title || 'DR SEOUL BEAUTY image')
 
 function onError() {
   if (srcRef.value !== FALLBACK) srcRef.value = FALLBACK
