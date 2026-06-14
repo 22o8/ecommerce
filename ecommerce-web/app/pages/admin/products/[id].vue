@@ -203,7 +203,7 @@
 
               <div v-else class="grid grid-cols-3 gap-2">
                 <div v-for="img in images" :key="img.id" class="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-                  <img :src="resolveUploadUrl(img.url || img.imageUrl || img.path)" class="h-24 w-full object-cover" />
+                  <img :src="resolveUploadUrl(img.url || img.imageUrl || img.path)" class="h-24 w-full object-cover" alt="صورة المنتج" loading="lazy" decoding="async" />
                   <button
                     type="button"
                     class="absolute right-1 top-1 rounded-lg bg-black/60 px-2 py-1 text-xs text-white hover:bg-black/80"

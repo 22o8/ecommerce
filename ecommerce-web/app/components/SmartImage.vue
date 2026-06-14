@@ -1,14 +1,18 @@
 <template>
   <div
-      :style="props.wrapperStyle"
-      :class="['relative overflow-hidden', props.rounded, props.background, props.wrapperClass]">
-    <img
+    :style="props.wrapperStyle"
+    :class="['relative overflow-hidden', props.rounded, props.background, props.wrapperClass]"
+  >
+    <NuxtImg
       :src="currentSrc"
       :alt="computedAlt"
       :loading="props.loading"
       :title="props.title || computedAlt"
       :width="props.width"
       :height="props.height"
+      :sizes="props.sizes"
+      :quality="props.quality"
+      :format="props.format"
       decoding="async"
       :fetchpriority="props.fetchpriority"
       :style="props.imgStyle"
@@ -32,6 +36,9 @@ type SmartImageProps = {
   title?: string
   width?: number | string
   height?: number | string
+  sizes?: string
+  quality?: number | string
+  format?: 'webp' | 'avif' | 'jpg' | 'png'
   fetchpriority?: 'high' | 'low' | 'auto'
   fit?: 'cover' | 'contain'
   loading?: 'lazy' | 'eager'
@@ -48,6 +55,9 @@ const props = withDefaults(defineProps<SmartImageProps>(), {
   title: '',
   width: undefined,
   height: undefined,
+  sizes: 'sm:100vw md:50vw lg:33vw',
+  quality: 80,
+  format: 'webp',
   fetchpriority: 'auto',
   fit: 'cover',
   loading: 'lazy',
@@ -59,22 +69,25 @@ const props = withDefaults(defineProps<SmartImageProps>(), {
   background: 'bg-transparent',
 })
 
-// Fallback (keeps UI stable if an image url is missing / broken)
 const FALLBACK = '/img-placeholder.svg'
-
 const api = useApi()
 
 function resolveUrl(v: string | undefined | null) {
   const raw = (v || '').trim()
   if (!raw) return FALLBACK
 
-  // Leave absolute URLs, data URIs, and local public assets as-is
-  if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('data:') || raw.startsWith('/_nuxt/') || raw.startsWith('/favicon') || raw.startsWith('/hero-placeholder')) {
+  if (
+    raw.startsWith('http://') ||
+    raw.startsWith('https://') ||
+    raw.startsWith('data:') ||
+    raw.startsWith('/_nuxt/') ||
+    raw.startsWith('/favicon') ||
+    raw.startsWith('/hero-placeholder') ||
+    raw.startsWith('/img-placeholder')
+  ) {
     return raw
   }
 
-  // If backend returns "/uploads/..." or "uploads/...", route via BFF proxy:
-  // -> "/api/bff/uploads/..."
   return api.buildAssetUrl(raw)
 }
 
@@ -89,7 +102,6 @@ watch(
 )
 
 const currentSrc = computed(() => srcRef.value || FALLBACK)
-
 const computedAlt = computed(() => props.alt || props.title || 'DR SEOUL BEAUTY image')
 
 function onError() {

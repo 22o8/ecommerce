@@ -7,6 +7,7 @@ using Ecommerce.Api.Contracts.Appearance;
 using Ecommerce.Api.Domain.Entities;
 using Ecommerce.Api.Infrastructure.Data;
 using Ecommerce.Api.Infrastructure.Storage;
+using Ecommerce.Api.Infrastructure.Images;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -109,26 +110,32 @@ public class AdminAppearanceController : ControllerBase
     }
 
     [HttpPost("upload")]
-    [RequestSizeLimit(160_000_000)]
-    [RequestFormLimits(MultipartBodyLengthLimit = 160_000_000)]
+    [RequestSizeLimit(500_000_000)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 500_000_000)]
     public async Task<ActionResult<object>> Upload([FromForm] IFormFile file)
     {
         if (file is null || file.Length == 0)
             return BadRequest(new { message = "File is required" });
 
-        var ext = Path.GetExtension(file.FileName);
         var isVideo = (file.ContentType ?? string.Empty).StartsWith("video/", StringComparison.OrdinalIgnoreCase);
-        if (string.IsNullOrWhiteSpace(ext)) ext = isVideo ? ".mp4" : ".jpg";
-
         var id = Guid.NewGuid();
-        var folder = isVideo ? "intro-videos" : "appearance";
-        var key = $"uploads/{folder}/{id}{ext}";
 
-        await using var stream = file.OpenReadStream();
-        // IStorageService.UploadAsync expects (Stream stream, string key, string contentType)
-        var url = await _storage.UploadAsync(stream, key, file.ContentType);
+        if (isVideo)
+        {
+            var ext = Path.GetExtension(file.FileName);
+            if (string.IsNullOrWhiteSpace(ext)) ext = ".mp4";
+            var key = $"uploads/intro-videos/{id}{ext}";
+            await using var videoStream = file.OpenReadStream();
+            var storedVideo = await _storage.UploadAsync(videoStream, key, string.IsNullOrWhiteSpace(file.ContentType) ? "video/mp4" : file.ContentType, HttpContext.RequestAborted);
+            return Ok(new { url = storedVideo.Url, key = storedVideo.Key, optimized = false });
+        }
 
-        return Ok(new { url });
+        var optimized = await ImageOptimizer.OptimizeImageToWebpAsync(file, HttpContext.RequestAborted);
+        await using var stream = optimized.Stream;
+        var imageKey = $"uploads/appearance/{id}{optimized.Extension}";
+        var stored = await _storage.UploadAsync(stream, imageKey, optimized.ContentType, HttpContext.RequestAborted);
+
+        return Ok(new { url = stored.Url, key = stored.Key, optimized = optimized.Optimized });
     }
 
     private async Task<AppearanceConfig> GetOrCreateConfig()

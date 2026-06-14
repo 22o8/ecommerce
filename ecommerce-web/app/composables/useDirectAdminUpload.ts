@@ -20,12 +20,8 @@ function authHeaders() {
 
 export function useDirectAdminUpload() {
   async function upload(path: string, file: File, options: DirectUploadOptions = {}) {
-    const maxMb = options.maxMb ?? 120
-    const sizeMb = file.size / 1024 / 1024
-    if (sizeMb > maxMb) {
-      throw new Error(`حجم الملف كبير. الحد الأقصى ${maxMb}MB`)
-    }
-
+    // لا نرفض الصور الكبيرة من الواجهة.
+    // السيرفر يستقبلها ثم يحولها تلقائياً إلى WebP/AVIF-ready ويضغطها.
     const fd = new FormData()
     fd.append('file', file)
     const normalizedPath = path.replace(/^\/+/, '')

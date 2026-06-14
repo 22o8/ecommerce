@@ -58,6 +58,7 @@
       <div class="product-card-actions" @click.stop>
         <button
           type="button"
+          :aria-label="`إضافة ${displayName} إلى السلة`"
           class="product-card-btn product-card-btn--cart"
           :class="props.compact ? 'product-card-btn--compact' : ''"
           @click.stop="addToCart"
@@ -69,6 +70,7 @@
 
         <button
           type="button"
+          :aria-label="`شراء ${displayName} الآن`"
           class="product-card-btn product-card-btn--buy"
           :class="props.compact ? 'product-card-btn--compact' : ''"
           @click.stop="openBuyConfirm"
@@ -105,7 +107,7 @@
           </p>
 
           <div class="buy-confirm-product">
-            <img :src="mainImage" :alt="displayName" />
+            <SmartImage :src="mainImage" :alt="displayName" :title="displayName" width="96" height="96" fit="contain" wrapper-class="w-16 h-16 shrink-0" img-class="w-full h-full" />
             <div>
               <b class="rtl-text">{{ displayName }}</b>
               <span class="keep-ltr">{{ formatPrice(displayFinalPrice) }}</span>

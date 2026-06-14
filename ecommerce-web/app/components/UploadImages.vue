@@ -34,7 +34,7 @@
     <div class="grid">
       <!-- صور السيرفر (modelValue) -->
       <div v-for="(img, idx) in modelValue" :key="'server-'+idx" class="card">
-        <img :src="assetUrl(img)" class="img" />
+        <SmartImage :src="assetUrl(img)" alt="صورة مرفوعة - DR SEOUL BEAUTY" title="صورة مرفوعة" width="320" height="220" fit="cover" wrapper-class="img" img-class="w-full h-full" />
         <div class="actions">
           <button class="mini danger" :disabled="isUploading" @click="removeServer(idx)">حذف</button>
           <button class="mini" @click="copy(img)">نسخ الرابط</button>
@@ -47,7 +47,7 @@
 
       <!-- معاينات محلية قبل الرفع -->
       <div v-for="(f, idx) in files" :key="'local-'+idx" class="card">
-        <img :src="f.preview" class="img" />
+        <img :src="f.preview" class="img" alt="معاينة صورة قبل الرفع" loading="lazy" decoding="async" />
         <div class="actions">
           <button class="mini danger" :disabled="isUploading" @click="removeLocal(idx)">إزالة</button>
         </div>
@@ -195,7 +195,7 @@ const optimizeImageFile = async (file: File): Promise<File> => {
   if (!file.type.startsWith('image/')) return file
 
   const bitmap = await createImageBitmap(file)
-  const max = 1800
+  const max = 1920
   const ratio = Math.min(1, max / Math.max(bitmap.width, bitmap.height))
   const width = Math.max(1, Math.round(bitmap.width * ratio))
   const height = Math.max(1, Math.round(bitmap.height * ratio))
@@ -208,7 +208,7 @@ const optimizeImageFile = async (file: File): Promise<File> => {
   if (!ctx) return file
   ctx.drawImage(bitmap, 0, 0, width, height)
 
-  const blob: Blob | null = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.82))
+  const blob: Blob | null = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.80))
   if (!blob) return file
 
   const baseName = file.name.replace(/\.[^.]+$/, '') || 'image'

@@ -175,7 +175,7 @@
                 :key="idx"
                 class="group relative overflow-hidden rounded-xl border border-white/10 bg-black/20"
               >
-                <img :src="f.preview" class="h-20 w-full object-cover" />
+                <img :src="f.preview" class="h-20 w-full object-cover" alt="معاينة صورة المنتج قبل الرفع" loading="lazy" decoding="async" />
                 <button
                   type="button"
                   class="absolute right-2 top-2 rounded-lg bg-black/60 px-2 py-1 text-xs opacity-0 transition group-hover:opacity-100"

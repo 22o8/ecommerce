@@ -35,6 +35,7 @@
             <Icon name="mdi:magnify" class="text-lg opacity-70" />
             <input
               v-model="q"
+              aria-label="بحث عن منتج"
               class="w-full bg-transparent outline-none text-sm rtl-text"
               :placeholder="t('productsPage.searchPlaceholder')"
               @keydown.enter="goSearch"
@@ -76,7 +77,7 @@
               </NuxtLink>
             </div>
           </div>
-          <UiButton variant="secondary" @click="goSearch">
+          <UiButton variant="secondary" aria-label="تنفيذ البحث" @click="goSearch">
             <Icon name="mdi:arrow-right" class="keep-ltr" />
           </UiButton>
         </div>
@@ -84,14 +85,14 @@
         <!-- Actions -->
 	        <div class="flex items-center gap-0.5 sm:gap-2 flex-shrink-0">
 	          <!-- Brands -->
-	          <NuxtLink to="/brands" class="hidden sm:block">
+	          <NuxtLink to="/brands" class="hidden sm:block" aria-label="البراندات">
 	            <UiButton variant="secondary" class="px-2 sm:px-3">
               <Icon name="mdi:storefront-outline" class="text-lg" />
               <span class="hidden md:inline rtl-text">{{ t('home.brands') }}</span>
             </UiButton>
           </NuxtLink>
 	          <!-- Favorites -->
-          <NuxtLink v-if="auth.isAuthed" to="/favorites" class="hidden sm:block">
+          <NuxtLink v-if="auth.isAuthed" to="/favorites" class="hidden sm:block" aria-label="المفضلة">
             <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0">
               <Icon name="mdi:heart-outline" class="text-lg" />
               <span class="hidden md:inline rtl-text">{{ t('nav.favorites') }}</span>
@@ -105,7 +106,7 @@
           </NuxtLink>
 
           <!-- Cart: يظهر على الهاتف أيضاً (أيقونة فقط) -->
-	          <NuxtLink to="/cart" class="block">
+	          <NuxtLink to="/cart" class="block" aria-label="السلة">
 	            <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0">
               <Icon name="mdi:cart-outline" class="text-lg" />
 	              <span class="hidden sm:inline rtl-text">{{ t('nav.cart') }}</span>
@@ -117,12 +118,12 @@
               </span>
             </UiButton>
           </NuxtLink>
-	          <UiButton variant="ghost" class="px-2 sm:px-3 shrink-0" @click="toggleLocale" :title="t('nav.language')">
+	          <UiButton variant="ghost" class="px-2 sm:px-3 shrink-0" aria-label="تغيير اللغة" @click="toggleLocale" :title="t('nav.language')">
             <Icon name="mdi:translate" class="text-lg" />
             <span class="hidden sm:inline keep-ltr">{{ ui.locale.toUpperCase() }}</span>
           </UiButton>
 
-	          <UiButton variant="ghost" class="px-2 sm:px-3 shrink-0" @click="toggleTheme" :title="ui.theme === 'dark' ? t('ui.dark') : t('ui.light')">
+	          <UiButton variant="ghost" class="px-2 sm:px-3 shrink-0" aria-label="تبديل الوضع الليلي والنهاري" @click="toggleTheme" :title="ui.theme === 'dark' ? t('ui.dark') : t('ui.light')">
             <Icon :name="ui.theme === 'dark' ? 'mdi:weather-night' : 'mdi:white-balance-sunny'" class="text-lg" />
           </UiButton>
 
@@ -145,7 +146,7 @@
             <span class="hidden sm:inline rtl-text">{{ t('nav.logout') }}</span>
           </UiButton>
 
-	        <button class="md:hidden shrink-0 min-w-[40px] rounded-2xl border border-app bg-surface px-2 py-2" @click="open = !open">
+	        <button class="md:hidden shrink-0 min-w-[40px] rounded-2xl border border-app bg-surface px-2 py-2" type="button" aria-label="فتح القائمة" @click="open = !open">
             <Icon name="mdi:menu" class="text-xl" />
           </button>
         </div>
@@ -160,6 +161,7 @@
             </button>
             <input
               v-model="q"
+              aria-label="بحث عن منتج"
               class="mobile-search-shell__input rtl-text"
               :placeholder="t('productsPage.searchPlaceholder')"
               @focus="openSearch = true"
@@ -199,6 +201,7 @@
             <Icon name="mdi:magnify" class="text-lg opacity-70" />
             <input
               v-model="q"
+              aria-label="بحث عن منتج"
               class="w-full bg-transparent outline-none text-sm rtl-text"
               :placeholder="t('productsPage.searchPlaceholder')"
               @keydown.enter="goSearch"

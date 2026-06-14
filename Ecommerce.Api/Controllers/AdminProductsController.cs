@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Ecommerce.Api.Domain.Entities;
 using Ecommerce.Api.Infrastructure.Data;
 using Ecommerce.Api.Infrastructure.Storage;
+using Ecommerce.Api.Infrastructure.Images;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -317,38 +318,10 @@ public class AdminProductsController : ControllerBase
                 ? $"{product.Title} - DR SEOUL BEAUTY Iraq"
                 : alt.Trim();
 
-            await using var originalStream = file.OpenReadStream();
-            await using var webpStream = new MemoryStream();
-
-            try
-            {
-                using var image = await Image.LoadAsync(originalStream, HttpContext.RequestAborted);
-
-                const int maxDimension = 1800;
-                if (image.Width > maxDimension || image.Height > maxDimension)
-                {
-                    image.Mutate(x => x.Resize(new ResizeOptions
-                    {
-                        Size = new Size(maxDimension, maxDimension),
-                        Mode = ResizeMode.Max
-                    }));
-                }
-
-                await image.SaveAsWebpAsync(webpStream, new WebpEncoder
-                {
-                    Quality = 82
-                }, HttpContext.RequestAborted);
-            }
-            catch
-            {
-                // إذا فشل التحويل لأي سبب، ارفع الملف الأصلي بدل ما تفشل العملية.
-                originalStream.Position = 0;
-                await originalStream.CopyToAsync(webpStream, HttpContext.RequestAborted);
-            }
-
-            webpStream.Position = 0;
-            var key = $"products/{id}/{Guid.NewGuid():N}.webp";
-            var upload = await _storage.UploadAsync(webpStream, key, "image/webp", HttpContext.RequestAborted);
+            var optimized = await ImageOptimizer.OptimizeImageToWebpAsync(file, HttpContext.RequestAborted);
+            await using var optimizedStream = optimized.Stream;
+            var key = $"products/{id}/{Guid.NewGuid():N}{optimized.Extension}";
+            var upload = await _storage.UploadAsync(optimizedStream, key, optimized.ContentType, HttpContext.RequestAborted);
 
             sort += 1;
             var img = new ProductImage
@@ -362,7 +335,7 @@ public class AdminProductsController : ControllerBase
             };
 
             _db.ProductImages.Add(img);
-            created.Add(new { img.Id, img.Url, img.Alt, img.SortOrder, format = "webp" });
+            created.Add(new { img.Id, img.Url, img.Alt, img.SortOrder, format = upload.Url.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) ? "webp" : "original" });
         }
 
         await _db.SaveChangesAsync();

@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using Ecommerce.Api.Domain.Entities;
 using Ecommerce.Api.Infrastructure.Data;
 using Ecommerce.Api.Infrastructure.Storage;
+using Ecommerce.Api.Infrastructure.Images;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -134,7 +135,8 @@ public class AdminBrandsController : ControllerBase
 
     // Upload square logo
     [HttpPost("{id:guid}/logo")]
-    [RequestSizeLimit(10_000_000)]
+    [RequestSizeLimit(500_000_000)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 500_000_000)]
     public async Task<IActionResult> UploadLogo([FromRoute] Guid id, [FromForm] IFormFile? file)
     {
         var b = await _db.Brands.FirstOrDefaultAsync(x => x.Id == id);
@@ -147,33 +149,25 @@ public class AdminBrandsController : ControllerBase
         if (file == null || file.Length == 0)
             return BadRequest(new { message = "No file uploaded" });
 
-        var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        { ".jpg", ".jpeg", ".png", ".webp" };
-
-        var ext = Path.GetExtension(file.FileName);
-        if (string.IsNullOrWhiteSpace(ext) || !allowed.Contains(ext))
-            return BadRequest(new { message = $"File type not allowed: {ext}" });
-
-        // Use the same storage pipeline as product images so logos are visible consistently on all devices.
-        // This also keeps brand images compatible with local storage or S3/R2 without extra per-device logic.
+        // يقبل أي حجم صورة تقريباً، ثم يحول الشعار تلقائياً إلى WebP مضغوط.
         var oldKey = ExtractStorageKeyFromUrl(b.LogoUrl);
-        var key = $"brands/{id}/logo{ext.ToLowerInvariant()}";
 
-        await using (var stream = file.OpenReadStream())
+        var optimized = await ImageOptimizer.OptimizeImageToWebpAsync(file, HttpContext.RequestAborted);
+        var newKey = $"brands/{id}/logo{optimized.Extension}";
+        await using (var stream = optimized.Stream)
         {
-            var contentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType;
-            var upload = await _storage.UploadAsync(stream, key, contentType, HttpContext.RequestAborted);
+            var upload = await _storage.UploadAsync(stream, newKey, optimized.ContentType, HttpContext.RequestAborted);
             b.LogoUrl = upload.Url;
         }
 
-        if (!string.IsNullOrWhiteSpace(oldKey) && !string.Equals(oldKey, key, StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(oldKey) && !string.Equals(oldKey, newKey, StringComparison.OrdinalIgnoreCase))
         {
             try { await _storage.DeleteAsync(oldKey, HttpContext.RequestAborted); } catch { }
         }
 
         await _db.SaveChangesAsync();
 
-        return Ok(new { logoUrl = b.LogoUrl, url = b.LogoUrl, key });
+        return Ok(new { logoUrl = b.LogoUrl, url = b.LogoUrl, optimized = true });
     }
 
     public class UpsertBrandRequest

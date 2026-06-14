@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Ecommerce.Api.Domain.Entities;
 using Ecommerce.Api.Infrastructure.Data;
 using Ecommerce.Api.Infrastructure.Storage;
+using Ecommerce.Api.Infrastructure.Images;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -194,7 +195,8 @@ public class AdminCategoriesController : ControllerBase
     }
 
     [HttpPost("upload")]
-    [RequestSizeLimit(20_000_000)]
+    [RequestSizeLimit(500_000_000)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 500_000_000)]
     public async Task<ActionResult<object>> Upload([FromForm] IFormFile? file)
     {
         if ((file is null || file.Length == 0) && Request.HasFormContentType && Request.Form.Files.Count > 0)
@@ -203,16 +205,13 @@ public class AdminCategoriesController : ControllerBase
         if (file is null || file.Length == 0)
             return BadRequest(new { message = "File is required" });
 
-        var ext = Path.GetExtension(file.FileName);
-        if (string.IsNullOrWhiteSpace(ext)) ext = ".jpg";
-
         var id = Guid.NewGuid();
-        var key = $"uploads/categories/{id}{ext}";
+        var optimized = await ImageOptimizer.OptimizeImageToWebpAsync(file, HttpContext.RequestAborted);
+        await using var stream = optimized.Stream;
+        var key = $"uploads/categories/{id}{optimized.Extension}";
+        var stored = await _storage.UploadAsync(stream, key, optimized.ContentType, HttpContext.RequestAborted);
 
-        await using var stream = file.OpenReadStream();
-        var stored = await _storage.UploadAsync(stream, key, file.ContentType);
-
-        return Ok(new { url = stored.Url, key = stored.Key });
+        return Ok(new { url = stored.Url, key = stored.Key, optimized = optimized.Optimized });
     }
 
 

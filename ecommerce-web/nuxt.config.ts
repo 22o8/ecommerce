@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-05',
 
-  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@vueuse/nuxt'],
+  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@vueuse/nuxt', '@nuxt/image', '@vercel/speed-insights'],
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
@@ -93,6 +93,21 @@ export default defineNuxtConfig({
     },
   },
 
+
+  image: {
+    quality: 80,
+    format: ['avif', 'webp'],
+    screens: {
+      xs: 320,
+      sm: 640,
+      md: 768,
+      lg: 1024,
+      xl: 1280,
+      xxl: 1536,
+    },
+    domains: ['drseoulbeauty.store', 'api.drseoulbeauty.store', 'ecommerce-api-22o8.fly.dev'],
+  },
+
   nitro: {
     // ✅ أفضل وضوحًا للنشر على Vercel
     preset: 'vercel',
@@ -118,10 +133,11 @@ export default defineNuxtConfig({
       '/api/uploads/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
 
       // ✅ كاش للصور
-      '/**/*.png': { headers: { 'cache-control': 'public, max-age=2592000' } },
-      '/**/*.jpg': { headers: { 'cache-control': 'public, max-age=2592000' } },
-      '/**/*.jpeg': { headers: { 'cache-control': 'public, max-age=2592000' } },
-      '/**/*.webp': { headers: { 'cache-control': 'public, max-age=2592000' } },
+      '/**/*.png': { headers: { 'cache-control': 'public, max-age=2592000, stale-while-revalidate=86400' } },
+      '/**/*.jpg': { headers: { 'cache-control': 'public, max-age=2592000, stale-while-revalidate=86400' } },
+      '/**/*.jpeg': { headers: { 'cache-control': 'public, max-age=2592000, stale-while-revalidate=86400' } },
+      '/**/*.webp': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+      '/**/*.avif': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
       '/**/*.svg': { headers: { 'cache-control': 'public, max-age=2592000' } },
       '/favicon.ico': { headers: { 'cache-control': 'no-cache, no-store, must-revalidate' } },
       '/**/*.ico': { headers: { 'cache-control': 'public, max-age=2592000' } },
