@@ -145,7 +145,6 @@ const links = computed(() => [
   { to: '/admin/brand-discounts', label: t('admin.brandDiscountsNav') || 'تخفيضات البراندات', icon: 'mdi:tag-percent-outline' },
   { to: '/admin/orders', label: t('admin.orders'), icon: 'mdi:receipt-text-outline' },
   { to: '/admin/purchase-invoices', label: 'فواتير الشراء', icon: 'mdi:cash-register' },
-  { to: '/admin/backups', label: 'نسخة احتياطية', icon: 'mdi:cloud-download-outline' },
   { to: '/admin/insights', label: t('admin.insights'), icon: 'mdi:chart-areaspline' },
   { to: '/admin/coupons', label: t('admin.couponsLabel') || 'Coupons', icon: 'mdi:ticket-percent-outline' },
   { to: '/admin/ads', label: t('admin.adsLabel') || 'Ads', icon: 'mdi:bullhorn-outline' },

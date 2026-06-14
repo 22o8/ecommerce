@@ -80,7 +80,6 @@ export function useAdminApi() {
       api.put<T>(`/admin/products/${productId}/images/reorder`, { imageIds }),
 
     // Backups
-    downloadFullBackupUrl: () => '/api/bff/admin/backups/full',
 
     // Admin Services
     // Swagger: GET/POST /api/admin/services
