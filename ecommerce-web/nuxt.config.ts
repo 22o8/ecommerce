@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2026-01-05',
 
-  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@vueuse/nuxt', '@nuxt/image', '@vercel/speed-insights'],
+  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@vueuse/nuxt', '@nuxt/image'],
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
