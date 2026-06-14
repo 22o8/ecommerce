@@ -9,7 +9,7 @@
         </div>
 
         <div class="flex gap-2 flex-wrap">
-          <NuxtLink to="/admin/products/new" class="admin-primary">+ {{ t('admin.newProduct') }}</NuxtLink><button class="admin-ghost" type="button" @click="fetchList(1)">{{ t('common.refresh') }}</button></div>
+          <NuxtLink to="/admin/products/new" class="admin-primary">+ {{ t('admin.newProduct') }}</NuxtLink><NuxtLink to="/admin/backups" class="admin-ghost">نسخة احتياطية</NuxtLink><button class="admin-ghost" type="button" @click="fetchList(1)">{{ t('common.refresh') }}</button></div>
       </div>
 
       <!-- Filters -->

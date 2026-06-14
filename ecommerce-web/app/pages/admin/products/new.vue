@@ -233,7 +233,7 @@ const categorySubCategoryItems = ref<any[]>([])
 const categorySubCategoryOptions = computed(() => (categorySubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
 async function loadCategorySubCategories() {
-  form.subCategory = categorySubCategoryOptions.value.some((x:any) => x.key === form.subCategory) ? form.subCategory : ''
+  const wantedSubCategory = String(form.subCategory || '')
   const selected = (categories.value || []).find((x:any) => String(x.key || '') === String(form.category || ''))
   if (!selected?.id || !selected?.hasDetailSections) {
     categorySubCategoryItems.value = []
@@ -243,7 +243,8 @@ async function loadCategorySubCategories() {
   try {
     const res: any = await $fetch('/api/bff/categories/active', { query: { section: 'regular', parentId: selected.id, _ts: Date.now() } })
     categorySubCategoryItems.value = Array.isArray(res) ? res : []
-    if (!categorySubCategoryItems.value.some((x:any) => String(x.key || '') === String(form.subCategory || ''))) form.subCategory = ''
+    if (!categorySubCategoryItems.value.some((x:any) => String(x.key || '') === wantedSubCategory)) form.subCategory = ''
+    else form.subCategory = wantedSubCategory
   } catch {
     categorySubCategoryItems.value = []
     form.subCategory = ''
@@ -257,7 +258,7 @@ const problemSubCategoryOptions = computed(() => (problemSubCategoryItems.value 
 
 
 async function loadProblemSubCategories() {
-  form.problemSubCategory = problemSubCategoryOptions.value.some((x:any) => x.key === form.problemSubCategory) ? form.problemSubCategory : ''
+  const wantedProblemSubCategory = String(form.problemSubCategory || '')
   const selected = (problemCategories.value || []).find((x:any) => String(x.key || '') === String(form.problemCategory || ''))
   if (!selected?.id) {
     problemSubCategoryItems.value = []
@@ -267,7 +268,8 @@ async function loadProblemSubCategories() {
   try {
     const res: any = await $fetch('/api/bff/categories/active', { query: { section: 'problem', parentId: selected.id, _ts: Date.now() } })
     problemSubCategoryItems.value = Array.isArray(res) ? res : []
-    if (!problemSubCategoryItems.value.some((x:any) => String(x.key || '') === String(form.problemSubCategory || ''))) form.problemSubCategory = ''
+    if (!problemSubCategoryItems.value.some((x:any) => String(x.key || '') === wantedProblemSubCategory)) form.problemSubCategory = ''
+    else form.problemSubCategory = wantedProblemSubCategory
   } catch {
     problemSubCategoryItems.value = []
     form.problemSubCategory = ''

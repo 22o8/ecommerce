@@ -276,7 +276,7 @@ const categorySubCategoryItems = ref<any[]>([])
 const categorySubCategoryOptions = computed(() => (categorySubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
 async function loadCategorySubCategories() {
-  form.subCategory = categorySubCategoryOptions.value.some((x:any) => x.key === form.subCategory) ? form.subCategory : ''
+  const wantedSubCategory = String(form.subCategory || '')
   const selected = (categories.value || []).find((x:any) => String(x.key || '') === String(form.category || ''))
   if (!selected?.id || !selected?.hasDetailSections) {
     categorySubCategoryItems.value = []
@@ -286,7 +286,8 @@ async function loadCategorySubCategories() {
   try {
     const res: any = await $fetch('/api/bff/categories/active', { query: { section: 'regular', parentId: selected.id, _ts: Date.now() } })
     categorySubCategoryItems.value = Array.isArray(res) ? res : []
-    if (!categorySubCategoryItems.value.some((x:any) => String(x.key || '') === String(form.subCategory || ''))) form.subCategory = ''
+    if (!categorySubCategoryItems.value.some((x:any) => String(x.key || '') === wantedSubCategory)) form.subCategory = ''
+    else form.subCategory = wantedSubCategory
   } catch {
     categorySubCategoryItems.value = []
     form.subCategory = ''
@@ -300,7 +301,7 @@ const problemSubCategoryOptions = computed(() => (problemSubCategoryItems.value 
 
 
 async function loadProblemSubCategories() {
-  form.problemSubCategory = problemSubCategoryOptions.value.some((x:any) => x.key === form.problemSubCategory) ? form.problemSubCategory : ''
+  const wantedProblemSubCategory = String(form.problemSubCategory || '')
   const selected = (problemCategories.value || []).find((x:any) => String(x.key || '') === String(form.problemCategory || ''))
   if (!selected?.id) {
     problemSubCategoryItems.value = []
@@ -310,7 +311,8 @@ async function loadProblemSubCategories() {
   try {
     const res: any = await $fetch('/api/bff/categories/active', { query: { section: 'problem', parentId: selected.id, _ts: Date.now() } })
     problemSubCategoryItems.value = Array.isArray(res) ? res : []
-    if (!problemSubCategoryItems.value.some((x:any) => String(x.key || '') === String(form.problemSubCategory || ''))) form.problemSubCategory = ''
+    if (!problemSubCategoryItems.value.some((x:any) => String(x.key || '') === wantedProblemSubCategory)) form.problemSubCategory = ''
+    else form.problemSubCategory = wantedProblemSubCategory
   } catch {
     problemSubCategoryItems.value = []
     form.problemSubCategory = ''
@@ -434,37 +436,30 @@ async function loadImages() {
 
 async function reloadAll() {
   loading.value = true
-  // ملاحظة: سابقاً كان يوجد متغير error، لكن الآن نعتمد على toast/errorMsg فقط.
-  // لذلك لا نستخدم error.value هنا حتى لا يحصل خطأ (error is not defined).
 
-  // لا نخلي فشل brands يمنع تحميل المنتج أو الصور (خصوصاً على الموبايل/شبكات ضعيفة)
-  const tasks: Array<Promise<any>> = []
+  try {
+    // مهم جداً: نحمل البراندات والتصنيفات أولاً قبل بيانات المنتج.
+    // سابقاً كانت صفحة التعديل تحمل المنتج قبل انتهاء التصنيفات، لذلك كان التصنيف الدقيق ينمسح من الفورم.
+    await Promise.all([
+      loadBrands().catch((e) => console.warn('[admin] loadBrands failed', e)),
+      fetchCategories(true, 'regular').catch((e) => console.warn('[admin] regular categories failed', e)),
+      fetchCategories(true, 'problem').catch((e) => console.warn('[admin] problem categories failed', e)),
+    ])
 
-  tasks.push(
-    loadBrands().catch((e) => {
-      console.warn('[admin] loadBrands failed', e)
-    })
-  )
-
-  tasks.push(
-    loadProduct().catch((e) => {
+    await loadProduct().catch((e) => {
       console.warn('[admin] loadProduct failed', e)
+      throw e
     })
-  )
 
-  // نجبر تحديث التصنيفات عند فتح تعديل المنتج حتى لا تبقى قائمة تصنيفات حل المشكلة قديمة بعد الإضافة من لوحة الإدارة.
-  tasks.push(fetchCategories(true, 'regular').catch(() => {}))
-  tasks.push(fetchCategories(true, 'problem').catch(() => {}))
+    await loadCategorySubCategories()
+    await loadProblemSubCategories()
 
-  // ننتظر أولاً المنتج حتى يصير عندنا id صحيح للصور
-  await Promise.all(tasks)
-  await loadProblemSubCategories()
-
-  await loadImages().catch((e) => {
-    console.warn('[admin] loadImages failed', e)
-  })
-
-  loading.value = false
+    await loadImages().catch((e) => {
+      console.warn('[admin] loadImages failed', e)
+    })
+  } finally {
+    loading.value = false
+  }
 }
 
 

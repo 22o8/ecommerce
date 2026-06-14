@@ -30,6 +30,8 @@ export function buildAssetUrl(p?: string | null) {
   const config = useRuntimeConfig()
   const apiBase = String((config.public as any)?.apiBase || '').replace(/\/$/, '')
   const apiOrigin = String((config.public as any)?.apiOrigin || '').replace(/\/$/, '')
+  const r2PublicUrl = String((config.public as any)?.r2PublicUrl || '').replace(/\/$/, '')
+  const r2LegacyPublicUrl = String((config.public as any)?.r2LegacyPublicUrl || '').replace(/\/$/, '')
 
   // 1) absolute URL
   // - لو كان http نحوله إلى https (خصوصاً Fly) لتجنب mixed content
@@ -38,6 +40,12 @@ export function buildAssetUrl(p?: string | null) {
   if (p.startsWith('http://') || p.startsWith('https://')) {
     try {
       const u = new URL(p)
+
+      // إذا كانت روابط الصور القديمة محفوظة في قاعدة البيانات على r2.dev
+      // نحولها تلقائياً إلى الدومين الجديد للصور بدون تعديل قاعدة البيانات.
+      if (r2PublicUrl && r2LegacyPublicUrl && p.startsWith(r2LegacyPublicUrl)) {
+        return safeUrl(p.replace(r2LegacyPublicUrl, r2PublicUrl))
+      }
 
       // proxy uploads عبر الـ BFF إذا كان نفس apiOrigin
       if (u.pathname.startsWith('/uploads/') && apiBase && apiOrigin) {

@@ -54,6 +54,8 @@ export default defineNuxtConfig({
 
       heroImage: process.env.NUXT_PUBLIC_HERO_IMAGE || '',
       gaId: process.env.NUXT_PUBLIC_GA_ID || '',
+      r2PublicUrl: process.env.R2_PUBLIC_URL || process.env.NUXT_PUBLIC_R2_PUBLIC_URL || '',
+      r2LegacyPublicUrl: process.env.R2_LEGACY_PUBLIC_URL || process.env.NUXT_PUBLIC_R2_LEGACY_PUBLIC_URL || 'https://pub-8972ea047b9a4be1a8fdddc3c996a48d.r2.dev',
     },
   },
 
@@ -105,7 +107,7 @@ export default defineNuxtConfig({
       xl: 1280,
       xxl: 1536,
     },
-    domains: ['drseoulbeauty.store', 'api.drseoulbeauty.store', 'ecommerce-api-22o8.fly.dev'],
+    domains: ['drseoulbeauty.store', 'api.drseoulbeauty.store', 'ecommerce-api-22o8.fly.dev', 'img.drseoulbeauty.store', 'pub-8972ea047b9a4be1a8fdddc3c996a48d.r2.dev'],
   },
 
   nitro: {

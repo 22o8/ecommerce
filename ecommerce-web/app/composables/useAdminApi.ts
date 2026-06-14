@@ -79,6 +79,9 @@ export function useAdminApi() {
     saveProductImageOrder: <T>(productId: string, imageIds: string[]) =>
       api.put<T>(`/admin/products/${productId}/images/reorder`, { imageIds }),
 
+    // Backups
+    downloadFullBackupUrl: () => '/api/bff/admin/backups/full',
+
     // Admin Services
     // Swagger: GET/POST /api/admin/services
     listServices: <T>(query?: any) => api.get<T>('/admin/services', query),
