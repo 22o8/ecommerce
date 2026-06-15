@@ -83,7 +83,7 @@
           <div class="flex justify-end gap-2 flex-wrap">
             <NuxtLink class="admin-pill" :to="`/admin/orders/${o.id}`">{{ t('common.details') }}</NuxtLink>
             <button class="admin-pill" type="button" @click="editOrder(o)">تعديل</button>
-            <button class="admin-pill" type="button" @click="markSold(o)">تم البيع</button>
+            <button class="admin-pill" type="button" @click="markSold(o)">قبول الفاتورة + نقاط</button>
             <button class="admin-danger" type="button" @click="removeOrder(o.id)" :disabled="loading">
               {{ t('common.delete') }}
             </button>
@@ -237,9 +237,22 @@ async function editOrder(o: OrderRow) {
 }
 
 async function markSold(o: OrderRow) {
-  const pointsRaw = prompt('النقاط التي ستصل للزبون بعد تأكيد البيع. اتركها فارغة للحساب التلقائي.', '')
-  const body:any = { status: 'Sold' }
-  if (pointsRaw) body.pointsOverride = Number(pointsRaw)
+  const feeRaw = prompt('مبلغ التوصيل بالدينار الذي تريد إضافته للفاتورة', String(o.deliveryFeeIqd || 0))
+  if (feeRaw === null) return
+
+  const pointsRaw = prompt('عدد نقاط الهدية التي ستصل للزبون بعد قبول الفاتورة. اتركها فارغة للحساب التلقائي.', '')
+  if (pointsRaw === null) return
+
+  const note = prompt('ملاحظة الإدارة على الفاتورة (اختياري)', o.adminNote || '')
+  if (note === null) return
+
+  const body:any = {
+    status: 'Sold',
+    deliveryFeeIqd: Math.max(0, Number(feeRaw || 0)),
+    adminNote: note || ''
+  }
+  if (String(pointsRaw).trim() !== '') body.pointsOverride = Math.max(0, Number(pointsRaw || 0))
+
   loading.value = true
   try {
     await api.patch(`/admin/orders/${o.id}/status`, body)

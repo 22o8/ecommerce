@@ -7,7 +7,7 @@
         </div>
         <div>
           <h1 class="text-2xl font-black rtl-text">إنشاء حساب</h1>
-          <p class="text-sm text-muted rtl-text">يمكن إنشاء الحساب بالإيميل أو رقم الهاتف، مع دعم كود المشاركة.</p>
+          <p class="text-sm text-muted rtl-text">يمكن إنشاء الحساب بالإيميل أو رقم الهاتف، وبعد التسجيل تظهر لك محفظة النقاط الخاصة بك.</p>
         </div>
       </div>
 
@@ -15,7 +15,11 @@
         <UiInput v-model="fullName" autocomplete="name" label="الاسم الكامل" class="rtl-text" />
         <UiInput v-model="phone" autocomplete="tel" label="رقم الهاتف" class="keep-ltr" />
         <UiInput v-model="email" type="email" autocomplete="email" label="الإيميل (اختياري إذا تستخدم الهاتف)" class="keep-ltr" />
-        <UiInput v-model="referralCode" label="كود المشاركة (اختياري)" class="keep-ltr" />
+        <div class="grid gap-1">
+          <label class="text-sm font-bold rtl-text">هل أتيت عن طريق رابط مشاركة؟ ضع كود المشاركة الذي وصلك</label>
+          <UiInput v-model="referralCode" label="كود المشاركة (اختياري)" class="keep-ltr" />
+          <p class="text-xs text-muted rtl-text">إذا ما عندك كود اترك الحقل فارغ.</p>
+        </div>
         <UiInput v-model="password" type="password" autocomplete="new-password" label="كلمة المرور" class="keep-ltr" />
 
         <UiButton :loading="loading" type="submit">

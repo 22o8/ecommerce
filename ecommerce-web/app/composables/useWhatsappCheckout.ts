@@ -63,10 +63,9 @@ export function useWhatsappCheckout() {
 
 
   const collectInvoiceExtras = () => {
-    if (!import.meta.client) return { deliveryFeeIqd: 0, customerNote: '' }
-    const feeRaw = prompt('مبلغ التوصيل بالدينار (اختياري)', '0') || '0'
-    const note = prompt('ملاحظة على الفاتورة أو العنوان (اختياري)', '') || ''
-    return { deliveryFeeIqd: Math.max(0, Number(feeRaw) || 0), customerNote: note }
+    // لا نطلب مبلغ التوصيل من الزبون نهائياً.
+    // الأدمن هو الذي يحدد مبلغ التوصيل والملاحظة من لوحة الفواتير حتى تنحسب الأرباح صح.
+    return { deliveryFeeIqd: 0, customerNote: '' }
   }
 
   const buildCartMessage = (items: WhatsappMessageItem[], meta?: WhatsappMessageMeta) => {
