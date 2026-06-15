@@ -33,17 +33,18 @@
       </div>
     </div>
 
+    <ReferralShareCard v-if="auth.isAuthed" />
+
     <div v-if="auth.isAuthed" class="card-soft p-6 md:p-8">
-      <h2 class="text-xl font-black rtl-text">شارك لأصحابك</h2>
-      <p class="mt-1 text-sm text-muted rtl-text">كل شخص يسجل عبر رابطك يظهر عند الإدارة، وهي تقرر الهدية: نقاط أو كوبون.</p>
-      <div class="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
-        <input class="input keep-ltr" readonly :value="wallet?.referralUrl || ''" />
-        <UiButton @click="copyReferral">
-          <Icon name="mdi:content-copy" />
-          <span>نسخ الرابط</span>
-        </UiButton>
+      <h2 class="text-xl font-black rtl-text">استبدال النقاط</h2>
+      <p class="mt-1 text-sm text-muted rtl-text">
+        عند وصولك إلى عدد نقاط مناسب، تواصل مع الإدارة. الإدارة تسحب النقاط من محفظتك وتجهز لك كوبون تخفيض وترسله لك كهدية داخل الإشعارات والقسائم.
+      </p>
+      <div class="mt-4 grid gap-3 sm:grid-cols-3">
+        <NuxtLink to="/notifications" class="rounded-3xl border border-app bg-surface p-4 rtl-text font-bold transition hover:bg-surface-2">الإشعارات والهدايا</NuxtLink>
+        <NuxtLink to="/my-coupons" class="rounded-3xl border border-app bg-surface p-4 rtl-text font-bold transition hover:bg-surface-2">قسائمي</NuxtLink>
+        <NuxtLink to="/contact" class="rounded-3xl border border-app bg-surface p-4 rtl-text font-bold transition hover:bg-surface-2">طلب استبدال النقاط</NuxtLink>
       </div>
-      <p v-if="copied" class="mt-2 text-sm text-emerald-400 rtl-text">تم نسخ الرابط.</p>
     </div>
 
     <div v-if="auth.isAuthed" class="grid gap-6 lg:grid-cols-2">
@@ -83,18 +84,12 @@ const api = useApi()
 const auth = useAuthStore()
 const loading = ref(false)
 const wallet = ref<any>(null)
-const copied = ref(false)
 
 async function load(){
   if (!auth.isAuthed) return
   loading.value = true
   try { wallet.value = await api.get('/wallet/me') }
   finally { loading.value = false }
-}
-async function copyReferral(){
-  await navigator.clipboard?.writeText(wallet.value?.referralUrl || '')
-  copied.value = true
-  setTimeout(() => copied.value = false, 1600)
 }
 onMounted(load)
 </script>

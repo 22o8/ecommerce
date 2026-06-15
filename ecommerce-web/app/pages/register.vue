@@ -16,9 +16,9 @@
         <UiInput v-model="phone" autocomplete="tel" label="رقم الهاتف" class="keep-ltr" />
         <UiInput v-model="email" type="email" autocomplete="email" label="الإيميل (اختياري إذا تستخدم الهاتف)" class="keep-ltr" />
         <div class="grid gap-1">
-          <label class="text-sm font-bold rtl-text">هل أتيت عن طريق رابط مشاركة؟ ضع كود المشاركة الذي وصلك</label>
+          <label class="text-sm font-bold rtl-text">هل أتيت عن طريق رابط مشاركة؟</label>
           <UiInput v-model="referralCode" label="كود المشاركة (اختياري)" class="keep-ltr" />
-          <p class="text-xs text-muted rtl-text">إذا ما عندك كود اترك الحقل فارغ.</p>
+          <p class="text-xs text-muted rtl-text">إذا دخلت من رابط مشاركة فالكود يمتلئ تلقائياً. وإذا وصلك الكود فقط اكتبه هنا يدوياً، والحقل اختياري.</p>
         </div>
         <UiInput v-model="password" type="password" autocomplete="new-password" label="كلمة المرور" class="keep-ltr" />
 

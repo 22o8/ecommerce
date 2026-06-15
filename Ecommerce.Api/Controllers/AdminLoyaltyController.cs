@@ -109,4 +109,22 @@ public class AdminLoyaltyController : ControllerBase
         await _db.SaveChangesAsync();
         return Ok(new { message = "Coupon gift sent", userId = req.UserId, couponCode = req.CouponCode });
     }
+
+    public record DeductPointsRequest(Guid UserId, int Points, string? Note);
+
+    [HttpPost("deduct-points")]
+    public async Task<IActionResult> DeductPoints([FromBody] DeductPointsRequest req)
+    {
+        if (req.UserId == Guid.Empty || req.Points <= 0) return BadRequest(new { message = "User and positive points are required." });
+        var wallet = await _db.PointsWallets.FirstOrDefaultAsync(x => x.UserId == req.UserId);
+        if (wallet == null || wallet.Balance < req.Points) return BadRequest(new { message = "Insufficient points." });
+        wallet.Balance -= req.Points;
+        wallet.LifetimeSpent += req.Points;
+        wallet.UpdatedAtUtc = DateTime.UtcNow;
+        _db.PointsTransactions.Add(new PointsTransaction { Wallet = wallet, UserId = req.UserId, Points = -req.Points, Type = "Spend", Note = req.Note ?? "تم سحب نقاط لاستبدالها بكوبون" });
+        _db.UserGifts.Add(new UserGift { UserId = req.UserId, GiftType = "Notice", Title = "تم استبدال نقاط", Message = req.Note ?? $"تم سحب {req.Points} نقطة من محفظتك لغرض الاستبدال." });
+        await _db.SaveChangesAsync();
+        return Ok(new { message = "Points deducted", userId = req.UserId, points = req.Points, balance = wallet.Balance });
+    }
+
 }

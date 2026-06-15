@@ -24,7 +24,8 @@
             <td class="p-3 keep-ltr">{{ u.referralCode }}</td>
             <td class="p-3 text-center font-bold">{{ u.referrals }}</td>
             <td class="p-3 text-center font-bold">{{ u.points }}</td>
-            <td class="p-3"><div class="flex gap-2"><button class="btn-mini" @click="grantPoints(u.id)">نقاط</button><button class="btn-mini" @click="grantCoupon(u.id)">كوبون</button></div></td>
+            <td class="p-3"><div class="flex gap-2"><button class="btn-mini" @click="grantPoints(u.id)">نقاط</button>
+              <button class="btn-mini" @click="deductPoints(u.id)">سحب نقاط</button><button class="btn-mini" @click="grantCoupon(u.id)">كوبون</button></div></td>
           </tr>
         </tbody>
       </table>
@@ -64,6 +65,13 @@ async function grantCoupon(userId:string, referralId?:string){
   const couponCode = prompt('اكتب كود الكوبون الذي تريد إرساله')
   if (!couponCode) return
   await api.post('/admin/loyalty/grant-coupon', { userId, couponCode, referralId, note: 'كوبون هدية من الإدارة' })
+  await load()
+}
+async function deductPoints(userId:string){
+  const points = Number(prompt('كم نقطة تريد سحبها من المحفظة؟', '100') || '0')
+  if (!points) return
+  const note = prompt('ملاحظة للزبون', 'تم سحب نقاط لغرض استبدالها بكوبون تخفيض') || 'تم سحب نقاط لغرض استبدالها بكوبون تخفيض'
+  await api.post('/admin/loyalty/deduct-points', { userId, points, note })
   await load()
 }
 onMounted(load)

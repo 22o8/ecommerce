@@ -105,6 +105,27 @@
             </UiButton>
           </NuxtLink>
 
+          <NuxtLink v-if="auth.isAuthed" to="/account" class="hidden sm:block" aria-label="محفظة النقاط">
+            <UiButton variant="secondary" class="px-2 sm:px-3">
+              <Icon name="mdi:wallet-outline" class="text-lg" />
+              <span class="hidden md:inline rtl-text">محفظتي</span>
+            </UiButton>
+          </NuxtLink>
+
+          <NuxtLink v-if="auth.isAuthed" to="/notifications" class="hidden sm:block" aria-label="الإشعارات">
+            <UiButton variant="secondary" class="px-2 sm:px-3">
+              <Icon name="mdi:bell-outline" class="text-lg" />
+              <span class="hidden md:inline rtl-text">الإشعارات</span>
+            </UiButton>
+          </NuxtLink>
+
+          <NuxtLink v-if="auth.isAuthed" to="/my-coupons" class="hidden md:block" aria-label="قسائمي">
+            <UiButton variant="secondary" class="px-2 sm:px-3">
+              <Icon name="mdi:ticket-percent-outline" class="text-lg" />
+              <span class="hidden lg:inline rtl-text">قسائمي</span>
+            </UiButton>
+          </NuxtLink>
+
           <!-- Cart: يظهر على الهاتف أيضاً (أيقونة فقط) -->
 	          <NuxtLink to="/cart" class="block" aria-label="السلة">
 	            <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0">
@@ -241,6 +262,24 @@
                 <Icon name="mdi:cart-outline" class="text-lg" />
                 <span class="rtl-text">{{ t('nav.cart') }}</span>
                 <span v-if="cart.count" class="keep-ltr text-xs text-muted">({{ cart.count }})</span>
+              </div>
+            </NuxtLink>
+            <NuxtLink v-if="auth.isAuthed" to="/account" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
+              <div class="flex items-center gap-2">
+                <Icon name="mdi:wallet-outline" class="text-lg" />
+                <span class="rtl-text">محفظتي</span>
+              </div>
+            </NuxtLink>
+            <NuxtLink v-if="auth.isAuthed" to="/notifications" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
+              <div class="flex items-center gap-2">
+                <Icon name="mdi:bell-outline" class="text-lg" />
+                <span class="rtl-text">الإشعارات</span>
+              </div>
+            </NuxtLink>
+            <NuxtLink v-if="auth.isAuthed" to="/my-coupons" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">
+              <div class="flex items-center gap-2">
+                <Icon name="mdi:ticket-percent-outline" class="text-lg" />
+                <span class="rtl-text">قسائمي</span>
               </div>
             </NuxtLink>
             <NuxtLink v-if="auth.isAuthed" to="/orders" class="rounded-2xl border border-app bg-surface-2 px-4 py-3">

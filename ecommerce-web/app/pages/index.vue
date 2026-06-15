@@ -524,7 +524,12 @@ useAdvancedSeo({
           </NuxtLink>
         </div>
 
-        <BrandMarquee :brands="topBrands" />
+        
+    <section class="mx-auto max-w-7xl px-4 pb-6 pt-2">
+      <ReferralShareCard />
+    </section>
+
+    <BrandMarquee :brands="topBrands" />
       </div>
     </section>
 
