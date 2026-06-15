@@ -238,6 +238,153 @@ public static class DbBootstrapper
             @"CREATE INDEX IF NOT EXISTS ""IX_ProductReviews_ProductId_Status_CreatedAt""
               ON ""ProductReviews"" (""ProductId"", ""Status"", ""CreatedAt"");",
 
+
+
+            // ============================
+            // Loyalty / referral / points schema
+            // Fixes production 500s when the new loyalty migration was not applied yet.
+            // ============================
+            @"ALTER TABLE IF EXISTS ""Users""
+              ADD COLUMN IF NOT EXISTS ""ReferralCode"" character varying(24) NOT NULL DEFAULT '';",
+
+            @"ALTER TABLE IF EXISTS ""Users""
+              ADD COLUMN IF NOT EXISTS ""ReferredByUserId"" uuid NULL;",
+
+            @"ALTER TABLE IF EXISTS ""Users""
+              ADD COLUMN IF NOT EXISTS ""Phone"" character varying(40) NOT NULL DEFAULT '';",
+
+            @"UPDATE ""Users""
+              SET ""ReferralCode"" = 'DSB' || upper(substr(md5(""Id""::text), 1, 8))
+              WHERE ""ReferralCode"" IS NULL OR btrim(""ReferralCode"") = '';",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_Users_Phone"" ON ""Users"" (""Phone"");",
+            @"CREATE INDEX IF NOT EXISTS ""IX_Users_ReferralCode"" ON ""Users"" (""ReferralCode"");",
+
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""SubtotalUsd"" numeric(18,2) NOT NULL DEFAULT 0;",
+
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""SubtotalIqd"" numeric(18,2) NOT NULL DEFAULT 0;",
+
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""DiscountAmountUsd"" numeric(18,2) NOT NULL DEFAULT 0;",
+
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""DiscountAmountIqd"" numeric(18,2) NOT NULL DEFAULT 0;",
+
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""DeliveryFeeIqd"" numeric(18,2) NOT NULL DEFAULT 0;",
+
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""DeliveryFeeUsd"" numeric(18,2) NOT NULL DEFAULT 0;",
+
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""CustomerNote"" character varying(1000) NULL;",
+
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""AdminNote"" character varying(1000) NULL;",
+
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""PointsEarned"" integer NOT NULL DEFAULT 0;",
+
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""PointsAwarded"" boolean NOT NULL DEFAULT FALSE;",
+
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""PointsAwardedAtUtc"" timestamp with time zone NULL;",
+
+            @"ALTER TABLE IF EXISTS ""Orders""
+              ADD COLUMN IF NOT EXISTS ""CouponCode"" character varying(80) NULL;",
+
+            @"CREATE TABLE IF NOT EXISTS ""PointsWallets"" (
+                ""Id"" uuid NOT NULL,
+                ""UserId"" uuid NOT NULL,
+                ""Balance"" integer NOT NULL DEFAULT 0,
+                ""LifetimeEarned"" integer NOT NULL DEFAULT 0,
+                ""LifetimeSpent"" integer NOT NULL DEFAULT 0,
+                ""UpdatedAtUtc"" timestamp with time zone NOT NULL DEFAULT now(),
+                CONSTRAINT ""PK_PointsWallets"" PRIMARY KEY (""Id""),
+                CONSTRAINT ""FK_PointsWallets_Users_UserId"" FOREIGN KEY (""UserId"")
+                    REFERENCES ""Users""(""Id"") ON DELETE CASCADE
+              );",
+
+            @"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_PointsWallets_UserId""
+              ON ""PointsWallets"" (""UserId"");",
+
+            @"INSERT INTO ""PointsWallets"" (""Id"", ""UserId"", ""Balance"", ""LifetimeEarned"", ""LifetimeSpent"", ""UpdatedAtUtc"")
+              SELECT ""Id"", ""Id"", 0, 0, 0, now()
+              FROM ""Users""
+              ON CONFLICT DO NOTHING;",
+
+            @"CREATE TABLE IF NOT EXISTS ""Referrals"" (
+                ""Id"" uuid NOT NULL,
+                ""ReferrerUserId"" uuid NOT NULL,
+                ""ReferredUserId"" uuid NOT NULL,
+                ""ReferralCode"" character varying(24) NOT NULL DEFAULT '',
+                ""Status"" text NOT NULL DEFAULT 'Registered',
+                ""Rewarded"" boolean NOT NULL DEFAULT FALSE,
+                ""RewardType"" text NULL,
+                ""RewardPoints"" integer NOT NULL DEFAULT 0,
+                ""RewardCouponCode"" text NULL,
+                ""CreatedAtUtc"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""RewardedAtUtc"" timestamp with time zone NULL,
+                CONSTRAINT ""PK_Referrals"" PRIMARY KEY (""Id""),
+                CONSTRAINT ""FK_Referrals_Users_ReferrerUserId"" FOREIGN KEY (""ReferrerUserId"")
+                    REFERENCES ""Users""(""Id"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_Referrals_Users_ReferredUserId"" FOREIGN KEY (""ReferredUserId"")
+                    REFERENCES ""Users""(""Id"") ON DELETE CASCADE
+              );",
+
+            @"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Referrals_ReferredUserId""
+              ON ""Referrals"" (""ReferredUserId"");",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_Referrals_ReferrerUserId_CreatedAtUtc""
+              ON ""Referrals"" (""ReferrerUserId"", ""CreatedAtUtc"");",
+
+            @"CREATE TABLE IF NOT EXISTS ""PointsTransactions"" (
+                ""Id"" uuid NOT NULL,
+                ""WalletId"" uuid NOT NULL,
+                ""UserId"" uuid NOT NULL,
+                ""OrderId"" uuid NULL,
+                ""Type"" character varying(40) NOT NULL DEFAULT 'Manual',
+                ""Points"" integer NOT NULL DEFAULT 0,
+                ""Note"" character varying(1000) NOT NULL DEFAULT '',
+                ""CreatedAtUtc"" timestamp with time zone NOT NULL DEFAULT now(),
+                CONSTRAINT ""PK_PointsTransactions"" PRIMARY KEY (""Id""),
+                CONSTRAINT ""FK_PointsTransactions_PointsWallets_WalletId"" FOREIGN KEY (""WalletId"")
+                    REFERENCES ""PointsWallets""(""Id"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_PointsTransactions_Users_UserId"" FOREIGN KEY (""UserId"")
+                    REFERENCES ""Users""(""Id"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_PointsTransactions_Orders_OrderId"" FOREIGN KEY (""OrderId"")
+                    REFERENCES ""Orders""(""Id"") ON DELETE SET NULL
+              );",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_PointsTransactions_OrderId"" ON ""PointsTransactions"" (""OrderId"");",
+            @"CREATE INDEX IF NOT EXISTS ""IX_PointsTransactions_WalletId"" ON ""PointsTransactions"" (""WalletId"");",
+            @"CREATE INDEX IF NOT EXISTS ""IX_PointsTransactions_UserId_CreatedAtUtc""
+              ON ""PointsTransactions"" (""UserId"", ""CreatedAtUtc"");",
+
+            @"CREATE TABLE IF NOT EXISTS ""UserGifts"" (
+                ""Id"" uuid NOT NULL,
+                ""UserId"" uuid NOT NULL,
+                ""ReferralId"" uuid NULL,
+                ""GiftType"" text NOT NULL DEFAULT 'Points',
+                ""Points"" integer NOT NULL DEFAULT 0,
+                ""CouponCode"" text NULL,
+                ""Title"" character varying(160) NOT NULL DEFAULT 'هدية جديدة',
+                ""Message"" character varying(1000) NOT NULL DEFAULT '',
+                ""IsRead"" boolean NOT NULL DEFAULT FALSE,
+                ""CreatedAtUtc"" timestamp with time zone NOT NULL DEFAULT now(),
+                CONSTRAINT ""PK_UserGifts"" PRIMARY KEY (""Id""),
+                CONSTRAINT ""FK_UserGifts_Users_UserId"" FOREIGN KEY (""UserId"")
+                    REFERENCES ""Users""(""Id"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_UserGifts_Referrals_ReferralId"" FOREIGN KEY (""ReferralId"")
+                    REFERENCES ""Referrals""(""Id"") ON DELETE SET NULL
+              );",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_UserGifts_ReferralId"" ON ""UserGifts"" (""ReferralId"");",
+            @"CREATE INDEX IF NOT EXISTS ""IX_UserGifts_UserId_CreatedAtUtc""
+              ON ""UserGifts"" (""UserId"", ""CreatedAtUtc"");",
             @"CREATE TABLE IF NOT EXISTS ""Categories"" (
                 ""Id"" uuid NOT NULL,
                 ""Key"" character varying(80) NOT NULL,
