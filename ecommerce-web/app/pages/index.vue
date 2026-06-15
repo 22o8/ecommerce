@@ -363,6 +363,10 @@ useAdvancedSeo({
               {{ t('homeHero.shopNow') }}
               <Icon name="mdi:arrow-left" class="text-lg" />
             </NuxtLink>
+            <NuxtLink to="/referral" class="home-luxury-hero__secondary home-luxury-hero__share">
+              <Icon name="mdi:share-variant-outline" class="text-lg" />
+              <span>شارك لصديقك واربح نقاط</span>
+            </NuxtLink>
             <NuxtLink to="/brands" class="home-luxury-hero__secondary">
               {{ t('nav.brands') }}
             </NuxtLink>
@@ -524,12 +528,8 @@ useAdvancedSeo({
           </NuxtLink>
         </div>
 
-        
-    <section class="mx-auto max-w-7xl px-4 pb-6 pt-2">
-      <ReferralShareCard />
-    </section>
 
-    <BrandMarquee :brands="topBrands" />
+        <BrandMarquee :brands="topBrands" />
       </div>
     </section>
 

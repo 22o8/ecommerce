@@ -226,7 +226,7 @@ public class AdminOrdersController : ControllerBase
             OrderId = order.Id,
             Type = "Purchase",
             Points = points,
-            Note = $"نقاط عملية شراء للطلب {order.Id}"
+            Note = "نقاط هدية بعد تأكيد الشراء"
         });
         _db.UserGifts.Add(new UserGift
         {
