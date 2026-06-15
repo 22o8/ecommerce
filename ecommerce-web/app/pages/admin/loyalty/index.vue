@@ -19,7 +19,7 @@
       <table class="w-full text-sm">
         <thead><tr class="text-muted"><th class="text-start p-3">العميل</th><th class="p-3">الكود</th><th class="p-3">المشاركات</th><th class="p-3">النقاط</th><th class="p-3">إرسال هدية</th></tr></thead>
         <tbody>
-          <tr v-for="u in data?.leaderboard || []" :key="u.id" class="border-t border-app">
+          <tr v-for="u in data?.leaderboard || []" :key="u.id" class="border-t border-white/10">
             <td class="p-3"><div class="font-bold rtl-text">{{ u.fullName || u.email || u.phone }}</div><div class="text-xs text-muted keep-ltr">{{ u.email || u.phone }}</div></td>
             <td class="p-3 keep-ltr">{{ u.referralCode }}</td>
             <td class="p-3 text-center font-bold">{{ u.referrals }}</td>
@@ -35,7 +35,7 @@
       <table class="w-full text-sm">
         <thead><tr class="text-muted"><th class="text-start p-3">صاحب الكود</th><th class="text-start p-3">الحساب الجديد</th><th class="p-3">الحالة</th><th class="p-3">هدية</th></tr></thead>
         <tbody>
-          <tr v-for="r in data?.referrals || []" :key="r.id" class="border-t border-app">
+          <tr v-for="r in data?.referrals || []" :key="r.id" class="border-t border-white/10">
             <td class="p-3 rtl-text">{{ r.referrer?.fullName || r.referrer?.email }}</td>
             <td class="p-3 rtl-text">{{ r.referred?.fullName || r.referred?.email }}</td>
             <td class="p-3 text-center">{{ r.rewarded ? 'تمت المكافأة' : 'ينتظر هدية' }}</td>
@@ -70,14 +70,5 @@ onMounted(load)
 </script>
 
 <style scoped>
-.btn-mini {
-  border-radius: 1rem;
-  border: 1px solid var(--app);
-  background-color: var(--surface);
-  padding: 0.5rem 0.75rem;
-  font-weight: 700;
-}
-.btn-mini:hover {
-  background-color: rgba(var(--primary), 0.1);
-}
+.btn-mini{ @apply rounded-2xl border border-white/10 bg-white/5 px-3 py-2 font-bold hover:bg-white/10; }
 </style>
