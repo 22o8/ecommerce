@@ -12,6 +12,13 @@ public class Order
     public decimal SubtotalIqd { get; set; }
     public decimal DiscountAmountUsd { get; set; }
     public decimal DiscountAmountIqd { get; set; }
+    public decimal DeliveryFeeIqd { get; set; } = 0m;
+    public decimal DeliveryFeeUsd { get; set; } = 0m;
+    public string? CustomerNote { get; set; }
+    public string? AdminNote { get; set; }
+    public int PointsEarned { get; set; } = 0;
+    public bool PointsAwarded { get; set; } = false;
+    public DateTime? PointsAwardedAtUtc { get; set; }
     public string? CouponCode { get; set; }
 
     // حالات فواتير الشراء:

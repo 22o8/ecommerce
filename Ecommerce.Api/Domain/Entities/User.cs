@@ -9,6 +9,9 @@ public class User
     public string Email { get; set; } = "";
     public string Phone { get; set; } = "";
     public string PasswordHash { get; set; } = "";
+    public string ReferralCode { get; set; } = "";
+    public Guid? ReferredByUserId { get; set; }
+    public User? ReferredByUser { get; set; }
 
     // "Admin" أو "User"
     public string Role { get; set; } = "User";

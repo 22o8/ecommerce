@@ -43,6 +43,7 @@
           <div class="rtl-text">{{ t('admin.status') }}</div>
           <div class="rtl-text">المنتج</div>
           <div class="rtl-text hidden md:block">{{ t('admin.user') }}</div>
+          <div class="rtl-text">المبلغ/التوصيل</div>
           <div class="rtl-text">التاريخ</div>
           <div class="text-right rtl-text">{{ t('common.actions') }}</div>
         </div>
@@ -75,10 +76,14 @@
 
           <div class="truncate hidden md:block">{{ o.userName || o.userEmail || '-' }}</div>
 
+          <div class="text-xs rtl-text"><div class="font-bold">{{ formatIqd(o.totalIqd || 0) }}</div><div class="text-muted">توصيل: {{ formatIqd(o.deliveryFeeIqd || 0) }}</div></div>
+
           <div class="keep-ltr text-xs text-muted">{{ formatDate(o.createdAt) }}</div>
 
-          <div class="flex justify-end gap-2">
+          <div class="flex justify-end gap-2 flex-wrap">
             <NuxtLink class="admin-pill" :to="`/admin/orders/${o.id}`">{{ t('common.details') }}</NuxtLink>
+            <button class="admin-pill" type="button" @click="editOrder(o)">تعديل</button>
+            <button class="admin-pill" type="button" @click="markSold(o)">تم البيع</button>
             <button class="admin-danger" type="button" @click="removeOrder(o.id)" :disabled="loading">
               {{ t('common.delete') }}
             </button>
@@ -107,6 +112,11 @@ type OrderRow = {
   userEmail?: string
   createdAt?: string
   totalIqd?: number
+  deliveryFeeIqd?: number
+  adminNote?: string
+  customerNote?: string
+  pointsEarned?: number
+  pointsAwarded?: boolean
 }
 
 const { t } = useI18n()
@@ -212,6 +222,32 @@ function statusClass(status: string) {
   return 'badge-off'
 }
 
+
+async function editOrder(o: OrderRow) {
+  const feeRaw = prompt('مبلغ التوصيل بالدينار', String(o.deliveryFeeIqd || 0))
+  if (feeRaw === null) return
+  const note = prompt('ملاحظة الإدارة على الفاتورة', o.adminNote || '')
+  if (note === null) return
+  loading.value = true
+  try {
+    await api.patch(`/admin/orders/${o.id}/status`, { status: o.status, deliveryFeeIqd: Number(feeRaw || 0), adminNote: note })
+    await fetchOrders()
+  } catch (e:any) { error.value = extractErr(e) }
+  finally { loading.value = false }
+}
+
+async function markSold(o: OrderRow) {
+  const pointsRaw = prompt('النقاط التي ستصل للزبون بعد تأكيد البيع. اتركها فارغة للحساب التلقائي.', '')
+  const body:any = { status: 'Sold' }
+  if (pointsRaw) body.pointsOverride = Number(pointsRaw)
+  loading.value = true
+  try {
+    await api.patch(`/admin/orders/${o.id}/status`, body)
+    await fetchOrders()
+  } catch (e:any) { error.value = extractErr(e) }
+  finally { loading.value = false }
+}
+
 async function fetchOrders() {
   loading.value = true
   error.value = ''
@@ -226,6 +262,11 @@ async function fetchOrders() {
       userEmail: x.userEmail ? String(x.userEmail) : (x.user?.email ? String(x.user.email) : ''),
       createdAt: x.createdAt ? String(x.createdAt) : '',
       totalIqd: Number(x.totalIqd ?? 0),
+      deliveryFeeIqd: Number(x.deliveryFeeIqd ?? 0),
+      adminNote: x.adminNote ? String(x.adminNote) : '',
+      customerNote: x.customerNote ? String(x.customerNote) : '',
+      pointsEarned: Number(x.pointsEarned ?? 0),
+      pointsAwarded: Boolean(x.pointsAwarded),
     }))
     selectedIds.value = []
   } catch (e: any) {
@@ -283,7 +324,7 @@ fetchOrders()
 .admin-tr{
   display: grid;
   /* موبايل: اخفِ أعمدة غير مهمة */
-  grid-template-columns: 1.2fr 1fr 1.6fr 1fr 1fr;
+  grid-template-columns: 1.2fr 1fr 1.6fr 1fr 1fr 1fr;
   gap: 12px;
   padding: 12px 16px;
   border-top: 1px solid rgb(var(--border));
@@ -292,7 +333,7 @@ fetchOrders()
 
 @media (min-width: 768px){
   .admin-tr{
-    grid-template-columns: 2fr 1fr 1.2fr 1.2fr 1fr 1fr;
+    grid-template-columns: 1.4fr .8fr 1.2fr 1fr 1fr 1fr 1.3fr;
   }
 }
 .admin-th{

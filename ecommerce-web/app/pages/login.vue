@@ -6,25 +6,23 @@
           <Icon name="mdi:account-lock-outline" class="text-2xl animate-floaty" />
         </div>
         <div>
-          <h1 class="text-2xl font-black rtl-text">{{ t('login.title') }}</h1>
-          <p class="text-sm text-muted rtl-text">{{ t('login.subtitle') }}</p>
+          <h1 class="text-2xl font-black rtl-text">تسجيل الدخول</h1>
+          <p class="text-sm text-muted rtl-text">ادخل بالإيميل أو رقم الهاتف.</p>
         </div>
       </div>
 
       <form class="mt-6 grid gap-4" @submit.prevent="submit">
-        <UiInput v-model="email" type="email" autocomplete="email" :label="t('auth.email')" class="keep-ltr" />
+        <UiInput v-model="identifier" autocomplete="username" label="الإيميل أو رقم الهاتف" class="keep-ltr" />
         <UiInput v-model="password" type="password" autocomplete="current-password" :label="t('auth.password')" class="keep-ltr" />
 
         <UiButton :loading="loading" type="submit">
           <Icon name="mdi:login-variant" class="text-lg" />
-          <span class="rtl-text">{{ t('nav.login') }}</span>
+          <span class="rtl-text">دخول</span>
         </UiButton>
 
         <p class="text-sm text-muted rtl-text">
-          {{ t('auth.noAccount') }}
-          <NuxtLink to="/register" class="font-bold text-[rgb(var(--primary))]">
-            {{ t('register.title') }}
-          </NuxtLink>
+          ما عندك حساب؟
+          <NuxtLink to="/register" class="font-bold text-[rgb(var(--primary))]">إنشاء حساب</NuxtLink>
         </p>
 
         <p v-if="error" class="text-sm rtl-text text-[rgb(var(--danger))]">{{ error }}</p>
@@ -41,7 +39,7 @@ const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 
-const email = ref('')
+const identifier = ref('')
 const password = ref('')
 const loading = ref(false)
 const error = ref('')
@@ -50,18 +48,12 @@ async function submit(){
   loading.value = true
   error.value = ''
   try{
-    await auth.login({ email: email.value, password: password.value })
+    await auth.login({ identifier: identifier.value, email: identifier.value, password: password.value })
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
-
-    // ✅ إذا أدمن وما محدد redirect -> روح للوحة التحكم
-    if (!redirect && auth.isAdmin) {
-      router.push('/admin')
-      return
-    }
-
+    if (!redirect && auth.isAdmin) return router.push('/admin')
     router.push(redirect || '/')
   }catch(e:any){
-    error.value = e?.data?.message || e?.message || t('loginFailed')
+    error.value = e?.data?.message || e?.message || 'فشل تسجيل الدخول'
   }finally{
     loading.value = false
   }

@@ -2,8 +2,8 @@
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
 
-type LoginRequest = { email: string; password: string }
-type RegisterRequest = { fullName: string; phone: string; email: string; password: string }
+type LoginRequest = { email?: string; identifier?: string; password: string }
+type RegisterRequest = { fullName: string; phone?: string; email?: string; password: string; referralCode?: string }
 
 export type User = {
   id: string
@@ -11,6 +11,7 @@ export type User = {
   email: string
   phone?: string
   role: string
+  referralCode?: string
 }
 
 export const useAuthStore = defineStore('auth', () => {

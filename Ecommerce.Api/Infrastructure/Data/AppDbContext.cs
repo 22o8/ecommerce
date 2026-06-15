@@ -39,6 +39,10 @@ public class AppDbContext : DbContext
     public DbSet<CouponUsage> CouponUsages => Set<CouponUsage>();
     public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
     public DbSet<CategoryDefinition> Categories => Set<CategoryDefinition>();
+    public DbSet<PointsWallet> PointsWallets => Set<PointsWallet>();
+    public DbSet<PointsTransaction> PointsTransactions => Set<PointsTransaction>();
+    public DbSet<Referral> Referrals => Set<Referral>();
+    public DbSet<UserGift> UserGifts => Set<UserGift>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -55,6 +59,17 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>()
             .Property(u => u.Role)
             .HasMaxLength(50);
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Phone);
+
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.ReferralCode);
+
+        modelBuilder.Entity<User>()
+            .Property(u => u.ReferralCode)
+            .HasMaxLength(24)
+            .HasDefaultValue("");
+
 
         // Product - Images relation
         modelBuilder.Entity<Product>()
@@ -313,6 +328,65 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<CategoryDefinition>()
             .HasIndex(x => new { x.Section, x.ParentId, x.SortOrder });
+
+        modelBuilder.Entity<Order>()
+            .Property(x => x.DeliveryFeeIqd)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Order>()
+            .Property(x => x.DeliveryFeeUsd)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Order>()
+            .Property(x => x.CustomerNote)
+            .HasMaxLength(1000);
+
+        modelBuilder.Entity<Order>()
+            .Property(x => x.AdminNote)
+            .HasMaxLength(1000);
+
+        modelBuilder.Entity<PointsWallet>()
+            .HasIndex(x => x.UserId)
+            .IsUnique();
+
+        modelBuilder.Entity<PointsWallet>()
+            .HasOne(x => x.User)
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PointsTransaction>()
+            .Property(x => x.Type)
+            .HasMaxLength(40);
+
+        modelBuilder.Entity<PointsTransaction>()
+            .Property(x => x.Note)
+            .HasMaxLength(1000);
+
+        modelBuilder.Entity<PointsTransaction>()
+            .HasIndex(x => new { x.UserId, x.CreatedAtUtc });
+
+        modelBuilder.Entity<Referral>()
+            .Property(x => x.ReferralCode)
+            .HasMaxLength(24);
+
+        modelBuilder.Entity<Referral>()
+            .HasIndex(x => x.ReferredUserId)
+            .IsUnique();
+
+        modelBuilder.Entity<Referral>()
+            .HasIndex(x => new { x.ReferrerUserId, x.CreatedAtUtc });
+
+        modelBuilder.Entity<UserGift>()
+            .Property(x => x.Title)
+            .HasMaxLength(160);
+
+        modelBuilder.Entity<UserGift>()
+            .Property(x => x.Message)
+            .HasMaxLength(1000);
+
+        modelBuilder.Entity<UserGift>()
+            .HasIndex(x => new { x.UserId, x.CreatedAtUtc });
 
 
     }

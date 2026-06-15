@@ -1,3 +1,4 @@
+using Ecommerce.Api.Domain.Entities;
 using Ecommerce.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +36,11 @@ public class AdminOrdersController : ControllerBase
                 o.CouponCode,
                 o.TotalIqd,
                     o.TotalUsd,
+                    o.DeliveryFeeIqd,
+                    o.CustomerNote,
+                    o.AdminNote,
+                    o.PointsEarned,
+                    o.PointsAwarded,
                     o.CreatedAt,
 
                     // ✅ حقول مسطّحة لتسهيل الفرونت
@@ -107,6 +113,14 @@ public class AdminOrdersController : ControllerBase
                     x.Status,
                     x.TotalIqd,
                     x.TotalUsd,
+                    x.SubtotalIqd,
+                    x.DiscountAmountIqd,
+                    x.CouponCode,
+                    x.DeliveryFeeIqd,
+                    x.CustomerNote,
+                    x.AdminNote,
+                    x.PointsEarned,
+                    x.PointsAwarded,
                     x.CreatedAt,
                     user = new
                     {
@@ -153,6 +167,79 @@ public class AdminOrdersController : ControllerBase
         }
     }
 
+
+    public sealed record UpdateOrderStatusRequest(string Status, decimal? DeliveryFeeIqd, string? AdminNote, int? PointsOverride);
+
+    [HttpPatch("{id:guid}/status")]
+    public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateOrderStatusRequest req)
+    {
+        var order = await _db.Orders.Include(o => o.User).FirstOrDefaultAsync(o => o.Id == id);
+        if (order is null) return NotFound(new { message = "Order not found." });
+
+        var allowed = new[] { "PendingSale", "Sold", "NotSold" };
+        var status = string.IsNullOrWhiteSpace(req.Status) ? order.Status : req.Status.Trim();
+        if (!allowed.Contains(status)) return BadRequest(new { message = "Invalid status." });
+
+        if (req.DeliveryFeeIqd.HasValue)
+        {
+            var oldFee = order.DeliveryFeeIqd;
+            var newFee = Math.Max(0m, req.DeliveryFeeIqd.Value);
+            order.DeliveryFeeIqd = newFee;
+            order.TotalIqd = Math.Max(0m, order.TotalIqd - oldFee + newFee);
+        }
+        if (req.AdminNote != null) order.AdminNote = req.AdminNote.Trim();
+
+        order.Status = status;
+        if (status == "Sold")
+        {
+            order.SoldAt ??= DateTime.UtcNow;
+            await AwardOrderPointsAsync(order, req.PointsOverride);
+        }
+        if (status == "NotSold")
+        {
+            order.SoldAt = null;
+        }
+
+        await _db.SaveChangesAsync();
+        return Ok(new { order.Id, order.Status, order.DeliveryFeeIqd, order.TotalIqd, order.AdminNote, order.PointsEarned, order.PointsAwarded });
+    }
+
+    private async Task AwardOrderPointsAsync(Order order, int? overridePoints)
+    {
+        if (order.PointsAwarded) return;
+        var points = overridePoints.HasValue ? Math.Max(0, overridePoints.Value) : (int)Math.Floor(order.TotalIqd / 1000m);
+        order.PointsEarned = points;
+        if (points <= 0) return;
+        var wallet = await _db.PointsWallets.FirstOrDefaultAsync(x => x.UserId == order.UserId);
+        if (wallet == null)
+        {
+            wallet = new PointsWallet { UserId = order.UserId };
+            _db.PointsWallets.Add(wallet);
+        }
+        wallet.Balance += points;
+        wallet.LifetimeEarned += points;
+        wallet.UpdatedAtUtc = DateTime.UtcNow;
+        _db.PointsTransactions.Add(new PointsTransaction
+        {
+            Wallet = wallet,
+            UserId = order.UserId,
+            OrderId = order.Id,
+            Type = "Purchase",
+            Points = points,
+            Note = $"نقاط عملية شراء للطلب {order.Id}"
+        });
+        _db.UserGifts.Add(new UserGift
+        {
+            UserId = order.UserId,
+            GiftType = "Points",
+            Points = points,
+            Title = "نقاط شراء",
+            Message = $"تمت إضافة {points} نقطة إلى محفظتك بعد تأكيد البيع."
+        });
+        order.PointsAwarded = true;
+        order.PointsAwardedAtUtc = DateTime.UtcNow;
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -175,8 +262,13 @@ public class AdminOrdersController : ControllerBase
                 .Where(x => x.OrderId == id)
                 .ToListAsync();
 
+            var pointsTransactions = await _db.PointsTransactions
+                .Where(x => x.OrderId == id)
+                .ToListAsync();
+
             if (couponUsages.Count > 0) _db.CouponUsages.RemoveRange(couponUsages);
             if (downloadTokens.Count > 0) _db.DownloadTokens.RemoveRange(downloadTokens);
+            if (pointsTransactions.Count > 0) _db.PointsTransactions.RemoveRange(pointsTransactions);
             if (order.Items.Count > 0) _db.OrderItems.RemoveRange(order.Items);
             if (order.Payments.Count > 0) _db.Payments.RemoveRange(order.Payments);
 
@@ -213,8 +305,13 @@ public class AdminOrdersController : ControllerBase
                     .Where(x => orderIds.Contains(x.OrderId))
                     .ToListAsync();
 
+                var pointsTransactions = await _db.PointsTransactions
+                    .Where(x => x.OrderId != null && orderIds.Contains(x.OrderId.Value))
+                    .ToListAsync();
+
                 if (couponUsages.Count > 0) _db.CouponUsages.RemoveRange(couponUsages);
                 if (downloadTokens.Count > 0) _db.DownloadTokens.RemoveRange(downloadTokens);
+                if (pointsTransactions.Count > 0) _db.PointsTransactions.RemoveRange(pointsTransactions);
             }
 
             _db.OrderItems.RemoveRange(orders.SelectMany(o => o.Items));

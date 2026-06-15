@@ -6,55 +6,34 @@
           <Icon name="mdi:account-plus-outline" class="text-2xl animate-floaty" />
         </div>
         <div>
-          <h1 class="text-2xl font-black rtl-text">{{ t('register.title') }}</h1>
-          <p class="text-sm text-muted rtl-text">{{ t('register.subtitle') }}</p>
+          <h1 class="text-2xl font-black rtl-text">إنشاء حساب</h1>
+          <p class="text-sm text-muted rtl-text">يمكن إنشاء الحساب بالإيميل أو رقم الهاتف، مع دعم كود المشاركة.</p>
         </div>
       </div>
 
       <form class="mt-6 grid gap-4" @submit.prevent="submit">
-        <UiInput v-model="fullName" autocomplete="name" :label="t('auth.fullName')" class="rtl-text" />
-        <UiInput v-model="phone" autocomplete="tel" :label="t('auth.phone')" class="keep-ltr" />
-        <UiInput v-model="email" type="email" autocomplete="email" :label="t('auth.email')" class="keep-ltr" />
-        <UiInput v-model="password" type="password" autocomplete="new-password" :label="t('auth.password')" class="keep-ltr" />
+        <UiInput v-model="fullName" autocomplete="name" label="الاسم الكامل" class="rtl-text" />
+        <UiInput v-model="phone" autocomplete="tel" label="رقم الهاتف" class="keep-ltr" />
+        <UiInput v-model="email" type="email" autocomplete="email" label="الإيميل (اختياري إذا تستخدم الهاتف)" class="keep-ltr" />
+        <UiInput v-model="referralCode" label="كود المشاركة (اختياري)" class="keep-ltr" />
+        <UiInput v-model="password" type="password" autocomplete="new-password" label="كلمة المرور" class="keep-ltr" />
 
         <UiButton :loading="loading" type="submit">
           <Icon name="mdi:account-check-outline" class="text-lg" />
-          <span class="rtl-text">{{ t('createAccount') }}</span>
+          <span class="rtl-text">إنشاء الحساب</span>
         </UiButton>
 
-        <p class="text-xs rtl-text text-muted">
-          <Icon name="mdi:alert-outline" class="inline-block align-[-2px]" />
-          {{ t('accuracyWarning') }}
-        </p>
-
+        <p class="text-xs rtl-text text-muted">يجب إدخال إيميل أو رقم هاتف واحد على الأقل.</p>
         <p v-if="error" class="text-sm rtl-text text-[rgb(var(--danger))]">{{ error }}</p>
       </form>
     </div>
 
     <div class="card-soft p-6 md:p-8">
-      <h2 class="text-xl font-extrabold rtl-text">{{ t('benefitsTitle') }}</h2>
+      <h2 class="text-xl font-extrabold rtl-text">مميزات الحساب</h2>
       <div class="mt-4 grid gap-3">
-        <div class="rounded-3xl border border-app bg-surface p-4">
-          <div class="flex items-center gap-2">
-            <Icon name="mdi:cart-outline" class="text-xl" />
-            <div class="font-bold rtl-text">{{ t('cartTitle') }}</div>
-          </div>
-          <div class="text-sm text-muted rtl-text mt-1">{{ t('cartHint') }}</div>
-        </div>
-		        <div class="rounded-3xl border border-app bg-surface p-4">
-		          <div class="flex items-center gap-2">
-		            <Icon name="mdi:receipt-text-outline" class="text-xl" />
-		            <div class="font-bold rtl-text">{{ t('benefit.orders.title') }}</div>
-		          </div>
-		          <div class="text-sm text-muted rtl-text mt-1">{{ t('benefit.orders.desc') }}</div>
-		        </div>
-		        <div class="rounded-3xl border border-app bg-surface p-4">
-		          <div class="flex items-center gap-2">
-		            <Icon name="mdi:whatsapp" class="text-xl" />
-		            <div class="font-bold rtl-text">{{ t('benefit.whatsapp.title') }}</div>
-		          </div>
-		          <div class="text-sm text-muted rtl-text mt-1">{{ t('benefit.whatsapp.desc') }}</div>
-		        </div>
+        <div class="rounded-3xl border border-app bg-surface p-4 rtl-text">محفظة نقاط لكل عميل.</div>
+        <div class="rounded-3xl border border-app bg-surface p-4 rtl-text">كود مشاركة خاص بك.</div>
+        <div class="rounded-3xl border border-app bg-surface p-4 rtl-text">متابعة الطلبات والهدايا والكوبونات.</div>
       </div>
     </div>
   </div>
@@ -64,13 +43,14 @@
 import UiButton from '~/components/ui/UiButton.vue'
 import UiInput from '~/components/ui/UiInput.vue'
 
-const { t } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 
 const fullName = ref('')
 const phone = ref('')
 const email = ref('')
+const referralCode = ref(typeof route.query.ref === 'string' ? route.query.ref : '')
 const password = ref('')
 const loading = ref(false)
 const error = ref('')
@@ -84,10 +64,11 @@ async function submit() {
       phone: phone.value,
       email: email.value,
       password: password.value,
+      referralCode: referralCode.value,
     })
-    router.push('/cart')
+    router.push('/account')
   } catch (e: any) {
-    error.value = e?.data?.message || e?.message || t('registerFailed')
+    error.value = e?.data?.message || e?.message || 'فشل إنشاء الحساب'
   } finally {
     loading.value = false
   }

@@ -61,6 +61,14 @@ export function useWhatsappCheckout() {
     return value
   }
 
+
+  const collectInvoiceExtras = () => {
+    if (!import.meta.client) return { deliveryFeeIqd: 0, customerNote: '' }
+    const feeRaw = prompt('مبلغ التوصيل بالدينار (اختياري)', '0') || '0'
+    const note = prompt('ملاحظة على الفاتورة أو العنوان (اختياري)', '') || ''
+    return { deliveryFeeIqd: Math.max(0, Number(feeRaw) || 0), customerNote: note }
+  }
+
   const buildCartMessage = (items: WhatsappMessageItem[], meta?: WhatsappMessageMeta) => {
     const when = new Date().toLocaleString('ar-IQ', {
       year: 'numeric',
@@ -116,7 +124,9 @@ export function useWhatsappCheckout() {
   }
 
   const openWhatsappForCart = async () => {
+    const extras = collectInvoiceExtras()
     const payload = {
+      ...extras,
       items: cart.items.map(i => ({
         productId: i.id,
         quantity: Math.max(1, Number(i.quantity) || 1),
@@ -156,7 +166,9 @@ export function useWhatsappCheckout() {
     const normalizedDiscount = Number(product?.discountPercent ?? 0)
     const title = String(product?.title ?? product?.name ?? 'منتج')
 
+    const extras = collectInvoiceExtras()
     const result: any = await api.post('/Checkout/cart/whatsapp', {
+      ...extras,
       items: [{ productId: id, quantity: Math.max(1, Number(quantity) || 1) }],
       couponCode: appliedCoupon.value?.code || undefined,
       deviceKey: getDeviceKey() || undefined

@@ -142,6 +142,14 @@ public class CheckoutController : ControllerBase
         return (coupon, discountIqd, discountUsd, null);
     }
 
+    private static int CalculatePoints(decimal totalIqd)
+    {
+        if (totalIqd <= 0) return 0;
+        return (int)Math.Floor(totalIqd / 1000m); // نقطة لكل 1000 د.ع
+    }
+
+    private static decimal CleanMoney(decimal value) => value < 0 ? 0 : Math.Round(value, 2);
+
     [HttpPost("products")]
     public async Task<IActionResult> CheckoutProduct([FromBody] CheckoutProductRequest req)
     {
@@ -167,8 +175,10 @@ public class CheckoutController : ControllerBase
             DiscountAmountUsd = couponResult.discountUsd,
             DiscountAmountIqd = couponResult.discountIqd,
             CouponCode = couponResult.coupon?.Code,
+            DeliveryFeeIqd = CleanMoney(req.DeliveryFeeIqd),
+            CustomerNote = req.CustomerNote?.Trim(),
             TotalUsd = Math.Max(0m, subtotalUsd - couponResult.discountUsd),
-            TotalIqd = Math.Max(0m, subtotalIqd - couponResult.discountIqd)
+            TotalIqd = Math.Max(0m, subtotalIqd - couponResult.discountIqd + CleanMoney(req.DeliveryFeeIqd))
         };
 
         order.Items.Add(new OrderItem
@@ -222,6 +232,9 @@ public class CheckoutController : ControllerBase
             amountUsd = order.TotalUsd,
             amountIqd = order.TotalIqd,
             couponCode = order.CouponCode,
+            deliveryFeeIqd = order.DeliveryFeeIqd,
+            customerNote = order.CustomerNote,
+            pointsEarned = CalculatePoints(order.TotalIqd),
             payment = new { payment.Id, payment.Provider, payment.Status, payment.ProviderRef }
         });
     }
@@ -276,8 +289,10 @@ public class CheckoutController : ControllerBase
         order.DiscountAmountUsd = couponResult.discountUsd;
         order.DiscountAmountIqd = couponResult.discountIqd;
         order.CouponCode = couponResult.coupon?.Code;
+        order.DeliveryFeeIqd = CleanMoney(req.DeliveryFeeIqd);
+        order.CustomerNote = req.CustomerNote?.Trim();
         order.TotalUsd = Math.Max(0m, subtotalUsd - couponResult.discountUsd);
-        order.TotalIqd = Math.Max(0m, subtotalIqd - couponResult.discountIqd);
+        order.TotalIqd = Math.Max(0m, subtotalIqd - couponResult.discountIqd + order.DeliveryFeeIqd);
 
         var payment = new Payment
         {
@@ -318,6 +333,9 @@ public class CheckoutController : ControllerBase
             amountUsd = order.TotalUsd,
             amountIqd = order.TotalIqd,
             couponCode = order.CouponCode,
+            deliveryFeeIqd = order.DeliveryFeeIqd,
+            customerNote = order.CustomerNote,
+            pointsEarned = CalculatePoints(order.TotalIqd),
             items = order.Items.Select(x => new { x.ProductId, x.Quantity, x.UnitPriceIqd, x.LineTotalIqd, x.UnitPriceUsd, x.LineTotalUsd }).ToList(),
             payment = new { payment.Id, payment.Provider, payment.Status, payment.ProviderRef }
         });
@@ -384,8 +402,10 @@ public class CheckoutController : ControllerBase
         order.DiscountAmountUsd = couponResult.discountUsd;
         order.DiscountAmountIqd = couponResult.discountIqd;
         order.CouponCode = couponResult.coupon?.Code;
+        order.DeliveryFeeIqd = CleanMoney(req.DeliveryFeeIqd);
+        order.CustomerNote = req.CustomerNote?.Trim();
         order.TotalUsd = Math.Max(0m, subtotalUsd - couponResult.discountUsd);
-        order.TotalIqd = Math.Max(0m, subtotalIqd - couponResult.discountIqd);
+        order.TotalIqd = Math.Max(0m, subtotalIqd - couponResult.discountIqd + order.DeliveryFeeIqd);
 
         var payment = new Payment
         {
@@ -417,7 +437,7 @@ public class CheckoutController : ControllerBase
             await _db.SaveChangesAsync();
         }
 
-        return Ok(new { orderId = order.Id, status = order.Status, couponCode = order.CouponCode, discountAmountIqd = order.DiscountAmountIqd, amountIqd = order.TotalIqd });
+        return Ok(new { orderId = order.Id, status = order.Status, couponCode = order.CouponCode, discountAmountIqd = order.DiscountAmountIqd, deliveryFeeIqd = order.DeliveryFeeIqd, customerNote = order.CustomerNote, pointsEarned = CalculatePoints(order.TotalIqd), amountIqd = order.TotalIqd });
     }
 
     [HttpPost("services")]
@@ -490,6 +510,8 @@ public class CheckoutProductRequest
     public int Quantity { get; set; } = 1;
     public string? CouponCode { get; set; }
     public string? DeviceKey { get; set; }
+    public decimal DeliveryFeeIqd { get; set; } = 0m;
+    public string? CustomerNote { get; set; }
 }
 
 public class CheckoutCartRequest
@@ -497,6 +519,8 @@ public class CheckoutCartRequest
     public List<CheckoutCartItem> Items { get; set; } = new();
     public string? CouponCode { get; set; }
     public string? DeviceKey { get; set; }
+    public decimal DeliveryFeeIqd { get; set; } = 0m;
+    public string? CustomerNote { get; set; }
 }
 
 public class CheckoutCartItem
