@@ -440,6 +440,105 @@ public class CheckoutController : ControllerBase
         return Ok(new { orderId = order.Id, status = order.Status, couponCode = order.CouponCode, discountAmountIqd = order.DiscountAmountIqd, deliveryFeeIqd = order.DeliveryFeeIqd, customerNote = order.CustomerNote, pointsEarned = CalculatePoints(order.TotalIqd), amountIqd = order.TotalIqd });
     }
 
+
+    [HttpPost("packages")]
+    public async Task<IActionResult> CheckoutPackage([FromBody] CheckoutPackageRequest req)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized("Invalid token");
+        var qty = req.Quantity <= 0 ? 1 : req.Quantity;
+        if (qty > 20) return BadRequest(new { message = "Quantity too large" });
+
+        var package = await _db.ProductPackages
+            .Include(x => x.Items).ThenInclude(i => i.Product)
+            .FirstOrDefaultAsync(x => x.Id == req.PackageId && x.IsPublished);
+
+        if (package == null) return NotFound(new { message = "Package not found" });
+        if (package.Items.Count == 0) return BadRequest(new { message = "Package has no products" });
+
+        var bad = package.Items.FirstOrDefault(i => i.Product == null || !i.Product.IsPublished || i.Product.StockQuantity < i.Quantity * qty);
+        if (bad != null)
+        {
+            return BadRequest(new
+            {
+                message = "Package is not available",
+                productId = bad.ProductId,
+                productTitle = bad.Product?.Title,
+                required = bad.Quantity * qty,
+                available = bad.Product?.StockQuantity ?? 0
+            });
+        }
+
+        var subtotalIqd = package.FinalPriceIqd * qty;
+        var subtotalUsd = 0m;
+        var products = package.Items.Select(i => i.Product!).ToList();
+        var couponResult = await ResolveCouponAsync(req.CouponCode, subtotalIqd, subtotalUsd, userId, req.DeviceKey, products);
+        if (couponResult.error != null) return couponResult.error;
+
+        var order = new Order
+        {
+            UserId = userId,
+            Status = "PendingSale",
+            SubtotalIqd = subtotalIqd,
+            SubtotalUsd = subtotalUsd,
+            DiscountAmountIqd = couponResult.discountIqd,
+            DiscountAmountUsd = 0m,
+            CouponCode = couponResult.coupon?.Code,
+            DeliveryFeeIqd = 0m,
+            CustomerNote = req.CustomerNote?.Trim(),
+            AdminNote = $"طلب بكج: {(string.IsNullOrWhiteSpace(package.NameAr) ? package.NameEn : package.NameAr)}",
+            TotalIqd = Math.Max(0m, subtotalIqd - couponResult.discountIqd),
+            TotalUsd = 0m
+        };
+
+        foreach (var item in package.Items.OrderBy(i => i.SortOrder))
+        {
+            var p = item.Product!;
+            var totalQty = item.Quantity * qty;
+            order.Items.Add(new OrderItem
+            {
+                ItemType = "ProductPackage",
+                ProductId = p.Id,
+                Quantity = totalQty,
+                UnitPriceIqd = 0m,
+                LineTotalIqd = 0m,
+                UnitPriceUsd = 0m,
+                LineTotalUsd = 0m
+            });
+        }
+
+        var payment = new Payment
+        {
+            Order = order,
+            Provider = "Package",
+            Status = "Pending",
+            ProviderRef = $"PKG-{Guid.NewGuid():N}",
+            AmountUsd = order.TotalUsd,
+            AmountIqd = order.TotalIqd
+        };
+        order.Payments.Add(payment);
+
+        if (couponResult.coupon != null)
+        {
+            couponResult.coupon.UsedCount += 1;
+            TryAttachCouponUsage(couponResult.coupon, userId, order.Id, req.DeviceKey);
+        }
+
+        _db.Orders.Add(order);
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            orderId = order.Id,
+            status = order.Status,
+            packageId = package.Id,
+            packageSlug = package.Slug,
+            subtotalIqd = order.SubtotalIqd,
+            discountAmountIqd = order.DiscountAmountIqd,
+            amountIqd = order.TotalIqd,
+            pointsEarned = CalculatePoints(order.TotalIqd)
+        });
+    }
+
     [HttpPost("services")]
     public async Task<IActionResult> CheckoutService([FromBody] CheckoutServiceRequest req)
     {
@@ -532,4 +631,13 @@ public class CheckoutCartItem
 public class CheckoutServiceRequest
 {
     public Guid ServiceRequestId { get; set; }
+}
+
+public class CheckoutPackageRequest
+{
+    public Guid PackageId { get; set; }
+    public int Quantity { get; set; } = 1;
+    public string? CouponCode { get; set; }
+    public string? DeviceKey { get; set; }
+    public string? CustomerNote { get; set; }
 }

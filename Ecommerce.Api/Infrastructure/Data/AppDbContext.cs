@@ -43,6 +43,8 @@ public class AppDbContext : DbContext
     public DbSet<PointsTransaction> PointsTransactions => Set<PointsTransaction>();
     public DbSet<Referral> Referrals => Set<Referral>();
     public DbSet<UserGift> UserGifts => Set<UserGift>();
+    public DbSet<ProductPackage> ProductPackages => Set<ProductPackage>();
+    public DbSet<ProductPackageItem> ProductPackageItems => Set<ProductPackageItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -387,6 +389,50 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<UserGift>()
             .HasIndex(x => new { x.UserId, x.CreatedAtUtc });
+
+        modelBuilder.Entity<ProductPackage>()
+            .HasIndex(x => x.Slug)
+            .IsUnique();
+
+        modelBuilder.Entity<ProductPackage>()
+            .Property(x => x.Slug)
+            .HasMaxLength(160);
+
+        modelBuilder.Entity<ProductPackage>()
+            .Property(x => x.NameAr)
+            .HasMaxLength(180);
+
+        modelBuilder.Entity<ProductPackage>()
+            .Property(x => x.NameEn)
+            .HasMaxLength(180);
+
+        modelBuilder.Entity<ProductPackage>()
+            .Property(x => x.CoverUrl)
+            .HasMaxLength(2000);
+
+        modelBuilder.Entity<ProductPackage>()
+            .Property(x => x.MediaType)
+            .HasMaxLength(20);
+
+        modelBuilder.Entity<ProductPackage>()
+            .Property(x => x.SliderPlacement)
+            .HasMaxLength(40);
+
+        modelBuilder.Entity<ProductPackage>()
+            .HasMany(x => x.Items)
+            .WithOne(x => x.ProductPackage)
+            .HasForeignKey(x => x.ProductPackageId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProductPackageItem>()
+            .HasOne(x => x.Product)
+            .WithMany()
+            .HasForeignKey(x => x.ProductId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ProductPackageItem>()
+            .HasIndex(x => new { x.ProductPackageId, x.ProductId })
+            .IsUnique();
 
 
     }

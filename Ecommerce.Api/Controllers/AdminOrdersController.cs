@@ -173,9 +173,13 @@ public class AdminOrdersController : ControllerBase
     [HttpPatch("{id:guid}/status")]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateOrderStatusRequest req)
     {
-        var order = await _db.Orders.Include(o => o.User).FirstOrDefaultAsync(o => o.Id == id);
+        var order = await _db.Orders
+            .Include(o => o.User)
+            .Include(o => o.Items).ThenInclude(i => i.Product)
+            .FirstOrDefaultAsync(o => o.Id == id);
         if (order is null) return NotFound(new { message = "Order not found." });
 
+        var oldStatus = order.Status;
         var allowed = new[] { "PendingSale", "Sold", "NotSold" };
         var status = string.IsNullOrWhiteSpace(req.Status) ? order.Status : req.Status.Trim();
         if (!allowed.Contains(status)) return BadRequest(new { message = "Invalid status." });
@@ -192,6 +196,11 @@ public class AdminOrdersController : ControllerBase
         order.Status = status;
         if (status == "Sold")
         {
+            if (oldStatus != "Sold")
+            {
+                var stockError = DeductStockForOrder(order);
+                if (stockError != null) return stockError;
+            }
             order.SoldAt ??= DateTime.UtcNow;
             await AwardOrderPointsAsync(order, req.PointsOverride);
         }
@@ -202,6 +211,35 @@ public class AdminOrdersController : ControllerBase
 
         await _db.SaveChangesAsync();
         return Ok(new { order.Id, order.Status, order.DeliveryFeeIqd, order.TotalIqd, order.AdminNote, order.PointsEarned, order.PointsAwarded });
+    }
+
+
+    private IActionResult? DeductStockForOrder(Order order)
+    {
+        foreach (var item in order.Items.Where(i => i.ProductId.HasValue))
+        {
+            if (item.Product == null)
+                return BadRequest(new { message = "لا يمكن تأكيد البيع لأن أحد المنتجات غير موجود.", productId = item.ProductId });
+
+            var required = Math.Max(1, item.Quantity);
+            if (item.Product.StockQuantity < required)
+            {
+                return BadRequest(new
+                {
+                    message = "لا يمكن تأكيد البيع لأن كمية أحد المنتجات غير كافية.",
+                    productId = item.ProductId,
+                    productTitle = item.Product.Title,
+                    required,
+                    available = item.Product.StockQuantity
+                });
+            }
+        }
+
+        foreach (var item in order.Items.Where(i => i.ProductId.HasValue && i.Product != null))
+        {
+            item.Product!.StockQuantity -= Math.Max(1, item.Quantity);
+        }
+        return null;
     }
 
     private async Task AwardOrderPointsAsync(Order order, int? overridePoints)

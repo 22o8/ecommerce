@@ -181,6 +181,7 @@ const { buildAssetUrl } = useApi()
 const heroLogo = computed(() => appearance.data.siteLogoUrl ? buildAssetUrl(appearance.data.siteLogoUrl) : siteLogoSrc)
 
 const homeAds = useState<any[]>('home-inline-ads', () => [])
+const sliderPackages = ref<any[]>([])
 const homeAdIndex = ref(0)
 let homeAdTimer: ReturnType<typeof setInterval> | null = null
 
@@ -237,6 +238,20 @@ async function loadHomeAds() {
     homeAds.value = []
   }
 }
+async function loadSliderPackages() {
+  try {
+    const res: any = await $fetch('/api/bff/packages')
+    sliderPackages.value = (Array.isArray(res) ? res : []).filter((p: any) => p.showInSlider || p.ShowInSlider)
+  } catch {
+    sliderPackages.value = []
+  }
+}
+const topPackageAds = computed(() => sliderPackages.value.filter((p: any) => (p.sliderPlacement || p.SliderPlacement) === 'home_top'))
+const bottomPackageAds = computed(() => sliderPackages.value.filter((p: any) => (p.sliderPlacement || p.SliderPlacement) === 'home_bottom' || (p.sliderPlacement || p.SliderPlacement) === 'offers'))
+function pkgName(p: any) { return p.name || p.nameAr || p.NameAr || p.nameEn || p.NameEn || 'بكج' }
+function pkgCover(p: any) { return buildAssetUrl(p.coverUrl || p.CoverUrl || '') }
+function pkgPrice(p: any) { return Number(p.finalPriceIqd || p.FinalPriceIqd || 0).toLocaleString('en-US') + ' د.ع' }
+
 function startHomeAdTimer() {
   if (homeAdTimer) clearInterval(homeAdTimer)
   if (heroInlineMediaItems.value.length <= 1) return
@@ -303,6 +318,7 @@ function scrollRail(direction: 'prev' | 'next', rail: HTMLElement | null) {
 
 onMounted(() => {
   loadHomeAds()
+  loadSliderPackages()
   categoryRail.value?.addEventListener('wheel', onRailWheel, { passive: false })
   problemCategoryRail.value?.addEventListener('wheel', onRailWheel, { passive: false })
   ensureTopRatedLoaded()
@@ -403,6 +419,21 @@ useAdvancedSeo({
               </Transition>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section v-if="topPackageAds.length" class="mx-auto max-w-[92rem] px-4 pb-8 lg:px-6">
+      <div class="home-section-panel p-4 md:p-6">
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <h2 class="text-2xl font-black rtl-text">عروض البكجات</h2>
+          <NuxtLink to="/packages" class="text-sm font-bold text-[rgb(var(--primary))]">عرض الكل</NuxtLink>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <NuxtLink v-for="pkg in topPackageAds" :key="pkg.id" :to="`/packages`" class="rounded-3xl border border-app bg-surface/70 p-3 grid gap-3 hover:bg-surface">
+            <img v-if="pkgCover(pkg)" :src="pkgCover(pkg)" :alt="pkgName(pkg)" class="h-44 w-full rounded-2xl object-contain bg-black/10" loading="lazy" />
+            <div class="rtl-text"><b>{{ pkgName(pkg) }}</b><p class="text-sm text-[rgb(var(--muted))]">{{ pkgPrice(pkg) }}</p></div>
+          </NuxtLink>
         </div>
       </div>
     </section>
@@ -607,7 +638,22 @@ useAdvancedSeo({
         </div>
       </div>
     </section>
-  </div>
+  
+    <section v-if="bottomPackageAds.length" class="mx-auto max-w-[92rem] px-4 py-8 lg:px-6">
+      <div class="home-section-panel p-4 md:p-6">
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <h2 class="text-2xl font-black rtl-text">بكجات مختارة</h2>
+          <NuxtLink to="/packages" class="text-sm font-bold text-[rgb(var(--primary))]">عرض الكل</NuxtLink>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <NuxtLink v-for="pkg in bottomPackageAds" :key="pkg.id" to="/packages" class="rounded-3xl border border-app bg-surface/70 p-3 grid gap-3 hover:bg-surface">
+            <img v-if="pkgCover(pkg)" :src="pkgCover(pkg)" :alt="pkgName(pkg)" class="h-40 w-full rounded-2xl object-contain bg-black/10" loading="lazy" />
+            <div class="rtl-text"><b>{{ pkgName(pkg) }}</b><p class="text-sm text-[rgb(var(--muted))]">{{ pkgPrice(pkg) }}</p></div>
+          </NuxtLink>
+        </div>
+      </div>
+    </section>
+</div>
 </template>
 <style scoped>
 .section-kicker{

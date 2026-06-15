@@ -424,6 +424,57 @@ public static class DbBootstrapper
             @"CREATE INDEX IF NOT EXISTS ""IX_Categories_Section_ParentId_SortOrder""
               ON ""Categories"" (""Section"", ""ParentId"", ""SortOrder"");",
 
+            // ============================
+            // Product Packages schema
+            // ============================
+            @"CREATE TABLE IF NOT EXISTS ""ProductPackages"" (
+                ""Id"" uuid NOT NULL,
+                ""NameAr"" character varying(180) NOT NULL DEFAULT '',
+                ""NameEn"" character varying(180) NOT NULL DEFAULT '',
+                ""Slug"" character varying(160) NOT NULL DEFAULT '',
+                ""ShortDescription"" text NOT NULL DEFAULT '',
+                ""SeoDescription"" text NOT NULL DEFAULT '',
+                ""Note"" text NOT NULL DEFAULT '',
+                ""CoverUrl"" character varying(2000) NOT NULL DEFAULT '',
+                ""MediaType"" character varying(20) NOT NULL DEFAULT 'image',
+                ""OriginalPriceIqd"" numeric(18,2) NOT NULL DEFAULT 0,
+                ""FinalPriceIqd"" numeric(18,2) NOT NULL DEFAULT 0,
+                ""Category"" text NOT NULL DEFAULT '',
+                ""ProblemCategory"" text NOT NULL DEFAULT '',
+                ""IsPublished"" boolean NOT NULL DEFAULT TRUE,
+                ""IsFeatured"" boolean NOT NULL DEFAULT FALSE,
+                ""ShowInSlider"" boolean NOT NULL DEFAULT FALSE,
+                ""SliderPlacement"" character varying(40) NOT NULL DEFAULT 'packages',
+                ""SortOrder"" integer NOT NULL DEFAULT 0,
+                ""SoldCount"" integer NOT NULL DEFAULT 0,
+                ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT now(),
+                CONSTRAINT ""PK_ProductPackages"" PRIMARY KEY (""Id"")
+              );",
+
+            @"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_ProductPackages_Slug""
+              ON ""ProductPackages"" (""Slug"");",
+
+            @"CREATE TABLE IF NOT EXISTS ""ProductPackageItems"" (
+                ""Id"" uuid NOT NULL,
+                ""ProductPackageId"" uuid NOT NULL,
+                ""ProductId"" uuid NOT NULL,
+                ""Quantity"" integer NOT NULL DEFAULT 1,
+                ""SortOrder"" integer NOT NULL DEFAULT 0,
+                CONSTRAINT ""PK_ProductPackageItems"" PRIMARY KEY (""Id""),
+                CONSTRAINT ""FK_ProductPackageItems_ProductPackages_ProductPackageId"" FOREIGN KEY (""ProductPackageId"")
+                    REFERENCES ""ProductPackages""(""Id"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_ProductPackageItems_Products_ProductId"" FOREIGN KEY (""ProductId"")
+                    REFERENCES ""Products""(""Id"") ON DELETE RESTRICT
+              );",
+
+            @"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_ProductPackageItems_ProductPackageId_ProductId""
+              ON ""ProductPackageItems"" (""ProductPackageId"", ""ProductId"");",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_ProductPackageItems_ProductId""
+              ON ""ProductPackageItems"" (""ProductId"");",
+
+
         };
 
         foreach (var sql in statements)
