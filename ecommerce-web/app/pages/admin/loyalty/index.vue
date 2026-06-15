@@ -70,5 +70,14 @@ onMounted(load)
 </script>
 
 <style scoped>
-.btn-mini{ @apply rounded-2xl border border-app bg-surface px-3 py-2 font-bold hover:bg-[rgb(var(--primary))]/10; }
+.btn-mini {
+  border-radius: 1rem;
+  border: 1px solid var(--app);
+  background-color: var(--surface);
+  padding: 0.5rem 0.75rem;
+  font-weight: 700;
+}
+.btn-mini:hover {
+  background-color: rgba(var(--primary), 0.1);
+}
 </style>
