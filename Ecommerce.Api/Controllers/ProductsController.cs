@@ -187,7 +187,7 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> GetAll([FromQuery] PublicProductQuery query)
     {
         var page = query.Page < 1 ? 1 : query.Page;
-        var pageSize = query.PageSize is < 1 or > 60 ? 12 : query.PageSize;
+        var pageSize = query.PageSize is < 1 or > 300 ? 12 : query.PageSize;
         var q = N(query.Q);
         var brand = N(query.Brand);
         var category = N(query.Category);
@@ -207,12 +207,32 @@ public class ProductsController : ControllerBase
                 return new List<string>();
 
             var aliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { normalized };
+
+            // حماية مهمة: بعض البيانات القديمة مخزونة بمفاتيح مختلفة عن روابط الواجهة.
+            // مثال: رابط التصنيف /suncream بينما المنتج محفوظ category=sunscreen.
+            // لذلك نوسّع المرادفات حتى لا يختفي المنتج من التصنيف الدقيق.
+            var manualAliases = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["suncream"] = new[] { "sunscreen", "sun-screen", "واقي", "واقي شمس" },
+                ["sunscreen"] = new[] { "suncream", "sun-screen", "واقي", "واقي شمس" },
+                ["serumsking"] = new[] { "serum", "serums", "سيروم" },
+                ["serum"] = new[] { "serumsking", "serums", "سيروم" },
+                ["ceam"] = new[] { "cream", "كريم" },
+                ["cream"] = new[] { "ceam", "كريم" },
+            };
+
+            if (manualAliases.TryGetValue(normalized, out var directAliases))
+            {
+                foreach (var alias in directAliases)
+                    aliases.Add(N(alias));
+            }
+
             var defs = await _db.Categories
                 .AsNoTracking()
                 .Where(c => c.IsActive &&
-                    (c.Key.ToLower() == normalized ||
-                     c.NameAr.ToLower() == normalized ||
-                     (c.NameEn != null && c.NameEn.ToLower() == normalized)))
+                    (aliases.Contains(c.Key.ToLower()) ||
+                     aliases.Contains(c.NameAr.ToLower()) ||
+                     (c.NameEn != null && aliases.Contains(c.NameEn.ToLower()))))
                 .Select(c => new { c.Key, c.NameAr, c.NameEn })
                 .ToListAsync();
 
@@ -221,6 +241,16 @@ public class ProductsController : ControllerBase
                 if (!string.IsNullOrWhiteSpace(def.Key)) aliases.Add(N(def.Key));
                 if (!string.IsNullOrWhiteSpace(def.NameAr)) aliases.Add(N(def.NameAr));
                 if (!string.IsNullOrWhiteSpace(def.NameEn)) aliases.Add(N(def.NameEn));
+            }
+
+            // مرّة ثانية بعد قراءة التعاريف حتى نغطي أي مفتاح مرادف ظهر من قاعدة البيانات.
+            foreach (var key in aliases.ToList())
+            {
+                if (manualAliases.TryGetValue(key, out var moreAliases))
+                {
+                    foreach (var alias in moreAliases)
+                        aliases.Add(N(alias));
+                }
             }
 
             return aliases.ToList();

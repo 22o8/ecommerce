@@ -273,53 +273,64 @@ const finalPrice = computed(() => {
 const slugTouched = ref(false)
 const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام', id: '', hasDetailSections: false }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false) })))
 const categorySubCategoryItems = ref<any[]>([])
+const preservingCategorySelection = ref(false)
 const categorySubCategoryOptions = computed(() => (categorySubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
-async function loadCategorySubCategories() {
-  const wantedSubCategory = String(form.subCategory || '')
-  const selected = (categories.value || []).find((x:any) => String(x.key || '') === String(form.category || ''))
+async function loadCategorySubCategories(preserveValue?: string) {
+  const wantedSubCategory = String(preserveValue ?? form.subCategory ?? '').trim().toLowerCase()
+  const selected = (categories.value || []).find((x:any) => String(x.key || '').trim().toLowerCase() === String(form.category || '').trim().toLowerCase())
   if (!selected?.id || !selected?.hasDetailSections) {
     categorySubCategoryItems.value = []
-    form.subCategory = ''
+    // فقط نمسح إذا المستخدم غيّر التصنيف بنفسه، وليس أثناء تحميل المنتج من قاعدة البيانات.
+    if (!preserveValue) form.subCategory = ''
     return
   }
   try {
     const res: any = await $fetch('/api/bff/categories/active', { query: { section: 'regular', parentId: selected.id, _ts: Date.now() } })
     categorySubCategoryItems.value = Array.isArray(res) ? res : []
-    if (!categorySubCategoryItems.value.some((x:any) => String(x.key || '') === wantedSubCategory)) form.subCategory = ''
-    else form.subCategory = wantedSubCategory
+    const exists = categorySubCategoryItems.value.some((x:any) => String(x.key || '').trim().toLowerCase() === wantedSubCategory)
+    if (wantedSubCategory && exists) form.subCategory = wantedSubCategory
+    else if (!preserveValue) form.subCategory = ''
   } catch {
     categorySubCategoryItems.value = []
-    form.subCategory = ''
+    if (!preserveValue) form.subCategory = ''
   }
 }
 
-watch(() => form.category, () => { loadCategorySubCategories() })
+watch(() => form.category, async () => {
+  if (preservingCategorySelection.value) return
+  await loadCategorySubCategories('')
+})
 const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false) })))
 const problemSubCategoryItems = ref<any[]>([])
+const preservingProblemSelection = ref(false)
 const problemSubCategoryOptions = computed(() => (problemSubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
 
-async function loadProblemSubCategories() {
-  const wantedProblemSubCategory = String(form.problemSubCategory || '')
-  const selected = (problemCategories.value || []).find((x:any) => String(x.key || '') === String(form.problemCategory || ''))
+async function loadProblemSubCategories(preserveValue?: string) {
+  const wantedProblemSubCategory = String(preserveValue ?? form.problemSubCategory ?? '').trim().toLowerCase()
+  const selected = (problemCategories.value || []).find((x:any) => String(x.key || '').trim().toLowerCase() === String(form.problemCategory || '').trim().toLowerCase())
   if (!selected?.id) {
     problemSubCategoryItems.value = []
-    form.problemSubCategory = ''
+    if (!preserveValue) form.problemSubCategory = ''
     return
   }
   try {
     const res: any = await $fetch('/api/bff/categories/active', { query: { section: 'problem', parentId: selected.id, _ts: Date.now() } })
     problemSubCategoryItems.value = Array.isArray(res) ? res : []
-    if (!problemSubCategoryItems.value.some((x:any) => String(x.key || '') === wantedProblemSubCategory)) form.problemSubCategory = ''
-    else form.problemSubCategory = wantedProblemSubCategory
+    const exists = problemSubCategoryItems.value.some((x:any) => String(x.key || '').trim().toLowerCase() === wantedProblemSubCategory)
+    if (wantedProblemSubCategory && exists) form.problemSubCategory = wantedProblemSubCategory
+    else if (!preserveValue) form.problemSubCategory = ''
   } catch {
     problemSubCategoryItems.value = []
-    form.problemSubCategory = ''
+    if (!preserveValue) form.problemSubCategory = ''
   }
 }
 
-watch(() => form.problemCategory, () => { loadProblemSubCategories() })
+watch(() => form.problemCategory, async () => {
+  if (preservingProblemSelection.value) return
+  await loadProblemSubCategories('')
+})
 
 const autoSlugBase = ref('')
 
@@ -350,11 +361,18 @@ async function resetForm() {
   form.discountPercent = Number(product.value.discountPercent ?? 0)
   // we store brand slug/name in the same field; API expects "brand"
   form.brandSlug = product.value.brand || product.value.brandSlug || ''
+  const savedSubCategory = String(product.value.subCategory || '').trim().toLowerCase()
+  const savedProblemSubCategory = String(product.value.problemSubCategory || '').trim().toLowerCase()
+  preservingCategorySelection.value = true
+  preservingProblemSelection.value = true
   form.category = product.value.category || 'general'
-  form.subCategory = product.value.subCategory || ''
+  form.subCategory = savedSubCategory
   form.problemCategory = product.value.problemCategory || ''
-  form.problemSubCategory = product.value.problemSubCategory || ''
-  await loadCategorySubCategories()
+  form.problemSubCategory = savedProblemSubCategory
+  await loadCategorySubCategories(savedSubCategory)
+  await loadProblemSubCategories(savedProblemSubCategory)
+  preservingCategorySelection.value = false
+  preservingProblemSelection.value = false
   form.stockQuantity = Number(product.value.stockQuantity ?? 0)
   form.lowStockThreshold = Number(product.value.lowStockThreshold ?? 5)
   form.isCouponAllowed = Boolean(product.value.isCouponAllowed ?? true)
@@ -451,8 +469,8 @@ async function reloadAll() {
       throw e
     })
 
-    await loadCategorySubCategories()
-    await loadProblemSubCategories()
+    await loadCategorySubCategories(String(form.subCategory || ''))
+    await loadProblemSubCategories(String(form.problemSubCategory || ''))
 
     await loadImages().catch((e) => {
       console.warn('[admin] loadImages failed', e)
@@ -500,8 +518,8 @@ async function onSave() {
     })
     toast.success(t('common.saved'))
     await Promise.all([loadProduct(), fetchCategories(true, 'regular'), fetchCategories(true, 'problem')])
-    await loadCategorySubCategories()
-    await loadProblemSubCategories()
+    await loadCategorySubCategories(String(form.subCategory || ''))
+    await loadProblemSubCategories(String(form.problemSubCategory || ''))
   } catch (e: any) {
     toast.error(e?.data?.message || e?.message || t('common.errorGeneric'))
   } finally {

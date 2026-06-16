@@ -6,6 +6,8 @@ export function useAdminApi() {
 
   return {
     getDashboardStats: <T>() => api.get<T>('/admin/dashboard/stats'),
+    listAdminActivities: <T>(query?: any) => api.get<T>('/admin/activities', query),
+    getCategoryHealth: <T>() => api.get<T>('/admin/activities/category-health'),
 
     // generic (تحتاجها بالصفحات)
     get: api.get,

@@ -122,6 +122,7 @@ public class AdminCategoriesController : ControllerBase
         };
         _db.Categories.Add(entity);
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "create", normalizedSection == "problem" ? "problem_category" : "category", entity.Id.ToString(), $"إضافة تصنيف: {entity.NameAr}", entity.ParentId == null ? "تصنيف رئيسي" : "تصنيف دقيق", new { entity.Key, entity.NameAr, entity.Section, entity.ParentId, entity.HasDetailSections }, HttpContext.RequestAborted);
         return Ok(new { entity.Id });
     }
 
@@ -176,6 +177,7 @@ public class AdminCategoriesController : ControllerBase
         }
 
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "update", normalizedSection == "problem" ? "problem_category" : "category", entity.Id.ToString(), $"تعديل تصنيف: {entity.NameAr}", entity.ParentId == null ? "تصنيف رئيسي" : "تصنيف دقيق", new { entity.Key, entity.NameAr, entity.Section, entity.ParentId, entity.HasDetailSections, entity.IsActive }, HttpContext.RequestAborted);
         return Ok(new { entity.Id });
     }
 
@@ -191,6 +193,7 @@ public class AdminCategoriesController : ControllerBase
 
         _db.Categories.Remove(entity);
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "delete", entity.Section == "problem" ? "problem_category" : "category", entity.Id.ToString(), $"حذف تصنيف: {entity.NameAr}", entity.ParentId == null ? "تصنيف رئيسي" : "تصنيف دقيق", new { entity.Key, entity.NameAr, entity.Section, entity.ParentId }, HttpContext.RequestAborted);
         return Ok();
     }
 

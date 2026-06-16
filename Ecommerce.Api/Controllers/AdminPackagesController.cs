@@ -124,6 +124,7 @@ public class AdminPackagesController : ControllerBase
         };
         _db.ProductPackages.Add(package);
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "create", "package", package.Id.ToString(), $"إنشاء بكج: {package.NameAr}", $"عدد المنتجات: {package.Items.Count}، السعر: {package.FinalPriceIqd}", new { package.NameAr, package.Slug, package.FinalPriceIqd, ItemsCount = package.Items.Count }, HttpContext.RequestAborted);
         return Ok(ToDto(await _db.ProductPackages.Include(x => x.Items).ThenInclude(i => i.Product).FirstAsync(x => x.Id == package.Id)));
     }
 
@@ -156,6 +157,7 @@ public class AdminPackagesController : ControllerBase
         await _db.SaveChangesAsync();
         package.Items = req.Items.Select((x, idx) => new ProductPackageItem { ProductPackageId = package.Id, ProductId = x.ProductId, Quantity = Math.Max(1, x.Quantity), SortOrder = idx }).ToList();
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "update", "package", package.Id.ToString(), $"تعديل بكج: {package.NameAr}", $"عدد المنتجات: {package.Items.Count}، السعر: {package.FinalPriceIqd}", new { package.NameAr, package.Slug, package.FinalPriceIqd, ItemsCount = package.Items.Count }, HttpContext.RequestAborted);
         return Ok(ToDto(await _db.ProductPackages.Include(x => x.Items).ThenInclude(i => i.Product).FirstAsync(x => x.Id == package.Id)));
     }
 
@@ -166,6 +168,7 @@ public class AdminPackagesController : ControllerBase
         if (package == null) return NotFound();
         _db.ProductPackages.Remove(package);
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "delete", "package", id.ToString(), $"حذف بكج: {package.NameAr}", package.Slug, new { package.NameAr, package.Slug }, HttpContext.RequestAborted);
         return Ok(new { message = "Package deleted" });
     }
 

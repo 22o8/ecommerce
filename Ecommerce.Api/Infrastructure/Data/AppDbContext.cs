@@ -45,6 +45,7 @@ public class AppDbContext : DbContext
     public DbSet<UserGift> UserGifts => Set<UserGift>();
     public DbSet<ProductPackage> ProductPackages => Set<ProductPackage>();
     public DbSet<ProductPackageItem> ProductPackageItems => Set<ProductPackageItem>();
+    public DbSet<AdminActivity> AdminActivities => Set<AdminActivity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -433,6 +434,28 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ProductPackageItem>()
             .HasIndex(x => new { x.ProductPackageId, x.ProductId })
             .IsUnique();
+
+        modelBuilder.Entity<AdminActivity>()
+            .Property(x => x.Action)
+            .HasMaxLength(80);
+
+        modelBuilder.Entity<AdminActivity>()
+            .Property(x => x.EntityType)
+            .HasMaxLength(80);
+
+        modelBuilder.Entity<AdminActivity>()
+            .Property(x => x.EntityId)
+            .HasMaxLength(120);
+
+        modelBuilder.Entity<AdminActivity>()
+            .Property(x => x.AdminEmail)
+            .HasMaxLength(220);
+
+        modelBuilder.Entity<AdminActivity>()
+            .HasIndex(x => x.CreatedAtUtc);
+
+        modelBuilder.Entity<AdminActivity>()
+            .HasIndex(x => new { x.EntityType, x.Action, x.CreatedAtUtc });
 
 
     }

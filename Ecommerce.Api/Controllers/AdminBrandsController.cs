@@ -82,6 +82,7 @@ public class AdminBrandsController : ControllerBase
 
         _db.Brands.Add(b);
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "create", "brand", b.Id.ToString(), $"رفع براند: {b.Name}", $"المفتاح: {b.Slug}", new { b.Name, b.Slug }, HttpContext.RequestAborted);
 
         return CreatedAtAction(nameof(GetById), new { id = b.Id }, new { b.Id });
     }
@@ -110,6 +111,7 @@ public class AdminBrandsController : ControllerBase
         b.IsActive = req.IsActive;
 
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "update", "brand", b.Id.ToString(), $"تعديل براند: {b.Name}", $"المفتاح: {b.Slug}", new { b.Name, b.Slug, b.IsActive }, HttpContext.RequestAborted);
         return Ok(new { message = "Updated" });
     }
 
@@ -130,6 +132,7 @@ public class AdminBrandsController : ControllerBase
 
         _db.Brands.Remove(b);
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "delete", "brand", id.ToString(), $"حذف براند: {b.Name}", $"المفتاح: {b.Slug}", new { b.Name, b.Slug }, HttpContext.RequestAborted);
         return Ok(new { message = "Deleted" });
     }
 
@@ -166,6 +169,7 @@ public class AdminBrandsController : ControllerBase
         }
 
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "upload_logo", "brand", b.Id.ToString(), $"رفع شعار براند: {b.Name}", b.LogoUrl ?? "", new { b.Name, b.Slug, b.LogoUrl }, HttpContext.RequestAborted);
 
         return Ok(new { logoUrl = b.LogoUrl, url = b.LogoUrl, optimized = true });
     }

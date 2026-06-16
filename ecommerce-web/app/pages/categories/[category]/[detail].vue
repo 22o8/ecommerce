@@ -50,8 +50,25 @@ function norm(v: unknown) {
   return String(v ?? '').trim().toLowerCase()
 }
 
+const manualAliasMap: Record<string, string[]> = {
+  suncream: ['sunscreen', 'sun-screen', 'واقي', 'واقي شمس'],
+  sunscreen: ['suncream', 'sun-screen', 'واقي', 'واقي شمس'],
+  serumsking: ['serum', 'serums', 'سيروم'],
+  serum: ['serumsking', 'serums', 'سيروم'],
+  ceam: ['cream', 'كريم'],
+  cream: ['ceam', 'كريم'],
+}
+
+function expandAliases(values: string[]) {
+  const result = new Set(values.map(norm).filter(Boolean))
+  for (const value of Array.from(result)) {
+    for (const alias of manualAliasMap[value] || []) result.add(norm(alias))
+  }
+  return Array.from(result).filter(Boolean)
+}
+
 function uniqueAliases(values: unknown[]) {
-  return Array.from(new Set(values.map(norm).filter(Boolean)))
+  return expandAliases(values.map(norm).filter(Boolean))
 }
 
 await useAsyncData(
@@ -75,8 +92,15 @@ await useAsyncData(
       detailAliases.value = uniqueAliases([detailKey.value])
     }
 
-    // نجلب منتجات التصنيف الرئيسي فقط، ثم نفلتر محلياً بشكل صارم على التصنيف الدقيق.
-    await products.fetch({ page: 1, pageSize: 60, sort: 'new', category: categoryKey.value })
+    // نجلب من السيرفر بالتصنيف الرئيسي + التصنيف الدقيق حتى لا يختفي منتج إذا كان خارج أول 60 منتج.
+    // بعدها نعمل فلترة محلية صارمة كحماية إضافية.
+    await products.fetch({
+      page: 1,
+      pageSize: 300,
+      sort: 'new',
+      category: categoryKey.value,
+      subCategory: detailKey.value,
+    })
 
     if (parentAliases.length) {
       products.items = (products.items || []).filter((p: any) => parentAliases.includes(norm(p?.category ?? p?.Category)))

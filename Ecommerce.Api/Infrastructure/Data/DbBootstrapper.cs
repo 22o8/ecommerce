@@ -474,6 +474,29 @@ public static class DbBootstrapper
             @"CREATE INDEX IF NOT EXISTS ""IX_ProductPackageItems_ProductId""
               ON ""ProductPackageItems"" (""ProductId"");",
 
+            // ============================
+            // Admin Activities schema
+            // ============================
+            @"CREATE TABLE IF NOT EXISTS ""AdminActivities"" (
+                ""Id"" uuid NOT NULL,
+                ""AdminUserId"" uuid NULL,
+                ""AdminEmail"" character varying(220) NOT NULL DEFAULT '',
+                ""Action"" character varying(80) NOT NULL DEFAULT '',
+                ""EntityType"" character varying(80) NOT NULL DEFAULT '',
+                ""EntityId"" character varying(120) NULL,
+                ""Title"" text NOT NULL DEFAULT '',
+                ""Details"" text NOT NULL DEFAULT '',
+                ""MetadataJson"" text NULL,
+                ""CreatedAtUtc"" timestamp with time zone NOT NULL DEFAULT now(),
+                CONSTRAINT ""PK_AdminActivities"" PRIMARY KEY (""Id"")
+              );",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_AdminActivities_CreatedAtUtc""
+              ON ""AdminActivities"" (""CreatedAtUtc"");",
+
+            @"CREATE INDEX IF NOT EXISTS ""IX_AdminActivities_EntityType_Action_CreatedAtUtc""
+              ON ""AdminActivities"" (""EntityType"", ""Action"", ""CreatedAtUtc"");",
+
 
         };
 

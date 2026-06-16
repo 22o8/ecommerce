@@ -160,6 +160,7 @@ public class AdminProductsController : ControllerBase
 
         _db.Products.Add(p);
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "create", "product", p.Id.ToString(), $"رفع منتج: {p.Title}", $"البراند: {p.Brand}، التصنيف: {p.Category}، الدقيق: {p.SubCategory}، مشكلة: {p.ProblemCategory}، دقيق المشكلة: {p.ProblemSubCategory}", new { p.Title, p.Brand, p.Category, p.SubCategory, p.ProblemCategory, p.ProblemSubCategory }, HttpContext.RequestAborted);
 
         return CreatedAtAction(nameof(GetById), new { id = p.Id }, new { p.Id });
     }
@@ -211,6 +212,7 @@ public class AdminProductsController : ControllerBase
         p.IsCouponAllowed = req.IsCouponAllowed;
 
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "update", "product", p.Id.ToString(), $"تعديل منتج: {p.Title}", $"البراند: {p.Brand}، التصنيف: {p.Category}، الدقيق: {p.SubCategory}، مشكلة: {p.ProblemCategory}، دقيق المشكلة: {p.ProblemSubCategory}", new { p.Title, p.Brand, p.Category, p.SubCategory, p.ProblemCategory, p.ProblemSubCategory }, HttpContext.RequestAborted);
         return Ok(new { message = "Updated" });
     }
 
@@ -222,6 +224,7 @@ public class AdminProductsController : ControllerBase
 
         p.IsFeatured = req.IsFeatured;
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "feature", "product", p.Id.ToString(), $"تغيير تمييز المنتج: {p.Title}", req.IsFeatured ? "تم تمييز المنتج" : "تم إلغاء تمييز المنتج", new { p.Title, req.IsFeatured }, HttpContext.RequestAborted);
         return Ok(new { message = "Updated", id = p.Id, p.IsFeatured });
     }
 
@@ -249,6 +252,7 @@ public class AdminProductsController : ControllerBase
 
         _db.Products.Remove(product);
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "delete", "product", id.ToString(), $"حذف منتج: {product.Title}", $"البراند: {product.Brand}، التصنيف: {product.Category}", new { product.Title, product.Brand, product.Category, product.SubCategory }, HttpContext.RequestAborted);
 
         return Ok(new { message = "Deleted successfully" });
     }
@@ -339,6 +343,7 @@ public class AdminProductsController : ControllerBase
         }
 
         await _db.SaveChangesAsync();
+        await AdminActivityWriter.LogAsync(_db, User, "upload_images", "product", id.ToString(), $"رفع صور للمنتج: {product.Title}", $"عدد الصور: {created.Count}", new { product.Title, Count = created.Count }, HttpContext.RequestAborted);
         return Ok(new
         {
             items = created,

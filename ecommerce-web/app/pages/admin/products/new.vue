@@ -230,53 +230,64 @@ const form = reactive({
 const slugTouched = ref(false)
 const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام', id: '', hasDetailSections: false }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false) })))
 const categorySubCategoryItems = ref<any[]>([])
+const preservingCategorySelection = ref(false)
 const categorySubCategoryOptions = computed(() => (categorySubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
-async function loadCategorySubCategories() {
-  const wantedSubCategory = String(form.subCategory || '')
-  const selected = (categories.value || []).find((x:any) => String(x.key || '') === String(form.category || ''))
+async function loadCategorySubCategories(preserveValue?: string) {
+  const wantedSubCategory = String(preserveValue ?? form.subCategory ?? '').trim().toLowerCase()
+  const selected = (categories.value || []).find((x:any) => String(x.key || '').trim().toLowerCase() === String(form.category || '').trim().toLowerCase())
   if (!selected?.id || !selected?.hasDetailSections) {
     categorySubCategoryItems.value = []
-    form.subCategory = ''
+    // فقط نمسح إذا المستخدم غيّر التصنيف بنفسه، وليس أثناء تحميل المنتج من قاعدة البيانات.
+    if (!preserveValue) form.subCategory = ''
     return
   }
   try {
     const res: any = await $fetch('/api/bff/categories/active', { query: { section: 'regular', parentId: selected.id, _ts: Date.now() } })
     categorySubCategoryItems.value = Array.isArray(res) ? res : []
-    if (!categorySubCategoryItems.value.some((x:any) => String(x.key || '') === wantedSubCategory)) form.subCategory = ''
-    else form.subCategory = wantedSubCategory
+    const exists = categorySubCategoryItems.value.some((x:any) => String(x.key || '').trim().toLowerCase() === wantedSubCategory)
+    if (wantedSubCategory && exists) form.subCategory = wantedSubCategory
+    else if (!preserveValue) form.subCategory = ''
   } catch {
     categorySubCategoryItems.value = []
-    form.subCategory = ''
+    if (!preserveValue) form.subCategory = ''
   }
 }
 
-watch(() => form.category, () => { loadCategorySubCategories() })
+watch(() => form.category, async () => {
+  if (preservingCategorySelection.value) return
+  await loadCategorySubCategories('')
+})
 const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false) })))
 const problemSubCategoryItems = ref<any[]>([])
+const preservingProblemSelection = ref(false)
 const problemSubCategoryOptions = computed(() => (problemSubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
 
 
-async function loadProblemSubCategories() {
-  const wantedProblemSubCategory = String(form.problemSubCategory || '')
-  const selected = (problemCategories.value || []).find((x:any) => String(x.key || '') === String(form.problemCategory || ''))
+async function loadProblemSubCategories(preserveValue?: string) {
+  const wantedProblemSubCategory = String(preserveValue ?? form.problemSubCategory ?? '').trim().toLowerCase()
+  const selected = (problemCategories.value || []).find((x:any) => String(x.key || '').trim().toLowerCase() === String(form.problemCategory || '').trim().toLowerCase())
   if (!selected?.id) {
     problemSubCategoryItems.value = []
-    form.problemSubCategory = ''
+    if (!preserveValue) form.problemSubCategory = ''
     return
   }
   try {
     const res: any = await $fetch('/api/bff/categories/active', { query: { section: 'problem', parentId: selected.id, _ts: Date.now() } })
     problemSubCategoryItems.value = Array.isArray(res) ? res : []
-    if (!problemSubCategoryItems.value.some((x:any) => String(x.key || '') === wantedProblemSubCategory)) form.problemSubCategory = ''
-    else form.problemSubCategory = wantedProblemSubCategory
+    const exists = problemSubCategoryItems.value.some((x:any) => String(x.key || '').trim().toLowerCase() === wantedProblemSubCategory)
+    if (wantedProblemSubCategory && exists) form.problemSubCategory = wantedProblemSubCategory
+    else if (!preserveValue) form.problemSubCategory = ''
   } catch {
     problemSubCategoryItems.value = []
-    form.problemSubCategory = ''
+    if (!preserveValue) form.problemSubCategory = ''
   }
 }
 
-watch(() => form.problemCategory, () => { loadProblemSubCategories() })
+watch(() => form.problemCategory, async () => {
+  if (preservingProblemSelection.value) return
+  await loadProblemSubCategories('')
+})
 
 
 const slugify = (input: string) => {
@@ -315,9 +326,9 @@ onMounted(async () => {
   try {
     // نجبر تحديث التصنيفات هنا حتى تظهر أي تصنيفات حل مشكلة تمت إضافتها من لوحة الإدارة مباشرة بدون كاش قديم.
     const [res] = await Promise.all([listBrands(), fetchCategories(true, 'regular'), fetchCategories(true, 'problem')])
-    await loadCategorySubCategories()
+    await loadCategorySubCategories(String(form.subCategory || ''))
     brands.value = (res?.items || res || []) as BrandItem[]
-    await loadProblemSubCategories()
+    await loadProblemSubCategories(String(form.problemSubCategory || ''))
   } catch (e: any) {
     toast.error(e?.message || t('common.error'))
   }

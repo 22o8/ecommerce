@@ -138,6 +138,7 @@ const open = ref(false)
 
 const links = computed(() => [
   { to: '/admin', label: t('admin.overview'), icon: 'mdi:view-dashboard-outline' },
+  { to: '/admin/activities', label: 'حركات الإدارة', icon: 'mdi:history' },
   // `admin.products` and `admin.brands` are objects (they contain title/hint/etc),
   // so we must use a string key for the sidebar label.
   { to: '/admin/products', label: t('admin.productsLabel'), icon: 'mdi:cube-outline' },
