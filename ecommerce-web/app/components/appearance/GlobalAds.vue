@@ -51,13 +51,30 @@
               <small v-if="currentTopSlide.subtitle">{{ currentTopSlide.subtitle }}</small>
             </div>
           </NuxtLink>
+
+          <button
+            v-if="topSlides.length > 1"
+            type="button"
+            class="ad-slider__nav ad-slider__nav--prev"
+            aria-label="الإعلان السابق"
+            @click="goToPreviousSlide"
+          >‹</button>
+          <button
+            v-if="topSlides.length > 1"
+            type="button"
+            class="ad-slider__nav ad-slider__nav--next"
+            aria-label="الإعلان التالي"
+            @mouseenter="goToNextSlide"
+            @click="goToNextSlide"
+          >›</button>
+
           <div v-if="topSlides.length > 1" class="ad-slider__dots">
             <button
               v-for="(_, idx) in topSlides"
               :key="idx"
               type="button"
               :class="idx === sliderIndex ? 'is-active' : ''"
-              @click="sliderIndex = idx"
+              @click="setSlide(idx); startTimer()"
               :aria-label="`slide ${idx + 1}`"
             />
           </div>
@@ -69,9 +86,12 @@
           <NuxtLink :to="safeLink(primaryBottomAd.linkUrl)" class="ad-bottom-frame__link">
             <component
               :is="mediaComponent(currentBottomMedia)"
-              v-bind="mediaAttrs(currentBottomMedia, primaryBottomAd.title || 'advertisement')"
+              v-bind="mediaAttrs(currentBottomMedia, primaryBottomAd.title || 'advertisement', 'manual')"
               class="ad-bottom-frame__media"
             />
+            <div v-if="isVideo(currentBottomMedia)" class="ad-bottom-frame__video-hint">
+              ▶ اضغط تشغيل لمشاهدة الفيديو بالصوت
+            </div>
             <div v-if="primaryBottomAd.title || primaryBottomAd.subtitle" class="ad-bottom-frame__content rtl-text">
               <b>{{ primaryBottomAd.title }}</b>
               <span v-if="primaryBottomAd.subtitle">{{ primaryBottomAd.subtitle }}</span>
@@ -248,9 +268,33 @@ function isVideo(url?: string) {
   return /\.(mp4|webm|ogg|mov)$/i.test(u)
 }
 function mediaComponent(url?: string) { return isVideo(url) ? 'video' : 'img' }
-function mediaAttrs(path?: string, alt?: string) {
+function mediaAttrs(path?: string, alt?: string, mode: 'auto' | 'manual' = 'auto') {
   const src = asset(path)
-  if (isVideo(src)) return { src, autoplay: true, muted: true, loop: true, playsinline: true, preload: 'auto', controls: false, disablepictureinpicture: true, controlslist: 'nodownload noplaybackrate noremoteplayback' }
+  if (isVideo(src)) {
+    if (mode === 'manual') {
+      return {
+        src,
+        controls: true,
+        autoplay: false,
+        muted: false,
+        loop: false,
+        playsinline: true,
+        preload: 'metadata',
+        controlslist: 'nodownload noplaybackrate noremoteplayback',
+      }
+    }
+    return {
+      src,
+      autoplay: true,
+      muted: true,
+      loop: true,
+      playsinline: true,
+      preload: 'metadata',
+      controls: false,
+      disablepictureinpicture: true,
+      controlslist: 'nodownload noplaybackrate noremoteplayback',
+    }
+  }
   return { src, alt: alt || 'advertisement', loading: 'eager', decoding: 'async', fetchpriority: 'high' }
 }
 const asset = (p?: string) => api.buildAssetUrl(p || '')
@@ -343,6 +387,7 @@ onBeforeUnmount(() => {
 .ad-hero-frame__peek:hover::before{ opacity:1; }
 .ad-bottom-frame__media{ display:block; width:100%; object-fit:contain; object-position:center; background:linear-gradient(135deg, rgba(var(--surface-rgb),.92), rgba(var(--surface-2-rgb),.72)); }
 .ad-bottom-frame__media{ height:clamp(150px,18vw,270px); }
+.ad-bottom-frame__video-hint{ position:absolute; inset-inline:1rem auto; top:1rem; z-index:4; width:max-content; max-width:calc(100% - 2rem); border:1px solid rgba(255,255,255,.18); border-radius:999px; padding:.55rem .85rem; color:#fff; background:rgba(0,0,0,.48); backdrop-filter:blur(14px); font-size:.82rem; font-weight:1000; }
 .ad-hero-frame__shade{ pointer-events:none; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.66), rgba(0,0,0,.24) 44%, rgba(0,0,0,.08)); }
 :global(html[dir="rtl"]) .ad-hero-frame__shade{ background:linear-gradient(270deg, rgba(0,0,0,.66), rgba(0,0,0,.24) 44%, rgba(0,0,0,.08)); }
 .ad-hero-frame__content{ position:absolute; inset-block:auto 1.25rem; inset-inline:1.25rem auto; display:grid; gap:.35rem; max-width:min(620px, calc(100% - 2.5rem)); color:white; }
@@ -353,6 +398,10 @@ onBeforeUnmount(() => {
 .ad-bottom-frame__content{ position:absolute; inset-inline:1rem; bottom:1rem; display:grid; gap:.25rem; width:max-content; max-width:min(520px, calc(100% - 2rem)); border:1px solid rgba(255,255,255,.16); border-radius:1.35rem; padding:.85rem 1rem; color:white; background:rgba(5,5,9,.48); backdrop-filter:blur(16px); }
 .ad-bottom-frame__content b{ font-size:1.1rem; font-weight:1000; }
 .ad-bottom-frame__content span{ font-size:.86rem; color:rgba(255,255,255,.78); }
+.ad-slider__nav{ position:absolute; top:50%; z-index:6; display:grid; place-items:center; width:clamp(2.35rem,3.2vw,3.1rem); height:clamp(2.35rem,3.2vw,3.1rem); transform:translateY(-50%); border:1px solid rgba(255,255,255,.26); border-radius:999px; color:white; background:rgba(0,0,0,.42); box-shadow:0 14px 40px rgba(0,0,0,.22); backdrop-filter:blur(14px); font-size:clamp(1.45rem,2vw,2rem); font-weight:1000; line-height:1; transition:transform .2s ease, background .2s ease, opacity .2s ease; }
+.ad-slider__nav:hover{ transform:translateY(-50%) scale(1.06); background:rgba(var(--primary),.88); color:#050509; }
+.ad-slider__nav--prev{ left:clamp(.75rem,1.3vw,1.15rem); }
+.ad-slider__nav--next{ right:clamp(.75rem,1.3vw,1.15rem); }
 .ad-slider__dots{ position:absolute; inset-inline:0; bottom:.8rem; display:flex; align-items:center; justify-content:center; gap:.4rem; z-index:5; }
 .ad-slider__dots button{ width:.58rem; height:.58rem; border-radius:999px; background:rgba(255,255,255,.55); transition:.2s ease; }
 .ad-slider__dots button.is-active{ width:2.3rem; background:white; }
@@ -377,6 +426,9 @@ onBeforeUnmount(() => {
 @media(max-width:640px){
   .ad-container{ padding-inline:.75rem; }
   .ad-hero-frame__peek{ display:none; }
+  .ad-slider__nav{ width:2.55rem; height:2.55rem; font-size:1.8rem; background:rgba(0,0,0,.52); }
+  .ad-slider__nav--prev{ left:.5rem; }
+  .ad-slider__nav--next{ right:.5rem; }
   .ad-hero-frame{ border-radius:1.35rem; min-height:168px; }
   .ad-hero-frame__media-layer{ height:178px; }
   .ad-hero-frame__shade{ background:linear-gradient(0deg, rgba(0,0,0,.72), rgba(0,0,0,.10)); }
