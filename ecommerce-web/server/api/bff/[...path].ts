@@ -104,7 +104,9 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    const isLogin = routePath.toLowerCase() === 'auth/login' && method === 'POST'
+    const normalizedAuthRoute = routePath.toLowerCase()
+    const isLogin = normalizedAuthRoute === 'auth/login' && method === 'POST'
+    const isRegister = normalizedAuthRoute === 'auth/register' && method === 'POST'
     const isLogout = routePath.toLowerCase() === 'auth/logout'
 
     if (isLogout) {
@@ -122,7 +124,7 @@ export default defineEventHandler(async (event) => {
       body: body || undefined,
     })
 
-    if (isLogin) {
+    if (isLogin || isRegister) {
       const json = await res.json().catch(() => null)
       const token = json?.token
       const role = json?.user?.role || 'User'

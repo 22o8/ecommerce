@@ -338,17 +338,25 @@ try
 
     if (!skipMigrations)
     {
-        Console.WriteLine("Applying EF migrations (auto)...");
-        db.Database.Migrate();
-        Console.WriteLine("EF migrations applied.");
+        try
+        {
+            Console.WriteLine("Applying EF migrations (auto)...");
+            db.Database.Migrate();
+            Console.WriteLine("EF migrations applied.");
+        }
+        catch (Exception migrateEx)
+        {
+            // لا توقف تشغيل التطبيق إذا فشل EF migration بسبب اختلاف قديم بقاعدة الإنتاج.
+            // نكمل بعدها على DbBootstrapper لأنه يستخدم ADD COLUMN IF NOT EXISTS ويصلح السكيمة بأمان.
+            Console.WriteLine("⚠️ EF migrations failed, continuing with DbBootstrapper: " + migrateEx.Message);
+        }
     }
     else
     {
         Console.WriteLine("SKIP_MIGRATIONS enabled -> skipping EF migrations.");
     }
 
-    // ✅ حتى لو ماكو Migrations داخل المشروع/أو ما تنطبق، نصلّح أقل سكيمة مطلوبة
-    // هذا يحل غالباً 500 بـ AdminProducts + حذف البراند.
+    // ✅ لازم يشتغل حتى لو فشل EF Migrate، لأن أخطاء التسجيل الحالية سببها أعمدة/جداول ناقصة.
     var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DbBootstrapper");
     DbBootstrapper.EnsureCoreSchemaAsync(db, logger).GetAwaiter().GetResult();
 }

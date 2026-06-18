@@ -19,16 +19,18 @@ public class AuthController(AppDbContext db, IConfiguration cfg) : ControllerBas
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest req)
     {
+        await EnsureAuthSchemaAsync();
+
         if ((string.IsNullOrWhiteSpace(req.Email) && string.IsNullOrWhiteSpace(req.Phone)) || string.IsNullOrWhiteSpace(req.Password))
-            return BadRequest(new { message = "Email or phone and password are required." });
+            return BadRequest(new { message = "يجب إدخال إيميل أو رقم هاتف مع كلمة المرور." });
 
         var email = (req.Email ?? string.Empty).Trim().ToLowerInvariant();
         var phone = NormalizePhone(req.Phone);
 
         if (!string.IsNullOrWhiteSpace(email) && await db.Users.AnyAsync(u => u.Email.ToLower() == email))
-            return BadRequest(new { message = "Email already exists." });
+            return BadRequest(new { message = "هذا الإيميل مسجل مسبقاً." });
         if (!string.IsNullOrWhiteSpace(phone) && await db.Users.AnyAsync(u => u.Phone == phone))
-            return BadRequest(new { message = "Phone already exists." });
+            return BadRequest(new { message = "رقم الهاتف مسجل مسبقاً." });
 
         User? referrer = null;
         var referralCode = (req.ReferralCode ?? string.Empty).Trim().ToUpperInvariant();
@@ -52,10 +54,18 @@ public class AuthController(AppDbContext db, IConfiguration cfg) : ControllerBas
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password)
         };
 
-        db.Users.Add(user);
-        await db.SaveChangesAsync();
+        try
+        {
+            db.Users.Add(user);
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+        {
+            return BadRequest(new { message = "الحساب موجود مسبقاً. جرّب تسجيل الدخول أو استخدم إيميل/رقم مختلف." });
+        }
 
-        db.PointsWallets.Add(new Ecommerce.Api.Domain.Entities.PointsWallet { UserId = user.Id });
+        if (!await db.PointsWallets.AnyAsync(x => x.UserId == user.Id))
+            db.PointsWallets.Add(new Ecommerce.Api.Domain.Entities.PointsWallet { UserId = user.Id });
         if (referrer != null)
         {
             db.Referrals.Add(new Ecommerce.Api.Domain.Entities.Referral
@@ -83,6 +93,8 @@ public class AuthController(AppDbContext db, IConfiguration cfg) : ControllerBas
     {
         try
         {
+            await EnsureAuthSchemaAsync();
+
             var identifier = (req.Identifier ?? req.Email ?? string.Empty).Trim();
             var normalizedEmail = identifier.ToLowerInvariant();
             var normalizedPhone = NormalizePhone(identifier);
@@ -110,6 +122,65 @@ public class AuthController(AppDbContext db, IConfiguration cfg) : ControllerBas
         {
             return Problem(title: "Login failed", detail: ex.Message, statusCode: 500);
         }
+    }
+
+    private async Task EnsureAuthSchemaAsync()
+    {
+        // دفاع إضافي: إذا قاعدة الإنتاج ما طبقت المايغريشن بعد، لا نخلي التسجيل/الدخول يطيح 500.
+        // هذه الأوامر آمنة لأنها تستخدم IF NOT EXISTS.
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""Phone"" character varying(40) NOT NULL DEFAULT '';");
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""ReferralCode"" character varying(24) NOT NULL DEFAULT '';");
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""ReferredByUserId"" uuid NULL;");
+        await db.Database.ExecuteSqlRawAsync(@"UPDATE ""Users"" SET ""ReferralCode"" = 'DSB' || upper(substr(md5(""Id""::text), 1, 8)) WHERE ""ReferralCode"" IS NULL OR btrim(""ReferralCode"") = '';");
+        await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_Users_Phone"" ON ""Users"" (""Phone"");");
+        await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_Users_ReferralCode"" ON ""Users"" (""ReferralCode"");");
+
+        await db.Database.ExecuteSqlRawAsync(@"CREATE TABLE IF NOT EXISTS ""PointsWallets"" (
+            ""Id"" uuid PRIMARY KEY,
+            ""UserId"" uuid NOT NULL,
+            ""Balance"" integer NOT NULL DEFAULT 0,
+            ""LifetimeEarned"" integer NOT NULL DEFAULT 0,
+            ""LifetimeSpent"" integer NOT NULL DEFAULT 0,
+            ""UpdatedAtUtc"" timestamp with time zone NOT NULL DEFAULT now()
+        );");
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""PointsWallets"" ADD COLUMN IF NOT EXISTS ""LifetimeEarned"" integer NOT NULL DEFAULT 0;");
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""PointsWallets"" ADD COLUMN IF NOT EXISTS ""LifetimeSpent"" integer NOT NULL DEFAULT 0;");
+        await db.Database.ExecuteSqlRawAsync(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_PointsWallets_UserId"" ON ""PointsWallets"" (""UserId"");");
+
+        await db.Database.ExecuteSqlRawAsync(@"CREATE TABLE IF NOT EXISTS ""Referrals"" (
+            ""Id"" uuid PRIMARY KEY,
+            ""ReferrerUserId"" uuid NOT NULL,
+            ""ReferredUserId"" uuid NOT NULL,
+            ""ReferralCode"" character varying(24) NOT NULL DEFAULT '',
+            ""Status"" text NOT NULL DEFAULT 'Registered',
+            ""Rewarded"" boolean NOT NULL DEFAULT FALSE,
+            ""RewardType"" character varying(40) NULL,
+            ""RewardPoints"" integer NOT NULL DEFAULT 0,
+            ""RewardCouponCode"" character varying(80) NULL,
+            ""CreatedAtUtc"" timestamp with time zone NOT NULL DEFAULT now(),
+            ""RewardedAtUtc"" timestamp with time zone NULL
+        );");
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Referrals"" ADD COLUMN IF NOT EXISTS ""RewardType"" character varying(40) NULL;");
+
+        await db.Database.ExecuteSqlRawAsync(@"CREATE TABLE IF NOT EXISTS ""UserGifts"" (
+            ""Id"" uuid PRIMARY KEY,
+            ""UserId"" uuid NOT NULL,
+            ""ReferralId"" uuid NULL,
+            ""GiftType"" character varying(40) NOT NULL DEFAULT 'Notice',
+            ""Title"" character varying(160) NOT NULL DEFAULT '',
+            ""Message"" text NOT NULL DEFAULT '',
+            ""Points"" integer NOT NULL DEFAULT 0,
+            ""CouponCode"" character varying(80) NULL,
+            ""IsRead"" boolean NOT NULL DEFAULT FALSE,
+            ""CreatedAtUtc"" timestamp with time zone NOT NULL DEFAULT now()
+        );");
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""UserGifts"" ADD COLUMN IF NOT EXISTS ""ReferralId"" uuid NULL;");
+    }
+
+    private static bool IsUniqueViolation(DbUpdateException ex)
+    {
+        var text = ex.ToString();
+        return text.Contains("23505") || text.Contains("duplicate key", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string NormalizePhone(string? phone)

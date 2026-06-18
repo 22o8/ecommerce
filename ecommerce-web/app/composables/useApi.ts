@@ -181,6 +181,8 @@ export function useApi() {
       const derivedMessage =
         normalizedData?.message ||
         normalizedData?.error ||
+        normalizedData?.detail ||
+        normalizedData?.title ||
         (typeof rawData === 'string' ? rawData : '') ||
         e?.message ||
         'API Error'
