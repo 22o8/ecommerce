@@ -211,20 +211,30 @@ function adHasContent(ad: any) {
 function isAdEnabled(ad: any) {
   return (ad?.isEnabled ?? ad?.IsEnabled) !== false
 }
-const heroInlineAd = computed(() => {
+const heroInlineAds = computed(() => {
   return (homeAds.value || [])
-    .filter((ad: any) => isAdEnabled(ad) && ['banner', 'slider'].includes(normalizeAdType(ad)) && normalizeAdPlacement(ad) === 'home_hero_inline' && adHasContent(ad))
-    .sort((a: any, b: any) => Number(a?.sortOrder ?? a?.SortOrder ?? 0) - Number(b?.sortOrder ?? b?.SortOrder ?? 0))[0] || null
+    .filter((ad: any) => isAdEnabled(ad) && ['banner', 'slider'].includes(normalizeAdType(ad)) && ['home_hero_inline', 'home_top', 'hero', 'home_slider'].includes(normalizeAdPlacement(ad)) && adHasContent(ad))
+    .sort((a: any, b: any) => Number(a?.sortOrder ?? a?.SortOrder ?? 0) - Number(b?.sortOrder ?? b?.SortOrder ?? 0))
 })
-const heroInlineMediaItems = computed(() => heroInlineAd.value ? adMediaList(heroInlineAd.value) : [])
-const currentHeroInlineMedia = computed(() => heroInlineMediaItems.value[homeAdIndex.value] || heroInlineMediaItems.value[0] || '')
+const heroInlineSlides = computed(() => {
+  return heroInlineAds.value.flatMap((ad: any) => {
+    const media = adMediaList(ad)
+    if (!media.length) return [{ ad, media: '' }]
+    return media.map((url: string) => ({ ad, media: url }))
+  })
+})
+const currentHeroSlide = computed(() => heroInlineSlides.value[homeAdIndex.value] || heroInlineSlides.value[0] || null)
+const currentHeroInlineMedia = computed(() => currentHeroSlide.value?.media || '')
+const currentHeroInlineAd = computed(() => currentHeroSlide.value?.ad || null)
+const prevHeroInlineMedia = computed(() => heroInlineSlides.value.length > 1 ? heroInlineSlides.value[(homeAdIndex.value - 1 + heroInlineSlides.value.length) % heroInlineSlides.value.length]?.media || '' : '')
+const nextHeroInlineMedia = computed(() => heroInlineSlides.value.length > 1 ? heroInlineSlides.value[(homeAdIndex.value + 1) % heroInlineSlides.value.length]?.media || '' : '')
 function isHeroVideo(url?: string) {
   return /\.(mp4|webm|ogg|mov)(\?|$)/i.test(String(url || ''))
 }
 function heroMediaAttrs(url?: string) {
   const src = buildAssetUrl(url || '')
   if (isHeroVideo(src)) return { src, autoplay: true, muted: true, loop: true, playsinline: true, preload: 'auto', controls: false }
-  return { src, alt: heroInlineAd.value?.title || heroInlineAd.value?.Title || 'advertisement', loading: 'eager', decoding: 'async', fetchpriority: 'high' }
+  return { src, alt: currentHeroInlineAd.value?.title || currentHeroInlineAd.value?.Title || 'advertisement', loading: 'eager', decoding: 'async', fetchpriority: 'high' }
 }
 function safeAdLink(link?: string) {
   const value = String(link || '').trim()
@@ -254,12 +264,12 @@ function pkgPrice(p: any) { return Number(p.finalPriceIqd || p.FinalPriceIqd || 
 
 function startHomeAdTimer() {
   if (homeAdTimer) clearInterval(homeAdTimer)
-  if (heroInlineMediaItems.value.length <= 1) return
+  if (heroInlineSlides.value.length <= 1) return
   homeAdTimer = setInterval(() => {
-    homeAdIndex.value = (homeAdIndex.value + 1) % heroInlineMediaItems.value.length
-  }, 5200)
+    homeAdIndex.value = (homeAdIndex.value + 1) % heroInlineSlides.value.length
+  }, 5000)
 }
-watch(heroInlineMediaItems, () => {
+watch(heroInlineSlides, () => {
   homeAdIndex.value = 0
   startHomeAdTimer()
 })
@@ -357,19 +367,40 @@ useAdvancedSeo({
         <div class="home-luxury-hero__glow home-luxury-hero__glow--two" />
 
         <div class="home-luxury-hero__content rtl-text">
-          <div v-if="heroInlineAd" class="home-luxury-hero__inline-ad">
-            <NuxtLink :to="safeAdLink(heroInlineAd.linkUrl || heroInlineAd.LinkUrl)" class="home-luxury-hero__inline-ad-link">
-              <component
-                v-if="currentHeroInlineMedia"
-                :is="isHeroVideo(currentHeroInlineMedia) ? 'video' : 'img'"
-                :key="currentHeroInlineMedia"
-                v-bind="heroMediaAttrs(currentHeroInlineMedia)"
-                class="home-luxury-hero__inline-ad-media"
-              />
-              <div v-if="heroInlineAd.title || heroInlineAd.Title || heroInlineAd.subtitle || heroInlineAd.Subtitle" class="home-luxury-hero__inline-ad-text">
+          <div v-if="currentHeroInlineAd" class="home-luxury-hero__inline-ad">
+            <NuxtLink :to="safeAdLink(currentHeroInlineAd.linkUrl || currentHeroInlineAd.LinkUrl)" class="home-luxury-hero__inline-ad-link">
+              <div class="home-luxury-hero__slider-stage">
+                <img
+                  v-if="prevHeroInlineMedia && !isHeroVideo(prevHeroInlineMedia)"
+                  :src="buildAssetUrl(prevHeroInlineMedia)"
+                  alt=""
+                  aria-hidden="true"
+                  class="home-luxury-hero__side-preview home-luxury-hero__side-preview--prev"
+                  loading="lazy"
+                />
+                <component
+                  v-if="currentHeroInlineMedia"
+                  :is="isHeroVideo(currentHeroInlineMedia) ? 'video' : 'img'"
+                  :key="currentHeroInlineMedia"
+                  v-bind="heroMediaAttrs(currentHeroInlineMedia)"
+                  class="home-luxury-hero__inline-ad-media"
+                />
+                <img
+                  v-if="nextHeroInlineMedia && !isHeroVideo(nextHeroInlineMedia)"
+                  :src="buildAssetUrl(nextHeroInlineMedia)"
+                  alt=""
+                  aria-hidden="true"
+                  class="home-luxury-hero__side-preview home-luxury-hero__side-preview--next"
+                  loading="lazy"
+                />
+                <div v-if="heroInlineSlides.length > 1" class="home-luxury-hero__dots" aria-hidden="true">
+                  <span v-for="(_, i) in heroInlineSlides" :key="i" :class="i === homeAdIndex ? 'is-active' : ''" />
+                </div>
+              </div>
+              <div v-if="currentHeroInlineAd.title || currentHeroInlineAd.Title || currentHeroInlineAd.subtitle || currentHeroInlineAd.Subtitle" class="home-luxury-hero__inline-ad-text">
                 <span>إعلان</span>
-                <b>{{ heroInlineAd.title || heroInlineAd.Title }}</b>
-                <small v-if="heroInlineAd.subtitle || heroInlineAd.Subtitle">{{ heroInlineAd.subtitle || heroInlineAd.Subtitle }}</small>
+                <b>{{ currentHeroInlineAd.title || currentHeroInlineAd.Title }}</b>
+                <small v-if="currentHeroInlineAd.subtitle || currentHeroInlineAd.Subtitle">{{ currentHeroInlineAd.subtitle || currentHeroInlineAd.Subtitle }}</small>
               </div>
             </NuxtLink>
           </div>
@@ -1099,6 +1130,70 @@ useAdvancedSeo({
   background:rgba(var(--surface-rgb), .66);
   box-shadow:0 18px 48px rgba(0,0,0,.16);
 }
+
+.home-luxury-hero__slider-stage{
+  position:relative;
+  min-height:14rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  background:radial-gradient(circle at 50% 45%, rgba(var(--surface-rgb), .42), rgba(0,0,0,.10));
+}
+.home-luxury-hero__slider-stage::before,.home-luxury-hero__slider-stage::after{
+  content:"";
+  position:absolute;
+  inset:0 auto 0 0;
+  width:18%;
+  z-index:2;
+  pointer-events:none;
+  background:linear-gradient(90deg, rgba(var(--surface-rgb), .92), rgba(var(--surface-rgb), .20), transparent);
+}
+.home-luxury-hero__slider-stage::after{
+  left:auto;
+  right:0;
+  background:linear-gradient(270deg, rgba(var(--surface-rgb), .92), rgba(var(--surface-rgb), .20), transparent);
+}
+.home-luxury-hero__side-preview{
+  position:absolute;
+  top:50%;
+  width:34%;
+  height:78%;
+  object-fit:contain;
+  opacity:.24;
+  filter:blur(.8px) saturate(.9);
+  transform:translateY(-50%) scale(.88);
+  border-radius:1.25rem;
+  transition:opacity .25s ease, transform .25s ease;
+}
+.home-luxury-hero__side-preview--prev{ left:-13%; }
+.home-luxury-hero__side-preview--next{ right:-13%; }
+.home-luxury-hero__dots{
+  position:absolute;
+  z-index:4;
+  bottom:.85rem;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.32rem .55rem;
+  border-radius:999px;
+  background:rgba(0,0,0,.28);
+  backdrop-filter:blur(10px);
+}
+.home-luxury-hero__dots span{
+  width:.42rem;
+  height:.42rem;
+  border-radius:999px;
+  background:rgba(255,255,255,.55);
+  transition:width .2s ease, background .2s ease;
+}
+.home-luxury-hero__dots span.is-active{
+  width:1.15rem;
+  background:rgb(var(--primary));
+}
+
 .home-luxury-hero__inline-ad-link{
   position:relative;
   display:block;
@@ -1307,7 +1402,11 @@ useAdvancedSeo({
   .home-luxury-hero__actions{ display:grid; grid-template-columns:1fr; }
   .home-luxury-hero__actions--moved{ margin-top:.85rem; padding-top:0; }
   .home-luxury-hero__inline-ad-link{ min-height:10rem; }
+  .home-luxury-hero__slider-stage{ min-height:10rem; }
   .home-luxury-hero__inline-ad-media{ height:10rem; }
+  .home-luxury-hero__side-preview{ width:42%; opacity:.18; }
+  .home-luxury-hero__side-preview--prev{ left:-22%; }
+  .home-luxury-hero__side-preview--next{ right:-22%; }
 }
 
 </style>

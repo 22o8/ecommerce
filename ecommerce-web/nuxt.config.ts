@@ -20,7 +20,7 @@ export default defineNuxtConfig({
       // ملاحظة: الأسعار المخزنة عندك حالياً تبدو بالدولار، وهنا نعرضها بالدينار.
       usdToIqdRate: Number(process.env.NUXT_PUBLIC_USD_TO_IQD_RATE || 1300),
       // WhatsApp number (بدون +). غيّره لاحقًا من ENV بدون تعديل كود.
-      // Preferred: NUXT_PUBLIC_WHATSAPP_NUMBER=9647704252132
+      // Preferred: NUXT_PUBLIC_WHATSAPP_NUMBER=9647500157600
       whatsappPhone: process.env.NUXT_PUBLIC_WHATSAPP_PHONE || '',
 
       // ✅ الافتراضي (الأفضل على Vercel):
@@ -46,10 +46,10 @@ export default defineNuxtConfig({
       whatsappNumber:
         process.env.NUXT_PUBLIC_WHATSAPP_NUMBER ||
         process.env.NUXT_PUBLIC_WHATSAPP_PHONE ||
-        '9647704252132',
+        '9647500157600',
 
       supportEmail: process.env.NUXT_PUBLIC_SUPPORT_EMAIL || 'dr@drseoulbeauty.store',
-      supportPhone: process.env.NUXT_PUBLIC_SUPPORT_PHONE || '9640000000000',
+      supportPhone: process.env.NUXT_PUBLIC_SUPPORT_PHONE || '07500157600',
       instagramUrl: process.env.NUXT_PUBLIC_INSTAGRAM_URL || 'https://www.instagram.com/dr.seoul_beauty?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==',
 
       heroImage: process.env.NUXT_PUBLIC_HERO_IMAGE || '',
