@@ -38,7 +38,7 @@ export default defineNuxtConfig({
           : undefined) ||
         'https://ecommerce-api-22o8.fly.dev',
 
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://drseoulbeauty.store',
       siteName: process.env.NUXT_PUBLIC_SITE_NAME || 'DR SEOUL BEAUTY',
 
       // WhatsApp number (without +)
@@ -76,11 +76,15 @@ export default defineNuxtConfig({
         { property: 'og:type', content: 'website' },
         { property: 'og:title', content: 'DR SEOUL BEAUTY' },
         { property: 'og:description', content: 'متجر كوزمتك ومنتجات عناية مختارة بعناية.' },
-        { property: 'og:image', content: '/og-image.png' },
+        { property: 'og:image', content: 'https://drseoulbeauty.store/og-image.png' },
+        { property: 'og:image:secure_url', content: 'https://drseoulbeauty.store/og-image.png' },
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
+        { property: 'og:image:alt', content: 'DR SEOUL BEAUTY Korean Skincare Iraq' },
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:title', content: 'DR SEOUL BEAUTY' },
         { name: 'twitter:description', content: 'متجر كوزمتك ومنتجات عناية مختارة بعناية.' },
-        { name: 'twitter:image', content: '/og-image.png' },
+        { name: 'twitter:image', content: 'https://drseoulbeauty.store/og-image.png' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
         { name: 'apple-mobile-web-app-title', content: 'DR SEOUL BEAUTY' },
