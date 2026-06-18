@@ -33,7 +33,7 @@
             />
           </button>
 
-          <button type="button" class="ad-hero-frame__link ad-hero-frame__link--button" @click="handleSlideClick(currentTopSlide)" :aria-label="isVideo(currentTopSlide.media) ? 'تشغيل الفيديو الإعلاني' : 'فتح الإعلان'">
+          <button type="button" class="ad-hero-frame__link" @click="handleSlideClick(currentTopSlide)">
             <div class="ad-hero-frame__media-layer">
               <component
                 v-for="(slide, idx) in topSlides"
@@ -43,7 +43,6 @@
                 class="ad-hero-frame__media"
                 :class="{ 'is-active': idx === sliderIndex }"
               />
-              <span v-if="isVideo(currentTopSlide.media)" class="ad-video-play-badge">▶ اضغط لتشغيل الفيديو بالصوت</span>
             </div>
             <div class="ad-hero-frame__shade" />
             <div v-if="currentTopSlide.title || currentTopSlide.subtitle" class="ad-hero-frame__content rtl-text">
@@ -84,7 +83,7 @@
 
       <section v-if="zone === 'bottom' && currentBottomSlide" class="ad-container ad-container--bottom">
         <div class="ad-bottom-frame">
-          <button type="button" class="ad-bottom-frame__link ad-bottom-frame__link--button" @click="handleBottomSlideClick(currentBottomSlide)" :aria-label="isVideo(currentBottomSlide.media) ? 'تشغيل الفيديو الإعلاني' : 'فتح الإعلان'">
+          <button type="button" class="ad-bottom-frame__link" @click="handleSlideClick(currentBottomSlide)">
             <component
               :is="mediaComponent(currentBottomSlide.media)"
               v-bind="mediaAttrs(currentBottomSlide.media, currentBottomSlide.title || 'advertisement')"
@@ -164,29 +163,22 @@
         </div>
       </Transition>
     </Teleport>
-
     <Teleport to="body">
       <Transition name="ad-popup-fade">
-        <div
-          v-if="videoModalSrc"
-          class="ad-video-modal"
-          role="dialog"
-          aria-modal="true"
-        >
+        <div v-if="activeVideoUrl" class="ad-video-modal" role="dialog" aria-modal="true">
           <button class="ad-video-modal__overlay" type="button" aria-label="إغلاق الفيديو" @click="closeVideoModal" />
-          <article class="ad-video-modal__card rtl-text">
-            <button class="ad-popup__close" type="button" @click="closeVideoModal" aria-label="إغلاق">✕</button>
+          <article class="ad-video-modal__card">
+            <button class="ad-video-modal__close" type="button" aria-label="إغلاق" @click="closeVideoModal">✕</button>
             <video
-              :key="videoModalSrc"
-              class="ad-video-modal__media"
-              :src="videoModalSrc"
+              :key="activeVideoUrl"
+              :src="activeVideoUrl"
+              class="ad-video-modal__video"
               controls
               autoplay
               playsinline
-              preload="auto"
+              preload="metadata"
               controlslist="nodownload noplaybackrate noremoteplayback"
             />
-            <div v-if="videoModalTitle" class="ad-video-modal__caption">{{ videoModalTitle }}</div>
           </article>
         </div>
       </Transition>
@@ -206,11 +198,10 @@ const showPopup = ref(false)
 const loadingKey = ref(0)
 const sliderIndex = ref(0)
 const bottomSliderIndex = ref(0)
-const videoModalSrc = ref('')
-const videoModalTitle = ref('')
+const activeVideoUrl = ref('')
 let timer: ReturnType<typeof setInterval> | null = null
-let popupTimer: ReturnType<typeof setTimeout> | null = null
 let bottomTimer: ReturnType<typeof setInterval> | null = null
+let popupTimer: ReturnType<typeof setTimeout> | null = null
 
 const isHome = computed(() => route.path === '/')
 const norm = (v: any) => String(v ?? '').trim().toLowerCase()
@@ -261,6 +252,8 @@ const topPlacements = computed(() => [
   'above_hero',
 ])
 const bottomPlacements = computed(() => [
+  'home_hero_inline',
+  'home_inline_slider',
   'home_bottom_slider',
   'home_bottom',
   'bottom',
@@ -325,14 +318,17 @@ const previousTopSlide = computed(() => {
 })
 const bottomSlides = computed(() => {
   const seen = new Set<string>()
-  return bottomAds.value.flatMap((ad: any) => mediaList(ad).map((m: string) => ({
-    key: `${ad?.id ?? ad?.Id ?? adOrder(ad)}-${m}`,
-    media: m,
-    title: ad?.title || ad?.Title || '',
-    subtitle: ad?.subtitle || ad?.Subtitle || '',
-    linkUrl: ad?.linkUrl || ad?.LinkUrl || '',
-    type: adType(ad),
-  }))).filter((slide: any) => {
+  return bottomAds.value.flatMap((ad: any) => {
+    const media = mediaList(ad)
+    return media.map((m: string) => ({
+      key: `${ad?.id ?? ad?.Id ?? adOrder(ad)}-${m}`,
+      media: m,
+      title: ad?.title || ad?.Title || '',
+      subtitle: ad?.subtitle || ad?.Subtitle || '',
+      linkUrl: ad?.linkUrl || ad?.LinkUrl || '',
+      type: adType(ad),
+    }))
+  }).filter((slide: any) => {
     if (seen.has(slide.key)) return false
     seen.add(slide.key)
     return true
@@ -379,34 +375,30 @@ function safeLink(link?: string) {
   const v = String(link || '#').trim()
   return v || '#'
 }
-async function openAdLink(link?: string) {
-  const v = safeLink(link)
-  if (!v || v === '#') return
-  await navigateTo(v)
+function stopTimer() {
+  if (timer) clearInterval(timer)
+  timer = null
 }
-function openVideoModal(src?: string, title?: string) {
-  const url = asset(src || '')
-  if (!url || !isVideo(url)) return
-  stopTimer()
-  stopBottomTimer()
-  videoModalSrc.value = url
-  videoModalTitle.value = title || ''
+function setSlide(index: number) {
+  if (topSlides.value.length <= 0) return
+  sliderIndex.value = (index + topSlides.value.length) % topSlides.value.length
 }
-function closeVideoModal() {
-  videoModalSrc.value = ''
-  videoModalTitle.value = ''
+function goToNextSlide() {
+  if (topSlides.value.length <= 1) return
+  setSlide(sliderIndex.value + 1)
   startTimer()
-  startBottomTimer()
 }
-function handleSlideClick(slide: any) {
-  if (!slide) return
-  if (isVideo(slide.media)) return openVideoModal(slide.media, slide.title || slide.subtitle || 'إعلان فيديو')
-  return openAdLink(slide.linkUrl)
+function goToPreviousSlide() {
+  if (topSlides.value.length <= 1) return
+  setSlide(sliderIndex.value - 1)
+  startTimer()
 }
-function handleBottomSlideClick(slide: any) {
-  if (!slide) return
-  if (isVideo(slide.media)) return openVideoModal(slide.media, slide.title || slide.subtitle || 'إعلان فيديو')
-  return openAdLink(slide.linkUrl)
+function startTimer() {
+  stopTimer()
+  if (topSlides.value.length <= 1) return
+  timer = setInterval(() => {
+    setSlide(sliderIndex.value + 1)
+  }, 5000)
 }
 function stopBottomTimer() {
   if (bottomTimer) clearInterval(bottomTimer)
@@ -433,31 +425,16 @@ function startBottomTimer() {
     setBottomSlide(bottomSliderIndex.value + 1)
   }, 5000)
 }
-function stopTimer() {
-  if (timer) clearInterval(timer)
-  timer = null
+async function handleSlideClick(slide: any) {
+  const media = asset(slide?.media || '')
+  if (isVideo(media)) {
+    activeVideoUrl.value = media
+    return
+  }
+  const link = safeLink(slide?.linkUrl)
+  if (link && link !== '#') await navigateTo(link)
 }
-function setSlide(index: number) {
-  if (topSlides.value.length <= 0) return
-  sliderIndex.value = (index + topSlides.value.length) % topSlides.value.length
-}
-function goToNextSlide() {
-  if (topSlides.value.length <= 1) return
-  setSlide(sliderIndex.value + 1)
-  startTimer()
-}
-function goToPreviousSlide() {
-  if (topSlides.value.length <= 1) return
-  setSlide(sliderIndex.value - 1)
-  startTimer()
-}
-function startTimer() {
-  stopTimer()
-  if (topSlides.value.length <= 1) return
-  timer = setInterval(() => {
-    setSlide(sliderIndex.value + 1)
-  }, 5000)
-}
+function closeVideoModal() { activeVideoUrl.value = '' }
 function openPopupSoon() {
   if (!process.client || zone.value !== 'top' || !isHome.value) return
   if (popupTimer) clearTimeout(popupTimer)
@@ -509,8 +486,7 @@ onBeforeUnmount(() => {
 .ad-hero-frame,.ad-bottom-frame{ position:relative; overflow:hidden; border:1px solid rgba(var(--border),.78); background:linear-gradient(135deg, rgba(var(--surface-rgb),.92), rgba(var(--surface-2-rgb),.72)); box-shadow:0 22px 70px rgba(0,0,0,.18); }
 .ad-hero-frame{ border-radius:clamp(1.35rem,2.2vw,2.4rem); min-height:clamp(180px,23vw,360px); }
 .ad-bottom-frame{ border-radius:2rem; }
-.ad-hero-frame__link,.ad-bottom-frame__link{ display:block; position:relative; min-height:inherit; color:inherit; z-index:2; }
-.ad-hero-frame__link--button,.ad-bottom-frame__link--button{ width:100%; border:0; padding:0; margin:0; text-align:inherit; background:transparent; cursor:pointer; }
+.ad-hero-frame__link,.ad-bottom-frame__link{ display:block; position:relative; width:100%; min-height:inherit; color:inherit; z-index:2; border:0; padding:0; margin:0; background:transparent; text-align:inherit; cursor:pointer; }
 .ad-hero-frame__media-layer{ position:relative; width:100%; height:clamp(190px,24vw,380px); overflow:hidden; background:linear-gradient(90deg, rgba(0,0,0,.36), rgba(var(--surface-rgb),.72) 24%, rgba(var(--surface-rgb),.90) 50%, rgba(var(--surface-rgb),.72) 76%, rgba(0,0,0,.20)); }
 .ad-hero-frame__media{ position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; object-position:center; opacity:0; transform:translateZ(0) scale(.985); transition:opacity .55s ease, transform .55s ease; background:transparent; }
 .ad-hero-frame__media.is-active{ opacity:1; z-index:1; transform:translateZ(0) scale(1); }
@@ -523,9 +499,7 @@ onBeforeUnmount(() => {
 .ad-hero-frame__peek:hover::before{ opacity:1; }
 .ad-bottom-frame__media{ display:block; width:100%; object-fit:contain; object-position:center; background:linear-gradient(135deg, rgba(var(--surface-rgb),.92), rgba(var(--surface-2-rgb),.72)); }
 .ad-bottom-frame__media{ height:clamp(150px,18vw,270px); }
-.ad-bottom-frame__video-hint,.ad-video-play-badge{ position:absolute; z-index:4; width:max-content; max-width:calc(100% - 2rem); border:1px solid rgba(255,255,255,.18); border-radius:999px; padding:.55rem .85rem; color:#fff; background:rgba(0,0,0,.58); backdrop-filter:blur(14px); font-size:.82rem; font-weight:1000; box-shadow:0 14px 44px rgba(0,0,0,.25); }
-.ad-bottom-frame__video-hint{ inset-inline:1rem auto; top:1rem; }
-.ad-video-play-badge{ left:50%; bottom:1rem; transform:translateX(-50%); pointer-events:none; }
+.ad-bottom-frame__video-hint{ position:absolute; inset-inline:1rem auto; top:1rem; z-index:4; width:max-content; max-width:calc(100% - 2rem); border:1px solid rgba(255,255,255,.18); border-radius:999px; padding:.55rem .85rem; color:#fff; background:rgba(0,0,0,.48); backdrop-filter:blur(14px); font-size:.82rem; font-weight:1000; }
 .ad-hero-frame__shade{ pointer-events:none; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.66), rgba(0,0,0,.24) 44%, rgba(0,0,0,.08)); }
 :global(html[dir="rtl"]) .ad-hero-frame__shade{ background:linear-gradient(270deg, rgba(0,0,0,.66), rgba(0,0,0,.24) 44%, rgba(0,0,0,.08)); }
 .ad-hero-frame__content{ position:absolute; inset-block:auto 1.25rem; inset-inline:1.25rem auto; display:grid; gap:.35rem; max-width:min(620px, calc(100% - 2.5rem)); color:white; }
@@ -557,11 +531,6 @@ onBeforeUnmount(() => {
 .ad-popup__close{ position:absolute; z-index:5; inset-inline-start:.85rem; top:.85rem; width:2.65rem; height:2.65rem; border-radius:999px; background:rgba(0,0,0,.58); color:white; border:1px solid rgba(255,255,255,.18); font-weight:1000; box-shadow:0 10px 30px rgba(0,0,0,.25); }
 .ad-popup__badge{ justify-self:center; width:max-content; border-radius:999px; padding:.36rem .85rem; background:rgba(var(--primary),.14); color:rgb(var(--primary)) !important; font-size:.78rem; font-weight:1000; }
 .ad-popup__cta{ justify-self:center; margin-top:.45rem; border-radius:999px; padding:.76rem 1.2rem; background:rgb(var(--primary)); color:#050509; font-size:.88rem; font-weight:1000; }
-.ad-video-modal{ position:fixed; inset:0; z-index:100000; display:flex; align-items:center; justify-content:center; padding:1rem; }
-.ad-video-modal__overlay{ position:absolute; inset:0; border:0; cursor:pointer; background:rgba(3,5,10,.82); backdrop-filter:blur(14px); }
-.ad-video-modal__card{ position:relative; z-index:1; width:min(96vw, 980px); overflow:hidden; border-radius:1.6rem; border:1px solid rgba(255,255,255,.16); background:#050509; box-shadow:0 35px 110px rgba(0,0,0,.58); }
-.ad-video-modal__media{ display:block; width:100%; max-height:78vh; background:#000; object-fit:contain; }
-.ad-video-modal__caption{ padding:.85rem 1rem; color:#fff; font-weight:900; text-align:center; background:linear-gradient(90deg, rgba(var(--primary),.18), rgba(255,255,255,.04)); }
 .ad-popup-fade-enter-active,.ad-popup-fade-leave-active{ transition:opacity .2s ease; }
 .ad-popup-fade-enter-from,.ad-popup-fade-leave-to{ opacity:0; }
 @keyframes popupIn{ from{ opacity:0; transform:translateY(18px) scale(.96); } to{ opacity:1; transform:none; } }
@@ -584,4 +553,12 @@ onBeforeUnmount(() => {
   .ad-popup-card{ border-radius:1.35rem; }
   .ad-popup-card__content{ padding:1rem; }
 }
+
+.ad-video-modal{ position:fixed; inset:0; z-index:100000; display:flex; align-items:center; justify-content:center; padding:clamp(.75rem,2vw,1.5rem); }
+.ad-video-modal__overlay{ position:absolute; inset:0; background:rgba(3,5,10,.82); backdrop-filter:blur(14px); border:0; cursor:pointer; }
+.ad-video-modal__card{ position:relative; z-index:1; width:min(94vw, 980px); max-height:90vh; border-radius:1.6rem; overflow:hidden; border:1px solid rgba(255,255,255,.16); background:#050509; box-shadow:0 34px 110px rgba(0,0,0,.65); }
+.ad-video-modal__video{ display:block; width:100%; max-height:90vh; background:#000; object-fit:contain; }
+.ad-video-modal__close{ position:absolute; z-index:3; top:.8rem; inset-inline-start:.8rem; width:2.6rem; height:2.6rem; border-radius:999px; border:1px solid rgba(255,255,255,.22); background:rgba(0,0,0,.62); color:#fff; font-weight:1000; }
+
 </style>
+
