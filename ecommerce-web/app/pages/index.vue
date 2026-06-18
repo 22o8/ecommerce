@@ -402,46 +402,6 @@ useAdvancedSeo({
         <div class="home-luxury-hero__glow home-luxury-hero__glow--two" />
 
         <div class="home-luxury-hero__content rtl-text">
-          <div v-if="currentHeroInlineAd" class="home-luxury-hero__inline-ad">
-            <NuxtLink :to="safeAdLink(currentHeroInlineAd.linkUrl || currentHeroInlineAd.LinkUrl)" class="home-luxury-hero__inline-ad-link">
-              <div class="home-luxury-hero__slider-stage">
-                <img
-                  v-if="prevHeroInlineMedia && !isHeroVideo(prevHeroInlineMedia)"
-                  :src="buildAssetUrl(prevHeroInlineMedia)"
-                  alt=""
-                  aria-hidden="true"
-                  class="home-luxury-hero__side-preview home-luxury-hero__side-preview--prev"
-                  loading="lazy"
-                />
-                <Transition name="hero-slide-fade" mode="out-in">
-                  <component
-                    v-if="currentHeroInlineMedia"
-                    :is="isHeroVideo(currentHeroInlineMedia) ? 'video' : 'img'"
-                    :key="currentHeroInlineMedia"
-                    v-bind="heroMediaAttrs(currentHeroInlineMedia)"
-                    class="home-luxury-hero__inline-ad-media"
-                  />
-                </Transition>
-                <img
-                  v-if="nextHeroInlineMedia && !isHeroVideo(nextHeroInlineMedia)"
-                  :src="buildAssetUrl(nextHeroInlineMedia)"
-                  alt=""
-                  aria-hidden="true"
-                  class="home-luxury-hero__side-preview home-luxury-hero__side-preview--next"
-                  loading="lazy"
-                />
-                <div v-if="heroInlineSlides.length > 1" class="home-luxury-hero__dots" aria-hidden="true">
-                  <span v-for="(_, i) in heroInlineSlides" :key="i" :class="i === homeAdIndex ? 'is-active' : ''" />
-                </div>
-              </div>
-              <div v-if="currentHeroInlineAd.title || currentHeroInlineAd.Title || currentHeroInlineAd.subtitle || currentHeroInlineAd.Subtitle" class="home-luxury-hero__inline-ad-text">
-                <span>إعلان</span>
-                <b>{{ currentHeroInlineAd.title || currentHeroInlineAd.Title }}</b>
-                <small v-if="currentHeroInlineAd.subtitle || currentHeroInlineAd.Subtitle">{{ currentHeroInlineAd.subtitle || currentHeroInlineAd.Subtitle }}</small>
-              </div>
-            </NuxtLink>
-          </div>
-
           <div class="home-luxury-hero__actions home-luxury-hero__actions--moved">
             <NuxtLink to="/products" class="home-luxury-hero__primary">
               {{ t('homeHero.shopNow') }}

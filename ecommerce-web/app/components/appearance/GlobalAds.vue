@@ -1,29 +1,29 @@
 <template>
   <ClientOnly>
     <div v-if="enabled && hasInlineAd" class="global-ads" :data-zone="zone">
-      <section v-if="zone === 'top' && primaryTopAd" class="ad-container ad-container--hero">
-        <div class="ad-hero-frame" :class="`ad-hero-frame--${primaryTopAd.type || 'banner'}`">
-          <NuxtLink :to="safeLink(primaryTopAd.linkUrl)" class="ad-hero-frame__link">
+      <section v-if="zone === 'top' && currentTopSlide" class="ad-container ad-container--hero">
+        <div class="ad-hero-frame" :class="`ad-hero-frame--${currentTopSlide.type || 'slider'}`">
+          <NuxtLink :to="safeLink(currentTopSlide.linkUrl)" class="ad-hero-frame__link">
             <div class="ad-hero-frame__media-layer">
               <component
-                v-for="(media, idx) in topMedia"
-                :is="mediaComponent(media)"
-                :key="media"
-                v-bind="mediaAttrs(media, primaryTopAd.title || 'advertisement')"
+                v-for="(slide, idx) in topSlides"
+                :is="mediaComponent(slide.media)"
+                :key="slide.key"
+                v-bind="mediaAttrs(slide.media, slide.title || 'advertisement')"
                 class="ad-hero-frame__media"
                 :class="{ 'is-active': idx === sliderIndex }"
               />
             </div>
             <div class="ad-hero-frame__shade" />
-            <div v-if="primaryTopAd.title || primaryTopAd.subtitle" class="ad-hero-frame__content rtl-text">
+            <div v-if="currentTopSlide.title || currentTopSlide.subtitle" class="ad-hero-frame__content rtl-text">
               <span class="ad-hero-frame__eyebrow">إعلان</span>
-              <b>{{ primaryTopAd.title }}</b>
-              <small v-if="primaryTopAd.subtitle">{{ primaryTopAd.subtitle }}</small>
+              <b>{{ currentTopSlide.title }}</b>
+              <small v-if="currentTopSlide.subtitle">{{ currentTopSlide.subtitle }}</small>
             </div>
           </NuxtLink>
-          <div v-if="topMedia.length > 1" class="ad-slider__dots">
+          <div v-if="topSlides.length > 1" class="ad-slider__dots">
             <button
-              v-for="(_, idx) in topMedia"
+              v-for="(_, idx) in topSlides"
               :key="idx"
               type="button"
               :class="idx === sliderIndex ? 'is-active' : ''"
@@ -54,7 +54,7 @@
     <Teleport to="body">
       <Transition name="ad-popup-fade">
         <div
-          v-if="enabled && zone === 'top' && popupAd && showPopup"
+          v-if="enabled && isHome && zone === 'top' && popupAd && showPopup"
           class="ad-popup-layer"
           role="dialog"
           aria-modal="true"
@@ -159,9 +159,14 @@ const bottomPlacements = computed(() => [
   'home_footer',
 ])
 
-const topSlider = computed(() => findAd(['slider'], topPlacements.value, true))
-const topBanner = computed(() => findAd(['banner'], topPlacements.value, true))
-const primaryTopAd = computed(() => topSlider.value || topBanner.value)
+const topAds = computed(() => {
+  const typeSet = new Set(['slider', 'banner'])
+  const placeSet = new Set(topPlacements.value.map(norm))
+  return [...enabledAds.value]
+    .filter((a: any) => typeSet.has(adType(a)) && placeSet.has(adPlacement(a)) && isRenderable(a, true))
+    .sort((a: any, b: any) => adScore(a, topPlacements.value) - adScore(b, topPlacements.value) || adOrder(a) - adOrder(b))
+})
+const primaryTopAd = computed(() => topAds.value[0] || null)
 const bottomSlider = computed(() => findAd(['slider'], bottomPlacements.value, true))
 const bottomBanner = computed(() => findAd(['banner'], bottomPlacements.value, true))
 const primaryBottomAd = computed(() => bottomSlider.value || bottomBanner.value)
@@ -178,8 +183,25 @@ const popupAd = computed(() => {
 
 const hasInlineAd = computed(() => Boolean(primaryTopAd.value || primaryBottomAd.value))
 
-const topMedia = computed(() => primaryTopAd.value ? mediaList(primaryTopAd.value) : [])
-const currentTopMedia = computed(() => topMedia.value[sliderIndex.value] || topMedia.value[0] || '')
+const topSlides = computed(() => {
+  const seen = new Set<string>()
+  return topAds.value.flatMap((ad: any) => {
+    const media = mediaList(ad)
+    return media.map((m: string) => ({
+      key: `${ad?.id ?? ad?.Id ?? adOrder(ad)}-${m}`,
+      media: m,
+      title: ad?.title || ad?.Title || '',
+      subtitle: ad?.subtitle || ad?.Subtitle || '',
+      linkUrl: ad?.linkUrl || ad?.LinkUrl || '',
+      type: adType(ad),
+    }))
+  }).filter((slide: any) => {
+    if (seen.has(slide.key)) return false
+    seen.add(slide.key)
+    return true
+  })
+})
+const currentTopSlide = computed(() => topSlides.value[sliderIndex.value] || topSlides.value[0] || null)
 const bottomMedia = computed(() => primaryBottomAd.value ? mediaList(primaryBottomAd.value) : [])
 const currentBottomMedia = computed(() => bottomMedia.value[0] || '')
 
@@ -204,13 +226,13 @@ function stopTimer() {
 }
 function startTimer() {
   stopTimer()
-  if (topMedia.value.length <= 1) return
+  if (topSlides.value.length <= 1) return
   timer = setInterval(() => {
-    sliderIndex.value = (sliderIndex.value + 1) % topMedia.value.length
-  }, 5200)
+    sliderIndex.value = (sliderIndex.value + 1) % topSlides.value.length
+  }, 5000)
 }
 function openPopupSoon() {
-  if (!process.client || zone.value !== 'top') return
+  if (!process.client || zone.value !== 'top' || !isHome.value) return
   if (popupTimer) clearTimeout(popupTimer)
   showPopup.value = false
   if (!popupAd.value) return
@@ -239,7 +261,7 @@ onMounted(() => {
   if (process.client) window.addEventListener('ads:changed', loadAds)
 })
 watch(() => route.fullPath, () => loadAds())
-watch(topMedia, () => { sliderIndex.value = 0; startTimer() })
+watch(() => topSlides.value.map((x: any) => x.key).join('|'), () => { sliderIndex.value = 0; startTimer() })
 watch(popupAd, () => openPopupSoon())
 onBeforeUnmount(() => {
   stopTimer()
