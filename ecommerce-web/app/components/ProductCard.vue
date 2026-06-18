@@ -472,9 +472,9 @@ function goProduct() {
   border-radius:2rem;
   border:1px solid rgba(var(--border), .9);
   background:
-    radial-gradient(circle at top right, rgba(var(--primary),.16), transparent 34%),
-    linear-gradient(180deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .95));
-  color:rgb(var(--fg));
+    radial-gradient(circle at top right, rgba(var(--primary),.22), transparent 36%),
+    linear-gradient(180deg, rgba(15, 23, 42, .98), rgba(8, 13, 25, .96));
+  color:#f8fafc;
   padding:1.45rem;
   box-shadow:0 34px 100px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
 }
@@ -489,7 +489,7 @@ function goProduct() {
   place-items:center;
   border:1px solid rgba(var(--border), .88);
   background:rgba(var(--surface-rgb), .72);
-  color:rgb(var(--fg));
+  color:#f8fafc;
 }
 .buy-confirm-icon{
   width:3.35rem;
@@ -502,14 +502,14 @@ function goProduct() {
   font-size:1.65rem;
   box-shadow:0 16px 36px rgba(var(--primary),.28);
 }
-.buy-confirm-title{ margin-top:1rem; font-size:1.45rem; font-weight:1000; color:rgb(var(--fg)); }
-.buy-confirm-text{ margin-top:.45rem; color:rgb(var(--muted)); line-height:1.8; }
+.buy-confirm-title{ margin-top:1rem; font-size:1.45rem; font-weight:1000; color:#f8fafc; }
+.buy-confirm-text{ margin-top:.45rem; color:#dbeafe; line-height:1.8; }
 .buy-confirm-product{
   margin-top:1rem;
   padding:.8rem;
   border-radius:1.25rem;
   border:1px solid rgba(var(--border), .78);
-  background:rgba(var(--surface-rgb), .64);
+  background:rgba(255,255,255,.08);
   display:flex;
   align-items:center;
   gap:.85rem;
@@ -523,8 +523,8 @@ function goProduct() {
   background:rgba(var(--surface-2-rgb),.7);
 }
 .buy-confirm-product div{ min-width:0; display:grid; gap:.25rem; }
-.buy-confirm-product b{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:rgb(var(--fg)); }
-.buy-confirm-product span{ color:rgb(var(--primary)); font-weight:1000; }
+.buy-confirm-product b{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#f8fafc; }
+.buy-confirm-product span{ color:#f472b6; font-weight:1000; }
 .buy-confirm-actions{
   margin-top:1.15rem;
   display:grid;
@@ -543,7 +543,7 @@ function goProduct() {
   transition:.18s ease;
 }
 .buy-confirm-btn:hover{ transform:translateY(-1px); }
-.buy-confirm-btn--ghost{ background:rgba(var(--surface-rgb), .7); color:rgb(var(--fg)); }
+.buy-confirm-btn--ghost{ background:rgba(255,255,255,.09); color:#f8fafc; }
 .buy-confirm-btn--main{
   border-color:transparent;
   color:white;

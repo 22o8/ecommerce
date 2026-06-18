@@ -196,6 +196,30 @@ function normalizeAdType(ad: any) {
 function normalizeAdPlacement(ad: any) {
   return normalizeAdValue(ad?.placement ?? ad?.Placement ?? '')
 }
+function isHeroSliderAd(ad: any) {
+  const type = normalizeAdType(ad)
+  const placement = normalizeAdPlacement(ad)
+  const placementLabel = normalizeAdValue(ad?.placementLabel ?? ad?.PlacementLabel ?? ad?.displayPlacement ?? ad?.DisplayPlacement ?? '')
+  const title = normalizeAdValue(ad?.title ?? ad?.Title ?? '')
+  return (
+    type === 'slider' ||
+    placement.includes('slider') ||
+    placement.includes('home') ||
+    placement.includes('hero') ||
+    placementLabel.includes('سلايدر') ||
+    placementLabel.includes('بداية الصفحة') ||
+    title.includes('عروضنا')
+  )
+}
+function slideIdentity(slide: any) {
+  const ad = slide?.ad || {}
+  return [
+    ad?.id ?? ad?.Id ?? '',
+    slide?.media ?? '',
+    ad?.title ?? ad?.Title ?? '',
+    ad?.sortOrder ?? ad?.SortOrder ?? 0,
+  ].join('|')
+}
 function adMediaList(ad: any) {
   const raw = ad?.imageUrls ?? ad?.ImageUrls
   const arr = Array.isArray(raw) ? raw : (Array.isArray(raw?.$values) ? raw.$values : [])
@@ -213,14 +237,25 @@ function isAdEnabled(ad: any) {
 }
 const heroInlineAds = computed(() => {
   return (homeAds.value || [])
-    .filter((ad: any) => isAdEnabled(ad) && ['banner', 'slider'].includes(normalizeAdType(ad)) && ['home_hero_inline', 'home_top', 'hero', 'home_slider'].includes(normalizeAdPlacement(ad)) && adHasContent(ad))
-    .sort((a: any, b: any) => Number(a?.sortOrder ?? a?.SortOrder ?? 0) - Number(b?.sortOrder ?? b?.SortOrder ?? 0))
+    .filter((ad: any) => isAdEnabled(ad) && isHeroSliderAd(ad) && adHasContent(ad))
+    .sort((a: any, b: any) => {
+      const orderDiff = Number(a?.sortOrder ?? a?.SortOrder ?? 0) - Number(b?.sortOrder ?? b?.SortOrder ?? 0)
+      if (orderDiff !== 0) return orderDiff
+      return String(a?.createdAt ?? a?.CreatedAt ?? '').localeCompare(String(b?.createdAt ?? b?.CreatedAt ?? ''))
+    })
 })
 const heroInlineSlides = computed(() => {
-  return heroInlineAds.value.flatMap((ad: any) => {
+  const seen = new Set<string>()
+  const slides = heroInlineAds.value.flatMap((ad: any) => {
     const media = adMediaList(ad)
     if (!media.length) return [{ ad, media: '' }]
     return media.map((url: string) => ({ ad, media: url }))
+  })
+  return slides.filter((slide: any) => {
+    const key = slideIdentity(slide)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
   })
 })
 const currentHeroSlide = computed(() => heroInlineSlides.value[homeAdIndex.value] || heroInlineSlides.value[0] || null)
@@ -269,10 +304,10 @@ function startHomeAdTimer() {
     homeAdIndex.value = (homeAdIndex.value + 1) % heroInlineSlides.value.length
   }, 5000)
 }
-watch(heroInlineSlides, () => {
+watch(() => heroInlineSlides.value.map(slideIdentity).join('::'), () => {
   homeAdIndex.value = 0
   startHomeAdTimer()
-})
+}, { immediate: true })
 const categoryRail = ref<HTMLElement | null>(null)
 const problemCategoryRail = ref<HTMLElement | null>(null)
 const dragState = { active: false, moved: false, startX: 0, startScroll: 0, target: null as HTMLElement | null }
@@ -378,13 +413,15 @@ useAdvancedSeo({
                   class="home-luxury-hero__side-preview home-luxury-hero__side-preview--prev"
                   loading="lazy"
                 />
-                <component
-                  v-if="currentHeroInlineMedia"
-                  :is="isHeroVideo(currentHeroInlineMedia) ? 'video' : 'img'"
-                  :key="currentHeroInlineMedia"
-                  v-bind="heroMediaAttrs(currentHeroInlineMedia)"
-                  class="home-luxury-hero__inline-ad-media"
-                />
+                <Transition name="hero-slide-fade" mode="out-in">
+                  <component
+                    v-if="currentHeroInlineMedia"
+                    :is="isHeroVideo(currentHeroInlineMedia) ? 'video' : 'img'"
+                    :key="currentHeroInlineMedia"
+                    v-bind="heroMediaAttrs(currentHeroInlineMedia)"
+                    class="home-luxury-hero__inline-ad-media"
+                  />
+                </Transition>
                 <img
                   v-if="nextHeroInlineMedia && !isHeroVideo(nextHeroInlineMedia)"
                   :src="buildAssetUrl(nextHeroInlineMedia)"
@@ -1123,7 +1160,7 @@ useAdvancedSeo({
 .home-luxury-hero__inline-ad{
   margin-top:0;
   width:100%;
-  max-width:44rem;
+  max-width:100%;
   border:1px solid rgba(var(--border), .82);
   border-radius:1.45rem;
   overflow:hidden;
@@ -1133,7 +1170,7 @@ useAdvancedSeo({
 
 .home-luxury-hero__slider-stage{
   position:relative;
-  min-height:14rem;
+  min-height:clamp(15rem, 25vw, 24rem);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -1144,7 +1181,7 @@ useAdvancedSeo({
   content:"";
   position:absolute;
   inset:0 auto 0 0;
-  width:18%;
+  width:24%;
   z-index:2;
   pointer-events:none;
   background:linear-gradient(90deg, rgba(var(--surface-rgb), .92), rgba(var(--surface-rgb), .20), transparent);
@@ -1157,17 +1194,17 @@ useAdvancedSeo({
 .home-luxury-hero__side-preview{
   position:absolute;
   top:50%;
-  width:34%;
-  height:78%;
-  object-fit:contain;
-  opacity:.24;
-  filter:blur(.8px) saturate(.9);
-  transform:translateY(-50%) scale(.88);
+  width:38%;
+  height:86%;
+  object-fit:cover;
+  opacity:.30;
+  filter:blur(1.2px) saturate(.92) brightness(.94);
+  transform:translateY(-50%) scale(.92);
   border-radius:1.25rem;
   transition:opacity .25s ease, transform .25s ease;
 }
-.home-luxury-hero__side-preview--prev{ left:-13%; }
-.home-luxury-hero__side-preview--next{ right:-13%; }
+.home-luxury-hero__side-preview--prev{ left:-11%; }
+.home-luxury-hero__side-preview--next{ right:-11%; }
 .home-luxury-hero__dots{
   position:absolute;
   z-index:4;
@@ -1194,15 +1231,19 @@ useAdvancedSeo({
   background:rgb(var(--primary));
 }
 
+
+.hero-slide-fade-enter-active,.hero-slide-fade-leave-active{ transition:opacity .42s ease, transform .42s ease; }
+.hero-slide-fade-enter-from,.hero-slide-fade-leave-to{ opacity:0; transform:scale(.985); }
+
 .home-luxury-hero__inline-ad-link{
   position:relative;
   display:block;
-  min-height:14rem;
+  min-height:clamp(15rem, 25vw, 24rem);
   color:rgb(var(--text));
 }
 .home-luxury-hero__inline-ad-media{
   width:100%;
-  height:clamp(14rem, 22vw, 18rem);
+  height:clamp(15rem, 25vw, 24rem);
   object-fit:contain;
   object-position:center;
   display:block;
@@ -1401,7 +1442,11 @@ useAdvancedSeo({
   .home-luxury-hero__subtitle{ font-size:.95rem; line-height:1.75; }
   .home-luxury-hero__actions{ display:grid; grid-template-columns:1fr; }
   .home-luxury-hero__actions--moved{ margin-top:.85rem; padding-top:0; }
-  .home-luxury-hero__inline-ad-link{ min-height:10rem; }
+  
+.hero-slide-fade-enter-active,.hero-slide-fade-leave-active{ transition:opacity .42s ease, transform .42s ease; }
+.hero-slide-fade-enter-from,.hero-slide-fade-leave-to{ opacity:0; transform:scale(.985); }
+
+.home-luxury-hero__inline-ad-link{ min-height:10rem; }
   .home-luxury-hero__slider-stage{ min-height:10rem; }
   .home-luxury-hero__inline-ad-media{ height:10rem; }
   .home-luxury-hero__side-preview{ width:42%; opacity:.18; }
