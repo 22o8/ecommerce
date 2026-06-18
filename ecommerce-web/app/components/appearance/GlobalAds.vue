@@ -252,7 +252,6 @@ const topPlacements = computed(() => [
   'above_hero',
 ])
 const bottomPlacements = computed(() => [
-  'home_hero_inline',
   'home_inline_slider',
   'home_bottom_slider',
   'home_bottom',
