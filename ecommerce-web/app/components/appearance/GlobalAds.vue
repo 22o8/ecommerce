@@ -3,6 +3,36 @@
     <div v-if="enabled && hasInlineAd" class="global-ads" :data-zone="zone">
       <section v-if="zone === 'top' && currentTopSlide" class="ad-container ad-container--hero">
         <div class="ad-hero-frame" :class="`ad-hero-frame--${currentTopSlide.type || 'slider'}`">
+          <button
+            v-if="topSlides.length > 1 && previousTopSlide"
+            type="button"
+            class="ad-hero-frame__peek ad-hero-frame__peek--prev"
+            aria-label="الإعلان السابق"
+            @mouseenter="goToPreviousSlide"
+            @click="goToPreviousSlide"
+          >
+            <component
+              :is="mediaComponent(previousTopSlide.media)"
+              v-bind="mediaAttrs(previousTopSlide.media, previousTopSlide.title || 'advertisement')"
+              class="ad-hero-frame__peek-media"
+            />
+          </button>
+
+          <button
+            v-if="topSlides.length > 1 && nextTopSlide"
+            type="button"
+            class="ad-hero-frame__peek ad-hero-frame__peek--next"
+            aria-label="الإعلان التالي"
+            @mouseenter="goToNextSlide"
+            @click="goToNextSlide"
+          >
+            <component
+              :is="mediaComponent(nextTopSlide.media)"
+              v-bind="mediaAttrs(nextTopSlide.media, nextTopSlide.title || 'advertisement')"
+              class="ad-hero-frame__peek-media"
+            />
+          </button>
+
           <NuxtLink :to="safeLink(currentTopSlide.linkUrl)" class="ad-hero-frame__link">
             <div class="ad-hero-frame__media-layer">
               <component
@@ -202,6 +232,14 @@ const topSlides = computed(() => {
   })
 })
 const currentTopSlide = computed(() => topSlides.value[sliderIndex.value] || topSlides.value[0] || null)
+const nextTopSlide = computed(() => {
+  if (topSlides.value.length <= 1) return null
+  return topSlides.value[(sliderIndex.value + 1) % topSlides.value.length] || null
+})
+const previousTopSlide = computed(() => {
+  if (topSlides.value.length <= 1) return null
+  return topSlides.value[(sliderIndex.value - 1 + topSlides.value.length) % topSlides.value.length] || null
+})
 const bottomMedia = computed(() => primaryBottomAd.value ? mediaList(primaryBottomAd.value) : [])
 const currentBottomMedia = computed(() => bottomMedia.value[0] || '')
 
@@ -224,11 +262,25 @@ function stopTimer() {
   if (timer) clearInterval(timer)
   timer = null
 }
+function setSlide(index: number) {
+  if (topSlides.value.length <= 0) return
+  sliderIndex.value = (index + topSlides.value.length) % topSlides.value.length
+}
+function goToNextSlide() {
+  if (topSlides.value.length <= 1) return
+  setSlide(sliderIndex.value + 1)
+  startTimer()
+}
+function goToPreviousSlide() {
+  if (topSlides.value.length <= 1) return
+  setSlide(sliderIndex.value - 1)
+  startTimer()
+}
 function startTimer() {
   stopTimer()
   if (topSlides.value.length <= 1) return
   timer = setInterval(() => {
-    sliderIndex.value = (sliderIndex.value + 1) % topSlides.value.length
+    setSlide(sliderIndex.value + 1)
   }, 5000)
 }
 function openPopupSoon() {
@@ -278,10 +330,17 @@ onBeforeUnmount(() => {
 .ad-hero-frame,.ad-bottom-frame{ position:relative; overflow:hidden; border:1px solid rgba(var(--border),.78); background:linear-gradient(135deg, rgba(var(--surface-rgb),.92), rgba(var(--surface-2-rgb),.72)); box-shadow:0 22px 70px rgba(0,0,0,.18); }
 .ad-hero-frame{ border-radius:clamp(1.35rem,2.2vw,2.4rem); min-height:clamp(180px,23vw,360px); }
 .ad-bottom-frame{ border-radius:2rem; }
-.ad-hero-frame__link,.ad-bottom-frame__link{ display:block; position:relative; min-height:inherit; color:inherit; }
-.ad-hero-frame__media-layer{ position:relative; width:100%; height:clamp(190px,24vw,380px); overflow:hidden; background:linear-gradient(135deg, rgba(var(--surface-rgb),.92), rgba(var(--surface-2-rgb),.72)); }
-.ad-hero-frame__media{ position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; object-position:center; opacity:0; transform:translateZ(0); transition:opacity .28s ease; background:transparent; }
-.ad-hero-frame__media.is-active{ opacity:1; z-index:1; }
+.ad-hero-frame__link,.ad-bottom-frame__link{ display:block; position:relative; min-height:inherit; color:inherit; z-index:2; }
+.ad-hero-frame__media-layer{ position:relative; width:100%; height:clamp(190px,24vw,380px); overflow:hidden; background:linear-gradient(90deg, rgba(0,0,0,.36), rgba(var(--surface-rgb),.72) 24%, rgba(var(--surface-rgb),.90) 50%, rgba(var(--surface-rgb),.72) 76%, rgba(0,0,0,.20)); }
+.ad-hero-frame__media{ position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; object-position:center; opacity:0; transform:translateZ(0) scale(.985); transition:opacity .55s ease, transform .55s ease; background:transparent; }
+.ad-hero-frame__media.is-active{ opacity:1; z-index:1; transform:translateZ(0) scale(1); }
+.ad-hero-frame__peek{ position:absolute; top:0; bottom:0; width:min(28%, 420px); z-index:3; display:flex; align-items:center; justify-content:center; padding:clamp(.7rem,1.2vw,1.15rem); border:0; outline:0; background:transparent; cursor:pointer; overflow:hidden; transition:opacity .28s ease, transform .28s ease, filter .28s ease; }
+.ad-hero-frame__peek::before{ content:""; position:absolute; inset:clamp(.5rem,1vw,.9rem); border-radius:clamp(1rem,1.7vw,1.9rem); background:rgba(255,255,255,.10); box-shadow:inset 0 0 0 1px rgba(255,255,255,.10), 0 20px 60px rgba(0,0,0,.22); backdrop-filter:blur(10px); opacity:.75; }
+.ad-hero-frame__peek--prev{ left:0; justify-content:flex-start; background:linear-gradient(90deg, rgba(0,0,0,.50), rgba(0,0,0,.12), transparent); }
+.ad-hero-frame__peek--next{ right:0; justify-content:flex-end; background:linear-gradient(270deg, rgba(0,0,0,.46), rgba(0,0,0,.10), transparent); }
+.ad-hero-frame__peek-media{ position:relative; z-index:1; display:block; width:100%; height:82%; object-fit:contain; object-position:center; opacity:.34; filter:blur(5px) saturate(.95); transform:scale(.88); transition:opacity .28s ease, filter .28s ease, transform .28s ease; border-radius:1.4rem; }
+.ad-hero-frame__peek:hover .ad-hero-frame__peek-media{ opacity:.58; filter:blur(2px) saturate(1.04); transform:scale(.94); }
+.ad-hero-frame__peek:hover::before{ opacity:1; }
 .ad-bottom-frame__media{ display:block; width:100%; object-fit:contain; object-position:center; background:linear-gradient(135deg, rgba(var(--surface-rgb),.92), rgba(var(--surface-2-rgb),.72)); }
 .ad-bottom-frame__media{ height:clamp(150px,18vw,270px); }
 .ad-hero-frame__shade{ pointer-events:none; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.66), rgba(0,0,0,.24) 44%, rgba(0,0,0,.08)); }
@@ -317,6 +376,7 @@ onBeforeUnmount(() => {
 
 @media(max-width:640px){
   .ad-container{ padding-inline:.75rem; }
+  .ad-hero-frame__peek{ display:none; }
   .ad-hero-frame{ border-radius:1.35rem; min-height:168px; }
   .ad-hero-frame__media-layer{ height:178px; }
   .ad-hero-frame__shade{ background:linear-gradient(0deg, rgba(0,0,0,.72), rgba(0,0,0,.10)); }
