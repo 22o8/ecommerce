@@ -33,7 +33,7 @@
             />
           </button>
 
-          <NuxtLink :to="safeLink(currentTopSlide.linkUrl)" class="ad-hero-frame__link">
+          <button type="button" class="ad-hero-frame__link ad-hero-frame__link--button" @click="handleSlideClick(currentTopSlide)" :aria-label="isVideo(currentTopSlide.media) ? 'تشغيل الفيديو الإعلاني' : 'فتح الإعلان'">
             <div class="ad-hero-frame__media-layer">
               <component
                 v-for="(slide, idx) in topSlides"
@@ -43,6 +43,7 @@
                 class="ad-hero-frame__media"
                 :class="{ 'is-active': idx === sliderIndex }"
               />
+              <span v-if="isVideo(currentTopSlide.media)" class="ad-video-play-badge">▶ اضغط لتشغيل الفيديو بالصوت</span>
             </div>
             <div class="ad-hero-frame__shade" />
             <div v-if="currentTopSlide.title || currentTopSlide.subtitle" class="ad-hero-frame__content rtl-text">
@@ -50,7 +51,7 @@
               <b>{{ currentTopSlide.title }}</b>
               <small v-if="currentTopSlide.subtitle">{{ currentTopSlide.subtitle }}</small>
             </div>
-          </NuxtLink>
+          </button>
 
           <button
             v-if="topSlides.length > 1"
@@ -81,22 +82,48 @@
         </div>
       </section>
 
-      <section v-if="zone === 'bottom' && primaryBottomAd" class="ad-container ad-container--bottom">
+      <section v-if="zone === 'bottom' && currentBottomSlide" class="ad-container ad-container--bottom">
         <div class="ad-bottom-frame">
-          <NuxtLink :to="safeLink(primaryBottomAd.linkUrl)" class="ad-bottom-frame__link">
+          <button type="button" class="ad-bottom-frame__link ad-bottom-frame__link--button" @click="handleBottomSlideClick(currentBottomSlide)" :aria-label="isVideo(currentBottomSlide.media) ? 'تشغيل الفيديو الإعلاني' : 'فتح الإعلان'">
             <component
-              :is="mediaComponent(currentBottomMedia)"
-              v-bind="mediaAttrs(currentBottomMedia, primaryBottomAd.title || 'advertisement', 'manual')"
+              :is="mediaComponent(currentBottomSlide.media)"
+              v-bind="mediaAttrs(currentBottomSlide.media, currentBottomSlide.title || 'advertisement')"
               class="ad-bottom-frame__media"
             />
-            <div v-if="isVideo(currentBottomMedia)" class="ad-bottom-frame__video-hint">
-              ▶ اضغط تشغيل لمشاهدة الفيديو بالصوت
+            <div v-if="isVideo(currentBottomSlide.media)" class="ad-bottom-frame__video-hint">
+              ▶ اضغط لتشغيل الفيديو بالصوت
             </div>
-            <div v-if="primaryBottomAd.title || primaryBottomAd.subtitle" class="ad-bottom-frame__content rtl-text">
-              <b>{{ primaryBottomAd.title }}</b>
-              <span v-if="primaryBottomAd.subtitle">{{ primaryBottomAd.subtitle }}</span>
+            <div v-if="currentBottomSlide.title || currentBottomSlide.subtitle" class="ad-bottom-frame__content rtl-text">
+              <b>{{ currentBottomSlide.title }}</b>
+              <span v-if="currentBottomSlide.subtitle">{{ currentBottomSlide.subtitle }}</span>
             </div>
-          </NuxtLink>
+          </button>
+
+          <button
+            v-if="bottomSlides.length > 1"
+            type="button"
+            class="ad-slider__nav ad-slider__nav--prev"
+            aria-label="الإعلان السابق"
+            @click="goToPreviousBottomSlide"
+          >‹</button>
+          <button
+            v-if="bottomSlides.length > 1"
+            type="button"
+            class="ad-slider__nav ad-slider__nav--next"
+            aria-label="الإعلان التالي"
+            @click="goToNextBottomSlide"
+          >›</button>
+
+          <div v-if="bottomSlides.length > 1" class="ad-slider__dots">
+            <button
+              v-for="(_, idx) in bottomSlides"
+              :key="idx"
+              type="button"
+              :class="idx === bottomSliderIndex ? 'is-active' : ''"
+              @click="setBottomSlide(idx); startBottomTimer()"
+              :aria-label="`bottom slide ${idx + 1}`"
+            />
+          </div>
         </div>
       </section>
     </div>
@@ -137,6 +164,33 @@
         </div>
       </Transition>
     </Teleport>
+
+    <Teleport to="body">
+      <Transition name="ad-popup-fade">
+        <div
+          v-if="videoModalSrc"
+          class="ad-video-modal"
+          role="dialog"
+          aria-modal="true"
+        >
+          <button class="ad-video-modal__overlay" type="button" aria-label="إغلاق الفيديو" @click="closeVideoModal" />
+          <article class="ad-video-modal__card rtl-text">
+            <button class="ad-popup__close" type="button" @click="closeVideoModal" aria-label="إغلاق">✕</button>
+            <video
+              :key="videoModalSrc"
+              class="ad-video-modal__media"
+              :src="videoModalSrc"
+              controls
+              autoplay
+              playsinline
+              preload="auto"
+              controlslist="nodownload noplaybackrate noremoteplayback"
+            />
+            <div v-if="videoModalTitle" class="ad-video-modal__caption">{{ videoModalTitle }}</div>
+          </article>
+        </div>
+      </Transition>
+    </Teleport>
   </ClientOnly>
 </template>
 
@@ -151,8 +205,12 @@ const ads = useState<any[]>('public-global-ads', () => [])
 const showPopup = ref(false)
 const loadingKey = ref(0)
 const sliderIndex = ref(0)
+const bottomSliderIndex = ref(0)
+const videoModalSrc = ref('')
+const videoModalTitle = ref('')
 let timer: ReturnType<typeof setInterval> | null = null
 let popupTimer: ReturnType<typeof setTimeout> | null = null
+let bottomTimer: ReturnType<typeof setInterval> | null = null
 
 const isHome = computed(() => route.path === '/')
 const norm = (v: any) => String(v ?? '').trim().toLowerCase()
@@ -217,9 +275,14 @@ const topAds = computed(() => {
     .sort((a: any, b: any) => adScore(a, topPlacements.value) - adScore(b, topPlacements.value) || adOrder(a) - adOrder(b))
 })
 const primaryTopAd = computed(() => topAds.value[0] || null)
-const bottomSlider = computed(() => findAd(['slider'], bottomPlacements.value, true))
-const bottomBanner = computed(() => findAd(['banner'], bottomPlacements.value, true))
-const primaryBottomAd = computed(() => bottomSlider.value || bottomBanner.value)
+const bottomAds = computed(() => {
+  const typeSet = new Set(['slider', 'banner'])
+  const placeSet = new Set(bottomPlacements.value.map(norm))
+  return [...enabledAds.value]
+    .filter((a: any) => typeSet.has(adType(a)) && placeSet.has(adPlacement(a)) && isRenderable(a, true))
+    .sort((a: any, b: any) => adScore(a, bottomPlacements.value) - adScore(b, bottomPlacements.value) || adOrder(a) - adOrder(b))
+})
+const primaryBottomAd = computed(() => bottomAds.value[0] || null)
 
 // حل جذري للمنبثق: لا نعتمد على مكان واحد فقط.
 // أي إعلان نوعه popup/modal/popover ويكون مفعلاً سيظهر، حتى لو كان placement قديماً أو فارغاً.
@@ -260,8 +323,22 @@ const previousTopSlide = computed(() => {
   if (topSlides.value.length <= 1) return null
   return topSlides.value[(sliderIndex.value - 1 + topSlides.value.length) % topSlides.value.length] || null
 })
-const bottomMedia = computed(() => primaryBottomAd.value ? mediaList(primaryBottomAd.value) : [])
-const currentBottomMedia = computed(() => bottomMedia.value[0] || '')
+const bottomSlides = computed(() => {
+  const seen = new Set<string>()
+  return bottomAds.value.flatMap((ad: any) => mediaList(ad).map((m: string) => ({
+    key: `${ad?.id ?? ad?.Id ?? adOrder(ad)}-${m}`,
+    media: m,
+    title: ad?.title || ad?.Title || '',
+    subtitle: ad?.subtitle || ad?.Subtitle || '',
+    linkUrl: ad?.linkUrl || ad?.LinkUrl || '',
+    type: adType(ad),
+  }))).filter((slide: any) => {
+    if (seen.has(slide.key)) return false
+    seen.add(slide.key)
+    return true
+  })
+})
+const currentBottomSlide = computed(() => bottomSlides.value[bottomSliderIndex.value] || bottomSlides.value[0] || null)
 
 function isVideo(url?: string) {
   const u = String(url || '').split('?')[0].toLowerCase()
@@ -301,6 +378,60 @@ const asset = (p?: string) => api.buildAssetUrl(p || '')
 function safeLink(link?: string) {
   const v = String(link || '#').trim()
   return v || '#'
+}
+async function openAdLink(link?: string) {
+  const v = safeLink(link)
+  if (!v || v === '#') return
+  await navigateTo(v)
+}
+function openVideoModal(src?: string, title?: string) {
+  const url = asset(src || '')
+  if (!url || !isVideo(url)) return
+  stopTimer()
+  stopBottomTimer()
+  videoModalSrc.value = url
+  videoModalTitle.value = title || ''
+}
+function closeVideoModal() {
+  videoModalSrc.value = ''
+  videoModalTitle.value = ''
+  startTimer()
+  startBottomTimer()
+}
+function handleSlideClick(slide: any) {
+  if (!slide) return
+  if (isVideo(slide.media)) return openVideoModal(slide.media, slide.title || slide.subtitle || 'إعلان فيديو')
+  return openAdLink(slide.linkUrl)
+}
+function handleBottomSlideClick(slide: any) {
+  if (!slide) return
+  if (isVideo(slide.media)) return openVideoModal(slide.media, slide.title || slide.subtitle || 'إعلان فيديو')
+  return openAdLink(slide.linkUrl)
+}
+function stopBottomTimer() {
+  if (bottomTimer) clearInterval(bottomTimer)
+  bottomTimer = null
+}
+function setBottomSlide(index: number) {
+  if (bottomSlides.value.length <= 0) return
+  bottomSliderIndex.value = (index + bottomSlides.value.length) % bottomSlides.value.length
+}
+function goToNextBottomSlide() {
+  if (bottomSlides.value.length <= 1) return
+  setBottomSlide(bottomSliderIndex.value + 1)
+  startBottomTimer()
+}
+function goToPreviousBottomSlide() {
+  if (bottomSlides.value.length <= 1) return
+  setBottomSlide(bottomSliderIndex.value - 1)
+  startBottomTimer()
+}
+function startBottomTimer() {
+  stopBottomTimer()
+  if (bottomSlides.value.length <= 1) return
+  bottomTimer = setInterval(() => {
+    setBottomSlide(bottomSliderIndex.value + 1)
+  }, 5000)
 }
 function stopTimer() {
   if (timer) clearInterval(timer)
@@ -347,7 +478,9 @@ async function loadAds() {
     ads.value = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : (Array.isArray(res?.data) ? res.data : []))
   } catch { ads.value = [] }
   sliderIndex.value = 0
+  bottomSliderIndex.value = 0
   startTimer()
+  startBottomTimer()
   openPopupSoon()
 }
 function close() { showPopup.value = false }
@@ -358,9 +491,11 @@ onMounted(() => {
 })
 watch(() => route.fullPath, () => loadAds())
 watch(() => topSlides.value.map((x: any) => x.key).join('|'), () => { sliderIndex.value = 0; startTimer() })
+watch(() => bottomSlides.value.map((x: any) => x.key).join('|'), () => { bottomSliderIndex.value = 0; startBottomTimer() })
 watch(popupAd, () => openPopupSoon())
 onBeforeUnmount(() => {
   stopTimer()
+  stopBottomTimer()
   if (popupTimer) clearTimeout(popupTimer)
   if (process.client) window.removeEventListener('ads:changed', loadAds)
 })
@@ -375,6 +510,7 @@ onBeforeUnmount(() => {
 .ad-hero-frame{ border-radius:clamp(1.35rem,2.2vw,2.4rem); min-height:clamp(180px,23vw,360px); }
 .ad-bottom-frame{ border-radius:2rem; }
 .ad-hero-frame__link,.ad-bottom-frame__link{ display:block; position:relative; min-height:inherit; color:inherit; z-index:2; }
+.ad-hero-frame__link--button,.ad-bottom-frame__link--button{ width:100%; border:0; padding:0; margin:0; text-align:inherit; background:transparent; cursor:pointer; }
 .ad-hero-frame__media-layer{ position:relative; width:100%; height:clamp(190px,24vw,380px); overflow:hidden; background:linear-gradient(90deg, rgba(0,0,0,.36), rgba(var(--surface-rgb),.72) 24%, rgba(var(--surface-rgb),.90) 50%, rgba(var(--surface-rgb),.72) 76%, rgba(0,0,0,.20)); }
 .ad-hero-frame__media{ position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; object-position:center; opacity:0; transform:translateZ(0) scale(.985); transition:opacity .55s ease, transform .55s ease; background:transparent; }
 .ad-hero-frame__media.is-active{ opacity:1; z-index:1; transform:translateZ(0) scale(1); }
@@ -387,7 +523,9 @@ onBeforeUnmount(() => {
 .ad-hero-frame__peek:hover::before{ opacity:1; }
 .ad-bottom-frame__media{ display:block; width:100%; object-fit:contain; object-position:center; background:linear-gradient(135deg, rgba(var(--surface-rgb),.92), rgba(var(--surface-2-rgb),.72)); }
 .ad-bottom-frame__media{ height:clamp(150px,18vw,270px); }
-.ad-bottom-frame__video-hint{ position:absolute; inset-inline:1rem auto; top:1rem; z-index:4; width:max-content; max-width:calc(100% - 2rem); border:1px solid rgba(255,255,255,.18); border-radius:999px; padding:.55rem .85rem; color:#fff; background:rgba(0,0,0,.48); backdrop-filter:blur(14px); font-size:.82rem; font-weight:1000; }
+.ad-bottom-frame__video-hint,.ad-video-play-badge{ position:absolute; z-index:4; width:max-content; max-width:calc(100% - 2rem); border:1px solid rgba(255,255,255,.18); border-radius:999px; padding:.55rem .85rem; color:#fff; background:rgba(0,0,0,.58); backdrop-filter:blur(14px); font-size:.82rem; font-weight:1000; box-shadow:0 14px 44px rgba(0,0,0,.25); }
+.ad-bottom-frame__video-hint{ inset-inline:1rem auto; top:1rem; }
+.ad-video-play-badge{ left:50%; bottom:1rem; transform:translateX(-50%); pointer-events:none; }
 .ad-hero-frame__shade{ pointer-events:none; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.66), rgba(0,0,0,.24) 44%, rgba(0,0,0,.08)); }
 :global(html[dir="rtl"]) .ad-hero-frame__shade{ background:linear-gradient(270deg, rgba(0,0,0,.66), rgba(0,0,0,.24) 44%, rgba(0,0,0,.08)); }
 .ad-hero-frame__content{ position:absolute; inset-block:auto 1.25rem; inset-inline:1.25rem auto; display:grid; gap:.35rem; max-width:min(620px, calc(100% - 2.5rem)); color:white; }
@@ -419,6 +557,11 @@ onBeforeUnmount(() => {
 .ad-popup__close{ position:absolute; z-index:5; inset-inline-start:.85rem; top:.85rem; width:2.65rem; height:2.65rem; border-radius:999px; background:rgba(0,0,0,.58); color:white; border:1px solid rgba(255,255,255,.18); font-weight:1000; box-shadow:0 10px 30px rgba(0,0,0,.25); }
 .ad-popup__badge{ justify-self:center; width:max-content; border-radius:999px; padding:.36rem .85rem; background:rgba(var(--primary),.14); color:rgb(var(--primary)) !important; font-size:.78rem; font-weight:1000; }
 .ad-popup__cta{ justify-self:center; margin-top:.45rem; border-radius:999px; padding:.76rem 1.2rem; background:rgb(var(--primary)); color:#050509; font-size:.88rem; font-weight:1000; }
+.ad-video-modal{ position:fixed; inset:0; z-index:100000; display:flex; align-items:center; justify-content:center; padding:1rem; }
+.ad-video-modal__overlay{ position:absolute; inset:0; border:0; cursor:pointer; background:rgba(3,5,10,.82); backdrop-filter:blur(14px); }
+.ad-video-modal__card{ position:relative; z-index:1; width:min(96vw, 980px); overflow:hidden; border-radius:1.6rem; border:1px solid rgba(255,255,255,.16); background:#050509; box-shadow:0 35px 110px rgba(0,0,0,.58); }
+.ad-video-modal__media{ display:block; width:100%; max-height:78vh; background:#000; object-fit:contain; }
+.ad-video-modal__caption{ padding:.85rem 1rem; color:#fff; font-weight:900; text-align:center; background:linear-gradient(90deg, rgba(var(--primary),.18), rgba(255,255,255,.04)); }
 .ad-popup-fade-enter-active,.ad-popup-fade-leave-active{ transition:opacity .2s ease; }
 .ad-popup-fade-enter-from,.ad-popup-fade-leave-to{ opacity:0; }
 @keyframes popupIn{ from{ opacity:0; transform:translateY(18px) scale(.96); } to{ opacity:1; transform:none; } }
