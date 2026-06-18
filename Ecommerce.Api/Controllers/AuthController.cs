@@ -131,6 +131,12 @@ public class AuthController(AppDbContext db, IConfiguration cfg) : ControllerBas
         await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""Phone"" character varying(40) NOT NULL DEFAULT '';");
         await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""ReferralCode"" character varying(24) NOT NULL DEFAULT '';");
         await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""ReferredByUserId"" uuid NULL;");
+
+        // مهم: بعض العملاء ينشئون حساب برقم هاتف بدون إيميل، فالإيميل يبقى فارغاً.
+        // الفهرس القديم الفريد على Email كان يمنع أكثر من حساب فارغ ويسبب خطأ 23505.
+        await db.Database.ExecuteSqlRawAsync(@"DROP INDEX IF EXISTS ""IX_Users_Email"";");
+        await db.Database.ExecuteSqlRawAsync(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Users_Email"" ON ""Users"" (""Email"") WHERE ""Email"" IS NOT NULL AND btrim(""Email"") <> '';");
+
         await db.Database.ExecuteSqlRawAsync(@"UPDATE ""Users"" SET ""ReferralCode"" = 'DSB' || upper(substr(md5(""Id""::text), 1, 8)) WHERE ""ReferralCode"" IS NULL OR btrim(""ReferralCode"") = '';");
         await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_Users_Phone"" ON ""Users"" (""Phone"");");
         await db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_Users_ReferralCode"" ON ""Users"" (""ReferralCode"");");

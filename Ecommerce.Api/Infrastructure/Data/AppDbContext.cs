@@ -53,7 +53,8 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("\"Email\" IS NOT NULL AND btrim(\"Email\") <> ''");
 
         modelBuilder.Entity<User>()
             .Property(u => u.Email)
