@@ -90,7 +90,10 @@ public sealed class S3ObjectStorage : IObjectStorage
             Key = normalizedKey,
             InputStream = uploadStream,
             ContentType = string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType,
-            CacheControl = "public, max-age=31536000, immutable",
+            Headers =
+{
+    CacheControl = "public, max-age=31536000, immutable"
+}
         };
 
         // نفس الشي على مستوى الطلب، إذا كانت الخصائص متاحة نطفي chunking ونطفي توقيع الحمولة.
