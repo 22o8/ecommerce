@@ -9,8 +9,8 @@ public sealed record OptimizedUpload(MemoryStream Stream, string ContentType, st
 
 public static class ImageOptimizer
 {
-    public const int MaxDimension = 1920;
-    public const int WebpQuality = 80;
+    public const int MaxDimension = 1200;
+    public const int WebpQuality = 72;
 
     public static async Task<OptimizedUpload> OptimizeImageToWebpAsync(IFormFile file, CancellationToken ct = default)
     {

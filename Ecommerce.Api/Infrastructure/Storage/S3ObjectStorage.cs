@@ -89,12 +89,12 @@ public sealed class S3ObjectStorage : IObjectStorage
             BucketName = _opt.Bucket,
             Key = normalizedKey,
             InputStream = uploadStream,
-            ContentType = string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType,
-            Headers =
-{
-    CacheControl = "public, max-age=31536000, immutable"
-}
+            ContentType = string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType
         };
+
+        // Cache سنة كاملة للملفات التي تحمل أسماء فريدة.
+        // بعض نسخ AWSSDK لا تملك خاصية PutObjectRequest.CacheControl، لذلك نستخدم Headers collection.
+        put.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
 
         // نفس الشي على مستوى الطلب، إذا كانت الخصائص متاحة نطفي chunking ونطفي توقيع الحمولة.
         TrySet(put, "UseChunkEncoding", false);
