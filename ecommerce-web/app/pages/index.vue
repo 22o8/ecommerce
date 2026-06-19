@@ -291,7 +291,7 @@ async function loadSliderPackages() {
     sliderPackages.value = []
   }
 }
-const heroPackageSpotlight = computed(() => sliderPackages.value.slice(0, 3))
+const heroPackageSpotlight = computed(() => sliderPackages.value.filter((p: any) => (p.showInSlider ?? p.ShowInSlider) !== false && (p.sliderPlacement || p.SliderPlacement) === 'hero_logo_side').slice(0, 3))
 const topPackageAds = computed(() => sliderPackages.value.filter((p: any) => (p.sliderPlacement || p.SliderPlacement) === 'home_top'))
 const bottomPackageAds = computed(() => sliderPackages.value.filter((p: any) => (p.sliderPlacement || p.SliderPlacement) === 'home_bottom' || (p.sliderPlacement || p.SliderPlacement) === 'offers'))
 function pkgName(p: any) { return p.name || p.nameAr || p.NameAr || p.nameEn || p.NameEn || 'بكج' }
@@ -416,13 +416,15 @@ useAdvancedSeo({
               {{ t('nav.brands') }}
             </NuxtLink>
           </div>
+        </div>
 
-          <div v-if="heroPackageSpotlight.length" class="home-luxury-hero__packages" aria-label="بكجات وعروض مختارة">
+        <div class="home-luxury-hero__visual home-luxury-hero__visual--logo">
+          <div v-if="heroPackageSpotlight.length" class="home-luxury-hero__logo-packages" aria-label="بكجات مختارة بجانب اللوكو">
             <div class="home-luxury-hero__packages-head">
               <span class="rtl-text">بكجات مختارة</span>
               <NuxtLink to="/packages" class="rtl-text">عرض الكل</NuxtLink>
             </div>
-            <div class="home-luxury-hero__packages-grid">
+            <div class="home-luxury-hero__logo-packages-grid">
               <NuxtLink
                 v-for="pkg in heroPackageSpotlight"
                 :key="pkg.id || pkg.Id"
@@ -436,7 +438,7 @@ useAdvancedSeo({
                   :title="pkgName(pkg)"
                   width="600"
                   height="360"
-                  sizes="(max-width: 768px) 31vw, 150px"
+                  sizes="(max-width: 768px) 44vw, 160px"
                   loading="lazy"
                   fit="cover"
                   wrapper-class="home-luxury-hero__package-img"
@@ -447,9 +449,6 @@ useAdvancedSeo({
               </NuxtLink>
             </div>
           </div>
-        </div>
-
-        <div class="home-luxury-hero__visual home-luxury-hero__visual--logo" aria-hidden="true">
           <div class="home-luxury-hero__logo-stage">
             <div class="home-luxury-hero__logo-ring home-luxury-hero__logo-ring--one" />
             <div class="home-luxury-hero__logo-ring home-luxury-hero__logo-ring--two" />
@@ -1470,6 +1469,7 @@ useAdvancedSeo({
 :global(html.theme-light) .home-luxury-hero__stat{ background:rgba(255,255,255,.82); }
 @media (max-width: 1024px){
   .home-luxury-hero{ grid-template-columns:1fr; padding:1.35rem; min-height:auto; }
+  .home-luxury-hero__logo-packages{ position:relative; inset:auto; width:100%; max-width:26rem; margin:0 auto .85rem; }
   .home-luxury-hero__visual{ min-height:260px; order:-1; }
   .home-luxury-hero__logo-stage{ width:min(20rem, 82vw); }
   .home-luxury-hero__orb--large{ width:min(17rem, 78vw); }
@@ -1502,6 +1502,26 @@ useAdvancedSeo({
 
 </style>
 <style scoped>
+
+.home-luxury-hero__logo-packages{
+  position:absolute;
+  top:.2rem;
+  inset-inline-start:-2.2rem;
+  z-index:6;
+  width:min(20rem, 48vw);
+  border:1px solid rgba(var(--primary), .22);
+  border-radius:1.35rem;
+  background:linear-gradient(135deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-2-rgb), .92));
+  box-shadow:0 22px 60px rgba(0,0,0,.22);
+  padding:.85rem;
+}
+.home-luxury-hero__logo-packages-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:.55rem;
+}
+.home-luxury-hero__logo-packages .home-luxury-hero__package-card:nth-child(n+3){ display:none; }
+
 .home-luxury-hero__packages{
   margin-top:1.15rem;
   width:min(38rem, 100%);
@@ -1553,6 +1573,8 @@ useAdvancedSeo({
 }
 .home-luxury-hero__package-card b{ font-size:.78rem; color:rgb(var(--primary)); }
 @media (max-width:640px){
+  .home-luxury-hero__logo-packages{ padding:.7rem; border-radius:1.1rem; width:100%; }
+  .home-luxury-hero__logo-packages-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
   .home-luxury-hero__packages{ padding:.75rem; border-radius:1.15rem; }
   .home-luxury-hero__packages-grid{ gap:.45rem; }
   :deep(.home-luxury-hero__package-img){ height:3.9rem; }

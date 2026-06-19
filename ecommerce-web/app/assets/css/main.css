@@ -722,11 +722,12 @@ html.theme-dark select optgroup{
 
 /* Boxed wrapper for search + filters so they're obvious in both themes */
 .control-box{
-  background: #0f1117;
-border: 1px solid rgba(255,255,255,.08);
+  background: rgba(var(--surface-rgb), .96);
+  border: 1px solid rgba(var(--border), 1);
   border-radius: 1rem;
   padding: .75rem;
   box-shadow: var(--shadow-card);
+  backdrop-filter: blur(10px);
 }
 
 /* ✅ تعزيز إضافي على الدارك لأن الخلفية غالباً قريبة من لون السطح */

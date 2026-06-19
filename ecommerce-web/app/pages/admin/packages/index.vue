@@ -34,6 +34,7 @@
         <label v-if="form.showInSlider" class="field md:col-span-2"><span>مكان السلايدر</span>
           <select v-model="form.sliderPlacement" class="input">
             <option value="home_top">بداية الصفحة الرئيسية</option>
+            <option value="hero_logo_side">بجانب اللوكو الكبير فوق أزرار الهيرو</option>
             <option value="home_bottom">نهاية الصفحة الرئيسية</option>
             <option value="packages">صفحة البكجات فقط</option>
             <option value="offers">قسم العروض والبكجات</option>

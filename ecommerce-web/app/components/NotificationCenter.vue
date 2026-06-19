@@ -206,23 +206,25 @@ onBeforeUnmount(() => {
   overflow:hidden;
   border-radius:1.35rem;
   border:1px solid rgb(var(--border));
-  background:rgba(var(--surface), .96);
-  box-shadow:0 26px 70px rgba(0,0,0,.24);
-  backdrop-filter:blur(18px);
+  background:rgb(var(--surface));
+  background:#0b0f19;
+  box-shadow:0 30px 90px rgba(0,0,0,.58), 0 0 0 1px rgba(255,255,255,.04) inset;
+  backdrop-filter:none;
+  isolation:isolate;
 }
-.notification-center__head{ display:flex; justify-content:space-between; gap:1rem; padding:1rem; border-bottom:1px solid rgb(var(--border)); }
+.notification-center__head{ display:flex; justify-content:space-between; gap:1rem; padding:1rem; border-bottom:1px solid rgba(255,255,255,.10); background:#101624; }
 .notification-center__head p{ margin-top:.15rem; font-size:.78rem; color:rgb(var(--muted)); }
-.notification-center__head button{ display:grid; place-items:center; width:2rem; height:2rem; border-radius:.85rem; background:rgb(var(--surface-2)); }
-.notification-center__list{ max-height:22rem; overflow:auto; padding:.5rem; }
-.notification-center__item{ width:100%; display:flex; gap:.75rem; text-align:start; border-radius:1rem; padding:.75rem; transition:.18s ease; }
-.notification-center__item:hover{ background:rgba(var(--primary), .08); }
-.notification-center__item.is-unread{ background:rgba(var(--primary), .13); }
+.notification-center__head button{ display:grid; place-items:center; width:2rem; height:2rem; border-radius:.85rem; background:#1b2233; color:#fff; }
+.notification-center__list{ max-height:22rem; overflow:auto; padding:.55rem; background:#0b0f19; }
+.notification-center__item{ width:100%; display:flex; gap:.75rem; text-align:start; border-radius:1rem; padding:.8rem; transition:.18s ease; background:#111827; border:1px solid rgba(255,255,255,.07); margin-bottom:.5rem; color:#fff; }
+.notification-center__item:hover{ background:#172033; border-color:rgba(var(--primary), .32); }
+.notification-center__item.is-unread{ background:#171d31; border-color:rgba(var(--primary), .42); box-shadow:0 10px 28px rgba(var(--primary), .10); }
 .notification-center__icon{ display:grid; width:2.35rem; height:2.35rem; flex:0 0 auto; place-items:center; border-radius:.9rem; background:rgba(var(--primary), .18); color:rgb(var(--primary)); font-size:1.25rem; }
 .notification-center__item b{ display:block; font-size:.9rem; }
-.notification-center__item small{ display:block; margin-top:.18rem; color:rgb(var(--muted)); font-size:.76rem; line-height:1.45; }
+.notification-center__item small{ display:block; margin-top:.18rem; color:#b7c0d4; font-size:.76rem; line-height:1.45; }
 .notification-center__item em{ display:inline-flex; margin-top:.45rem; margin-inline-end:.35rem; border-radius:999px; background:rgba(16,185,129,.15); color:#10b981; padding:.16rem .5rem; font-size:.72rem; font-style:normal; font-weight:1000; }
 .notification-center__empty{ padding:1rem; color:rgb(var(--muted)); font-size:.9rem; }
-.notification-center__actions{ display:flex; align-items:center; justify-content:space-between; gap:.75rem; border-top:1px solid rgb(var(--border)); padding:.8rem 1rem; font-size:.82rem; font-weight:900; color:rgb(var(--primary)); }
+.notification-center__actions{ display:flex; align-items:center; justify-content:space-between; gap:.75rem; border-top:1px solid rgba(255,255,255,.10); padding:.8rem 1rem; font-size:.82rem; font-weight:900; color:rgb(var(--primary)); background:#101624; }
 .notification-center__toast{
   position:fixed;
   right:1rem;
@@ -233,10 +235,10 @@ onBeforeUnmount(() => {
   gap:.9rem;
   border-radius:1.35rem;
   border:1px solid rgba(var(--primary), .28);
-  background:linear-gradient(135deg, rgba(var(--surface), .98), rgba(var(--surface-2), .98));
+  background:linear-gradient(135deg, #0f1422, #151c2d);
   box-shadow:0 24px 75px rgba(0,0,0,.30);
   padding:1rem;
-  backdrop-filter:blur(18px);
+  backdrop-filter:none;
 }
 .notification-center__toast-icon{ display:grid; width:3rem; height:3rem; place-items:center; border-radius:1rem; background:rgba(var(--primary), .18); color:rgb(var(--primary)); font-size:1.5rem; }
 .notification-center__toast p{ margin-top:.25rem; color:rgb(var(--muted)); font-size:.85rem; line-height:1.6; }
