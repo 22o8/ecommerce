@@ -244,13 +244,19 @@ public class AuthController(AppDbContext db, IConfiguration cfg) : ControllerBas
     private async Task<Ad?> GetActiveWelcomeOfferAsync()
     {
         var now = DateTimeOffset.UtcNow;
+        // بعض النسخ القديمة خزنت إعلان الترحيب كـ Popup عادي بمكان ظهور "/"
+        // لذلك لا نعتمد على Placement فقط؛ أي إعلان يحتوي IsNewUserOnly أو نقاط/كوبون ترحيبي يعتبر إعلان ترحيب.
         return await db.Ads.AsNoTracking()
             .Where(x => x.IsEnabled
                 && x.Type == AdType.Popup
-                && (x.IsNewUserOnly || x.Placement == "welcome_new_user")
+                && (x.IsNewUserOnly
+                    || x.Placement == "welcome_new_user"
+                    || x.WelcomePoints > 0
+                    || (x.WelcomeCouponCode != null && x.WelcomeCouponCode.Trim() != ""))
                 && (x.StartAt == null || x.StartAt <= now)
                 && (x.EndAt == null || x.EndAt >= now))
-            .OrderBy(x => x.SortOrder)
+            .OrderBy(x => x.IsNewUserOnly || x.Placement == "welcome_new_user" ? 0 : 1)
+            .ThenBy(x => x.SortOrder)
             .ThenByDescending(x => x.UpdatedAt)
             .FirstOrDefaultAsync();
     }

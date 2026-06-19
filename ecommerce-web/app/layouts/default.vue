@@ -17,6 +17,7 @@
     <AppFooter />
 
     <PageNavigationControls />
+    <NewUserWelcomeModal />
 
     <!-- Floating WhatsApp -->
     <a
@@ -44,6 +45,7 @@ import AppFooter from '~/components/AppFooter.vue'
 import GlobalEffects from '~/components/appearance/GlobalEffects.vue'
 import GlobalAds from '~/components/appearance/GlobalAds.vue'
 import PageNavigationControls from '~/components/PageNavigationControls.vue'
+import NewUserWelcomeModal from '~/components/NewUserWelcomeModal.vue'
 const { t } = useI18n()
 const config = useRuntimeConfig()
 const whats = String((config.public as any).whatsappNumber || '').trim()

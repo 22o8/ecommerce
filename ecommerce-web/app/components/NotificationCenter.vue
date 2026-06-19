@@ -2,14 +2,14 @@
   <div v-if="auth.isAuthed" class="notification-center">
     <button
       type="button"
-      class="notification-center__button"
+      :class="['notification-center__button', { 'has-unread': unreadCount > 0 }]"
       aria-label="الإشعارات"
       title="الإشعارات"
       @click="togglePanel"
     >
       <Icon name="mdi:bell-outline" class="text-lg" />
       <span class="hidden md:inline rtl-text">الإشعارات</span>
-      <span v-if="unreadCount" class="notification-center__badge" aria-hidden="true"></span>
+      <span v-if="unreadCount" class="notification-center__badge" aria-label="إشعارات غير مقروءة">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
     </button>
 
     <div v-if="panelOpen" class="notification-center__panel" role="dialog" aria-modal="false" aria-label="مركز الإشعارات">
@@ -151,8 +151,13 @@ watch(() => auth.isAuthed, (value) => {
   }
 }, { immediate: true })
 
+function refreshNotifications() {
+  loadNotifications(false)
+}
+
 onMounted(() => {
   if (auth.isAuthed) loadNotifications(false)
+  window.addEventListener('drsb:notifications-refresh', refreshNotifications)
   pollTimer = setInterval(() => {
     if (auth.isAuthed) loadNotifications(false)
   }, 60000)
@@ -160,6 +165,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   if (pollTimer) clearInterval(pollTimer)
+  if (process.client) window.removeEventListener('drsb:notifications-refresh', refreshNotifications)
 })
 </script>
 
@@ -183,15 +189,27 @@ onBeforeUnmount(() => {
 .notification-center__button:hover{ transform:translateY(-1px); background:rgb(var(--surface-2)); }
 .notification-center__badge{
   position:absolute;
-  top:.18rem;
-  right:.22rem;
-  width:.62rem;
-  height:.62rem;
+  top:-.2rem;
+  right:-.22rem;
+  min-width:1.05rem;
+  height:1.05rem;
+  display:grid;
+  place-items:center;
+  padding:0 .2rem;
   border-radius:999px;
   background:#ef4444;
+  color:#fff;
+  font-size:.62rem;
+  font-weight:1000;
   border:2px solid rgb(var(--surface));
   box-shadow:0 0 0 4px rgba(239,68,68,.14), 0 8px 18px rgba(239,68,68,.35);
 }
+.notification-center__button.has-unread{
+  border-color:rgba(239,68,68,.45);
+  box-shadow:0 0 0 4px rgba(239,68,68,.06);
+}
+.notification-center__button.has-unread :deep(svg){ animation:notificationBellPulse 1.7s ease-in-out infinite; }
+@keyframes notificationBellPulse{ 0%,100%{transform:rotate(0)} 20%{transform:rotate(-10deg)} 40%{transform:rotate(10deg)} 60%{transform:rotate(-6deg)} 80%{transform:rotate(0)} }
 .notification-center__panel{
   position:absolute;
   top:calc(100% + .65rem);
