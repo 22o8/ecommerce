@@ -5,7 +5,20 @@
         <div class="flex items-center gap-2 sm:gap-3 min-w-0">
           <NuxtLink to="/" class="flex items-center min-w-0" title="الرئيسية" aria-label="الرئيسية">
             <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-[rgb(var(--primary))] animate-float text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black overflow-hidden">
-              <img v-if="resolvedLogo" :src="resolvedLogo" alt="Site logo" class="h-full w-full object-cover" />
+              <SmartImage
+              v-if="resolvedLogo"
+              :src="resolvedLogo"
+              alt="شعار DR SEOUL BEAUTY"
+              title="DR SEOUL BEAUTY"
+              width="96"
+              height="96"
+              sizes="70px"
+              quality="60"
+              format="webp"
+              loading="eager"
+              wrapper-class="h-full w-full rounded-full"
+              img-class="h-full w-full object-cover"
+            />
               <Icon v-else name="mdi:shopping-outline" class="text-xl animate-floaty" />
             </div>
           </NuxtLink>
@@ -149,15 +162,15 @@
           </UiButton>
 
 	          <!-- Admin: نخليها فقط داخل زر المينيو على الهاتف -->
-	          <NuxtLink v-if="isAdmin" to="/admin" class="hidden sm:block">
-	            <UiButton variant="secondary">
+	          <NuxtLink v-if="isAdmin" to="/admin" class="hidden sm:block" aria-label="لوحة التحكم">
+	            <UiButton variant="secondary" aria-label="لوحة التحكم">
               <Icon name="mdi:view-dashboard-outline" class="text-lg" />
               <span class="rtl-text">{{ t('home.dashboard') }}</span>
             </UiButton>
           </NuxtLink>
 
-          <NuxtLink v-if="!auth.isAuthed" to="/login">
-            <UiButton>
+          <NuxtLink v-if="!auth.isAuthed" to="/login" aria-label="تسجيل الدخول">
+            <UiButton aria-label="تسجيل الدخول">
               <Icon name="mdi:login-variant" class="text-lg" />
               <span class="hidden sm:inline rtl-text">{{ t('nav.login') }}</span>
             </UiButton>

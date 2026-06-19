@@ -4,7 +4,20 @@
       <div class="grid gap-3">
         <div class="flex items-center gap-3">
           <div class="h-10 w-10 rounded-2xl bg-[rgb(var(--primary))] text-black dark:text-[rgb(var(--bg))] grid place-items-center font-black overflow-hidden">
-            <img v-if="resolvedLogo" :src="resolvedLogo" alt="Site logo" class="h-full w-full object-cover" />
+            <SmartImage
+              v-if="resolvedLogo"
+              :src="resolvedLogo"
+              alt="شعار DR SEOUL BEAUTY"
+              title="DR SEOUL BEAUTY"
+              width="96"
+              height="96"
+              sizes="70px"
+              quality="60"
+              format="webp"
+              loading="eager"
+              wrapper-class="h-full w-full rounded-full"
+              img-class="h-full w-full object-cover"
+            />
             <Icon v-else name="mdi:storefront-outline" class="text-xl" />
           </div>
         </div>

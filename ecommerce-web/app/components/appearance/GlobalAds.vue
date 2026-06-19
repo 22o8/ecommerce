@@ -33,7 +33,7 @@
             />
           </button>
 
-          <button type="button" class="ad-hero-frame__link" @click="handleSlideClick(currentTopSlide)">
+          <button type="button" class="ad-hero-frame__link" :aria-label="currentTopSlide.title || 'فتح الإعلان'" @click="handleSlideClick(currentTopSlide)">
             <div class="ad-hero-frame__media-layer">
               <component
                 v-for="(slide, idx) in topSlides"
@@ -83,7 +83,7 @@
 
       <section v-if="zone === 'bottom' && currentBottomSlide" class="ad-container ad-container--bottom">
         <div class="ad-bottom-frame">
-          <button type="button" class="ad-bottom-frame__link" @click="handleSlideClick(currentBottomSlide)">
+          <button type="button" class="ad-bottom-frame__link" :aria-label="currentBottomSlide.title || 'فتح الإعلان'" @click="handleSlideClick(currentBottomSlide)">
             <component
               :is="mediaComponent(currentBottomSlide.media)"
               v-bind="mediaAttrs(currentBottomSlide.media, currentBottomSlide.title || 'advertisement')"
@@ -134,6 +134,7 @@
           class="ad-popup-layer"
           role="dialog"
           aria-modal="true"
+          :aria-label="popupAd.title || 'إعلان خاص'"
         >
           <button class="ad-popup-layer__overlay" type="button" aria-label="إغلاق الإعلان" @click="close" />
           <article class="ad-popup-card rtl-text">
@@ -165,7 +166,7 @@
     </Teleport>
     <Teleport to="body">
       <Transition name="ad-popup-fade">
-        <div v-if="activeVideoUrl" class="ad-video-modal" role="dialog" aria-modal="true">
+        <div v-if="activeVideoUrl" class="ad-video-modal" role="dialog" aria-modal="true" aria-label="مشاهدة فيديو الإعلان">
           <button class="ad-video-modal__overlay" type="button" aria-label="إغلاق الفيديو" @click="closeVideoModal" />
           <article class="ad-video-modal__card">
             <button class="ad-video-modal__close" type="button" aria-label="إغلاق" @click="closeVideoModal">✕</button>
@@ -339,7 +340,7 @@ function isVideo(url?: string) {
   const u = String(url || '').split('?')[0].toLowerCase()
   return /\.(mp4|webm|ogg|mov)$/i.test(u)
 }
-function mediaComponent(url?: string) { return isVideo(url) ? 'video' : 'img' }
+function mediaComponent(url?: string) { return isVideo(url) ? 'span' : 'img' }
 function mediaAttrs(path?: string, alt?: string, mode: 'auto' | 'manual' = 'auto') {
   const src = asset(path)
   if (isVideo(src)) {
@@ -361,7 +362,7 @@ function mediaAttrs(path?: string, alt?: string, mode: 'auto' | 'manual' = 'auto
       muted: true,
       loop: true,
       playsinline: true,
-      preload: 'metadata',
+      preload: 'none',
       controls: false,
       disablepictureinpicture: true,
       controlslist: 'nodownload noplaybackrate noremoteplayback',
@@ -516,6 +517,14 @@ onBeforeUnmount(() => {
 .ad-slider__dots{ position:absolute; inset-inline:0; bottom:.8rem; display:flex; align-items:center; justify-content:center; gap:.4rem; z-index:5; }
 .ad-slider__dots button{ width:.58rem; height:.58rem; border-radius:999px; background:rgba(255,255,255,.55); transition:.2s ease; }
 .ad-slider__dots button.is-active{ width:2.3rem; background:white; }
+
+
+.ad-hero-frame__media[data-video-src],.ad-hero-frame__peek-media[data-video-src],.ad-bottom-frame__media[data-video-src],.ad-popup-card__media[data-video-src]{
+  display:grid; place-items:center; background:linear-gradient(135deg, rgba(var(--primary),.22), rgba(15,23,42,.55)); position:relative; color:white;
+}
+.ad-hero-frame__media[data-video-src]::after,.ad-hero-frame__peek-media[data-video-src]::after,.ad-bottom-frame__media[data-video-src]::after,.ad-popup-card__media[data-video-src]::after{
+  content:'▶ تشغيل الفيديو'; padding:.75rem 1rem; border-radius:999px; background:rgba(0,0,0,.48); backdrop-filter:blur(10px); font-weight:900; font-size:.9rem;
+}
 
 .ad-popup-layer{ position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; padding:1rem; isolation:isolate; }
 .ad-popup-layer__overlay{ position:absolute; inset:0; z-index:0; cursor:pointer; background:rgba(3,5,10,.76); backdrop-filter:blur(12px); }

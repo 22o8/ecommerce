@@ -1,6 +1,5 @@
 <template>
   <article
-    role="button"
     tabindex="0"
     class="group product-card-shell"
     :class="props.compact ? 'product-card-shell--compact' : ''"

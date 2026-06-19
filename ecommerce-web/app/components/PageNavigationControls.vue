@@ -1,5 +1,5 @@
 <template>
-  <div class="page-nav-controls" aria-label="Page navigation shortcuts">
+  <nav class="page-nav-controls" aria-label="اختصارات التنقل">
     <Transition name="page-nav-pop">
       <button
         v-if="canGoBack"
@@ -26,7 +26,7 @@
         <Icon name="mdi:arrow-up" class="page-nav-icon" />
       </button>
     </Transition>
-  </div>
+  </nav>
 </template>
 
 <script setup lang="ts">

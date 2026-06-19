@@ -93,6 +93,8 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=drseoul-20260605' },
         { rel: 'shortcut icon', type: 'image/x-icon', href: '/favicon.ico?v=drseoul-20260605' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
+        { rel: 'preconnect', href: 'https://img.drseoulbeauty.store', crossorigin: '' },
+        { rel: 'dns-prefetch', href: 'https://img.drseoulbeauty.store' },
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
       ],
       script: [{ children: "if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}))}" }],

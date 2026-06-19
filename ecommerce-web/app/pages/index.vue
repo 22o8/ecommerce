@@ -608,7 +608,21 @@ useAdvancedSeo({
           <div ref="problemCategoryRail" class="category-unified-rail" @pointerdown="(e) => onRailPointerDown(e, problemCategoryRail)" @pointermove="onRailPointerMove" @pointerup="endRailDrag" @pointercancel="endRailDrag" @pointerleave="endRailDrag">
             <NuxtLink v-for="c in problemCards" :key="c.key" :to="c.to" class="category-mobile-pill" @click="onRailLinkClick">
               <div class="category-mobile-pill__image-wrap" :class="`bg-gradient-to-br ${c.accent}`">
-                <img v-if="c.imageUrl" :src="buildAssetUrl(c.imageUrl)" :alt="c.title" class="category-mobile-pill__image" />
+                <SmartImage
+                  v-if="c.imageUrl"
+                  :src="c.imageUrl"
+                  :alt="c.title"
+                  :title="c.title"
+                  width="240"
+                  height="240"
+                  sizes="196px"
+                  quality="58"
+                  format="webp"
+                  loading="lazy"
+                  fit="cover"
+                  wrapper-class="h-full w-full rounded-[inherit]"
+                  img-class="category-mobile-pill__image"
+                />
                 <div v-else class="category-mobile-pill__fallback">{{ c.title?.slice(0, 1) }}</div>
               </div>
               <div class="category-mobile-pill__title">{{ c.title }}</div>
