@@ -422,26 +422,54 @@ useAdvancedSeo({
             <div class="home-luxury-hero__logo-ring home-luxury-hero__logo-ring--one" />
             <div class="home-luxury-hero__logo-ring home-luxury-hero__logo-ring--two" />
             <div class="home-luxury-hero__orb home-luxury-hero__orb--large home-luxury-hero__orb--logo">
-              <img :src="heroLogo" alt="" />
+              <SmartImage
+                :src="heroLogo"
+                alt="DR SEOUL BEAUTY"
+                title="DR SEOUL BEAUTY"
+                width="360"
+                height="360"
+                sizes="320px"
+                loading="eager"
+                fetchpriority="high"
+                fit="cover"
+                wrapper-class="h-full w-full rounded-full"
+                img-class="home-luxury-hero__logo-img"
+              />
             </div>
             <div class="home-luxury-hero__orb home-luxury-hero__orb--small home-luxury-hero__orb--top brand-orbit-card">
               <Transition name="brand-orbit-fade" mode="out-in">
-                <img
+                <SmartImage
                   v-if="orbitBrandTop"
                   :key="`top-${orbitBrandTop.id || orbitBrandTop.slug || brandOrbitIndex}`"
                   :src="brandOrbitSrc(orbitBrandTop)"
                   :alt="orbitBrandTop.name || 'Brand'"
+                  :title="orbitBrandTop.name || 'Brand'"
+                  width="150"
+                  height="150"
+                  sizes="90px"
+                  loading="lazy"
+                  fit="cover"
+                  wrapper-class="h-full w-full rounded-[inherit]"
+                  img-class="h-full w-full object-cover"
                 />
                 <span v-else key="beauty">Beauty</span>
               </Transition>
             </div>
             <div class="home-luxury-hero__orb home-luxury-hero__orb--small home-luxury-hero__orb--bottom brand-orbit-card">
               <Transition name="brand-orbit-fade" mode="out-in">
-                <img
+                <SmartImage
                   v-if="orbitBrandBottom"
                   :key="`bottom-${orbitBrandBottom.id || orbitBrandBottom.slug || brandOrbitIndex}`"
                   :src="brandOrbitSrc(orbitBrandBottom)"
                   :alt="orbitBrandBottom.name || 'Brand'"
+                  :title="orbitBrandBottom.name || 'Brand'"
+                  width="150"
+                  height="150"
+                  sizes="90px"
+                  loading="lazy"
+                  fit="cover"
+                  wrapper-class="h-full w-full rounded-[inherit]"
+                  img-class="h-full w-full object-cover"
                 />
                 <span v-else key="store">Store</span>
               </Transition>
@@ -459,7 +487,7 @@ useAdvancedSeo({
         </div>
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <NuxtLink v-for="pkg in topPackageAds" :key="pkg.id" :to="`/packages`" class="rounded-3xl border border-app bg-surface/70 p-3 grid gap-3 hover:bg-surface">
-            <img v-if="pkgCover(pkg)" :src="pkgCover(pkg)" :alt="pkgName(pkg)" class="h-44 w-full rounded-2xl object-contain bg-black/10" loading="lazy" />
+            <SmartImage v-if="pkgCover(pkg)" :src="pkgCover(pkg)" :alt="pkgName(pkg)" :title="pkgName(pkg)" width="600" height="360" sizes="(max-width: 768px) 90vw, 360px" loading="lazy" fit="contain" wrapper-class="h-44 w-full rounded-2xl bg-black/10" img-class="h-full w-full object-contain" />
             <div class="rtl-text"><b>{{ pkgName(pkg) }}</b><p class="text-sm text-[rgb(var(--muted))]">{{ pkgPrice(pkg) }}</p></div>
           </NuxtLink>
         </div>
@@ -555,7 +583,19 @@ useAdvancedSeo({
                   class="category-dropdown-panel__link"
                 >
                   <div class="category-dropdown-panel__icon">
-                    <img v-if="child.imageUrl" :src="buildAssetUrl(child.imageUrl)" :alt="child.nameAr" class="h-full w-full object-cover" />
+                    <SmartImage
+                      v-if="child.imageUrl"
+                      :src="child.imageUrl"
+                      :alt="child.nameAr || 'تصنيف'"
+                      :title="child.nameAr || 'تصنيف'"
+                      width="150"
+                      height="150"
+                      sizes="72px"
+                      loading="lazy"
+                      fit="cover"
+                      wrapper-class="h-full w-full rounded-[inherit]"
+                      img-class="h-full w-full object-cover"
+                    />
                     <span v-else>{{ child.nameAr?.slice(0, 1) }}</span>
                   </div>
                   <div class="min-w-0">
@@ -689,7 +729,7 @@ useAdvancedSeo({
         </div>
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <NuxtLink v-for="pkg in bottomPackageAds" :key="pkg.id" to="/packages" class="rounded-3xl border border-app bg-surface/70 p-3 grid gap-3 hover:bg-surface">
-            <img v-if="pkgCover(pkg)" :src="pkgCover(pkg)" :alt="pkgName(pkg)" class="h-40 w-full rounded-2xl object-contain bg-black/10" loading="lazy" />
+            <SmartImage v-if="pkgCover(pkg)" :src="pkgCover(pkg)" :alt="pkgName(pkg)" :title="pkgName(pkg)" width="600" height="320" sizes="(max-width: 768px) 90vw, 320px" loading="lazy" fit="contain" wrapper-class="h-40 w-full rounded-2xl bg-black/10" img-class="h-full w-full object-contain" />
             <div class="rtl-text"><b>{{ pkgName(pkg) }}</b><p class="text-sm text-[rgb(var(--muted))]">{{ pkgPrice(pkg) }}</p></div>
           </NuxtLink>
         </div>
@@ -1318,7 +1358,7 @@ useAdvancedSeo({
   color:rgb(var(--text));
   font-weight:1000;
 }
-.home-luxury-hero__orb img{ width:100%; height:100%; object-fit:cover; }
+.home-luxury-hero__orb img,.home-luxury-hero__logo-img{ width:100%; height:100%; object-fit:cover; }
 .home-luxury-hero__orb--large{
   position:relative;
   width:min(20rem, 84%);

@@ -68,10 +68,17 @@
                 class="w-full px-3 py-3 text-left hover:bg-surface-2 transition flex items-center gap-3"
                 @click="openLive(item)"
               >
-                <img
-                  class="h-10 w-10 rounded-xl object-cover border border-app"
+                <SmartImage
                   :src="item.imageUrl || '/hero-placeholder.svg'"
-                  :alt="item.name"
+                  :alt="item.name || 'منتج'"
+                  :title="item.name || 'منتج'"
+                  width="150"
+                  height="150"
+                  sizes="40px"
+                  loading="lazy"
+                  fit="cover"
+                  wrapper-class="h-10 w-10 rounded-xl border border-app"
+                  img-class="h-full w-full object-cover"
                 />
                 <div class="min-w-0 flex-1">
                   <div class="font-extrabold text-sm truncate keep-ltr">{{ item.name }}</div>
@@ -99,14 +106,14 @@
 	        <div class="flex items-center gap-0.5 sm:gap-2 flex-shrink-0">
 	          <!-- Brands -->
 	          <NuxtLink to="/brands" class="hidden sm:block" aria-label="البراندات">
-	            <UiButton variant="secondary" class="px-2 sm:px-3">
+	            <UiButton variant="secondary" class="px-2 sm:px-3" aria-label="البراندات">
               <Icon name="mdi:storefront-outline" class="text-lg" />
               <span class="hidden md:inline rtl-text">{{ t('home.brands') }}</span>
             </UiButton>
           </NuxtLink>
 	          <!-- Favorites -->
           <NuxtLink v-if="auth.isAuthed" to="/favorites" class="hidden sm:block" aria-label="المفضلة">
-            <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0">
+            <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0" aria-label="المفضلة">
               <Icon name="mdi:heart-outline" class="text-lg" />
               <span class="hidden md:inline rtl-text">{{ t('nav.favorites') }}</span>
               <span
@@ -119,21 +126,21 @@
           </NuxtLink>
 
           <NuxtLink v-if="auth.isAuthed" to="/account" class="hidden sm:block" aria-label="محفظة النقاط">
-            <UiButton variant="secondary" class="px-2 sm:px-3">
+            <UiButton variant="secondary" class="px-2 sm:px-3" aria-label="محفظة النقاط">
               <Icon name="mdi:wallet-outline" class="text-lg" />
               <span class="hidden md:inline rtl-text">محفظتي</span>
             </UiButton>
           </NuxtLink>
 
           <NuxtLink v-if="auth.isAuthed" to="/notifications" class="hidden sm:block" aria-label="الإشعارات">
-            <UiButton variant="secondary" class="px-2 sm:px-3">
+            <UiButton variant="secondary" class="px-2 sm:px-3" aria-label="الإشعارات">
               <Icon name="mdi:bell-outline" class="text-lg" />
               <span class="hidden md:inline rtl-text">الإشعارات</span>
             </UiButton>
           </NuxtLink>
 
           <NuxtLink v-if="auth.isAuthed" to="/my-coupons" class="hidden md:block" aria-label="قسائمي">
-            <UiButton variant="secondary" class="px-2 sm:px-3">
+            <UiButton variant="secondary" class="px-2 sm:px-3" aria-label="قسائمي">
               <Icon name="mdi:ticket-percent-outline" class="text-lg" />
               <span class="hidden lg:inline rtl-text">قسائمي</span>
             </UiButton>
@@ -141,7 +148,7 @@
 
           <!-- Cart: يظهر على الهاتف أيضاً (أيقونة فقط) -->
 	          <NuxtLink to="/cart" class="block" aria-label="السلة">
-	            <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0">
+	            <UiButton variant="secondary" class="relative px-2 sm:px-3 shrink-0" aria-label="السلة">
               <Icon name="mdi:cart-outline" class="text-lg" />
 	              <span class="hidden sm:inline rtl-text">{{ t('nav.cart') }}</span>
               <span
@@ -170,12 +177,12 @@
           </NuxtLink>
 
           <NuxtLink v-if="!auth.isAuthed" to="/login" aria-label="تسجيل الدخول">
-            <UiButton aria-label="تسجيل الدخول">
+            <UiButton aria-label="تسجيل الدخول" title="تسجيل الدخول">
               <Icon name="mdi:login-variant" class="text-lg" />
               <span class="hidden sm:inline rtl-text">{{ t('nav.login') }}</span>
             </UiButton>
           </NuxtLink>
-          <UiButton v-else variant="secondary" @click="logout">
+          <UiButton v-else variant="secondary" aria-label="تسجيل الخروج" title="تسجيل الخروج" @click="logout">
             <Icon name="mdi:logout-variant" class="text-lg" />
             <span class="hidden sm:inline rtl-text">{{ t('nav.logout') }}</span>
           </UiButton>
@@ -213,10 +220,17 @@
               class="flex w-full items-center gap-3 px-3 py-3 text-left transition hover:bg-surface-2"
               @click="openLive(item)"
             >
-              <img
-                class="h-11 w-11 rounded-2xl object-cover border border-app"
+              <SmartImage
                 :src="item.imageUrl || '/hero-placeholder.svg'"
-                :alt="item.name"
+                :alt="item.name || 'منتج'"
+                :title="item.name || 'منتج'"
+                width="150"
+                height="150"
+                sizes="44px"
+                loading="lazy"
+                fit="cover"
+                wrapper-class="h-11 w-11 rounded-2xl border border-app"
+                img-class="h-full w-full object-cover"
               />
               <div class="min-w-0 flex-1">
                 <div class="truncate text-sm font-extrabold keep-ltr">{{ item.name }}</div>

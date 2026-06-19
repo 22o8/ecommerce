@@ -12,6 +12,8 @@
     -->
     <img
       :src="currentSrc"
+      :srcset="computedSrcset"
+      :sizes="computedSizes"
       :alt="computedAlt"
       :loading="props.loading"
       :title="props.title || computedAlt"
@@ -107,6 +109,29 @@ watch(
 )
 
 const currentSrc = computed(() => srcRef.value || FALLBACK)
+
+function optimizedVariant(url: string, variant: 'thumb' | 'medium' | 'large') {
+  if (!url || !url.includes('/optimized/') || !url.endsWith('.webp')) return ''
+  return url
+    .replace(/-(thumb|medium|large)\.webp($|\?)/i, `-${variant}.webp$2`)
+}
+
+const computedSrcset = computed(() => {
+  const u = currentSrc.value
+  const thumb = optimizedVariant(u, 'thumb')
+  const medium = optimizedVariant(u, 'medium')
+  const large = optimizedVariant(u, 'large')
+  if (!thumb || !medium || !large) return undefined
+  return `${thumb} 150w, ${medium} 600w, ${large} 1200w`
+})
+
+const computedSizes = computed(() => {
+  if (!computedSrcset.value) return undefined
+  const raw = String(props.sizes || '').trim()
+  if (!raw || raw.includes(':')) return '(max-width: 640px) 150px, (max-width: 1024px) 600px, 1200px'
+  return raw
+})
+
 const computedAlt = computed(() => props.alt || props.title || 'DR SEOUL BEAUTY image')
 
 function onError() {

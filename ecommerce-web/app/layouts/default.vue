@@ -2,14 +2,18 @@
   <div class="min-h-screen bg-app relative overflow-x-clip">
     <GlobalEffects />
     <AppNavbar />
-    <GlobalAds zone="top" />
+    <div class="global-ads-reserve global-ads-reserve--top">
+      <GlobalAds zone="top" />
+    </div>
 
     <main class="mx-auto max-w-7xl px-4 py-8">
       <slot />
     </main>
 
 
-    <GlobalAds zone="bottom" />
+    <div class="global-ads-reserve global-ads-reserve--bottom">
+      <GlobalAds zone="bottom" />
+    </div>
     <AppFooter />
 
     <PageNavigationControls />
@@ -72,6 +76,16 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+
+.global-ads-reserve--top{
+  min-height: clamp(292px, 34vw, 540px);
+}
+.global-ads-reserve--bottom{
+  min-height: 0;
+}
+@media(max-width:640px){
+  .global-ads-reserve--top{ min-height: 304px; }
+}
 .wa-fab{
   position: fixed;
   inset-inline-end: 1.15rem;

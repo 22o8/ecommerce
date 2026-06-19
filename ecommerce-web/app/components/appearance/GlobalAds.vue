@@ -13,7 +13,7 @@
           >
             <component
               :is="mediaComponent(previousTopSlide.media)"
-              v-bind="mediaAttrs(previousTopSlide.media, previousTopSlide.title || 'advertisement')"
+              v-bind="mediaAttrs(previousTopSlide.media, previousTopSlide.title || 'advertisement', 'peek')"
               class="ad-hero-frame__peek-media"
             />
           </button>
@@ -28,7 +28,7 @@
           >
             <component
               :is="mediaComponent(nextTopSlide.media)"
-              v-bind="mediaAttrs(nextTopSlide.media, nextTopSlide.title || 'advertisement')"
+              v-bind="mediaAttrs(nextTopSlide.media, nextTopSlide.title || 'advertisement', 'peek')"
               class="ad-hero-frame__peek-media"
             />
           </button>
@@ -36,12 +36,11 @@
           <button type="button" class="ad-hero-frame__link" :aria-label="currentTopSlide.title || 'فتح الإعلان'" @click="handleSlideClick(currentTopSlide)">
             <div class="ad-hero-frame__media-layer">
               <component
-                v-for="(slide, idx) in topSlides"
-                :is="mediaComponent(slide.media)"
-                :key="slide.key"
-                v-bind="mediaAttrs(slide.media, slide.title || 'advertisement')"
-                class="ad-hero-frame__media"
-                :class="{ 'is-active': idx === sliderIndex }"
+                v-if="currentTopSlide"
+                :is="mediaComponent(currentTopSlide.media)"
+                :key="currentTopSlide.key"
+                v-bind="mediaAttrs(currentTopSlide.media, currentTopSlide.title || 'advertisement', 'auto')"
+                class="ad-hero-frame__media is-active"
               />
             </div>
           </button>
@@ -86,7 +85,7 @@
           <button type="button" class="ad-bottom-frame__link" :aria-label="currentBottomSlide.title || 'فتح الإعلان'" @click="handleSlideClick(currentBottomSlide)">
             <component
               :is="mediaComponent(currentBottomSlide.media)"
-              v-bind="mediaAttrs(currentBottomSlide.media, currentBottomSlide.title || 'advertisement')"
+              v-bind="mediaAttrs(currentBottomSlide.media, currentBottomSlide.title || 'advertisement', 'auto')"
               class="ad-bottom-frame__media"
             />
             <div v-if="isVideo(currentBottomSlide.media)" class="ad-bottom-frame__video-hint">
@@ -149,7 +148,7 @@
               <div v-if="firstMedia(popupAd)" class="ad-popup-card__media-wrap">
                 <component
                   :is="mediaComponent(firstMedia(popupAd))"
-                  v-bind="mediaAttrs(firstMedia(popupAd), popupAd.title || 'popup')"
+                  v-bind="mediaAttrs(firstMedia(popupAd), popupAd.title || 'popup', 'lazy')"
                   class="ad-popup-card__media"
                 />
               </div>
@@ -342,7 +341,30 @@ function isVideo(url?: string) {
   return /\.(mp4|webm|ogg|mov)$/i.test(u)
 }
 function mediaComponent(url?: string) { return isVideo(url) ? 'video' : 'img' }
-function mediaAttrs(path?: string, alt?: string, mode: 'auto' | 'manual' = 'auto') {
+function optimizedVariant(url: string, variant: 'thumb' | 'medium' | 'large') {
+  if (!url || !url.includes('/optimized/') || !url.endsWith('.webp')) return ''
+  return url.replace(/-(thumb|medium|large)\.webp($|\?)/i, `-${variant}.webp$2`)
+}
+function responsiveImageAttrs(src: string, alt?: string, mode: 'auto' | 'manual' | 'peek' | 'lazy' = 'auto') {
+  const thumb = optimizedVariant(src, 'thumb')
+  const medium = optimizedVariant(src, 'medium')
+  const large = optimizedVariant(src, 'large')
+  const attrs: Record<string, any> = {
+    src,
+    alt: alt || 'advertisement',
+    loading: mode === 'auto' ? 'eager' : 'lazy',
+    decoding: 'async',
+    fetchpriority: mode === 'auto' ? 'high' : 'low',
+    width: mode === 'auto' ? 1200 : 600,
+    height: mode === 'auto' ? 420 : 240,
+  }
+  if (thumb && medium && large) {
+    attrs.srcset = `${thumb} 150w, ${medium} 600w, ${large} 1200w`
+    attrs.sizes = mode === 'auto' ? '(max-width: 768px) 92vw, 1200px' : '220px'
+  }
+  return attrs
+}
+function mediaAttrs(path?: string, alt?: string, mode: 'auto' | 'manual' | 'peek' | 'lazy' = 'auto') {
   const src = asset(path)
   if (isVideo(src)) {
     if (mode === 'manual') {
@@ -354,6 +376,19 @@ function mediaAttrs(path?: string, alt?: string, mode: 'auto' | 'manual' = 'auto
         loop: false,
         playsinline: true,
         preload: 'metadata',
+        controlslist: 'nodownload noplaybackrate noremoteplayback',
+      }
+    }
+    if (mode === 'peek' || mode === 'lazy') {
+      return {
+        src,
+        autoplay: false,
+        muted: true,
+        loop: false,
+        playsinline: true,
+        preload: 'none',
+        controls: false,
+        disablepictureinpicture: true,
         controlslist: 'nodownload noplaybackrate noremoteplayback',
       }
     }
@@ -369,7 +404,7 @@ function mediaAttrs(path?: string, alt?: string, mode: 'auto' | 'manual' = 'auto
       controlslist: 'nodownload noplaybackrate noremoteplayback',
     }
   }
-  return { src, alt: alt || 'advertisement', loading: 'eager', decoding: 'async', fetchpriority: 'high' }
+  return responsiveImageAttrs(src, alt, mode)
 }
 const asset = (p?: string) => api.buildAssetUrl(p || '')
 function safeLink(link?: string) {
@@ -502,7 +537,7 @@ onBeforeUnmount(() => {
 .ad-bottom-frame__media{ height:clamp(150px,18vw,270px); }
 .ad-bottom-frame__video-hint{ position:absolute; inset-inline:1rem auto; top:1rem; z-index:4; width:max-content; max-width:calc(100% - 2rem); border:1px solid rgba(255,255,255,.18); border-radius:999px; padding:.55rem .85rem; color:#fff; background:rgba(0,0,0,.48); backdrop-filter:blur(14px); font-size:.82rem; font-weight:1000; }
 .ad-hero-frame__caption{ position:relative; z-index:4; display:grid; gap:.35rem; padding:clamp(.8rem,1.6vw,1.2rem) clamp(1rem,2vw,1.45rem) clamp(1rem,1.8vw,1.35rem); color:rgb(var(--text)); background:linear-gradient(180deg, rgba(var(--surface-rgb),.94), rgba(var(--surface-2-rgb),.78)); border-top:1px solid rgba(var(--border),.58); }
-.ad-hero-frame__eyebrow{ width:max-content; border:1px solid rgba(var(--primary),.22); background:rgba(var(--primary),.12); color:rgb(var(--primary)); backdrop-filter:blur(12px); border-radius:999px; padding:.35rem .7rem; font-size:.74rem; font-weight:1000; }
+.ad-hero-frame__eyebrow{ width:max-content; border:1px solid rgba(var(--primary),.35); background:rgba(3,5,10,.78); color:#fff; backdrop-filter:blur(12px); border-radius:999px; padding:.35rem .7rem; font-size:.74rem; font-weight:1000; }
 .ad-hero-frame__caption b{ font-size:clamp(1.15rem,2.3vw,2.35rem); font-weight:1000; line-height:1.25; }
 .ad-hero-frame__caption small{ max-width:720px; font-size:clamp(.84rem,1vw,1rem); color:rgb(var(--muted)); line-height:1.8; }
 .ad-bottom-frame__caption{ display:grid; gap:.35rem; padding:.9rem 1rem 1.05rem; border-top:1px solid rgba(var(--border),.58); color:rgb(var(--text)); background:linear-gradient(180deg, rgba(var(--surface-rgb),.94), rgba(var(--surface-2-rgb),.78)); }
@@ -513,8 +548,9 @@ onBeforeUnmount(() => {
 .ad-slider__nav--prev{ left:clamp(.75rem,1.3vw,1.15rem); }
 .ad-slider__nav--next{ right:clamp(.75rem,1.3vw,1.15rem); }
 .ad-slider__dots{ position:absolute; inset-inline:0; bottom:.8rem; display:flex; align-items:center; justify-content:center; gap:.4rem; z-index:5; }
-.ad-slider__dots button{ width:1.05rem; min-width:1.05rem; height:1.05rem; border-radius:999px; background:rgba(255,255,255,.55); transition:.2s ease; }
-.ad-slider__dots button.is-active{ width:2.6rem; background:white; }
+.ad-slider__dots button{ position:relative; width:2.75rem; min-width:2.75rem; height:2.75rem; border-radius:999px; background:transparent; transition:.2s ease; }
+.ad-slider__dots button::before{ content:""; position:absolute; inset:50% auto auto 50%; width:.75rem; height:.75rem; border-radius:999px; transform:translate(-50%,-50%); background:rgba(255,255,255,.65); box-shadow:0 4px 14px rgba(0,0,0,.18); transition:.2s ease; }
+.ad-slider__dots button.is-active::before{ width:2rem; background:white; }
 
 
 .ad-hero-frame__media:is(video),.ad-hero-frame__peek-media:is(video),.ad-bottom-frame__media:is(video),.ad-popup-card__media:is(video){

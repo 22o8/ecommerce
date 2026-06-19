@@ -13,9 +13,9 @@ public sealed class MediaOptimizationService
     private readonly IObjectStorage _storage;
 
     public const int MaxLarge = 1200;
-    public const int MaxMedium = 720;
-    public const int MaxThumb = 360;
-    public const int Quality = 72;
+    public const int MaxMedium = 600;
+    public const int MaxThumb = 150;
+    public const int Quality = 65;
 
     public MediaOptimizationService(IHttpClientFactory httpClientFactory, IObjectStorage storage)
     {
