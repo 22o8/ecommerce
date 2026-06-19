@@ -44,13 +44,13 @@
                 :class="{ 'is-active': idx === sliderIndex }"
               />
             </div>
-            <div class="ad-hero-frame__shade" />
-            <div v-if="currentTopSlide.title || currentTopSlide.subtitle" class="ad-hero-frame__content rtl-text">
-              <span class="ad-hero-frame__eyebrow">إعلان</span>
-              <b>{{ currentTopSlide.title }}</b>
-              <small v-if="currentTopSlide.subtitle">{{ currentTopSlide.subtitle }}</small>
-            </div>
           </button>
+
+          <div v-if="currentTopSlide.title || currentTopSlide.subtitle" class="ad-hero-frame__caption rtl-text">
+            <span class="ad-hero-frame__eyebrow">إعلان</span>
+            <b>{{ currentTopSlide.title }}</b>
+            <small v-if="currentTopSlide.subtitle">{{ currentTopSlide.subtitle }}</small>
+          </div>
 
           <button
             v-if="topSlides.length > 1"
@@ -75,7 +75,7 @@
               type="button"
               :class="idx === sliderIndex ? 'is-active' : ''"
               @click="setSlide(idx); startTimer()"
-              :aria-label="`slide ${idx + 1}`"
+              :aria-label="`انتقل إلى الإعلان ${idx + 1}`"
             />
           </div>
         </div>
@@ -92,11 +92,12 @@
             <div v-if="isVideo(currentBottomSlide.media)" class="ad-bottom-frame__video-hint">
               ▶ اضغط لتشغيل الفيديو بالصوت
             </div>
-            <div v-if="currentBottomSlide.title || currentBottomSlide.subtitle" class="ad-bottom-frame__content rtl-text">
-              <b>{{ currentBottomSlide.title }}</b>
-              <span v-if="currentBottomSlide.subtitle">{{ currentBottomSlide.subtitle }}</span>
-            </div>
           </button>
+          <div v-if="currentBottomSlide.title || currentBottomSlide.subtitle" class="ad-bottom-frame__caption rtl-text">
+            <span class="ad-hero-frame__eyebrow">إعلان</span>
+            <b>{{ currentBottomSlide.title }}</b>
+            <small v-if="currentBottomSlide.subtitle">{{ currentBottomSlide.subtitle }}</small>
+          </div>
 
           <button
             v-if="bottomSlides.length > 1"
@@ -120,7 +121,7 @@
               type="button"
               :class="idx === bottomSliderIndex ? 'is-active' : ''"
               @click="setBottomSlide(idx); startBottomTimer()"
-              :aria-label="`bottom slide ${idx + 1}`"
+              :aria-label="`انتقل إلى إعلان الواجهة ${idx + 1}`"
             />
           </div>
         </div>
@@ -340,7 +341,7 @@ function isVideo(url?: string) {
   const u = String(url || '').split('?')[0].toLowerCase()
   return /\.(mp4|webm|ogg|mov)$/i.test(u)
 }
-function mediaComponent(url?: string) { return isVideo(url) ? 'span' : 'img' }
+function mediaComponent(url?: string) { return isVideo(url) ? 'video' : 'img' }
 function mediaAttrs(path?: string, alt?: string, mode: 'auto' | 'manual' = 'auto') {
   const src = asset(path)
   if (isVideo(src)) {
@@ -362,7 +363,7 @@ function mediaAttrs(path?: string, alt?: string, mode: 'auto' | 'manual' = 'auto
       muted: true,
       loop: true,
       playsinline: true,
-      preload: 'none',
+      preload: 'metadata',
       controls: false,
       disablepictureinpicture: true,
       controlslist: 'nodownload noplaybackrate noremoteplayback',
@@ -486,7 +487,7 @@ onBeforeUnmount(() => {
 .ad-hero-frame,.ad-bottom-frame{ position:relative; overflow:hidden; border:1px solid rgba(var(--border),.78); background:linear-gradient(135deg, rgba(var(--surface-rgb),.92), rgba(var(--surface-2-rgb),.72)); box-shadow:0 22px 70px rgba(0,0,0,.18); }
 .ad-hero-frame{ border-radius:clamp(1.35rem,2.2vw,2.4rem); min-height:clamp(180px,23vw,360px); }
 .ad-bottom-frame{ border-radius:2rem; }
-.ad-hero-frame__link,.ad-bottom-frame__link{ display:block; position:relative; width:100%; min-height:inherit; color:inherit; z-index:2; border:0; padding:0; margin:0; background:transparent; text-align:inherit; cursor:pointer; }
+.ad-hero-frame__link,.ad-bottom-frame__link{ display:block; position:relative; width:100%; min-height:0; color:inherit; z-index:2; border:0; padding:0; margin:0; background:transparent; text-align:inherit; cursor:pointer; }
 .ad-hero-frame__media-layer{ position:relative; width:100%; height:clamp(190px,24vw,380px); overflow:hidden; background:linear-gradient(90deg, rgba(0,0,0,.36), rgba(var(--surface-rgb),.72) 24%, rgba(var(--surface-rgb),.90) 50%, rgba(var(--surface-rgb),.72) 76%, rgba(0,0,0,.20)); }
 .ad-hero-frame__media{ position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; object-position:center; opacity:0; transform:translateZ(0) scale(.985); transition:opacity .55s ease, transform .55s ease; background:transparent; }
 .ad-hero-frame__media.is-active{ opacity:1; z-index:1; transform:translateZ(0) scale(1); }
@@ -500,31 +501,45 @@ onBeforeUnmount(() => {
 .ad-bottom-frame__media{ display:block; width:100%; object-fit:contain; object-position:center; background:linear-gradient(135deg, rgba(var(--surface-rgb),.92), rgba(var(--surface-2-rgb),.72)); }
 .ad-bottom-frame__media{ height:clamp(150px,18vw,270px); }
 .ad-bottom-frame__video-hint{ position:absolute; inset-inline:1rem auto; top:1rem; z-index:4; width:max-content; max-width:calc(100% - 2rem); border:1px solid rgba(255,255,255,.18); border-radius:999px; padding:.55rem .85rem; color:#fff; background:rgba(0,0,0,.48); backdrop-filter:blur(14px); font-size:.82rem; font-weight:1000; }
-.ad-hero-frame__shade{ pointer-events:none; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.66), rgba(0,0,0,.24) 44%, rgba(0,0,0,.08)); }
-:global(html[dir="rtl"]) .ad-hero-frame__shade{ background:linear-gradient(270deg, rgba(0,0,0,.66), rgba(0,0,0,.24) 44%, rgba(0,0,0,.08)); }
-.ad-hero-frame__content{ position:absolute; inset-block:auto 1.25rem; inset-inline:1.25rem auto; display:grid; gap:.35rem; max-width:min(620px, calc(100% - 2.5rem)); color:white; }
-:global(html[dir="rtl"]) .ad-hero-frame__content{ inset-inline:auto 1.25rem; }
-.ad-hero-frame__eyebrow{ width:max-content; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.12); backdrop-filter:blur(12px); border-radius:999px; padding:.35rem .7rem; font-size:.74rem; font-weight:1000; }
-.ad-hero-frame__content b{ font-size:clamp(1.4rem,3vw,3.1rem); font-weight:1000; line-height:1.05; text-shadow:0 16px 48px rgba(0,0,0,.35); }
-.ad-hero-frame__content small{ max-width:520px; font-size:clamp(.86rem,1.1vw,1.05rem); color:rgba(255,255,255,.82); line-height:1.8; }
-.ad-bottom-frame__content{ position:absolute; inset-inline:1rem; bottom:1rem; display:grid; gap:.25rem; width:max-content; max-width:min(520px, calc(100% - 2rem)); border:1px solid rgba(255,255,255,.16); border-radius:1.35rem; padding:.85rem 1rem; color:white; background:rgba(5,5,9,.48); backdrop-filter:blur(16px); }
-.ad-bottom-frame__content b{ font-size:1.1rem; font-weight:1000; }
-.ad-bottom-frame__content span{ font-size:.86rem; color:rgba(255,255,255,.78); }
+.ad-hero-frame__caption{ position:relative; z-index:4; display:grid; gap:.35rem; padding:clamp(.8rem,1.6vw,1.2rem) clamp(1rem,2vw,1.45rem) clamp(1rem,1.8vw,1.35rem); color:rgb(var(--text)); background:linear-gradient(180deg, rgba(var(--surface-rgb),.94), rgba(var(--surface-2-rgb),.78)); border-top:1px solid rgba(var(--border),.58); }
+.ad-hero-frame__eyebrow{ width:max-content; border:1px solid rgba(var(--primary),.22); background:rgba(var(--primary),.12); color:rgb(var(--primary)); backdrop-filter:blur(12px); border-radius:999px; padding:.35rem .7rem; font-size:.74rem; font-weight:1000; }
+.ad-hero-frame__caption b{ font-size:clamp(1.15rem,2.3vw,2.35rem); font-weight:1000; line-height:1.25; }
+.ad-hero-frame__caption small{ max-width:720px; font-size:clamp(.84rem,1vw,1rem); color:rgb(var(--muted)); line-height:1.8; }
+.ad-bottom-frame__caption{ display:grid; gap:.35rem; padding:.9rem 1rem 1.05rem; border-top:1px solid rgba(var(--border),.58); color:rgb(var(--text)); background:linear-gradient(180deg, rgba(var(--surface-rgb),.94), rgba(var(--surface-2-rgb),.78)); }
+.ad-bottom-frame__caption b{ font-size:1.1rem; font-weight:1000; }
+.ad-bottom-frame__caption small{ font-size:.86rem; color:rgb(var(--muted)); line-height:1.7; }
 .ad-slider__nav{ position:absolute; top:50%; z-index:6; display:grid; place-items:center; width:clamp(2.35rem,3.2vw,3.1rem); height:clamp(2.35rem,3.2vw,3.1rem); transform:translateY(-50%); border:1px solid rgba(255,255,255,.26); border-radius:999px; color:white; background:rgba(0,0,0,.42); box-shadow:0 14px 40px rgba(0,0,0,.22); backdrop-filter:blur(14px); font-size:clamp(1.45rem,2vw,2rem); font-weight:1000; line-height:1; transition:transform .2s ease, background .2s ease, opacity .2s ease; }
 .ad-slider__nav:hover{ transform:translateY(-50%) scale(1.06); background:rgba(var(--primary),.88); color:#050509; }
 .ad-slider__nav--prev{ left:clamp(.75rem,1.3vw,1.15rem); }
 .ad-slider__nav--next{ right:clamp(.75rem,1.3vw,1.15rem); }
 .ad-slider__dots{ position:absolute; inset-inline:0; bottom:.8rem; display:flex; align-items:center; justify-content:center; gap:.4rem; z-index:5; }
-.ad-slider__dots button{ width:.58rem; height:.58rem; border-radius:999px; background:rgba(255,255,255,.55); transition:.2s ease; }
-.ad-slider__dots button.is-active{ width:2.3rem; background:white; }
+.ad-slider__dots button{ width:1.05rem; min-width:1.05rem; height:1.05rem; border-radius:999px; background:rgba(255,255,255,.55); transition:.2s ease; }
+.ad-slider__dots button.is-active{ width:2.6rem; background:white; }
 
 
-.ad-hero-frame__media[data-video-src],.ad-hero-frame__peek-media[data-video-src],.ad-bottom-frame__media[data-video-src],.ad-popup-card__media[data-video-src]{
-  display:grid; place-items:center; background:linear-gradient(135deg, rgba(var(--primary),.22), rgba(15,23,42,.55)); position:relative; color:white;
+.ad-hero-frame__media:is(video),.ad-hero-frame__peek-media:is(video),.ad-bottom-frame__media:is(video),.ad-popup-card__media:is(video){
+  background:#050509;
+  pointer-events:none;
 }
-.ad-hero-frame__media[data-video-src]::after,.ad-hero-frame__peek-media[data-video-src]::after,.ad-bottom-frame__media[data-video-src]::after,.ad-popup-card__media[data-video-src]::after{
-  content:'▶ تشغيل الفيديو'; padding:.75rem 1rem; border-radius:999px; background:rgba(0,0,0,.48); backdrop-filter:blur(10px); font-weight:900; font-size:.9rem;
+.ad-hero-frame__link::after,.ad-bottom-frame__link::after{
+  content:'اضغط لفتح الفيديو بالصوت';
+  position:absolute;
+  inset-inline:auto 1rem;
+  top:1rem;
+  z-index:6;
+  width:max-content;
+  max-width:calc(100% - 2rem);
+  display:none;
+  border:1px solid rgba(255,255,255,.20);
+  border-radius:999px;
+  padding:.5rem .8rem;
+  color:#fff;
+  background:rgba(0,0,0,.42);
+  backdrop-filter:blur(14px);
+  font-size:.78rem;
+  font-weight:1000;
 }
+.ad-hero-frame__link:has(video)::after,.ad-bottom-frame__link:has(video)::after{ display:block; }
 
 .ad-popup-layer{ position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; padding:1rem; isolation:isolate; }
 .ad-popup-layer__overlay{ position:absolute; inset:0; z-index:0; cursor:pointer; background:rgba(3,5,10,.76); backdrop-filter:blur(12px); }
@@ -551,13 +566,12 @@ onBeforeUnmount(() => {
   .ad-slider__nav--next{ right:.5rem; }
   .ad-hero-frame{ border-radius:1.35rem; min-height:168px; }
   .ad-hero-frame__media-layer{ height:178px; }
-  .ad-hero-frame__shade{ background:linear-gradient(0deg, rgba(0,0,0,.72), rgba(0,0,0,.10)); }
-  .ad-hero-frame__content{ inset-inline:.9rem !important; bottom:.9rem; max-width:calc(100% - 1.8rem); }
-  .ad-hero-frame__content b{ font-size:1.45rem; }
-  .ad-hero-frame__content small{ font-size:.82rem; }
+  .ad-hero-frame__caption{ padding:.8rem .9rem 1rem; }
+  .ad-hero-frame__caption b{ font-size:1.15rem; }
+  .ad-hero-frame__caption small{ font-size:.82rem; }
   .ad-bottom-frame{ border-radius:1.35rem; }
   .ad-bottom-frame__media{ height:160px; }
-  .ad-bottom-frame__content{ inset-inline:.65rem; bottom:.65rem; border-radius:1rem; padding:.65rem .75rem; }
+  .ad-bottom-frame__caption{ padding:.8rem .85rem 1rem; }
   .ad-popup-card{ border-radius:1.35rem; }
   .ad-popup-card__content{ padding:1rem; }
 }
