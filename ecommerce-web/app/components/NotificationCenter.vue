@@ -9,7 +9,7 @@
     >
       <Icon name="mdi:bell-outline" class="text-lg" />
       <span class="hidden md:inline rtl-text">الإشعارات</span>
-      <span v-if="unreadCount" class="notification-center__badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+      <span v-if="unreadCount" class="notification-center__badge" aria-hidden="true"></span>
     </button>
 
     <div v-if="panelOpen" class="notification-center__panel" role="dialog" aria-modal="false" aria-label="مركز الإشعارات">
@@ -143,7 +143,7 @@ async function dismissToast() {
 }
 
 watch(() => auth.isAuthed, (value) => {
-  if (value) loadNotifications(true)
+  if (value) loadNotifications(false)
   else {
     items.value = []
     unreadCount.value = 0
@@ -152,7 +152,7 @@ watch(() => auth.isAuthed, (value) => {
 }, { immediate: true })
 
 onMounted(() => {
-  if (auth.isAuthed) loadNotifications(true)
+  if (auth.isAuthed) loadNotifications(false)
   pollTimer = setInterval(() => {
     if (auth.isAuthed) loadNotifications(false)
   }, 60000)
@@ -183,19 +183,14 @@ onBeforeUnmount(() => {
 .notification-center__button:hover{ transform:translateY(-1px); background:rgb(var(--surface-2)); }
 .notification-center__badge{
   position:absolute;
-  top:-.45rem;
-  right:-.45rem;
-  display:grid;
-  min-width:1.25rem;
-  height:1.25rem;
-  place-items:center;
+  top:.18rem;
+  right:.22rem;
+  width:.62rem;
+  height:.62rem;
   border-radius:999px;
   background:#ef4444;
-  color:white;
-  padding:0 .3rem;
-  font-size:.68rem;
-  font-weight:1000;
-  box-shadow:0 10px 22px rgba(239,68,68,.32);
+  border:2px solid rgb(var(--surface));
+  box-shadow:0 0 0 4px rgba(239,68,68,.14), 0 8px 18px rgba(239,68,68,.35);
 }
 .notification-center__panel{
   position:absolute;

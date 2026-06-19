@@ -291,7 +291,41 @@ async function loadSliderPackages() {
     sliderPackages.value = []
   }
 }
-const heroPackageSpotlight = computed(() => sliderPackages.value.filter((p: any) => (p.showInSlider ?? p.ShowInSlider) !== false && (p.sliderPlacement || p.SliderPlacement) === 'hero_logo_side').slice(0, 3))
+const heroPackageSpotlight = computed(() => sliderPackages.value.filter((p: any) => (p.showInSlider ?? p.ShowInSlider) !== false && (p.sliderPlacement || p.SliderPlacement) === 'hero_logo_side').slice(0, 8))
+const heroPackageIndex = ref(0)
+const currentHeroPackage = computed(() => heroPackageSpotlight.value[heroPackageIndex.value] || heroPackageSpotlight.value[0] || null)
+const nextHeroPackage = computed(() => {
+  const list = heroPackageSpotlight.value
+  if (list.length <= 1) return null
+  return list[(heroPackageIndex.value + 1) % list.length]
+})
+let heroPackageTimer: ReturnType<typeof setInterval> | null = null
+const pkgTouch = { startX: 0, moved: false }
+function moveHeroPackage(direction: 'prev' | 'next') {
+  const total = heroPackageSpotlight.value.length
+  if (total <= 1) return
+  heroPackageIndex.value = direction === 'next'
+    ? (heroPackageIndex.value + 1) % total
+    : (heroPackageIndex.value - 1 + total) % total
+}
+function startHeroPackageTimer() {
+  if (heroPackageTimer) clearInterval(heroPackageTimer)
+  if (heroPackageSpotlight.value.length <= 1) return
+  heroPackageTimer = setInterval(() => moveHeroPackage('next'), 4200)
+}
+function pauseHeroPackageTimer() { if (heroPackageTimer) clearInterval(heroPackageTimer) }
+function onHeroPackageTouchStart(event: TouchEvent) { pkgTouch.startX = event.touches[0]?.clientX || 0; pkgTouch.moved = false; pauseHeroPackageTimer() }
+function onHeroPackageTouchMove(event: TouchEvent) { if (Math.abs((event.touches[0]?.clientX || 0) - pkgTouch.startX) > 18) pkgTouch.moved = true }
+function onHeroPackageTouchEnd(event: TouchEvent) {
+  const endX = event.changedTouches[0]?.clientX || pkgTouch.startX
+  const delta = endX - pkgTouch.startX
+  if (Math.abs(delta) > 45) moveHeroPackage(delta < 0 ? 'next' : 'prev')
+  startHeroPackageTimer()
+}
+watch(() => heroPackageSpotlight.value.map((p: any) => p.id || p.Id).join('::'), () => {
+  heroPackageIndex.value = 0
+  startHeroPackageTimer()
+})
 const topPackageAds = computed(() => sliderPackages.value.filter((p: any) => (p.sliderPlacement || p.SliderPlacement) === 'home_top'))
 const bottomPackageAds = computed(() => sliderPackages.value.filter((p: any) => (p.sliderPlacement || p.SliderPlacement) === 'home_bottom' || (p.sliderPlacement || p.SliderPlacement) === 'offers'))
 function pkgName(p: any) { return p.name || p.nameAr || p.NameAr || p.nameEn || p.NameEn || 'بكج' }
@@ -364,7 +398,7 @@ function scrollRail(direction: 'prev' | 'next', rail: HTMLElement | null) {
 
 onMounted(() => {
   loadHomeAds()
-  loadSliderPackages()
+  loadSliderPackages().then(() => startHeroPackageTimer())
   categoryRail.value?.addEventListener('wheel', onRailWheel, { passive: false })
   problemCategoryRail.value?.addEventListener('wheel', onRailWheel, { passive: false })
   ensureTopRatedLoaded()
@@ -380,6 +414,7 @@ onBeforeUnmount(() => {
   problemCategoryRail.value?.removeEventListener('wheel', onRailWheel as any)
   if (brandOrbitTimer) clearInterval(brandOrbitTimer)
   if (homeAdTimer) clearInterval(homeAdTimer)
+  if (heroPackageTimer) clearInterval(heroPackageTimer)
 })
 
 
@@ -403,6 +438,59 @@ useAdvancedSeo({
         <div class="home-luxury-hero__glow home-luxury-hero__glow--two" />
 
         <div class="home-luxury-hero__content rtl-text">
+          <div
+            v-if="currentHeroPackage"
+            class="home-luxury-hero__package-slider"
+            aria-label="بكجات مختارة"
+            @mouseenter="pauseHeroPackageTimer"
+            @mouseleave="startHeroPackageTimer"
+            @touchstart.passive="onHeroPackageTouchStart"
+            @touchmove.passive="onHeroPackageTouchMove"
+            @touchend.passive="onHeroPackageTouchEnd"
+          >
+            <button v-if="heroPackageSpotlight.length > 1" type="button" class="home-luxury-hero__pkg-nav home-luxury-hero__pkg-nav--prev" aria-label="البكج السابق" @click="moveHeroPackage('prev')">
+              <Icon name="mdi:chevron-right" />
+            </button>
+            <NuxtLink to="/packages" class="home-luxury-hero__package-feature">
+              <span class="home-luxury-hero__package-copy">
+                <small>بكج مختار</small>
+                <b>{{ pkgName(currentHeroPackage) }}</b>
+                <em>{{ pkgPrice(currentHeroPackage) }}</em>
+              </span>
+              <SmartImage
+                v-if="pkgCover(currentHeroPackage)"
+                :src="pkgCover(currentHeroPackage)"
+                :alt="pkgName(currentHeroPackage)"
+                width="240"
+                height="240"
+                sizes="96px"
+                loading="lazy"
+                fit="cover"
+                wrapper-class="home-luxury-hero__package-feature-img"
+                img-class="h-full w-full object-cover"
+              />
+              <span v-if="nextHeroPackage && pkgCover(nextHeroPackage)" class="home-luxury-hero__package-next">
+                <SmartImage
+                  :src="pkgCover(nextHeroPackage)"
+                  :alt="pkgName(nextHeroPackage)"
+                  width="120"
+                  height="120"
+                  sizes="54px"
+                  loading="lazy"
+                  fit="cover"
+                  wrapper-class="h-full w-full"
+                  img-class="h-full w-full object-cover"
+                />
+              </span>
+            </NuxtLink>
+            <button v-if="heroPackageSpotlight.length > 1" type="button" class="home-luxury-hero__pkg-nav home-luxury-hero__pkg-nav--next" aria-label="البكج التالي" @click="moveHeroPackage('next')">
+              <Icon name="mdi:chevron-left" />
+            </button>
+            <div v-if="heroPackageSpotlight.length > 1" class="home-luxury-hero__package-dots" aria-hidden="true">
+              <span v-for="(_, i) in heroPackageSpotlight" :key="i" :class="{ 'is-active': i === heroPackageIndex }" />
+            </div>
+          </div>
+
           <div class="home-luxury-hero__actions home-luxury-hero__actions--moved">
             <NuxtLink to="/products" class="home-luxury-hero__primary">
               {{ t('homeHero.shopNow') }}
@@ -419,36 +507,6 @@ useAdvancedSeo({
         </div>
 
         <div class="home-luxury-hero__visual home-luxury-hero__visual--logo">
-          <div v-if="heroPackageSpotlight.length" class="home-luxury-hero__logo-packages" aria-label="بكجات مختارة بجانب اللوكو">
-            <div class="home-luxury-hero__packages-head">
-              <span class="rtl-text">بكجات مختارة</span>
-              <NuxtLink to="/packages" class="rtl-text">عرض الكل</NuxtLink>
-            </div>
-            <div class="home-luxury-hero__logo-packages-grid">
-              <NuxtLink
-                v-for="pkg in heroPackageSpotlight"
-                :key="pkg.id || pkg.Id"
-                to="/packages"
-                class="home-luxury-hero__package-card"
-              >
-                <SmartImage
-                  v-if="pkgCover(pkg)"
-                  :src="pkgCover(pkg)"
-                  :alt="pkgName(pkg)"
-                  :title="pkgName(pkg)"
-                  width="600"
-                  height="360"
-                  sizes="(max-width: 768px) 44vw, 160px"
-                  loading="lazy"
-                  fit="cover"
-                  wrapper-class="home-luxury-hero__package-img"
-                  img-class="h-full w-full object-cover"
-                />
-                <span class="rtl-text">{{ pkgName(pkg) }}</span>
-                <b class="keep-ltr">{{ pkgPrice(pkg) }}</b>
-              </NuxtLink>
-            </div>
-          </div>
           <div class="home-luxury-hero__logo-stage">
             <div class="home-luxury-hero__logo-ring home-luxury-hero__logo-ring--one" />
             <div class="home-luxury-hero__logo-ring home-luxury-hero__logo-ring--two" />
@@ -1469,7 +1527,6 @@ useAdvancedSeo({
 :global(html.theme-light) .home-luxury-hero__stat{ background:rgba(255,255,255,.82); }
 @media (max-width: 1024px){
   .home-luxury-hero{ grid-template-columns:1fr; padding:1.35rem; min-height:auto; }
-  .home-luxury-hero__logo-packages{ position:relative; inset:auto; width:100%; max-width:26rem; margin:0 auto .85rem; }
   .home-luxury-hero__visual{ min-height:260px; order:-1; }
   .home-luxury-hero__logo-stage{ width:min(20rem, 82vw); }
   .home-luxury-hero__orb--large{ width:min(17rem, 78vw); }
@@ -1503,24 +1560,93 @@ useAdvancedSeo({
 </style>
 <style scoped>
 
-.home-luxury-hero__logo-packages{
+
+.home-luxury-hero__package-slider{
+  position:relative;
+  width:min(33rem, 100%);
+  margin:0 0 1rem auto;
+  border-radius:1.45rem;
+  isolation:isolate;
+}
+.home-luxury-hero__package-feature{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  min-height:7.3rem;
+  overflow:hidden;
+  border:1px solid rgba(var(--primary), .24);
+  border-radius:1.45rem;
+  background:
+    radial-gradient(circle at 86% 18%, rgba(var(--primary), .22), transparent 32%),
+    linear-gradient(135deg, rgba(var(--surface-rgb), .98), rgba(var(--surface-2-rgb), .94));
+  box-shadow:0 24px 70px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.10);
+  padding:1rem 1.15rem;
+  color:rgb(var(--text));
+  transform:translateZ(0);
+}
+.home-luxury-hero__package-feature::before{
+  content:"";
   position:absolute;
-  top:.2rem;
-  inset-inline-start:-2.2rem;
+  inset:-35% auto auto -14%;
+  width:15rem;
+  height:15rem;
+  border-radius:999px;
+  background:rgba(var(--primary), .10);
+  filter:blur(20px);
+}
+.home-luxury-hero__package-copy{ position:relative; z-index:2; display:grid; gap:.28rem; min-width:0; max-width:68%; }
+.home-luxury-hero__package-copy small{ color:rgb(var(--primary)); font-size:.78rem; font-weight:1000; }
+.home-luxury-hero__package-copy b{ color:rgb(var(--text)); font-size:1.08rem; line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.home-luxury-hero__package-copy em{ color:rgb(var(--primary)); font-size:1.02rem; font-style:normal; font-weight:1000; }
+.home-luxury-hero__package-feature-img{
+  position:relative;
+  z-index:3;
+  width:5.7rem;
+  height:5.7rem;
+  flex:0 0 auto;
+  overflow:hidden;
+  border-radius:1.2rem;
+  border:4px solid rgba(255,255,255,.8);
+  box-shadow:0 18px 38px rgba(0,0,0,.25);
+  transform:rotate(-5deg);
+  background:#fff;
+}
+.home-luxury-hero__package-next{
+  position:absolute;
+  inset-inline-end:.55rem;
+  bottom:.5rem;
+  z-index:2;
+  width:3rem;
+  height:3rem;
+  overflow:hidden;
+  border-radius:1rem;
+  border:3px solid rgba(255,255,255,.65);
+  opacity:.48;
+  filter:blur(.2px) saturate(.8);
+  transform:rotate(7deg) translateY(.35rem);
+  box-shadow:0 14px 30px rgba(0,0,0,.18);
+}
+.home-luxury-hero__pkg-nav{
+  position:absolute;
+  top:50%;
   z-index:6;
-  width:min(20rem, 48vw);
-  border:1px solid rgba(var(--primary), .22);
-  border-radius:1.35rem;
-  background:linear-gradient(135deg, rgba(var(--surface-rgb), .96), rgba(var(--surface-2-rgb), .92));
-  box-shadow:0 22px 60px rgba(0,0,0,.22);
-  padding:.85rem;
-}
-.home-luxury-hero__logo-packages-grid{
   display:grid;
-  grid-template-columns:repeat(2, minmax(0, 1fr));
-  gap:.55rem;
+  width:2.15rem;
+  height:2.15rem;
+  place-items:center;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(15,17,24,.82);
+  color:#fff;
+  box-shadow:0 12px 28px rgba(0,0,0,.25);
+  transform:translateY(-50%);
 }
-.home-luxury-hero__logo-packages .home-luxury-hero__package-card:nth-child(n+3){ display:none; }
+.home-luxury-hero__pkg-nav--prev{ inset-inline-start:-.65rem; }
+.home-luxury-hero__pkg-nav--next{ inset-inline-end:-.65rem; }
+.home-luxury-hero__package-dots{ display:flex; justify-content:center; gap:.28rem; margin-top:.55rem; }
+.home-luxury-hero__package-dots span{ width:.42rem; height:.42rem; border-radius:999px; background:rgba(var(--text-rgb), .22); transition:.2s ease; }
+.home-luxury-hero__package-dots span.is-active{ width:1.2rem; background:rgb(var(--primary)); }
 
 .home-luxury-hero__packages{
   margin-top:1.15rem;
@@ -1573,8 +1699,11 @@ useAdvancedSeo({
 }
 .home-luxury-hero__package-card b{ font-size:.78rem; color:rgb(var(--primary)); }
 @media (max-width:640px){
-  .home-luxury-hero__logo-packages{ padding:.7rem; border-radius:1.1rem; width:100%; }
-  .home-luxury-hero__logo-packages-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .home-luxury-hero__package-slider{ width:100%; margin:0 0 .85rem; }
+  .home-luxury-hero__package-feature{ min-height:6.4rem; padding:.8rem .95rem; }
+  .home-luxury-hero__package-copy b{ font-size:.95rem; }
+  .home-luxury-hero__package-feature-img{ width:4.8rem; height:4.8rem; }
+  .home-luxury-hero__pkg-nav{ width:2rem; height:2rem; }
   .home-luxury-hero__packages{ padding:.75rem; border-radius:1.15rem; }
   .home-luxury-hero__packages-grid{ gap:.45rem; }
   :deep(.home-luxury-hero__package-img){ height:3.9rem; }
