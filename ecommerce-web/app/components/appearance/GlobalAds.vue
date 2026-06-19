@@ -1,0 +1,622 @@
+<template>
+  <ClientOnly>
+    <div v-if="enabled && hasInlineAd" class="global-ads" :data-zone="zone">
+      <section v-if="zone === 'top' && currentTopSlide" class="ad-container ad-container--hero">
+        <div class="ad-hero-frame" :class="`ad-hero-frame--${currentTopSlide.type || 'slider'}`">
+          <button
+            v-if="topSlides.length > 1 && previousTopSlide"
+            type="button"
+            class="ad-hero-frame__peek ad-hero-frame__peek--prev"
+            aria-label="الإعلان السابق"
+            @mouseenter="goToPreviousSlide"
+            @click="goToPreviousSlide"
+          >
+            <component
+              :is="mediaComponent(previousTopSlide.media)"
+              v-bind="mediaAttrs(previousTopSlide.media, previousTopSlide.title || 'advertisement', 'peek')"
+              class="ad-hero-frame__peek-media"
+            />
+          </button>
+
+          <button
+            v-if="topSlides.length > 1 && nextTopSlide"
+            type="button"
+            class="ad-hero-frame__peek ad-hero-frame__peek--next"
+            aria-label="الإعلان التالي"
+            @mouseenter="goToNextSlide"
+            @click="goToNextSlide"
+          >
+            <component
+              :is="mediaComponent(nextTopSlide.media)"
+              v-bind="mediaAttrs(nextTopSlide.media, nextTopSlide.title || 'advertisement', 'peek')"
+              class="ad-hero-frame__peek-media"
+            />
+          </button>
+
+          <button type="button" class="ad-hero-frame__link" :aria-label="currentTopSlide.title || 'فتح الإعلان'" @click="handleSlideClick(currentTopSlide)">
+            <div class="ad-hero-frame__media-layer">
+              <component
+                v-if="currentTopSlide"
+                :is="mediaComponent(currentTopSlide.media)"
+                :key="currentTopSlide.key"
+                v-bind="mediaAttrs(currentTopSlide.media, currentTopSlide.title || 'advertisement', 'auto')"
+                class="ad-hero-frame__media is-active"
+              />
+            </div>
+          </button>
+
+          <div v-if="currentTopSlide.title || currentTopSlide.subtitle" class="ad-hero-frame__caption rtl-text">
+            <span class="ad-hero-frame__eyebrow">إعلان</span>
+            <b>{{ currentTopSlide.title }}</b>
+            <small v-if="currentTopSlide.subtitle">{{ currentTopSlide.subtitle }}</small>
+          </div>
+
+          <button
+            v-if="topSlides.length > 1"
+            type="button"
+            class="ad-slider__nav ad-slider__nav--prev"
+            aria-label="الإعلان السابق"
+            @click="goToPreviousSlide"
+          >‹</button>
+          <button
+            v-if="topSlides.length > 1"
+            type="button"
+            class="ad-slider__nav ad-slider__nav--next"
+            aria-label="الإعلان التالي"
+            @mouseenter="goToNextSlide"
+            @click="goToNextSlide"
+          >›</button>
+
+          <div v-if="topSlides.length > 1" class="ad-slider__dots">
+            <button
+              v-for="(_, idx) in topSlides"
+              :key="idx"
+              type="button"
+              :class="idx === sliderIndex ? 'is-active' : ''"
+              @click="setSlide(idx); startTimer()"
+              :aria-label="`انتقل إلى الإعلان ${idx + 1}`"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section v-if="zone === 'bottom' && currentBottomSlide" class="ad-container ad-container--bottom">
+        <div class="ad-bottom-frame">
+          <button type="button" class="ad-bottom-frame__link" :aria-label="currentBottomSlide.title || 'فتح الإعلان'" @click="handleSlideClick(currentBottomSlide)">
+            <component
+              :is="mediaComponent(currentBottomSlide.media)"
+              v-bind="mediaAttrs(currentBottomSlide.media, currentBottomSlide.title || 'advertisement', 'auto')"
+              class="ad-bottom-frame__media"
+            />
+            <div v-if="isVideo(currentBottomSlide.media)" class="ad-bottom-frame__video-hint">
+              ▶ اضغط لتشغيل الفيديو بالصوت
+            </div>
+          </button>
+          <div v-if="currentBottomSlide.title || currentBottomSlide.subtitle" class="ad-bottom-frame__caption rtl-text">
+            <span class="ad-hero-frame__eyebrow">إعلان</span>
+            <b>{{ currentBottomSlide.title }}</b>
+            <small v-if="currentBottomSlide.subtitle">{{ currentBottomSlide.subtitle }}</small>
+          </div>
+
+          <button
+            v-if="bottomSlides.length > 1"
+            type="button"
+            class="ad-slider__nav ad-slider__nav--prev"
+            aria-label="الإعلان السابق"
+            @click="goToPreviousBottomSlide"
+          >‹</button>
+          <button
+            v-if="bottomSlides.length > 1"
+            type="button"
+            class="ad-slider__nav ad-slider__nav--next"
+            aria-label="الإعلان التالي"
+            @click="goToNextBottomSlide"
+          >›</button>
+
+          <div v-if="bottomSlides.length > 1" class="ad-slider__dots">
+            <button
+              v-for="(_, idx) in bottomSlides"
+              :key="idx"
+              type="button"
+              :class="idx === bottomSliderIndex ? 'is-active' : ''"
+              @click="setBottomSlide(idx); startBottomTimer()"
+              :aria-label="`انتقل إلى إعلان الواجهة ${idx + 1}`"
+            />
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <Teleport to="body">
+      <Transition name="ad-popup-fade">
+        <div
+          v-if="enabled && isHome && zone === 'top' && popupAd && showPopup"
+          class="ad-popup-layer"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="popupAd.title || 'إعلان خاص'"
+        >
+          <button class="ad-popup-layer__overlay" type="button" aria-label="إغلاق الإعلان" @click="close" />
+          <article class="ad-popup-card rtl-text">
+            <button class="ad-popup__close" type="button" @click="close" aria-label="إغلاق">✕</button>
+
+            <NuxtLink
+              :to="safeLink(popupAd.linkUrl)"
+              class="ad-popup-card__link"
+              @click="close"
+            >
+              <div v-if="firstMedia(popupAd)" class="ad-popup-card__media-wrap">
+                <component
+                  :is="mediaComponent(firstMedia(popupAd))"
+                  v-bind="mediaAttrs(firstMedia(popupAd), popupAd.title || 'popup', 'lazy')"
+                  class="ad-popup-card__media"
+                />
+              </div>
+
+              <div class="ad-popup-card__content" :class="{ 'is-text-only': !firstMedia(popupAd) }">
+                <span class="ad-popup__badge">إعلان خاص</span>
+                <b>{{ popupAd.title || 'عرض خاص لك' }}</b>
+                <p>{{ popupAd.subtitle || 'اكتشف أحدث العروض المختارة داخل المتجر.' }}</p>
+                <strong v-if="popupAd.linkUrl" class="ad-popup__cta">اضغط للمتابعة</strong>
+              </div>
+            </NuxtLink>
+          </article>
+        </div>
+      </Transition>
+    </Teleport>
+    <Teleport to="body">
+      <Transition name="ad-popup-fade">
+        <div v-if="activeVideoUrl" class="ad-video-modal" role="dialog" aria-modal="true" aria-label="مشاهدة فيديو الإعلان">
+          <button class="ad-video-modal__overlay" type="button" aria-label="إغلاق الفيديو" @click="closeVideoModal" />
+          <article class="ad-video-modal__card">
+            <button class="ad-video-modal__close" type="button" aria-label="إغلاق" @click="closeVideoModal">✕</button>
+            <video
+              :key="activeVideoUrl"
+              :src="activeVideoUrl"
+              class="ad-video-modal__video"
+              controls
+              autoplay
+              playsinline
+              preload="metadata"
+              controlslist="nodownload noplaybackrate noremoteplayback"
+            />
+          </article>
+        </div>
+      </Transition>
+    </Teleport>
+  </ClientOnly>
+</template>
+
+<script setup lang="ts">
+const props = withDefaults(defineProps<{ zone?: 'top' | 'bottom' }>(), { zone: 'top' })
+const zone = computed(() => props.zone)
+const route = useRoute()
+const api = useApi()
+
+const enabled = computed(() => !route.path.startsWith('/admin'))
+const ads = useState<any[]>('public-global-ads', () => [])
+const showPopup = ref(false)
+const loadingKey = ref(0)
+const sliderIndex = ref(0)
+const bottomSliderIndex = ref(0)
+const activeVideoUrl = ref('')
+let timer: ReturnType<typeof setInterval> | null = null
+let bottomTimer: ReturnType<typeof setInterval> | null = null
+let popupTimer: ReturnType<typeof setTimeout> | null = null
+
+const isHome = computed(() => route.path === '/')
+const norm = (v: any) => String(v ?? '').trim().toLowerCase()
+const hasMedia = (ad: any) => mediaList(ad).length > 0
+const enabledAds = computed(() => ads.value.filter((ad: any) => (ad?.isEnabled ?? ad?.IsEnabled) !== false))
+
+function mediaList(ad: any) {
+  const raw = ad?.imageUrls ?? ad?.ImageUrls
+  const arr = Array.isArray(raw) ? raw : (Array.isArray(raw?.$values) ? raw.$values : [])
+  const merged = arr.length ? arr : ((ad?.imageUrl || ad?.ImageUrl) ? [ad?.imageUrl || ad?.ImageUrl] : [])
+  return merged.map((x: any) => String(x || '').trim()).filter(Boolean)
+}
+function firstMedia(ad: any) { return mediaList(ad)[0] || '' }
+const hasText = (ad: any) => Boolean(String(ad?.title || ad?.Title || ad?.subtitle || ad?.Subtitle || '').trim())
+const isRenderable = (ad: any, requireMedia = true) => !requireMedia || hasMedia(ad) || hasText(ad)
+
+function adType(ad: any) {
+  const raw = ad?.type ?? ad?.Type ?? ''
+  if (typeof raw === 'number') return ['slider', 'banner', 'popup', 'product'][raw] || ''
+  return norm(raw)
+}
+function adPlacement(ad: any) {
+  return norm(ad?.placement ?? ad?.Placement ?? '')
+}
+function adOrder(ad: any) {
+  return Number(ad?.sortOrder ?? ad?.SortOrder ?? 0)
+}
+function adScore(ad: any, placements: string[]) {
+  const p = adPlacement(ad)
+  const idx = placements.map(norm).indexOf(p)
+  return idx < 0 ? 999 : idx
+}
+function findAd(types: string[], placements: string[], requireMedia = true) {
+  const typeSet = new Set(types.map(norm))
+  const placeSet = new Set(placements.map(norm))
+  return [...enabledAds.value]
+    .filter((a: any) => typeSet.has(adType(a)) && placeSet.has(adPlacement(a)) && isRenderable(a, requireMedia))
+    .sort((a: any, b: any) => adScore(a, placements) - adScore(b, placements) || adOrder(a) - adOrder(b))[0] || null
+}
+
+// البانر والسلايدر: فقط بداية الصفحة أو آخر الصفحة.
+// القيم القديمة مدعومة فقط حتى لا تختفي إعلانات محفوظة سابقاً.
+const topPlacements = computed(() => [
+  'home_hero_slider',
+  'home_hero_top',
+  'home_top',
+  'hero_top',
+  'above_hero',
+])
+const bottomPlacements = computed(() => [
+  'home_inline_slider',
+  'home_bottom_slider',
+  'home_bottom',
+  'bottom',
+  'home_footer',
+])
+
+const topAds = computed(() => {
+  const typeSet = new Set(['slider', 'banner'])
+  const placeSet = new Set(topPlacements.value.map(norm))
+  return [...enabledAds.value]
+    .filter((a: any) => typeSet.has(adType(a)) && placeSet.has(adPlacement(a)) && isRenderable(a, true))
+    .sort((a: any, b: any) => adScore(a, topPlacements.value) - adScore(b, topPlacements.value) || adOrder(a) - adOrder(b))
+})
+const primaryTopAd = computed(() => topAds.value[0] || null)
+const bottomAds = computed(() => {
+  const typeSet = new Set(['slider', 'banner'])
+  const placeSet = new Set(bottomPlacements.value.map(norm))
+  return [...enabledAds.value]
+    .filter((a: any) => typeSet.has(adType(a)) && placeSet.has(adPlacement(a)) && isRenderable(a, true))
+    .sort((a: any, b: any) => adScore(a, bottomPlacements.value) - adScore(b, bottomPlacements.value) || adOrder(a) - adOrder(b))
+})
+const primaryBottomAd = computed(() => bottomAds.value[0] || null)
+
+// حل جذري للمنبثق: لا نعتمد على مكان واحد فقط.
+// أي إعلان نوعه popup/modal/popover ويكون مفعلاً سيظهر، حتى لو كان placement قديماً أو فارغاً.
+const popupAd = computed(() => {
+  const popupTypes = new Set(['popup', 'modal', 'popover', 'منبثق'])
+  const preferredPlaces = ['popup', 'site_popup', 'global_popup', 'home_popup', 'modal', 'site_modal', '']
+  return [...enabledAds.value]
+    .filter((a: any) => popupTypes.has(adType(a)) && isRenderable(a, false))
+    .sort((a: any, b: any) => adScore(a, preferredPlaces) - adScore(b, preferredPlaces) || adOrder(a) - adOrder(b))[0] || null
+})
+
+const hasInlineAd = computed(() => Boolean(primaryTopAd.value || primaryBottomAd.value))
+
+const topSlides = computed(() => {
+  const seen = new Set<string>()
+  return topAds.value.flatMap((ad: any) => {
+    const media = mediaList(ad)
+    return media.map((m: string) => ({
+      key: `${ad?.id ?? ad?.Id ?? adOrder(ad)}-${m}`,
+      media: m,
+      title: ad?.title || ad?.Title || '',
+      subtitle: ad?.subtitle || ad?.Subtitle || '',
+      linkUrl: ad?.linkUrl || ad?.LinkUrl || '',
+      type: adType(ad),
+    }))
+  }).filter((slide: any) => {
+    if (seen.has(slide.key)) return false
+    seen.add(slide.key)
+    return true
+  })
+})
+const currentTopSlide = computed(() => topSlides.value[sliderIndex.value] || topSlides.value[0] || null)
+const nextTopSlide = computed(() => {
+  if (topSlides.value.length <= 1) return null
+  return topSlides.value[(sliderIndex.value + 1) % topSlides.value.length] || null
+})
+const previousTopSlide = computed(() => {
+  if (topSlides.value.length <= 1) return null
+  return topSlides.value[(sliderIndex.value - 1 + topSlides.value.length) % topSlides.value.length] || null
+})
+const bottomSlides = computed(() => {
+  const seen = new Set<string>()
+  return bottomAds.value.flatMap((ad: any) => {
+    const media = mediaList(ad)
+    return media.map((m: string) => ({
+      key: `${ad?.id ?? ad?.Id ?? adOrder(ad)}-${m}`,
+      media: m,
+      title: ad?.title || ad?.Title || '',
+      subtitle: ad?.subtitle || ad?.Subtitle || '',
+      linkUrl: ad?.linkUrl || ad?.LinkUrl || '',
+      type: adType(ad),
+    }))
+  }).filter((slide: any) => {
+    if (seen.has(slide.key)) return false
+    seen.add(slide.key)
+    return true
+  })
+})
+const currentBottomSlide = computed(() => bottomSlides.value[bottomSliderIndex.value] || bottomSlides.value[0] || null)
+
+function isVideo(url?: string) {
+  const u = String(url || '').split('?')[0].toLowerCase()
+  return /\.(mp4|webm|ogg|mov)$/i.test(u)
+}
+function mediaComponent(url?: string) { return isVideo(url) ? 'video' : 'img' }
+function optimizedVariant(url: string, variant: 'thumb' | 'medium' | 'large') {
+  if (!url || !url.includes('/optimized/') || !url.endsWith('.webp')) return ''
+  return url.replace(/-(thumb|medium|large)\.webp($|\?)/i, `-${variant}.webp$2`)
+}
+function responsiveImageAttrs(src: string, alt?: string, mode: 'auto' | 'manual' | 'peek' | 'lazy' = 'auto') {
+  const thumb = optimizedVariant(src, 'thumb')
+  const medium = optimizedVariant(src, 'medium')
+  const large = optimizedVariant(src, 'large')
+  const attrs: Record<string, any> = {
+    src,
+    alt: alt || 'advertisement',
+    loading: mode === 'auto' ? 'eager' : 'lazy',
+    decoding: 'async',
+    fetchpriority: mode === 'auto' ? 'high' : 'low',
+    width: mode === 'auto' ? 1200 : 600,
+    height: mode === 'auto' ? 420 : 240,
+  }
+  if (thumb && medium && large) {
+    attrs.srcset = `${thumb} 150w, ${medium} 600w, ${large} 1200w`
+    attrs.sizes = mode === 'auto' ? '(max-width: 768px) 92vw, 1200px' : '220px'
+  }
+  return attrs
+}
+function mediaAttrs(path?: string, alt?: string, mode: 'auto' | 'manual' | 'peek' | 'lazy' = 'auto') {
+  const src = asset(path)
+  if (isVideo(src)) {
+    if (mode === 'manual') {
+      return {
+        src,
+        controls: true,
+        autoplay: false,
+        muted: false,
+        loop: false,
+        playsinline: true,
+        preload: 'metadata',
+        controlslist: 'nodownload noplaybackrate noremoteplayback',
+      }
+    }
+    if (mode === 'peek' || mode === 'lazy') {
+      return {
+        src,
+        autoplay: false,
+        muted: true,
+        loop: false,
+        playsinline: true,
+        preload: 'none',
+        controls: false,
+        disablepictureinpicture: true,
+        controlslist: 'nodownload noplaybackrate noremoteplayback',
+      }
+    }
+    return {
+      src,
+      autoplay: true,
+      muted: true,
+      loop: true,
+      playsinline: true,
+      preload: 'metadata',
+      controls: false,
+      disablepictureinpicture: true,
+      controlslist: 'nodownload noplaybackrate noremoteplayback',
+    }
+  }
+  return responsiveImageAttrs(src, alt, mode)
+}
+const asset = (p?: string) => api.buildAssetUrl(p || '')
+function safeLink(link?: string) {
+  const v = String(link || '#').trim()
+  return v || '#'
+}
+function stopTimer() {
+  if (timer) clearInterval(timer)
+  timer = null
+}
+function setSlide(index: number) {
+  if (topSlides.value.length <= 0) return
+  sliderIndex.value = (index + topSlides.value.length) % topSlides.value.length
+}
+function goToNextSlide() {
+  if (topSlides.value.length <= 1) return
+  setSlide(sliderIndex.value + 1)
+  startTimer()
+}
+function goToPreviousSlide() {
+  if (topSlides.value.length <= 1) return
+  setSlide(sliderIndex.value - 1)
+  startTimer()
+}
+function startTimer() {
+  stopTimer()
+  if (topSlides.value.length <= 1) return
+  timer = setInterval(() => {
+    setSlide(sliderIndex.value + 1)
+  }, 5000)
+}
+function stopBottomTimer() {
+  if (bottomTimer) clearInterval(bottomTimer)
+  bottomTimer = null
+}
+function setBottomSlide(index: number) {
+  if (bottomSlides.value.length <= 0) return
+  bottomSliderIndex.value = (index + bottomSlides.value.length) % bottomSlides.value.length
+}
+function goToNextBottomSlide() {
+  if (bottomSlides.value.length <= 1) return
+  setBottomSlide(bottomSliderIndex.value + 1)
+  startBottomTimer()
+}
+function goToPreviousBottomSlide() {
+  if (bottomSlides.value.length <= 1) return
+  setBottomSlide(bottomSliderIndex.value - 1)
+  startBottomTimer()
+}
+function startBottomTimer() {
+  stopBottomTimer()
+  if (bottomSlides.value.length <= 1) return
+  bottomTimer = setInterval(() => {
+    setBottomSlide(bottomSliderIndex.value + 1)
+  }, 5000)
+}
+async function handleSlideClick(slide: any) {
+  const media = asset(slide?.media || '')
+  if (isVideo(media)) {
+    activeVideoUrl.value = media
+    return
+  }
+  const link = safeLink(slide?.linkUrl)
+  if (link && link !== '#') await navigateTo(link)
+}
+function closeVideoModal() { activeVideoUrl.value = '' }
+function openPopupSoon() {
+  if (!process.client || zone.value !== 'top' || !isHome.value) return
+  if (popupTimer) clearTimeout(popupTimer)
+  showPopup.value = false
+  if (!popupAd.value) return
+  popupTimer = setTimeout(() => {
+    showPopup.value = Boolean(popupAd.value)
+  }, 220)
+}
+async function loadAds() {
+  if (!enabled.value) return
+  loadingKey.value = Date.now()
+  try {
+    const res: any = await $fetch('/api/bff/ads/active', {
+      query: { _ts: loadingKey.value },
+      headers: { 'cache-control': 'no-cache, no-store, must-revalidate', pragma: 'no-cache' },
+    })
+    ads.value = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : (Array.isArray(res?.data) ? res.data : []))
+  } catch { ads.value = [] }
+  sliderIndex.value = 0
+  bottomSliderIndex.value = 0
+  startTimer()
+  startBottomTimer()
+  openPopupSoon()
+}
+function close() { showPopup.value = false }
+
+onMounted(() => {
+  loadAds()
+  if (process.client) window.addEventListener('ads:changed', loadAds)
+})
+watch(() => route.fullPath, () => loadAds())
+watch(() => topSlides.value.map((x: any) => x.key).join('|'), () => { sliderIndex.value = 0; startTimer() })
+watch(() => bottomSlides.value.map((x: any) => x.key).join('|'), () => { bottomSliderIndex.value = 0; startBottomTimer() })
+watch(popupAd, () => openPopupSoon())
+onBeforeUnmount(() => {
+  stopTimer()
+  stopBottomTimer()
+  if (popupTimer) clearTimeout(popupTimer)
+  if (process.client) window.removeEventListener('ads:changed', loadAds)
+})
+</script>
+
+<style scoped>
+.global-ads{ position:relative; z-index:4; }
+.ad-container{ width:min(100%, 96rem); margin-inline:auto; padding-inline:clamp(.85rem,2vw,1.5rem); }
+.ad-container--hero{ padding-top:clamp(.7rem,1.4vw,1.15rem); padding-bottom:clamp(.25rem,.8vw,.65rem); }
+.ad-container--bottom{ padding-block:clamp(1rem,2vw,1.4rem); }
+.ad-hero-frame,.ad-bottom-frame{ position:relative; overflow:hidden; border:1px solid rgba(var(--border),.78); background:linear-gradient(135deg, rgba(var(--surface-rgb),.92), rgba(var(--surface-2-rgb),.72)); box-shadow:0 22px 70px rgba(0,0,0,.18); }
+.ad-hero-frame{ border-radius:clamp(1.35rem,2.2vw,2.4rem); min-height:clamp(180px,23vw,360px); }
+.ad-bottom-frame{ border-radius:2rem; }
+.ad-hero-frame__link,.ad-bottom-frame__link{ display:block; position:relative; width:100%; min-height:0; color:inherit; z-index:2; border:0; padding:0; margin:0; background:transparent; text-align:inherit; cursor:pointer; }
+.ad-hero-frame__media-layer{ position:relative; width:100%; height:clamp(190px,24vw,380px); overflow:hidden; background:linear-gradient(90deg, rgba(0,0,0,.36), rgba(var(--surface-rgb),.72) 24%, rgba(var(--surface-rgb),.90) 50%, rgba(var(--surface-rgb),.72) 76%, rgba(0,0,0,.20)); }
+.ad-hero-frame__media{ position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain; object-position:center; opacity:0; transform:translateZ(0) scale(.985); transition:opacity .55s ease, transform .55s ease; background:transparent; }
+.ad-hero-frame__media.is-active{ opacity:1; z-index:1; transform:translateZ(0) scale(1); }
+.ad-hero-frame__peek{ position:absolute; top:0; bottom:0; width:min(28%, 420px); z-index:3; display:flex; align-items:center; justify-content:center; padding:clamp(.7rem,1.2vw,1.15rem); border:0; outline:0; background:transparent; cursor:pointer; overflow:hidden; transition:opacity .28s ease, transform .28s ease, filter .28s ease; }
+.ad-hero-frame__peek::before{ content:""; position:absolute; inset:clamp(.5rem,1vw,.9rem); border-radius:clamp(1rem,1.7vw,1.9rem); background:rgba(255,255,255,.10); box-shadow:inset 0 0 0 1px rgba(255,255,255,.10), 0 20px 60px rgba(0,0,0,.22); backdrop-filter:blur(10px); opacity:.75; }
+.ad-hero-frame__peek--prev{ left:0; justify-content:flex-start; background:linear-gradient(90deg, rgba(0,0,0,.50), rgba(0,0,0,.12), transparent); }
+.ad-hero-frame__peek--next{ right:0; justify-content:flex-end; background:linear-gradient(270deg, rgba(0,0,0,.46), rgba(0,0,0,.10), transparent); }
+.ad-hero-frame__peek-media{ position:relative; z-index:1; display:block; width:100%; height:82%; object-fit:contain; object-position:center; opacity:.34; filter:blur(5px) saturate(.95); transform:scale(.88); transition:opacity .28s ease, filter .28s ease, transform .28s ease; border-radius:1.4rem; }
+.ad-hero-frame__peek:hover .ad-hero-frame__peek-media{ opacity:.58; filter:blur(2px) saturate(1.04); transform:scale(.94); }
+.ad-hero-frame__peek:hover::before{ opacity:1; }
+.ad-bottom-frame__media{ display:block; width:100%; object-fit:contain; object-position:center; background:linear-gradient(135deg, rgba(var(--surface-rgb),.92), rgba(var(--surface-2-rgb),.72)); }
+.ad-bottom-frame__media{ height:clamp(150px,18vw,270px); }
+.ad-bottom-frame__video-hint{ position:absolute; inset-inline:1rem auto; top:1rem; z-index:4; width:max-content; max-width:calc(100% - 2rem); border:1px solid rgba(255,255,255,.18); border-radius:999px; padding:.55rem .85rem; color:#fff; background:rgba(0,0,0,.48); backdrop-filter:blur(14px); font-size:.82rem; font-weight:1000; }
+.ad-hero-frame__caption{ position:relative; z-index:4; display:grid; gap:.35rem; padding:clamp(.8rem,1.6vw,1.2rem) clamp(1rem,2vw,1.45rem) clamp(1rem,1.8vw,1.35rem); color:rgb(var(--text)); background:linear-gradient(180deg, rgba(var(--surface-rgb),.94), rgba(var(--surface-2-rgb),.78)); border-top:1px solid rgba(var(--border),.58); }
+.ad-hero-frame__eyebrow{ width:max-content; border:1px solid rgba(var(--primary),.35); background:rgba(3,5,10,.78); color:#fff; backdrop-filter:blur(12px); border-radius:999px; padding:.35rem .7rem; font-size:.74rem; font-weight:1000; }
+.ad-hero-frame__caption b{ font-size:clamp(1.15rem,2.3vw,2.35rem); font-weight:1000; line-height:1.25; }
+.ad-hero-frame__caption small{ max-width:720px; font-size:clamp(.84rem,1vw,1rem); color:rgb(var(--muted)); line-height:1.8; }
+.ad-bottom-frame__caption{ display:grid; gap:.35rem; padding:.9rem 1rem 1.05rem; border-top:1px solid rgba(var(--border),.58); color:rgb(var(--text)); background:linear-gradient(180deg, rgba(var(--surface-rgb),.94), rgba(var(--surface-2-rgb),.78)); }
+.ad-bottom-frame__caption b{ font-size:1.1rem; font-weight:1000; }
+.ad-bottom-frame__caption small{ font-size:.86rem; color:rgb(var(--muted)); line-height:1.7; }
+.ad-slider__nav{ position:absolute; top:50%; z-index:6; display:grid; place-items:center; width:clamp(2.35rem,3.2vw,3.1rem); height:clamp(2.35rem,3.2vw,3.1rem); transform:translateY(-50%); border:1px solid rgba(255,255,255,.26); border-radius:999px; color:white; background:rgba(0,0,0,.42); box-shadow:0 14px 40px rgba(0,0,0,.22); backdrop-filter:blur(14px); font-size:clamp(1.45rem,2vw,2rem); font-weight:1000; line-height:1; transition:transform .2s ease, background .2s ease, opacity .2s ease; }
+.ad-slider__nav:hover{ transform:translateY(-50%) scale(1.06); background:rgba(var(--primary),.88); color:#050509; }
+.ad-slider__nav--prev{ left:clamp(.75rem,1.3vw,1.15rem); }
+.ad-slider__nav--next{ right:clamp(.75rem,1.3vw,1.15rem); }
+.ad-slider__dots{ position:absolute; inset-inline:0; bottom:.8rem; display:flex; align-items:center; justify-content:center; gap:.4rem; z-index:5; }
+.ad-slider__dots button{ position:relative; width:2.75rem; min-width:2.75rem; height:2.75rem; border-radius:999px; background:transparent; transition:.2s ease; }
+.ad-slider__dots button::before{ content:""; position:absolute; inset:50% auto auto 50%; width:.75rem; height:.75rem; border-radius:999px; transform:translate(-50%,-50%); background:rgba(255,255,255,.65); box-shadow:0 4px 14px rgba(0,0,0,.18); transition:.2s ease; }
+.ad-slider__dots button.is-active::before{ width:2rem; background:white; }
+
+
+.ad-hero-frame__media:is(video),.ad-hero-frame__peek-media:is(video),.ad-bottom-frame__media:is(video),.ad-popup-card__media:is(video){
+  background:#050509;
+  pointer-events:none;
+}
+.ad-hero-frame__link::after,.ad-bottom-frame__link::after{
+  content:'اضغط لفتح الفيديو بالصوت';
+  position:absolute;
+  inset-inline:auto 1rem;
+  top:1rem;
+  z-index:6;
+  width:max-content;
+  max-width:calc(100% - 2rem);
+  display:none;
+  border:1px solid rgba(255,255,255,.20);
+  border-radius:999px;
+  padding:.5rem .8rem;
+  color:#fff;
+  background:rgba(0,0,0,.42);
+  backdrop-filter:blur(14px);
+  font-size:.78rem;
+  font-weight:1000;
+}
+.ad-hero-frame__link:has(video)::after,.ad-bottom-frame__link:has(video)::after{ display:block; }
+
+.ad-popup-layer{ position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; padding:1rem; isolation:isolate; }
+.ad-popup-layer__overlay{ position:absolute; inset:0; z-index:0; cursor:pointer; background:rgba(3,5,10,.76); backdrop-filter:blur(12px); }
+.ad-popup-card{ position:relative; z-index:1; width:min(94vw, 660px); overflow:hidden; border-radius:2rem; border:1px solid rgba(255,255,255,.16); background:linear-gradient(145deg, rgb(var(--surface)), rgb(var(--surface-2))); box-shadow:0 34px 100px rgba(0,0,0,.55), 0 0 0 1px rgba(var(--primary),.16); animation:popupIn .28s ease both; }
+.ad-popup-card__link{ display:grid; color:inherit; text-decoration:none; }
+.ad-popup-card__media-wrap{ max-height:min(62vh, 430px); overflow:hidden; background:rgb(var(--surface-2)); }
+.ad-popup-card__media{ display:block; width:100%; height:100%; max-height:min(62vh, 430px); object-fit:contain; object-position:center; background:rgb(var(--surface-2)); }
+.ad-popup-card__content{ display:grid; gap:.55rem; padding:1.25rem; text-align:center; }
+.ad-popup-card__content.is-text-only{ min-height:280px; place-content:center; padding:2rem; background:radial-gradient(circle at top right, rgba(var(--primary),.22), transparent 45%); }
+.ad-popup-card__content b{ color:rgb(var(--text)); font-size:clamp(1.35rem,2.4vw,2rem); font-weight:1000; line-height:1.2; }
+.ad-popup-card__content p{ margin:0; color:rgb(var(--muted)); line-height:1.8; }
+.ad-popup__close{ position:absolute; z-index:5; inset-inline-start:.85rem; top:.85rem; width:2.65rem; height:2.65rem; border-radius:999px; background:rgba(0,0,0,.58); color:white; border:1px solid rgba(255,255,255,.18); font-weight:1000; box-shadow:0 10px 30px rgba(0,0,0,.25); }
+.ad-popup__badge{ justify-self:center; width:max-content; border-radius:999px; padding:.36rem .85rem; background:rgba(var(--primary),.14); color:rgb(var(--primary)) !important; font-size:.78rem; font-weight:1000; }
+.ad-popup__cta{ justify-self:center; margin-top:.45rem; border-radius:999px; padding:.76rem 1.2rem; background:rgb(var(--primary)); color:#050509; font-size:.88rem; font-weight:1000; }
+.ad-popup-fade-enter-active,.ad-popup-fade-leave-active{ transition:opacity .2s ease; }
+.ad-popup-fade-enter-from,.ad-popup-fade-leave-to{ opacity:0; }
+@keyframes popupIn{ from{ opacity:0; transform:translateY(18px) scale(.96); } to{ opacity:1; transform:none; } }
+
+@media(max-width:640px){
+  .ad-container{ padding-inline:.75rem; }
+  .ad-hero-frame__peek{ display:none; }
+  .ad-slider__nav{ width:2.55rem; height:2.55rem; font-size:1.8rem; background:rgba(0,0,0,.52); }
+  .ad-slider__nav--prev{ left:.5rem; }
+  .ad-slider__nav--next{ right:.5rem; }
+  .ad-hero-frame{ border-radius:1.35rem; min-height:168px; }
+  .ad-hero-frame__media-layer{ height:178px; }
+  .ad-hero-frame__caption{ padding:.8rem .9rem 1rem; }
+  .ad-hero-frame__caption b{ font-size:1.15rem; }
+  .ad-hero-frame__caption small{ font-size:.82rem; }
+  .ad-bottom-frame{ border-radius:1.35rem; }
+  .ad-bottom-frame__media{ height:160px; }
+  .ad-bottom-frame__caption{ padding:.8rem .85rem 1rem; }
+  .ad-popup-card{ border-radius:1.35rem; }
+  .ad-popup-card__content{ padding:1rem; }
+}
+
+.ad-video-modal{ position:fixed; inset:0; z-index:100000; display:flex; align-items:center; justify-content:center; padding:clamp(.75rem,2vw,1.5rem); }
+.ad-video-modal__overlay{ position:absolute; inset:0; background:rgba(3,5,10,.82); backdrop-filter:blur(14px); border:0; cursor:pointer; }
+.ad-video-modal__card{ position:relative; z-index:1; width:min(94vw, 980px); max-height:90vh; border-radius:1.6rem; overflow:hidden; border:1px solid rgba(255,255,255,.16); background:#050509; box-shadow:0 34px 110px rgba(0,0,0,.65); }
+.ad-video-modal__video{ display:block; width:100%; max-height:90vh; background:#000; object-fit:contain; }
+.ad-video-modal__close{ position:absolute; z-index:3; top:.8rem; inset-inline-start:.8rem; width:2.6rem; height:2.6rem; border-radius:999px; border:1px solid rgba(255,255,255,.22); background:rgba(0,0,0,.62); color:#fff; font-weight:1000; }
+
+</style>
+

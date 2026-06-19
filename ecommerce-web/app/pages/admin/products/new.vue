@@ -1,0 +1,420 @@
+<template>
+  <div class="w-full admin-product-form-page">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-bold">{{ t('admin.addProduct') }}</h1>
+        <p class="text-sm text-white/70">{{ t('admin.addProductHint') }}</p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <UiButton variant="ghost" @click="navigateTo('/admin/products')">{{ t('common.back') }}</UiButton>
+      </div>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <!-- Form -->
+      <UiCard class="form-shell lg:col-span-2">
+        <UiCardHeader>
+          <UiCardTitle>{{ t('admin.productDetails') }}</UiCardTitle>
+          <UiCardDescription>{{ t('admin.productDetailsHint') }}</UiCardDescription>
+        </UiCardHeader>
+        <UiCardContent>
+          <form class="grid grid-cols-1 gap-4 md:grid-cols-2" @submit.prevent="onCreate">
+            <div class="md:col-span-2">
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.brand') }}</label>
+              <select
+                v-model="form.brand"
+                class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20"
+                required
+              >
+                <option value="" disabled>{{ t('admin.selectBrand') }}</option>
+                <option v-for="b in brands" :key="b.id" :value="b.slug">
+                  {{ b.name }} (/{{ b.slug }})
+                </option>
+              </select>
+              <p v-if="brands.length === 0" class="mt-2 text-xs text-amber-200/90">
+                {{ t('admin.noBrandsYet') }}
+              </p>
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.name') }}</label>
+              <UiInput v-model="form.title" :placeholder="t('admin.namePlaceholder')" required />
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.slug') }}</label>
+              <UiInput
+                v-model="form.slug"
+                :placeholder="t('admin.slugPlaceholder')"
+                required
+                @update:modelValue="() => (slugTouched = true)"
+              />
+              <p class="mt-1 text-xs text-white/60">{{ t('admin.slugHint') }}</p>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.description') }}</label>
+              <textarea
+                v-model="form.description"
+                rows="4"
+                class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20"
+                :placeholder="t('admin.descriptionPlaceholder')"
+              />
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.price') }}</label>
+              <UiInput v-model.number="form.priceIqd" type="number" min="0" step="0.01" />
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.category') }}</label>
+              <select v-model="form.category" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
+                <option v-for="c in categoryOptions" :key="c.key" :value="c.key">{{ c.nameAr }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.preciseCategory') || 'التصنيف الدقيق' }} <span class="text-xs text-white/45">(اختياري)</span></label>
+              <select v-model="form.subCategory" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
+                <option value="">بدون تصنيف دقيق</option>
+                <option v-for="c in categorySubCategoryOptions" :key="c.key" :value="c.key">{{ c.nameAr }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.problemCategory') || 'تصنيف حل المشكلة' }}</label>
+              <select v-model="form.problemCategory" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
+                <option value="">{{ t('admin.problemCategoryPlaceholder') || 'اختر تصنيف حل المشكلة' }}</option>
+                <option v-for="c in problemCategoryOptions" :key="c.key" :value="c.key">{{ c.nameAr }}</option>
+              </select>
+            </div>
+
+            <div v-if="problemSubCategoryOptions.length">
+              <label class="mb-1 block text-sm text-white/80">القسم الدقيق لحل المشكلة</label>
+              <select v-model="form.problemSubCategory" class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-white/20">
+                <option value="">اختر القسم الدقيق</option>
+                <option v-for="c in problemSubCategoryOptions" :key="c.key" :value="c.key">{{ c.nameAr }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.stockQuantity') }}</label>
+              <UiInput v-model.number="form.stockQuantity" type="number" min="0" step="1" />
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm text-white/80">{{ t('admin.lowStockThreshold') }}</label>
+              <UiInput v-model.number="form.lowStockThreshold" type="number" min="0" step="1" />
+            </div>
+
+            <div class="md:col-span-2 flex flex-wrap items-end gap-6">
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-[rgb(var(--muted-2))]">
+                <input v-model="form.isCouponAllowed" type="checkbox" class="h-4 w-4" />
+                {{ t('admin.couponAllowed') || 'يسمح بالكوبون' }}
+              </label>
+            </div>
+
+            <div class="flex flex-wrap items-end gap-6">
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-[rgb(var(--muted-2))]">
+                <input v-model="form.isPublished" type="checkbox" class="h-4 w-4" />
+                {{ t('common.active') }}
+              </label>
+
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-[rgb(var(--muted-2))]">
+                <input v-model="form.isFeatured" type="checkbox" class="h-4 w-4" />
+                {{ t('admin.featuredOnHome') }}
+              </label>
+            </div>
+
+            <div class="md:col-span-2 flex flex-wrap items-center gap-2 pt-2">
+              <UiButton :disabled="loading" type="submit">
+                {{ loading ? t('common.saving') : t('common.create') }}
+              </UiButton>
+              <UiButton
+                variant="secondary"
+                :disabled="loading"
+                type="button"
+                @click="navigateTo('/admin/products')"
+              >
+                {{ t('common.cancel') }}
+              </UiButton>
+            </div>
+          </form>
+        </UiCardContent>
+      </UiCard>
+
+      <!-- Images -->
+      <UiCard class="side-shell">
+        <UiCardHeader>
+          <UiCardTitle>{{ t('admin.images') }}</UiCardTitle>
+          <UiCardDescription>{{ t('admin.imagesCreateHint') }}</UiCardDescription>
+        </UiCardHeader>
+        <UiCardContent>
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <input
+              ref="fileInput"
+              type="file"
+              accept="image/*"
+              multiple
+              class="hidden"
+              @change="onPickFiles"
+            />
+
+            <div class="flex items-center justify-between gap-2">
+              <div class="text-sm text-white/80">{{ t('admin.imagesSelected', { count: files.length }) }}</div>
+              <UiButton size="sm" variant="ghost" type="button" @click="fileInput?.click()">
+                {{ t('common.chooseFiles') }}
+              </UiButton>
+            </div>
+
+            <div v-if="files.length" class="mt-4 grid grid-cols-3 gap-2">
+              <div
+                v-for="(f, idx) in files"
+                :key="idx"
+                class="group relative overflow-hidden rounded-xl border border-white/10 bg-black/20"
+              >
+                <img :src="f.preview" class="h-20 w-full object-cover" alt="معاينة صورة المنتج قبل الرفع" loading="lazy" decoding="async" />
+                <button
+                  type="button"
+                  class="absolute right-2 top-2 rounded-lg bg-black/60 px-2 py-1 text-xs opacity-0 transition group-hover:opacity-100"
+                  @click="removeFile(idx)"
+                >
+                  {{ t('common.remove') }}
+                </button>
+              </div>
+            </div>
+
+            <p v-else class="mt-3 text-sm text-white/60">{{ t('admin.imagesEmpty') }}</p>
+          </div>
+        </UiCardContent>
+      </UiCard>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+definePageMeta({ layout: 'admin', middleware: 'admin' })
+
+const { t } = useI18n()
+const { categories, problemCategories, fetchCategories } = useCategories()
+const toast = useToast()
+const { listBrands, createProduct, uploadProductImages } = useAdminApi()
+
+type BrandItem = { id: string; slug: string; name: string }
+
+const brands = ref<BrandItem[]>([])
+const loading = ref(false)
+
+// ✅ مفاتيح الفورم لازم تكون مطابقة لطلب الـ API (.NET)
+// UpsertProductRequest: title, slug, description, priceIqd, isPublished, brand
+const form = reactive({
+  title: '',
+  slug: '',
+  description: '',
+  priceIqd: 0,
+  // slug الخاص بالبراند (نرسله للباك ضمن الحقل brand)
+  brand: '',
+  category: 'general',
+  subCategory: '',
+  problemCategory: '',
+  problemSubCategory: '',
+  stockQuantity: 100,
+  lowStockThreshold: 5,
+  isCouponAllowed: true,
+  isPublished: true,
+  isFeatured: false,
+})
+
+const slugTouched = ref(false)
+const categoryOptions = computed(() => (categories.value && categories.value.length ? categories.value : [{ key: 'general', nameAr: 'عام', id: '', hasDetailSections: false }]).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false) })))
+const categorySubCategoryItems = ref<any[]>([])
+const preservingCategorySelection = ref(false)
+const categorySubCategoryOptions = computed(() => (categorySubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
+
+async function loadCategorySubCategories(preserveValue?: string) {
+  const wantedSubCategory = String(preserveValue ?? form.subCategory ?? '').trim().toLowerCase()
+  const selected = (categories.value || []).find((x:any) => String(x.key || '').trim().toLowerCase() === String(form.category || '').trim().toLowerCase())
+  if (!selected?.id || !selected?.hasDetailSections) {
+    categorySubCategoryItems.value = []
+    // فقط نمسح إذا المستخدم غيّر التصنيف بنفسه، وليس أثناء تحميل المنتج من قاعدة البيانات.
+    if (!preserveValue) form.subCategory = ''
+    return
+  }
+  try {
+    const res: any = await $fetch('/api/bff/categories/active', { query: { section: 'regular', parentId: selected.id, _ts: Date.now() } })
+    categorySubCategoryItems.value = Array.isArray(res) ? res : []
+    const exists = categorySubCategoryItems.value.some((x:any) => String(x.key || '').trim().toLowerCase() === wantedSubCategory)
+    if (wantedSubCategory && exists) form.subCategory = wantedSubCategory
+    else if (!preserveValue) form.subCategory = ''
+  } catch {
+    categorySubCategoryItems.value = []
+    if (!preserveValue) form.subCategory = ''
+  }
+}
+
+watch(() => form.category, async () => {
+  if (preservingCategorySelection.value) return
+  await loadCategorySubCategories('')
+})
+const problemCategoryOptions = computed(() => (problemCategories.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || ''), id: String(c.id || ''), hasDetailSections: Boolean(c.hasDetailSections ?? false) })))
+const problemSubCategoryItems = ref<any[]>([])
+const preservingProblemSelection = ref(false)
+const problemSubCategoryOptions = computed(() => (problemSubCategoryItems.value || []).map((c:any) => ({ key: String(c.key || ''), nameAr: String(c.nameAr || c.key || '') })))
+
+
+async function loadProblemSubCategories(preserveValue?: string) {
+  const wantedProblemSubCategory = String(preserveValue ?? form.problemSubCategory ?? '').trim().toLowerCase()
+  const selected = (problemCategories.value || []).find((x:any) => String(x.key || '').trim().toLowerCase() === String(form.problemCategory || '').trim().toLowerCase())
+  if (!selected?.id) {
+    problemSubCategoryItems.value = []
+    if (!preserveValue) form.problemSubCategory = ''
+    return
+  }
+  try {
+    const res: any = await $fetch('/api/bff/categories/active', { query: { section: 'problem', parentId: selected.id, _ts: Date.now() } })
+    problemSubCategoryItems.value = Array.isArray(res) ? res : []
+    const exists = problemSubCategoryItems.value.some((x:any) => String(x.key || '').trim().toLowerCase() === wantedProblemSubCategory)
+    if (wantedProblemSubCategory && exists) form.problemSubCategory = wantedProblemSubCategory
+    else if (!preserveValue) form.problemSubCategory = ''
+  } catch {
+    problemSubCategoryItems.value = []
+    if (!preserveValue) form.problemSubCategory = ''
+  }
+}
+
+watch(() => form.problemCategory, async () => {
+  if (preservingProblemSelection.value) return
+  await loadProblemSubCategories('')
+})
+
+
+const slugify = (input: string) => {
+  return (input || '')
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/['"`]/g, '')
+    .replace(/[^a-z0-9\u0600-\u06FF]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+watch(
+  () => form.title,
+  (v) => {
+    if (!slugTouched.value || !form.slug) {
+      form.slug = slugify(v)
+    }
+  }
+)
+
+watch(
+  () => form.slug,
+  (v) => {
+    // إذا المستخدم مسح السلق، نرجع نفعّل التوليد التلقائي
+    if (!v) slugTouched.value = false
+  }
+)
+
+type PickedFile = { file: File; preview: string }
+const files = ref<PickedFile[]>([])
+const fileInput = ref<HTMLInputElement | null>(null)
+
+onMounted(async () => {
+  try {
+    // نجبر تحديث التصنيفات هنا حتى تظهر أي تصنيفات حل مشكلة تمت إضافتها من لوحة الإدارة مباشرة بدون كاش قديم.
+    const [res] = await Promise.all([listBrands(), fetchCategories(true, 'regular'), fetchCategories(true, 'problem')])
+    await loadCategorySubCategories(String(form.subCategory || ''))
+    brands.value = (res?.items || res || []) as BrandItem[]
+    await loadProblemSubCategories(String(form.problemSubCategory || ''))
+  } catch (e: any) {
+    toast.error(e?.message || t('common.error'))
+  }
+})
+
+function onPickFiles(e: Event) {
+  const input = e.target as HTMLInputElement
+  const list = input.files ? Array.from(input.files) : []
+  for (const f of list) {
+    files.value.push({ file: f, preview: URL.createObjectURL(f) })
+  }
+  // reset to allow re-pick same files
+  input.value = ''
+}
+
+function removeFile(idx: number) {
+  const item = files.value[idx]
+  if (item?.preview) URL.revokeObjectURL(item.preview)
+  files.value.splice(idx, 1)
+}
+
+onBeforeUnmount(() => {
+  for (const f of files.value) {
+    if (f.preview) URL.revokeObjectURL(f.preview)
+  }
+})
+
+async function onCreate() {
+  if (loading.value) return
+  loading.value = true
+  try {
+    const created: any = await createProduct({
+      title: form.title,
+      slug: form.slug,
+      description: form.description,
+      // تأكد أنه رقم (مو نص) حتى ما يرجع 400 من .NET
+      priceIqd: Number(form.priceIqd ?? 0),
+      // ✅ Backend يتحقق من البراند عبر الـ slug
+      brand: form.brand,
+      category: form.category,
+      subCategory: form.subCategory,
+      problemCategory: form.problemCategory,
+      problemSubCategory: form.problemSubCategory,
+      stockQuantity: Number(form.stockQuantity ?? 0),
+      lowStockThreshold: Number(form.lowStockThreshold ?? 0),
+      isCouponAllowed: !!form.isCouponAllowed,
+      isPublished: !!form.isPublished,
+      isFeatured: !!form.isFeatured,
+    })
+
+    const productId = created?.id || created?.productId
+
+    if (productId && files.value.length) {
+      await uploadProductImages(productId, files.value.map(x => x.file))
+    }
+
+    toast.success(t('common.saved'))
+    await navigateTo('/admin/products')
+  } catch (e: any) {
+    toast.error(e?.message || t('common.error'))
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
+<style scoped>
+.admin-product-form-page :deep(.form-shell),
+.admin-product-form-page :deep(.side-shell){
+  border-radius: 28px;
+  border: 1px solid rgba(var(--border), .95);
+  background: linear-gradient(180deg, rgba(var(--surface-rgb), .97), rgba(var(--surface-rgb), .90));
+  box-shadow: 0 22px 60px rgba(12, 16, 32, .14);
+}
+.admin-product-form-page :deep(.form-shell > div:first-child),
+.admin-product-form-page :deep(.side-shell > div:first-child){
+  border-bottom-color: rgba(var(--border), .85);
+}
+.admin-product-form-page :deep(input),
+.admin-product-form-page :deep(select),
+.admin-product-form-page :deep(textarea){
+  min-height: 46px;
+  border-radius: 16px;
+}
+@media (max-width: 768px){
+  .admin-product-form-page :deep(.form-shell),
+  .admin-product-form-page :deep(.side-shell){ border-radius: 22px; }
+}
+</style>

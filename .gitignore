@@ -1,10 +1,15 @@
-node_modules
-.nuxt
-.output
-.env
-.DS_Store
-.env.*
-dist
-coverage
-*.log
-.env.example
+@"
+**/node_modules/
+**/.output/
+**/.nuxt/
+**/dist/
+**/.env
+**/.env.*
+**/bin/
+**/obj/
+**/.vs/
+**/.idea/
+**/*.user
+**/*.suo
+**/*.log
+"@ | Out-File -Encoding utf8 .gitignore
