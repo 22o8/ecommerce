@@ -41,6 +41,28 @@
       </div>
     </div>
   </div>
+
+  <Teleport to="body">
+    <div v-if="welcomeOffer" class="welcome-offer-layer" role="dialog" aria-modal="true" aria-labelledby="welcome-offer-title" dir="rtl">
+      <div class="welcome-offer-card">
+        <button type="button" class="welcome-offer-close" aria-label="إغلاق" @click="closeWelcomeOffer">×</button>
+        <div v-if="welcomeOffer.imageUrl" class="welcome-offer-media">
+          <video v-if="isVideoUrl(welcomeOffer.imageUrl)" :src="assetUrl(welcomeOffer.imageUrl)" controls playsinline />
+          <img v-else :src="assetUrl(welcomeOffer.imageUrl)" alt="إعلان ترحيب" />
+        </div>
+        <div class="welcome-offer-body">
+          <span class="welcome-offer-badge">هدية ترحيبية</span>
+          <h2 id="welcome-offer-title">{{ welcomeOffer.title || 'مبروك!' }}</h2>
+          <p>{{ welcomeOffer.subtitle || 'مبروك حصلت على خصم و10 نقاط، استمتع بالتسوق داخل التطبيق.' }}</p>
+          <div class="welcome-offer-rewards">
+            <span v-if="Number(welcomeOffer.points || 0) > 0">+{{ welcomeOffer.points }} نقطة</span>
+            <span v-if="welcomeOffer.couponCode">كود الخصم: <b class="keep-ltr">{{ welcomeOffer.couponCode }}</b></span>
+          </div>
+          <button type="button" class="welcome-offer-action" @click="closeWelcomeOffer">ابدأ التسوق</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -58,19 +80,38 @@ const referralCode = ref(typeof route.query.ref === 'string' ? route.query.ref :
 const password = ref('')
 const loading = ref(false)
 const error = ref('')
+const api = useApi()
+const welcomeOffer = ref<any | null>(null)
+
+function assetUrl(url: string) {
+  return api.buildAssetUrl(url || '')
+}
+
+function isVideoUrl(url: string) {
+  return /\.(mp4|webm|ogg)(\?|#|$)/i.test(url || '')
+}
+
+function closeWelcomeOffer() {
+  welcomeOffer.value = null
+  router.push('/account')
+}
 
 async function submit() {
   loading.value = true
   error.value = ''
   try {
-    await auth.register({
+    const res: any = await auth.register({
       fullName: fullName.value,
       phone: phone.value,
       email: email.value,
       password: password.value,
       referralCode: referralCode.value,
     })
-    router.push('/account')
+    if (res?.welcomeOffer) {
+      welcomeOffer.value = res.welcomeOffer
+    } else {
+      router.push('/account')
+    }
   } catch (e: any) {
     error.value = e?.data?.message || e?.message || 'فشل إنشاء الحساب'
   } finally {
@@ -78,3 +119,99 @@ async function submit() {
   }
 }
 </script>
+
+
+<style scoped>
+.welcome-offer-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(2, 6, 15, .78);
+  backdrop-filter: blur(12px);
+}
+.welcome-offer-card {
+  width: min(94vw, 520px);
+  overflow: hidden;
+  position: relative;
+  border-radius: 30px;
+  border: 1px solid rgba(255,255,255,.13);
+  background: #0d111c;
+  box-shadow: 0 30px 100px rgba(0,0,0,.55);
+  color: white;
+}
+.welcome-offer-close {
+  position: absolute;
+  top: .8rem;
+  left: .8rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(15,23,42,.9);
+  color: white;
+  font-size: 1.3rem;
+  z-index: 2;
+}
+.welcome-offer-media {
+  background: #111827;
+  max-height: 290px;
+}
+.welcome-offer-media img,
+.welcome-offer-media video {
+  width: 100%;
+  max-height: 290px;
+  object-fit: cover;
+  display: block;
+}
+.welcome-offer-body {
+  padding: 1.4rem;
+  text-align: center;
+}
+.welcome-offer-badge {
+  display: inline-flex;
+  padding: .35rem .75rem;
+  border-radius: 999px;
+  color: #f9a8d4;
+  background: rgba(236,72,153,.14);
+  font-size: .8rem;
+  font-weight: 900;
+}
+.welcome-offer-body h2 {
+  margin: .75rem 0 .4rem;
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  font-weight: 1000;
+}
+.welcome-offer-body p {
+  margin: 0 auto;
+  max-width: 32rem;
+  color: rgba(255,255,255,.78);
+  line-height: 1.9;
+}
+.welcome-offer-rewards {
+  margin: 1rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+  justify-content: center;
+}
+.welcome-offer-rewards span {
+  border-radius: 999px;
+  background: rgba(139,92,246,.16);
+  color: #ddd6fe;
+  border: 1px solid rgba(139,92,246,.28);
+  padding: .55rem .8rem;
+  font-weight: 900;
+}
+.welcome-offer-action {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #a78bfa, #ec4899);
+  color: white;
+  font-weight: 1000;
+}
+</style>

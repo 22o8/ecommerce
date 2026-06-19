@@ -212,6 +212,10 @@ public class AppDbContext : DbContext
             .HasColumnType("jsonb");
 
         modelBuilder.Entity<Ad>()
+            .Property(x => x.WelcomeCouponCode)
+            .HasMaxLength(80);
+
+        modelBuilder.Entity<Ad>()
             .HasIndex(x => new { x.Type, x.Placement, x.SortOrder });
 
         modelBuilder.Entity<ProductReview>()

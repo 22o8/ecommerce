@@ -125,6 +125,23 @@
             <input v-model="form.subtitle" class="input-control" placeholder="نص قصير يظهر تحت العنوان" />
           </label>
 
+          <div v-if="form.type === 'welcome'" class="welcome-offer-fields full-width">
+            <div class="form-helper-card">
+              <Icon name="mdi:gift-open-outline" />
+              <span>هذا الإعلان يظهر فقط بعد إنشاء حساب جديد، ويضيف النقاط/الكوبون للزبون مع إشعار داخل الحساب.</span>
+            </div>
+            <div class="form-grid compact-grid">
+              <label class="field">
+                <span class="field-label"><Icon name="mdi:ticket-percent-outline" /> كود الخصم</span>
+                <input v-model="form.welcomeCouponCode" class="input-control keep-ltr" placeholder="مثال: WELCOME10" />
+              </label>
+              <label class="field">
+                <span class="field-label"><Icon name="mdi:star-circle-outline" /> نقاط الترحيب</span>
+                <input v-model.number="form.welcomePoints" type="number" min="0" class="input-control" />
+              </label>
+            </div>
+          </div>
+
           <div v-if="form.type === 'product'" class="product-picker full-width">
             <label class="field">
               <span>اختيار المنتج</span>
@@ -245,6 +262,7 @@
             <option value="banner">بانر</option>
             <option value="popup">منبثق</option>
             <option value="product">داخل منتج</option>
+            <option value="welcome">ترحيب مستخدم جديد</option>
           </select>
           <button type="button" class="secondary-action" @click="filterType = 'all'; search = ''">
             <Icon name="mdi:filter-off-outline" />
@@ -356,6 +374,7 @@ const adTypes = [
   { value: 'slider', label: 'سلايدر', icon: 'mdi:view-carousel-outline', hint: 'صور أو فيديو متحرك فوق الهيرو أو أعلى/آخر الصفحة' },
   { value: 'banner', label: 'بانر', icon: 'mdi:image-outline', hint: 'إعلان ثابت داخل الصفحة' },
   { value: 'popup', label: 'إعلان منبثق', icon: 'mdi:bell-ring-outline', hint: 'نافذة تظهر للزائر ويمكن أن تكون نصاً فقط' },
+  { value: 'welcome', label: 'ترحيب مستخدم جديد', icon: 'mdi:gift-open-outline', hint: 'يظهر مرة واحدة بعد إنشاء الحساب ويمنح نقاط/كوبون' },
   { value: 'product', label: 'داخل منتج', icon: 'mdi:package-variant-closed', hint: 'إعلان مربوط بمنتج محدد من البحث' },
 ]
 
@@ -369,6 +388,7 @@ const allPlacements = [
   // المنبثق مستقل ويظهر فوق الموقع.
   { value: 'popup', label: 'إعلان منبثق عام', type: 'popup' },
   { value: 'home_popup', label: 'إعلان منبثق للواجهة فقط', type: 'popup' },
+  { value: 'welcome_new_user', label: 'إعلان ترحيب للمستخدم الجديد فقط', type: 'welcome' },
   { value: 'product_page', label: 'إعلان داخل صفحة منتج', type: 'product' },
 ]
 
@@ -383,6 +403,9 @@ const form = reactive({
   productId: '',
   sortOrder: 0,
   isEnabled: true,
+  isNewUserOnly: false,
+  welcomeCouponCode: '',
+  welcomePoints: 10,
 })
 
 const currentType = computed(() => adTypes.find((x) => x.value === form.type) || adTypes[0])
@@ -441,9 +464,11 @@ function normalizeAds(res: any): any[] {
   return unwrapList(res)
     .map((ad: any) => {
       const rawType = ad?.type ?? ad?.Type ?? 'banner'
-      const normalizedType = typeof rawType === 'number'
+      let normalizedType = typeof rawType === 'number'
         ? ['slider', 'banner', 'popup', 'product'][rawType] || 'banner'
         : String(rawType).trim().toLowerCase()
+      const rawPlacement = String(ad?.placement ?? ad?.Placement ?? 'home_top').trim()
+      if (rawPlacement === 'welcome_new_user' || ad?.isNewUserOnly || ad?.IsNewUserOnly) normalizedType = 'welcome'
 
       const rawImageUrls = ad?.imageUrls ?? ad?.ImageUrls
       const imageUrls = Array.isArray(rawImageUrls)
@@ -456,7 +481,7 @@ function normalizeAds(res: any): any[] {
       return {
         id: String(ad?.id ?? ad?.Id ?? crypto.randomUUID()),
         type: normalizedType,
-        placement: String(ad?.placement ?? ad?.Placement ?? 'home_top').trim(),
+        placement: rawPlacement,
         title: ad?.title ?? ad?.Title ?? '',
         subtitle: ad?.subtitle ?? ad?.Subtitle ?? '',
         imageUrl,
@@ -465,6 +490,9 @@ function normalizeAds(res: any): any[] {
         productId: ad?.productId ?? ad?.ProductId ?? '',
         sortOrder: Number(ad?.sortOrder ?? ad?.SortOrder ?? 0),
         isEnabled: (ad?.isEnabled ?? ad?.IsEnabled) !== false,
+        isNewUserOnly: (ad?.isNewUserOnly ?? ad?.IsNewUserOnly) === true || rawPlacement === 'welcome_new_user',
+        welcomeCouponCode: ad?.welcomeCouponCode ?? ad?.WelcomeCouponCode ?? '',
+        welcomePoints: Number(ad?.welcomePoints ?? ad?.WelcomePoints ?? 0),
         createdAt: ad?.createdAt ?? ad?.CreatedAt ?? null,
         updatedAt: ad?.updatedAt ?? ad?.UpdatedAt ?? null,
       }
@@ -560,6 +588,9 @@ function startNewAd() {
     productId: '',
     sortOrder: 0,
     isEnabled: true,
+    isNewUserOnly: false,
+    welcomeCouponCode: '',
+    welcomePoints: 10,
   })
   productQuery.value = ''
 }
@@ -568,6 +599,7 @@ function selectType(type: string) {
   form.type = type
   form.placement = allPlacements.find((p) => p.type === type)?.value || 'home_top'
   if (type === 'popup' && !form.linkUrl) form.linkUrl = '/products'
+  if (type === 'welcome') { form.placement = 'welcome_new_user'; form.isNewUserOnly = true; if (!form.title) form.title = 'مبروك!'; if (!form.subtitle) form.subtitle = 'حصلت على خصم و10 نقاط، استمتع بالتسوق داخل التطبيق.' }
   if (type === 'product') form.linkUrl = form.productId ? `/product/${form.productId}` : '/products'
 }
 
@@ -590,6 +622,9 @@ function editAd(ad: any) {
     productId: ad.productId || '',
     sortOrder: Number(ad.sortOrder || 0),
     isEnabled: ad.isEnabled !== false,
+    isNewUserOnly: ad.isNewUserOnly === true || ad.placement === 'welcome_new_user',
+    welcomeCouponCode: ad.welcomeCouponCode || '',
+    welcomePoints: Number(ad.welcomePoints || 0),
   })
 
   const selected = products.value.find((p: any) => p.id === ad.productId)
@@ -600,8 +635,8 @@ function editAd(ad: any) {
 function buildPayload() {
   const images = mediaFromForm()
   return {
-    type: form.type,
-    placement: form.placement,
+    type: form.type === 'welcome' ? 'popup' : form.type,
+    placement: form.type === 'welcome' ? 'welcome_new_user' : form.placement,
     title: form.title || '',
     subtitle: form.subtitle || null,
     imageUrl: images[0] || '',
@@ -610,6 +645,9 @@ function buildPayload() {
     productId: form.type === 'product' && form.productId ? form.productId : null,
     sortOrder: Number(form.sortOrder || 0),
     isEnabled: Boolean(form.isEnabled),
+    isNewUserOnly: form.type === 'welcome' || Boolean(form.isNewUserOnly),
+    welcomeCouponCode: form.welcomeCouponCode || null,
+    welcomePoints: Number(form.welcomePoints || 0),
     startAt: null,
     endAt: null,
   }
@@ -630,11 +668,11 @@ function mergeSaved(raw: any) {
 }
 
 async function saveAd() {
-  if (form.type !== 'popup' && mediaFromForm().length === 0) {
+  if (!['popup','welcome'].includes(form.type) && mediaFromForm().length === 0) {
     toast.error('ارفع صورة أو فيديو واحد على الأقل')
     return
   }
-  if (form.type === 'popup' && !String(form.title || form.subtitle || form.imageUrl).trim() && mediaFromForm().length === 0) {
+  if (['popup','welcome'].includes(form.type) && !String(form.title || form.subtitle || form.imageUrl).trim() && mediaFromForm().length === 0) {
     toast.error('اكتب عنواناً أو وصفاً للإعلان المنبثق')
     return
   }
@@ -706,6 +744,9 @@ async function toggleAd(ad: any) {
       imageUrls: mediaList(ad),
       imageUrl: primaryMedia(ad),
       isEnabled: !ad.isEnabled,
+      isNewUserOnly: ad.isNewUserOnly === true || ad.placement === 'welcome_new_user',
+      welcomeCouponCode: ad.welcomeCouponCode || null,
+      welcomePoints: Number(ad.welcomePoints || 0),
       startAt: null,
       endAt: null,
     }

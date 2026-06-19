@@ -66,6 +66,9 @@ public class AdsController : ControllerBase
                 x.ImageUrl,
                 imageUrls = ParseImageUrls(x.ImageUrlsJson, x.ImageUrl),
                 x.LinkUrl,
+                x.IsNewUserOnly,
+                x.WelcomeCouponCode,
+                x.WelcomePoints,
                 x.ProductId,
                 x.SortOrder,
                 x.UpdatedAt

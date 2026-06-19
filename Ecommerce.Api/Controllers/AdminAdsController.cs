@@ -68,7 +68,10 @@ public class AdminAdsController : ControllerBase
         int SortOrder,
         bool IsEnabled,
         DateTimeOffset? StartAt,
-        DateTimeOffset? EndAt
+        DateTimeOffset? EndAt,
+        bool? IsNewUserOnly,
+        string? WelcomeCouponCode,
+        int? WelcomePoints
     );
 
     [HttpPost]
@@ -91,6 +94,9 @@ public class AdminAdsController : ControllerBase
             ImageUrl = ResolvePrimaryImage(req.ImageUrl, req.ImageUrls),
             ImageUrlsJson = SerializeImageUrls(req.ImageUrl, req.ImageUrls),
             LinkUrl = req.LinkUrl,
+            IsNewUserOnly = req.IsNewUserOnly == true || string.Equals(req.Placement?.Trim(), "welcome_new_user", StringComparison.OrdinalIgnoreCase),
+            WelcomeCouponCode = string.IsNullOrWhiteSpace(req.WelcomeCouponCode) ? null : req.WelcomeCouponCode.Trim().ToUpperInvariant(),
+            WelcomePoints = Math.Max(0, req.WelcomePoints ?? 0),
             ProductId = req.ProductId,
             SortOrder = req.SortOrder,
             IsEnabled = req.IsEnabled,
@@ -127,6 +133,9 @@ public class AdminAdsController : ControllerBase
         ad.ImageUrl = ResolvePrimaryImage(req.ImageUrl, req.ImageUrls);
         ad.ImageUrlsJson = SerializeImageUrls(req.ImageUrl, req.ImageUrls);
         ad.LinkUrl = req.LinkUrl;
+        ad.IsNewUserOnly = req.IsNewUserOnly == true || string.Equals(req.Placement?.Trim(), "welcome_new_user", StringComparison.OrdinalIgnoreCase);
+        ad.WelcomeCouponCode = string.IsNullOrWhiteSpace(req.WelcomeCouponCode) ? null : req.WelcomeCouponCode.Trim().ToUpperInvariant();
+        ad.WelcomePoints = Math.Max(0, req.WelcomePoints ?? 0);
         ad.ProductId = req.ProductId;
         ad.SortOrder = req.SortOrder;
         ad.IsEnabled = req.IsEnabled;
@@ -181,6 +190,9 @@ public class AdminAdsController : ControllerBase
             x.ImageUrl,
             imageUrls = ParseImageUrls(x.ImageUrlsJson, x.ImageUrl),
             x.LinkUrl,
+            x.IsNewUserOnly,
+            x.WelcomeCouponCode,
+            x.WelcomePoints,
             x.ProductId,
             x.SortOrder,
             x.IsEnabled,

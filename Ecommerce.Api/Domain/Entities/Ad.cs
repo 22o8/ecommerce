@@ -25,6 +25,11 @@ public class Ad
     public string? ImageUrlsJson { get; set; }
     public string? LinkUrl { get; set; }
 
+    // Welcome offer for newly registered customers
+    public bool IsNewUserOnly { get; set; } = false;
+    public string? WelcomeCouponCode { get; set; }
+    public int WelcomePoints { get; set; } = 0;
+
     // Product Ads
     public Guid? ProductId { get; set; }
 

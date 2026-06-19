@@ -64,8 +64,44 @@ public class AuthController(AppDbContext db, IConfiguration cfg) : ControllerBas
             return BadRequest(new { message = "الحساب موجود مسبقاً. جرّب تسجيل الدخول أو استخدم إيميل/رقم مختلف." });
         }
 
-        if (!await db.PointsWallets.AnyAsync(x => x.UserId == user.Id))
-            db.PointsWallets.Add(new Ecommerce.Api.Domain.Entities.PointsWallet { UserId = user.Id });
+        await EnsureWelcomeAdSchemaAsync();
+
+        var wallet = await db.PointsWallets.FirstOrDefaultAsync(x => x.UserId == user.Id);
+        if (wallet is null)
+        {
+            wallet = new Ecommerce.Api.Domain.Entities.PointsWallet { UserId = user.Id };
+            db.PointsWallets.Add(wallet);
+        }
+
+        var welcomeOffer = await GetActiveWelcomeOfferAsync();
+        if (welcomeOffer is not null)
+        {
+            if (welcomeOffer.WelcomePoints > 0)
+            {
+                wallet.Balance += welcomeOffer.WelcomePoints;
+                wallet.LifetimeEarned += welcomeOffer.WelcomePoints;
+                wallet.UpdatedAtUtc = DateTime.UtcNow;
+                db.PointsTransactions.Add(new Ecommerce.Api.Domain.Entities.PointsTransaction
+                {
+                    Wallet = wallet,
+                    UserId = user.Id,
+                    Points = welcomeOffer.WelcomePoints,
+                    Type = "WelcomeGift",
+                    Note = "نقاط ترحيب للمستخدم الجديد"
+                });
+            }
+
+            db.UserGifts.Add(new Ecommerce.Api.Domain.Entities.UserGift
+            {
+                UserId = user.Id,
+                GiftType = string.IsNullOrWhiteSpace(welcomeOffer.WelcomeCouponCode) ? "Welcome" : "Coupon",
+                Title = welcomeOffer.Title,
+                Message = BuildWelcomeMessage(welcomeOffer),
+                Points = welcomeOffer.WelcomePoints,
+                CouponCode = string.IsNullOrWhiteSpace(welcomeOffer.WelcomeCouponCode) ? null : welcomeOffer.WelcomeCouponCode
+            });
+        }
+
         if (referrer != null)
         {
             db.Referrals.Add(new Ecommerce.Api.Domain.Entities.Referral
@@ -85,7 +121,21 @@ public class AuthController(AppDbContext db, IConfiguration cfg) : ControllerBas
         await db.SaveChangesAsync();
 
         var token = CreateJwt(user);
-        return Ok(new { token, user = new { user.Id, user.FullName, user.Phone, user.Email, user.Role, user.ReferralCode } });
+        return Ok(new
+        {
+            token,
+            user = new { user.Id, user.FullName, user.Phone, user.Email, user.Role, user.ReferralCode },
+            welcomeOffer = welcomeOffer is null ? null : new
+            {
+                welcomeOffer.Id,
+                welcomeOffer.Title,
+                welcomeOffer.Subtitle,
+                welcomeOffer.ImageUrl,
+                welcomeOffer.LinkUrl,
+                couponCode = welcomeOffer.WelcomeCouponCode,
+                points = welcomeOffer.WelcomePoints
+            }
+        });
     }
 
     [HttpPost("login")]
@@ -182,6 +232,37 @@ public class AuthController(AppDbContext db, IConfiguration cfg) : ControllerBas
             ""CreatedAtUtc"" timestamp with time zone NOT NULL DEFAULT now()
         );");
         await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""UserGifts"" ADD COLUMN IF NOT EXISTS ""ReferralId"" uuid NULL;");
+    }
+
+    private async Task EnsureWelcomeAdSchemaAsync()
+    {
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Ads"" ADD COLUMN IF NOT EXISTS ""IsNewUserOnly"" boolean NOT NULL DEFAULT FALSE;");
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Ads"" ADD COLUMN IF NOT EXISTS ""WelcomeCouponCode"" character varying(80) NULL;");
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Ads"" ADD COLUMN IF NOT EXISTS ""WelcomePoints"" integer NOT NULL DEFAULT 0;");
+    }
+
+    private async Task<Ad?> GetActiveWelcomeOfferAsync()
+    {
+        var now = DateTimeOffset.UtcNow;
+        return await db.Ads.AsNoTracking()
+            .Where(x => x.IsEnabled
+                && x.Type == AdType.Popup
+                && (x.IsNewUserOnly || x.Placement == "welcome_new_user")
+                && (x.StartAt == null || x.StartAt <= now)
+                && (x.EndAt == null || x.EndAt >= now))
+            .OrderBy(x => x.SortOrder)
+            .ThenByDescending(x => x.UpdatedAt)
+            .FirstOrDefaultAsync();
+    }
+
+    private static string BuildWelcomeMessage(Ad offer)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(offer.Subtitle)) parts.Add(offer.Subtitle.Trim());
+        if (offer.WelcomePoints > 0) parts.Add($"حصلت على {offer.WelcomePoints} نقاط هدية.");
+        if (!string.IsNullOrWhiteSpace(offer.WelcomeCouponCode)) parts.Add($"كود الخصم: {offer.WelcomeCouponCode}");
+        if (parts.Count == 0) parts.Add("مبروك! حصلت على هدية ترحيبية، استمتع بالتسوق داخل التطبيق.");
+        return string.Join(" ", parts);
     }
 
     private static bool IsUniqueViolation(DbUpdateException ex)

@@ -201,6 +201,15 @@ public static class DbBootstrapper
             @"ALTER TABLE IF EXISTS ""Ads""
               ADD COLUMN IF NOT EXISTS ""ImageUrlsJson"" jsonb NULL;",
 
+            @"ALTER TABLE IF EXISTS ""Ads""
+              ADD COLUMN IF NOT EXISTS ""IsNewUserOnly"" boolean NOT NULL DEFAULT FALSE;",
+
+            @"ALTER TABLE IF EXISTS ""Ads""
+              ADD COLUMN IF NOT EXISTS ""WelcomeCouponCode"" character varying(80) NULL;",
+
+            @"ALTER TABLE IF EXISTS ""Ads""
+              ADD COLUMN IF NOT EXISTS ""WelcomePoints"" integer NOT NULL DEFAULT 0;",
+
             @"CREATE INDEX IF NOT EXISTS ""IX_Ads_Type_Placement_SortOrder""
               ON ""Ads"" (""Type"", ""Placement"", ""SortOrder"");",
 
