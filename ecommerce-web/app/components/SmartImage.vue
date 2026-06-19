@@ -3,16 +3,20 @@
     :style="props.wrapperStyle"
     :class="['relative overflow-hidden', props.rounded, props.background, props.wrapperClass]"
   >
-    <NuxtImg
+    <!--
+      مهم جداً:
+      لا نستخدم NuxtImg هنا حتى لا تمر الصور عبر /_vercel/image.
+      Vercel Image Optimization محدود بالخطة المجانية، وعند تجاوزه يظهر:
+      OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED
+      لذلك نعرض الصور مباشرة من R2/Cloudflare: img.drseoulbeauty.store
+    -->
+    <img
       :src="currentSrc"
       :alt="computedAlt"
       :loading="props.loading"
       :title="props.title || computedAlt"
       :width="props.width"
       :height="props.height"
-      :sizes="props.sizes"
-      :quality="props.quality"
-      :format="props.format"
       decoding="async"
       :fetchpriority="props.fetchpriority"
       :style="props.imgStyle"
@@ -36,6 +40,7 @@ type SmartImageProps = {
   title?: string
   width?: number | string
   height?: number | string
+  /** موجودة للتوافق مع الاستدعاءات القديمة فقط؛ لا نستخدمها مع img العادي */
   sizes?: string
   quality?: number | string
   format?: 'webp' | 'avif' | 'jpg' | 'png'
