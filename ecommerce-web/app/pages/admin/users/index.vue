@@ -42,6 +42,7 @@
           <thead>
             <tr class="text-left border-b border-app">
               <th class="py-3 px-2">{{ t('admin.users.name') }}</th>
+              <th class="py-3 px-2">رقم الهاتف</th>
               <th class="py-3 px-2">{{ t('admin.users.email') }}</th>
               <th class="py-3 px-2">{{ t('admin.users.role') }}</th>
               <th class="py-3 px-2">{{ t('admin.users.status') }}</th>
@@ -50,8 +51,9 @@
           </thead>
           <tbody>
             <tr v-for="u in items" :key="u.id" class="border-b border-app/70">
-              <td class="py-3 px-2 font-bold">{{ u.name || '—' }}</td>
-              <td class="py-3 px-2 keep-ltr">{{ u.email }}</td>
+              <td class="py-3 px-2 font-bold">{{ u.name || u.fullName || '—' }}</td>
+              <td class="py-3 px-2 keep-ltr">{{ u.phone || '—' }}</td>
+              <td class="py-3 px-2 keep-ltr">{{ displayEmail(u.email) }}</td>
               <td class="py-3 px-2">
                 <span class="badge" :class="u.role === 'Admin' ? 'badge-admin' : ''">{{ u.role }}</span>
               </td>
@@ -83,7 +85,8 @@
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
               <div class="font-black rtl-text truncate">{{ u.name || '—' }}</div>
-              <div class="text-sm admin-muted keep-ltr truncate">{{ u.email }}</div>
+              <div class="text-sm admin-muted keep-ltr truncate">{{ u.phone || '—' }}</div>
+              <div class="text-xs admin-muted keep-ltr truncate">{{ displayEmail(u.email) }}</div>
             </div>
             <div class="flex gap-2">
               <button class="icon-btn" @click="edit(u)" :title="t('edit')">
@@ -137,7 +140,11 @@
             </div>
             <div>
               <div class="text-xs admin-muted rtl-text">{{ t('admin.users.email') }}</div>
-              <input v-model="form.email" class="admin-input keep-ltr" />
+              <input v-model="form.email" class="admin-input keep-ltr" placeholder="بدون إيميل" />
+            </div>
+            <div>
+              <div class="text-xs admin-muted rtl-text">رقم الهاتف</div>
+              <input v-model="form.phone" class="admin-input keep-ltr" placeholder="مثال: 07700000000" />
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
@@ -191,7 +198,11 @@
             </div>
             <div>
               <div class="text-xs admin-muted rtl-text">{{ t('admin.users.email') }}</div>
-              <input v-model="createForm.email" class="admin-input keep-ltr" />
+              <input v-model="createForm.email" class="admin-input keep-ltr" placeholder="اختياري إذا تستخدم رقم الهاتف" />
+            </div>
+            <div>
+              <div class="text-xs admin-muted rtl-text">رقم الهاتف</div>
+              <input v-model="createForm.phone" class="admin-input keep-ltr" placeholder="اختياري إذا تستخدم الإيميل" />
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
@@ -229,7 +240,7 @@
           <div class="font-black rtl-text">{{ t('admin.users.deleteTitle') }}</div>
           <div class="mt-2 text-sm admin-muted rtl-text">
             {{ t('admin.users.deleteHint') }}
-            <span class="keep-ltr font-bold">{{ pendingDelete?.email }}</span>
+            <span class="keep-ltr font-bold">{{ pendingDelete?.phone || displayEmail(pendingDelete?.email) }}</span>
           </div>
           <div class="mt-4 flex justify-end gap-2">
             <UiButton variant="secondary" @click="closeAll">{{ t('cancel') }}</UiButton>
@@ -252,7 +263,9 @@ import UiButton from '~/components/ui/UiButton.vue'
 type UserRow = {
   id: string
   email: string
+  phone: string
   name: string | null
+  fullName?: string | null
   role: string
   isActive: boolean
   createdAt: string
@@ -284,6 +297,7 @@ const form = reactive({
   id: '',
   name: '',
   email: '',
+  phone: '',
   role: 'User',
   isActive: true,
   newPassword: ''
@@ -292,6 +306,7 @@ const form = reactive({
 const createForm = reactive({
   name: '',
   email: '',
+  phone: '',
   role: 'User',
   password: ''
 })
@@ -309,7 +324,13 @@ async function load(p = 1) {
         role: role.value || undefined
       }
     })
-    items.value = res?.items || []
+    items.value = (res?.items || []).map((u: any) => ({
+      ...u,
+      email: u.email || u.Email || '',
+      phone: u.phone || u.Phone || '',
+      name: u.name || u.Name || u.fullName || u.FullName || '',
+      fullName: u.fullName || u.FullName || u.name || u.Name || ''
+    }))
     total.value = res?.total || 0
   } catch (e: any) {
     error.value = e?.message || 'Failed'
@@ -318,10 +339,15 @@ async function load(p = 1) {
   }
 }
 
+function displayEmail(email?: string | null) {
+  return email && email.trim() ? email : 'بدون إيميل'
+}
+
 function edit(u: UserRow) {
   form.id = u.id
-  form.name = u.name || ''
-  form.email = u.email || ''
+  form.name = u.name || u.fullName || ''
+  form.email = u.email && u.email.trim() ? u.email : ''
+  form.phone = u.phone || ''
   form.role = u.role || 'User'
   form.isActive = !!u.isActive
   form.newPassword = ''
@@ -345,8 +371,10 @@ async function save() {
   saving.value = true
   try {
     await api.put(`/admin/users/${form.id}`, {
-      name: form.name,
-      email: form.email,
+      name: form.name?.trim() || '',
+      fullName: form.name?.trim() || '',
+      email: form.email?.trim() || '',
+      phone: form.phone?.trim() || '',
       role: form.role,
       isActive: form.isActive,
       newPassword: form.newPassword || undefined
@@ -362,13 +390,16 @@ async function create() {
   saving.value = true
   try {
     await api.post(`/admin/users`, {
-      name: createForm.name,
-      email: createForm.email,
+      name: createForm.name?.trim() || '',
+      fullName: createForm.name?.trim() || '',
+      email: createForm.email?.trim() || '',
+      phone: createForm.phone?.trim() || '',
       role: createForm.role,
       password: createForm.password
     })
     createForm.name = ''
     createForm.email = ''
+    createForm.phone = ''
     createForm.role = 'User'
     createForm.password = ''
     closeAll()

@@ -3,6 +3,7 @@ using Ecommerce.Api.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Ecommerce.Api.Controllers;
 
@@ -21,7 +22,9 @@ public class AdminUsersController : ControllerBase
     public sealed record UserListItem(
         Guid Id,
         string Email,
+        string Phone,
         string? Name,
+        string? FullName,
         string Role,
         bool IsActive,
         DateTime CreatedAt
@@ -34,60 +37,67 @@ public class AdminUsersController : ControllerBase
         int PageSize
     );
 
-    // =========================
-    // Helpers: support shadow/optional properties
-    // =========================
     private bool HasProp(string propName)
         => _db.Model.FindEntityType(typeof(User))?.FindProperty(propName) is not null;
 
-    private static string? SafeLike(string? s)
+    private static string? CleanOptional(string? s)
         => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
 
-    private static string NormalizeEmail(string email)
-        => email.Trim().ToLowerInvariant();
+    private static string CleanText(string? s)
+        => string.IsNullOrWhiteSpace(s) ? string.Empty : s.Trim();
+
+    private static string NormalizeEmail(string? email)
+        => string.IsNullOrWhiteSpace(email) ? string.Empty : email.Trim().ToLowerInvariant();
+
+    private static string NormalizePhone(string? phone)
+    {
+        var p = new string((phone ?? string.Empty).Where(char.IsDigit).ToArray());
+        if (p.StartsWith("9640")) p = "964" + p[4..];
+        if (p.StartsWith("00964")) p = "964" + p[5..];
+        if (p.StartsWith("+964")) p = "964" + p[4..];
+        return p;
+    }
 
     private static string NormalizeRole(string? role)
         => string.Equals(role?.Trim(), "admin", StringComparison.OrdinalIgnoreCase) ? "Admin" : "User";
 
-    private string? GetNameQuery(User u)
-        => HasProp("Name") ? EF.Property<string?>(u, "Name") : null;
-
-    private bool GetIsActiveQuery(User u)
+    private bool GetIsActive(User u)
         => HasProp("IsActive") ? EF.Property<bool>(u, "IsActive") : true;
 
-    private void SetOptionalProps(User user, string? name, bool? isActive)
+    private void SetOptionalProps(User user, bool? isActive)
     {
-        // Name (optional)
-        if (HasProp("Name"))
-        {
-            _db.Entry(user).Property("Name").CurrentValue = SafeLike(name);
-        }
-
-        // IsActive (optional)
         if (HasProp("IsActive") && isActive.HasValue)
-        {
             _db.Entry(user).Property("IsActive").CurrentValue = isActive.Value;
-        }
     }
 
     private UserListItem ToListItem(User u)
     {
-        var name = HasProp("Name") ? EF.Property<string?>(u, "Name") : null;
-        var isActive = HasProp("IsActive") ? EF.Property<bool>(u, "IsActive") : true;
-
+        var active = HasProp("IsActive") ? (bool)(_db.Entry(u).Property("IsActive").CurrentValue ?? true) : true;
         return new UserListItem(
             u.Id,
-            u.Email,
-            name,
+            u.Email ?? string.Empty,
+            u.Phone ?? string.Empty,
+            u.FullName,
+            u.FullName,
             u.Role,
-            isActive,
+            active,
             u.CreatedAt
         );
     }
 
-    // =========================
-    // List
-    // =========================
+    private async Task EnsureUsersSchemaAsync()
+    {
+        await _db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""FullName"" character varying(220) NOT NULL DEFAULT '';");
+        await _db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""Phone"" character varying(40) NOT NULL DEFAULT '';");
+        await _db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""ReferralCode"" character varying(24) NOT NULL DEFAULT '';");
+        await _db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""ReferredByUserId"" uuid NULL;");
+
+        await _db.Database.ExecuteSqlRawAsync(@"DROP INDEX IF EXISTS ""IX_Users_Email"";");
+        await _db.Database.ExecuteSqlRawAsync(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Users_Email"" ON ""Users"" (""Email"") WHERE ""Email"" IS NOT NULL AND btrim(""Email"") <> '';");
+        await _db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_Users_Phone"" ON ""Users"" (""Phone"");");
+        await _db.Database.ExecuteSqlRawAsync(@"CREATE INDEX IF NOT EXISTS ""IX_Users_ReferralCode"" ON ""Users"" (""ReferralCode"");");
+    }
+
     [HttpGet]
     public async Task<ActionResult<PagedResult<UserListItem>>> List(
         [FromQuery] int page = 1,
@@ -96,6 +106,7 @@ public class AdminUsersController : ControllerBase
         [FromQuery] string? role = null,
         [FromQuery] bool? isActive = null)
     {
+        await EnsureUsersSchemaAsync();
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 5, 100);
 
@@ -104,18 +115,11 @@ public class AdminUsersController : ControllerBase
         if (!string.IsNullOrWhiteSpace(q))
         {
             var s = q.Trim();
-
-            if (HasProp("Name"))
-            {
-                query = query.Where(u =>
-                    u.Email.Contains(s) ||
-                    (EF.Property<string?>(u, "Name") != null && EF.Property<string?>(u, "Name")!.Contains(s))
-                );
-            }
-            else
-            {
-                query = query.Where(u => u.Email.Contains(s));
-            }
+            query = query.Where(u =>
+                (u.Email != null && u.Email.Contains(s)) ||
+                (u.Phone != null && u.Phone.Contains(s)) ||
+                (u.FullName != null && u.FullName.Contains(s))
+            );
         }
 
         if (!string.IsNullOrWhiteSpace(role))
@@ -125,52 +129,57 @@ public class AdminUsersController : ControllerBase
         }
 
         if (isActive.HasValue && HasProp("IsActive"))
-        {
             query = query.Where(u => EF.Property<bool>(u, "IsActive") == isActive.Value);
-        }
 
         var total = await query.CountAsync();
 
-        var items = await query
+        var users = await query
             .OrderByDescending(u => u.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(u => new UserListItem(
-                u.Id,
-                u.Email,
-                // Name (optional)
-                HasProp("Name") ? EF.Property<string?>(u, "Name") : null,
-                u.Role,
-                // IsActive (optional)
-                HasProp("IsActive") ? EF.Property<bool>(u, "IsActive") : true,
-                u.CreatedAt
-            ))
             .ToListAsync();
+
+        var items = users.Select(u => new UserListItem(
+            u.Id,
+            u.Email ?? string.Empty,
+            u.Phone ?? string.Empty,
+            u.FullName,
+            u.FullName,
+            u.Role,
+            GetIsActive(u),
+            u.CreatedAt
+        )).ToList();
 
         return Ok(new PagedResult<UserListItem>(items, total, page, pageSize));
     }
 
-    // =========================
-    // Get single
-    // =========================
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<User>> Get(Guid id)
+    public async Task<ActionResult<object>> Get(Guid id)
     {
+        await EnsureUsersSchemaAsync();
         var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
         if (user is null) return NotFound();
 
-        // لا نرجّع كلمة المرور
-        user.PasswordHash = string.Empty;
-        return Ok(user);
+        return Ok(new
+        {
+            user.Id,
+            Email = user.Email ?? string.Empty,
+            Phone = user.Phone ?? string.Empty,
+            Name = user.FullName,
+            FullName = user.FullName,
+            user.Role,
+            IsActive = true,
+            user.CreatedAt,
+            user.ReferralCode
+        });
     }
 
-    // =========================
-    // Create
-    // =========================
     public sealed record CreateUserRequest(
-        string Email,
+        string? Email,
+        string? Phone,
         string Password,
         string? Name,
+        string? FullName,
         string? Role,
         bool? IsActive
     );
@@ -178,42 +187,48 @@ public class AdminUsersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<UserListItem>> Create([FromBody] CreateUserRequest req)
     {
-        if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
-            return BadRequest("Email and password are required");
-
+        await EnsureUsersSchemaAsync();
         var email = NormalizeEmail(req.Email);
+        var phone = NormalizePhone(req.Phone);
+        if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(phone))
+            return BadRequest(new { message = "يجب إدخال إيميل أو رقم هاتف." });
+        if (string.IsNullOrWhiteSpace(req.Password))
+            return BadRequest(new { message = "كلمة المرور مطلوبة." });
 
-        var exists = await _db.Users.AnyAsync(u => u.Email.ToLower() == email);
-        if (exists) return Conflict("Email already exists");
+        if (!string.IsNullOrWhiteSpace(email) && await _db.Users.AnyAsync(u => u.Email.ToLower() == email))
+            return Conflict(new { message = "هذا الإيميل مسجل مسبقاً." });
+        if (!string.IsNullOrWhiteSpace(phone) && await _db.Users.AnyAsync(u => u.Phone == phone))
+            return Conflict(new { message = "رقم الهاتف مسجل مسبقاً." });
 
         var user = new User
         {
             Id = Guid.NewGuid(),
+            FullName = CleanText(req.FullName ?? req.Name),
             Email = email,
+            Phone = phone,
             Role = NormalizeRole(req.Role),
             CreatedAt = DateTime.UtcNow,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password)
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
+            ReferralCode = "DSB" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()
         };
 
-        // set optional fields safely (even if not in entity)
-        SetOptionalProps(user, req.Name, req.IsActive ?? true);
-
+        SetOptionalProps(user, req.IsActive ?? true);
         _db.Users.Add(user);
-        await _db.SaveChangesAsync();
 
-        // read back optional props via Entry (ensures values present even if shadow)
-        var name = HasProp("Name") ? _db.Entry(user).Property("Name").CurrentValue as string : null;
-        var active = HasProp("IsActive") ? (bool)(_db.Entry(user).Property("IsActive").CurrentValue ?? true) : true;
+        try { await _db.SaveChangesAsync(); }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+        {
+            return Conflict(new { message = "الإيميل أو رقم الهاتف موجود مسبقاً." });
+        }
 
-        return Ok(new UserListItem(user.Id, user.Email, name, user.Role, active, user.CreatedAt));
+        return Ok(ToListItem(user));
     }
 
-    // =========================
-    // Update
-    // =========================
     public sealed record UpdateUserRequest(
         string? Email,
+        string? Phone,
         string? Name,
+        string? FullName,
         string? Role,
         bool? IsActive,
         string? NewPassword
@@ -222,47 +237,36 @@ public class AdminUsersController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<UserListItem>> Update(Guid id, [FromBody] UpdateUserRequest req)
     {
+        await EnsureUsersSchemaAsync();
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id);
         if (user is null) return NotFound();
 
-        if (!string.IsNullOrWhiteSpace(req.Email))
+        var email = NormalizeEmail(req.Email);
+        var phone = NormalizePhone(req.Phone);
+
+        if (!string.IsNullOrWhiteSpace(email) && await _db.Users.AnyAsync(u => u.Id != id && u.Email.ToLower() == email))
+            return Conflict(new { message = "هذا الإيميل مسجل مسبقاً." });
+        if (!string.IsNullOrWhiteSpace(phone) && await _db.Users.AnyAsync(u => u.Id != id && u.Phone == phone))
+            return Conflict(new { message = "رقم الهاتف مسجل مسبقاً." });
+
+        // مهم: إذا المستخدم بدون إيميل، لا نعوضه بإيميل الأدمن أبداً.
+        user.Email = email;
+        user.Phone = phone;
+        user.FullName = CleanText(req.FullName ?? req.Name);
+
+        if (!string.IsNullOrWhiteSpace(req.Role)) user.Role = NormalizeRole(req.Role);
+        if (!string.IsNullOrWhiteSpace(req.NewPassword)) user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
+        SetOptionalProps(user, req.IsActive);
+
+        try { await _db.SaveChangesAsync(); }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex))
         {
-            var email = NormalizeEmail(req.Email);
-
-            var emailExists = await _db.Users.AnyAsync(u => u.Id != id && u.Email.ToLower() == email);
-            if (emailExists) return Conflict("Email already exists");
-
-            user.Email = email;
+            return Conflict(new { message = "الإيميل أو رقم الهاتف موجود مسبقاً." });
         }
 
-        if (!string.IsNullOrWhiteSpace(req.Role))
-        {
-            user.Role = NormalizeRole(req.Role);
-        }
-
-        if (!string.IsNullOrWhiteSpace(req.NewPassword))
-        {
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
-        }
-
-        // optional fields
-        if (req.Name is not null || req.IsActive.HasValue)
-        {
-            SetOptionalProps(user, req.Name, req.IsActive);
-        }
-
-        await _db.SaveChangesAsync();
-
-        // build response (optional props)
-        var name = HasProp("Name") ? _db.Entry(user).Property("Name").CurrentValue as string : null;
-        var active = HasProp("IsActive") ? (bool)(_db.Entry(user).Property("IsActive").CurrentValue ?? true) : true;
-
-        return Ok(new UserListItem(user.Id, user.Email, name, user.Role, active, user.CreatedAt));
+        return Ok(ToListItem(user));
     }
 
-    // =========================
-    // Delete
-    // =========================
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -272,5 +276,12 @@ public class AdminUsersController : ControllerBase
         _db.Users.Remove(user);
         await _db.SaveChangesAsync();
         return NoContent();
+    }
+
+    private static bool IsUniqueViolation(DbUpdateException ex)
+    {
+        if (ex.InnerException is PostgresException pg && pg.SqlState == "23505") return true;
+        var text = ex.ToString();
+        return text.Contains("23505") || text.Contains("duplicate key", StringComparison.OrdinalIgnoreCase);
     }
 }

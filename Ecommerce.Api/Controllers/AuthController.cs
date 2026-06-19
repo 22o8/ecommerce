@@ -13,8 +13,8 @@ namespace Ecommerce.Api.Controllers;
 [Route("api/[controller]")]
 public class AuthController(AppDbContext db, IConfiguration cfg) : ControllerBase
 {
-    public record RegisterRequest(string FullName, string Phone, string Email, string Password, string? ReferralCode);
-    public record LoginRequest(string Email, string Password, string? Identifier = null);
+    public record RegisterRequest(string? FullName, string? Phone, string? Email, string Password, string? ReferralCode);
+    public record LoginRequest(string? Email, string Password, string? Identifier = null);
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest req)
@@ -128,6 +128,7 @@ public class AuthController(AppDbContext db, IConfiguration cfg) : ControllerBas
     {
         // دفاع إضافي: إذا قاعدة الإنتاج ما طبقت المايغريشن بعد، لا نخلي التسجيل/الدخول يطيح 500.
         // هذه الأوامر آمنة لأنها تستخدم IF NOT EXISTS.
+        await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""FullName"" character varying(220) NOT NULL DEFAULT '';");
         await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""Phone"" character varying(40) NOT NULL DEFAULT '';");
         await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""ReferralCode"" character varying(24) NOT NULL DEFAULT '';");
         await db.Database.ExecuteSqlRawAsync(@"ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""ReferredByUserId"" uuid NULL;");
@@ -235,7 +236,7 @@ public class AuthController(AppDbContext db, IConfiguration cfg) : ControllerBas
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Email),
+            new Claim(ClaimTypes.Name, !string.IsNullOrWhiteSpace(user.Email) ? user.Email : (!string.IsNullOrWhiteSpace(user.Phone) ? user.Phone : user.Id.ToString())),
             new Claim(ClaimTypes.Role, user.Role ?? "User"),
         };
 
