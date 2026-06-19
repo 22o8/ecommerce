@@ -81,8 +81,9 @@ public sealed class MediaOptimizationService
         await using var ms = new MemoryStream();
         await clone.SaveAsWebpAsync(ms, new WebpEncoder { Quality = Quality }, ct);
         ms.Position = 0;
+        var bytes = ms.Length;
         var stored = await _storage.UploadAsync(ms, key, "image/webp", ct);
-        return new MediaOptimizeResult(stored.Key, stored.Url, clone.Width, clone.Height, ms.Length, "image/webp");
+        return new MediaOptimizeResult(stored.Key, stored.Url, clone.Width, clone.Height, bytes, "image/webp");
     }
 
     private static void ResizeIfNeeded(Image image, int max)

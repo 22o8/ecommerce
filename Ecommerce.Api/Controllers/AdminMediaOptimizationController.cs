@@ -25,17 +25,21 @@ public sealed class AdminMediaOptimizationController : ControllerBase
         var productImages = await _db.ProductImages.CountAsync(x => !string.IsNullOrWhiteSpace(x.Url) && !x.Url.Contains("/optimized/"), ct);
         var brands = await _db.Brands.CountAsync(x => !string.IsNullOrWhiteSpace(x.LogoUrl) && !x.LogoUrl!.Contains("/optimized/"), ct);
         var categories = await _db.Categories.CountAsync(x => !string.IsNullOrWhiteSpace(x.ImageUrl) && !x.ImageUrl!.Contains("/optimized/"), ct);
-        var ads = await _db.Ads.CountAsync(x => !string.IsNullOrWhiteSpace(x.ImageUrl) && !x.ImageUrl.Contains("/optimized/") && !IsVideoUrl(x.ImageUrl), ct);
+        var ads = await _db.Ads
+            .Where(x => !string.IsNullOrWhiteSpace(x.ImageUrl) && !x.ImageUrl.Contains("/optimized/"))
+            .Select(x => x.ImageUrl)
+            .ToListAsync(ct);
+        var adImages = ads.Count(x => !string.IsNullOrWhiteSpace(x) && !IsVideoUrl(x));
         var appearanceAds = await _db.AppearanceAds.CountAsync(x => !string.IsNullOrWhiteSpace(x.ImageUrl) && !x.ImageUrl!.Contains("/optimized/"), ct);
         var appearanceLogos = await _db.AppearanceConfigs.CountAsync(x => !string.IsNullOrWhiteSpace(x.SiteLogoUrl) && !x.SiteLogoUrl!.Contains("/optimized/"), ct);
 
         return Ok(new
         {
-            pending = productImages + brands + categories + ads + appearanceAds + appearanceLogos,
+            pending = productImages + brands + categories + adImages + appearanceAds + appearanceLogos,
             productImages,
             brands,
             categories,
-            ads,
+            ads = adImages,
             appearanceAds,
             appearanceLogos,
             note = "استعمل POST migrate?apply=true&limit=20 لتحويل الملفات القديمة تدريجياً."
