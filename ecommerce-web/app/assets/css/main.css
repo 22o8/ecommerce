@@ -727,7 +727,6 @@ border: 1px solid rgba(255,255,255,.08);
   border-radius: 1rem;
   padding: .75rem;
   box-shadow: var(--shadow-card);
-  backdrop-filter: blur(10px);
 }
 
 /* ✅ تعزيز إضافي على الدارك لأن الخلفية غالباً قريبة من لون السطح */
