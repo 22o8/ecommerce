@@ -286,11 +286,12 @@ async function loadHomeAds() {
 async function loadSliderPackages() {
   try {
     const res: any = await $fetch('/api/bff/packages')
-    sliderPackages.value = (Array.isArray(res) ? res : []).filter((p: any) => p.showInSlider || p.ShowInSlider)
+    sliderPackages.value = (Array.isArray(res) ? res : [])
   } catch {
     sliderPackages.value = []
   }
 }
+const heroPackageSpotlight = computed(() => sliderPackages.value.slice(0, 3))
 const topPackageAds = computed(() => sliderPackages.value.filter((p: any) => (p.sliderPlacement || p.SliderPlacement) === 'home_top'))
 const bottomPackageAds = computed(() => sliderPackages.value.filter((p: any) => (p.sliderPlacement || p.SliderPlacement) === 'home_bottom' || (p.sliderPlacement || p.SliderPlacement) === 'offers'))
 function pkgName(p: any) { return p.name || p.nameAr || p.NameAr || p.nameEn || p.NameEn || 'بكج' }
@@ -414,6 +415,37 @@ useAdvancedSeo({
             <NuxtLink to="/brands" class="home-luxury-hero__secondary">
               {{ t('nav.brands') }}
             </NuxtLink>
+          </div>
+
+          <div v-if="heroPackageSpotlight.length" class="home-luxury-hero__packages" aria-label="بكجات وعروض مختارة">
+            <div class="home-luxury-hero__packages-head">
+              <span class="rtl-text">بكجات مختارة</span>
+              <NuxtLink to="/packages" class="rtl-text">عرض الكل</NuxtLink>
+            </div>
+            <div class="home-luxury-hero__packages-grid">
+              <NuxtLink
+                v-for="pkg in heroPackageSpotlight"
+                :key="pkg.id || pkg.Id"
+                to="/packages"
+                class="home-luxury-hero__package-card"
+              >
+                <SmartImage
+                  v-if="pkgCover(pkg)"
+                  :src="pkgCover(pkg)"
+                  :alt="pkgName(pkg)"
+                  :title="pkgName(pkg)"
+                  width="600"
+                  height="360"
+                  sizes="(max-width: 768px) 31vw, 150px"
+                  loading="lazy"
+                  fit="cover"
+                  wrapper-class="home-luxury-hero__package-img"
+                  img-class="h-full w-full object-cover"
+                />
+                <span class="rtl-text">{{ pkgName(pkg) }}</span>
+                <b class="keep-ltr">{{ pkgPrice(pkg) }}</b>
+              </NuxtLink>
+            </div>
           </div>
         </div>
 
@@ -1468,4 +1500,62 @@ useAdvancedSeo({
   .home-luxury-hero__side-preview--next{ right:-22%; }
 }
 
+</style>
+<style scoped>
+.home-luxury-hero__packages{
+  margin-top:1.15rem;
+  width:min(38rem, 100%);
+  border:1px solid rgba(var(--primary), .18);
+  border-radius:1.4rem;
+  background:linear-gradient(135deg, rgba(var(--surface), .72), rgba(var(--surface-2), .48));
+  box-shadow:0 18px 48px rgba(0,0,0,.12);
+  padding:.9rem;
+  backdrop-filter:blur(18px);
+}
+.home-luxury-hero__packages-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.75rem;
+  margin-bottom:.7rem;
+  font-size:.82rem;
+  font-weight:1000;
+}
+.home-luxury-hero__packages-head span{ color:rgb(var(--text)); }
+.home-luxury-hero__packages-head a{ color:rgb(var(--primary)); }
+.home-luxury-hero__packages-grid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:.65rem;
+}
+.home-luxury-hero__package-card{
+  min-width:0;
+  display:grid;
+  gap:.45rem;
+  border-radius:1rem;
+  background:rgba(var(--surface), .70);
+  border:1px solid rgb(var(--border));
+  padding:.45rem;
+  transition:.18s ease;
+}
+.home-luxury-hero__package-card:hover{ transform:translateY(-2px); border-color:rgba(var(--primary), .38); }
+:deep(.home-luxury-hero__package-img){ height:4.6rem; width:100%; border-radius:.85rem; overflow:hidden; background:rgba(0,0,0,.08); }
+.home-luxury-hero__package-card span{
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  min-height:2.25rem;
+  font-size:.72rem;
+  line-height:1.55;
+  font-weight:900;
+  color:rgb(var(--text));
+}
+.home-luxury-hero__package-card b{ font-size:.78rem; color:rgb(var(--primary)); }
+@media (max-width:640px){
+  .home-luxury-hero__packages{ padding:.75rem; border-radius:1.15rem; }
+  .home-luxury-hero__packages-grid{ gap:.45rem; }
+  :deep(.home-luxury-hero__package-img){ height:3.9rem; }
+  .home-luxury-hero__package-card span{ font-size:.68rem; min-height:2rem; }
+}
 </style>

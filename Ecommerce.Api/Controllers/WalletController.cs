@@ -51,4 +51,55 @@ public class WalletController : ControllerBase
             gifts
         });
     }
+
+    [HttpGet("notifications/unread-count")]
+    public async Task<IActionResult> UnreadCount(CancellationToken ct)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        var count = await _db.UserGifts.AsNoTracking()
+            .CountAsync(x => x.UserId == userId && !x.IsRead, ct);
+        return Ok(new { count });
+    }
+
+    [HttpGet("notifications")]
+    public async Task<IActionResult> Notifications([FromQuery] int take = 30, CancellationToken ct = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        take = Math.Clamp(take, 1, 100);
+        var gifts = await _db.UserGifts.AsNoTracking()
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .Take(take)
+            .Select(x => new { x.Id, x.GiftType, x.Points, x.CouponCode, x.Title, x.Message, x.IsRead, x.CreatedAtUtc })
+            .ToListAsync(ct);
+        var unread = gifts.Count(x => !x.IsRead);
+        return Ok(new { unread, items = gifts });
+    }
+
+    [HttpPost("notifications/{id:guid}/read")]
+    public async Task<IActionResult> MarkNotificationRead(Guid id, CancellationToken ct)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        var gift = await _db.UserGifts.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId, ct);
+        if (gift == null) return NotFound();
+        if (!gift.IsRead)
+        {
+            gift.IsRead = true;
+            await _db.SaveChangesAsync(ct);
+        }
+        return Ok(new { ok = true });
+    }
+
+    [HttpPost("notifications/read-all")]
+    public async Task<IActionResult> MarkAllNotificationsRead(CancellationToken ct)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        var gifts = await _db.UserGifts
+            .Where(x => x.UserId == userId && !x.IsRead)
+            .ToListAsync(ct);
+        foreach (var gift in gifts) gift.IsRead = true;
+        if (gifts.Count > 0) await _db.SaveChangesAsync(ct);
+        return Ok(new { ok = true, updated = gifts.Count });
+    }
+
 }

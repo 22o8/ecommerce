@@ -132,12 +132,7 @@
             </UiButton>
           </NuxtLink>
 
-          <NuxtLink v-if="auth.isAuthed" to="/notifications" class="hidden sm:block" aria-label="الإشعارات">
-            <UiButton variant="secondary" class="px-2 sm:px-3" aria-label="الإشعارات">
-              <Icon name="mdi:bell-outline" class="text-lg" />
-              <span class="hidden md:inline rtl-text">الإشعارات</span>
-            </UiButton>
-          </NuxtLink>
+          <NotificationCenter v-if="auth.isAuthed" class="hidden sm:block" />
 
           <NuxtLink v-if="auth.isAuthed" to="/my-coupons" class="hidden md:block" aria-label="قسائمي">
             <UiButton variant="secondary" class="px-2 sm:px-3" aria-label="قسائمي">
